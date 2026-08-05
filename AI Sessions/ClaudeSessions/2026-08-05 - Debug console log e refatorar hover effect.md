@@ -1,0 +1,6677 @@
+# Debug console log e refatorar hover effect
+**Date:** 2026-08-05 | **Session ID:** `7d280ceb-37ff-4487-8976-6254b6863dab`
+
+---
+
+## 👤 User *(02:49:51)*
+
+<command-message>handson</command-message>
+<command-name>/handson</command-name>
+
+## 👤 User *(02:49:51)*
+
+# ShakeHands — Session Pick-Up Protocol v3
+
+Execute the ShakeHands /handson ritual for this project.
+
+> **v3 (2026-05-08):** Added BoK Gate enforcement per MCORCH Master Execution Protocol — alert when active module work has no sealed BoK suite at `docs/bok/<slug>/`.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before reading anything)
+
+```bash
+git log --oneline -7                        # recent history + commit style
+git status --short                          # uncommitted changes
+git diff HEAD --stat                        # change scope
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # Chroma API v2 health
+ls docs/bok/ 2>/dev/null                    # BoK suites disponíveis
+wc -l HANDOFF.md                            # total lines — drives the read-from-end offset
+```
+
+Read in parallel (HANDOFF.md uses **read-from-end strategy** — SSP-01 v6.5.0; monolítico newest-first, **~10k+ linhas e crescendo** — rode o `wc -l` do pre-flight, NÃO assuma um total fixo):
+- `HANDOFF.md` with `limit=30` → FIRST ACTION FOR NEXT AGENT + o topo do Task State (a 1ª linha do Task State = a fase mais recém-selada; é o que importa).
+- ⚠️ **TOKEN-CAP GUARD (aprendido 2026-07-19):** as linhas do Task State e dos Records são **parágrafos densos (2-4k chars cada)** — uma janela de 55-400 linhas pode **estourar o teto de 25k tokens do Read** e falhar. **Regra:** leia em janelas de **≤150 linhas**; se o Read retornar erro de token-cap, **corte a janela pela metade** e repita. Nunca insista numa janela grande "porque o doc manda".
+- Para o Record mais recente (últimas 1-2 fases seladas): comece em `offset ≈ (total − 40)` com `limit=20` (pega a última linha do Task State) e depois leia o bloco `## … Record` mais novo em janelas ≤150 linhas subindo. As seções de sufixo (Pending Actions · GraphRAG State · Infrastructure · Key Files) ficam **no `CLAUDE.md`/`sprint-priorities`**, não no fim do HANDOFF.md — priorize aquelas.
+- 📌 **Se `wc -l HANDOFF.md` > ~4000:** o arquivo está pesado demais p/ pickup eficiente — sinalize nos ALERTAS que o `/handoff` deveria **arquivar Records antigos** (ver Phase 5 do seal). Um HANDOFF.md enxuto (Task State + ~12 Records recentes) é o alvo.
+- `CLAUDE.md` (architecture rules, data flow, key files — incluindo MCORCH Master Execution Protocol + Survival Laws link)
+- `.claude/context/sprint-priorities.md` (sprint goal, 4Cs snapshot, top gaps)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md` (memory index)
+
+> ⚠️ **Auditoria histórica de seals antigos:** usar `Read` com offset arbitrário em HANDOFF.md (fora do fluxo padrão de pickup). Ordering newest-first: seal mais antigo ≈ linha 2805, seal mais recente logo após linha 71. Cada `## <Phase> Record (YYYY-MM-DD)` marca um seal. Manter o Read em chunks ≤ 400 linhas para preservar budget de tokens.
+
+Also check for loose files in scratch/:
+```bash
+ls scratch/ 2>/dev/null && echo "⚠️ scratch/ has files — consider moving to .claude/scripts/db/" || echo "scratch/ clean ✅"
+```
+
+### Scratchpad continuity (aprendizado contínuo — SOP `docs/processes/scratchpad-harvest.md`)
+
+Se o Record mais recente do HANDOFF.md cita um path de scratchpad (`/tmp/claude-1001/.../scratchpad`),
+verifique se ele ainda existe — material de produção da sessão anterior pode viver lá:
+```bash
+ls /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ 2>/dev/null | wc -l   # sessões vivas
+```
+Se a sessão vai CONTINUAR uma produção (master, screencasts, trilha), localize o workdir anterior
+ANTES de regenerar qualquer coisa com custo: `find /tmp/claude-1001/<projeto>/ -maxdepth 3 -name "<artefato>"`.
+Runners promovidos vivem em `scripts/<módulo>/` (ex.: `scripts/ep05/`). Reboot do host = scratchpads
+mortos → reconstruir pelo Record (assets da Biblioteca + scripts do repo).
+
+### BoK Gate check (v3 — MCORCH Master Execution Protocol)
+
+For each BoK suite in `docs/bok/<slug>/`, verify completeness:
+```bash
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  if [ "$slug" = "security" ]; then
+    required_sec=(00-deepsearch-blueprint 01-brd-security 02-srs-secure-spec 03-sdd-hardening-architecture 04-fmea-security)
+    missing=()
+    for doc in "${required_sec[@]}"; do
+      [ -f "docs/bok/security/$doc.md" ] || missing+=("$doc")
+    done
+    [ ${#missing[@]} -eq 0 ] && echo "✅ security — BoK complete (ciso-4-artifact)" || echo "⚠️ security — missing: ${missing[*]}"
+    continue
+  fi
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] && echo "✅ $slug — BoK complete" || echo "⚠️ $slug — missing: ${missing[*]}"
+done
+```
+
+If the user mentions working on a **new module / complex feature / integration / architectural change**:
+- Check whether `docs/bok/<expected-slug>/` exists with all 9 docs.
+- If missing: surface in the **ALERTAS** section as a critical block per CLAUDE.md MCORCH Master Execution Protocol.
+- Recommend `/bok-scribe <idea summary>` before any code is written.
+
+---
+
+## BRIEF OUTPUT
+
+After gathering all context, produce a structured brief in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDSON — <FASE SELADA> (<data do último seal>)
+═══════════════════════════════════════════════════════════
+
+🏁 ESTADO ATUAL
+  Fase selada: <nome da última fase — do Task State header>
+  Últimos commits:
+    <hash> — <mensagem>
+    <hash> — <mensagem>
+    <hash> — <mensagem>
+
+📂 MUDANÇAS PENDENTES
+  <lista de arquivos M/?? com descrição do que contém, ou "Worktree limpo ✅">
+
+🏗️ INFRA
+  mcorch_chroma:     <status> — Chroma API: <OK / ERRO>
+  mcorch_claude_mem: <status>
+  mega-brain-*:      <status resumido>
+
+🧠 KNOWLEDGE MESH
+  <totalNodes> nós · <totalEdges> arestas (fonte: HANDOFF.md GraphRAG State)
+  Top tipos: <milestone:N · architecture:N · decision:N ...>
+
+🔧 TYPESCRIPT
+  <"Zero erros ✅" ou lista dos erros críticos>
+
+📚 BoK SUITES (v3 — MCORCH Master Execution Protocol)
+  Sealed: <list of docs/bok/<slug>/ com 9 docs completos>
+  Incomplete: <slugs com docs faltando ou "nenhum">
+  Mesh seal nodes:
+    <slug> → <node_id> (stability X.XX)
+
+⚠️ **GATE alert:** se sessão tocar módulo significativo sem BoK selada,
+    listar como bloqueador crítico e sugerir /bok-scribe antes de qualquer commit.
+
+📌 SPRINT
+  Goal: <Sprint Goal de sprint-priorities.md, ou "⚠️ Sprint goal não definido — rode /audit">
+  Top gap: <Gap #1 da seção "Top 3 Gap Closures", ou "não definido">
+
+⚡ PRÓXIMOS PASSOS (prioridade)
+  1. <item de maior prioridade do Pending Actions — com contexto de por que é urgente>
+  2. <segundo item>
+  3. <terceiro item>
+
+⚠️ ALERTAS
+  <containers unhealthy, TS errors, uncommitted changes que conflitam, scratch/ com arquivos, ou "Nenhum alerta ✅">
+
+═══════════════════════════════════════════════════════════
+  Pronto para trabalhar. Aguardando direção.
+═══════════════════════════════════════════════════════════
+```
+
+---
+
+## Fase 7 (opcional) — PMO handoff (`pmo-curator`)
+
+Depois de entregar o brief, **ofereça** disparar o PMO tático: a skill `pmo-curator` lê o mesmo estado, aplica MAPE-K de PROGRESSO e materializa os próximos passos priorizados em `NEXT-STEPS.md` (un-gated vs gated, dependências, deadlines, comando exato de cada passo executável).
+
+- **Quando oferecer:** sempre que o Sovereign, após o brief, pedir "os próximos passos / o que atacar primeiro / priorize o backlog / gere o plano".
+- **Como:** invocar a skill `pmo-curator` (ou delegar ao subagente homônimo). Ela é **plan-only** — não executa nada.
+- **Fronteira:** o `pmo-curator` é o loop de PROGRESSO; **não** é o guardião MAPE-K (loop de confiabilidade — infra/incidentes). SOP: `docs/processes/pmo-curator.md`.
+
+Não force — o `/handson` continua entregando o brief como sempre; o PMO é uma camada de planejamento opcional por cima.
+
+---
+
+## Rules
+
+- **TypeScript errors → report immediately.** If there are TS errors, list them under ALERTAS. Do not start implementing new features until errors are resolved (unless the user explicitly asks to proceed despite errors).
+- **Unhealthy containers → report with triage.** Suggest the fix command if known (e.g., `docker compose restart mcorch-vector-engine` for chroma).
+- **Uncommitted changes → describe, do not commit.** Only describe what exists in the working tree; committing is the user's call.
+- **Keep the brief tight.** No padding. No repetition of CLAUDE.md architecture. The user already knows the architecture — they need the delta: what changed, what's broken, what's next.
+- **Pending Actions priority order:** CRITICAL (before first client) > NON-CRITICAL > Phase Zeta > Core v3 > Epsilon v9.
+- **Knowledge Mesh numbers:** use `GraphRAG State` section from HANDOFF.md as the source. Do not invent counts.
+
+
+## 🤖 Claude *(02:49:59)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The user triggered the /handson command, so I need to execute the ShakeHands pick-up protocol by running some pre-flight commands in parallel and loading the necessary files.
+
+</details>
+
+
+## 🤖 Claude *(02:49:59)*
+
+Executando o ritual `/handson` — pré-voo em paralelo agora.
+
+## 🤖 Claude *(02:49:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git log --oneline -7 && echo \"---STATUS---\" && git status --short && echo \"---DIFFSTAT---\" && git diff HEAD --stat | tail -5",
+  "description": "Hist\u00f3rico git recente + status + diff stat"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 3a8bf2d docs(handoff): seal v6.133.0 — Agente do Spaces + esteira do episódio ponta-a-ponta
+> 9a1fac5 feat(spaces): montador do MASTER + preview no hover + barra do agente flutuante
+> 3e83f1c feat(spaces): 'Executar tudo' passa a despachar Cena Motion e Efeito Sonoro
+> 8fab68b feat(spaces): motor DUPLO no Efeito Sonoro — síntese FFmpeg (grátis) + IA, cada uma onde é boa
+> 691d9ff feat(spaces): nó Efeito Sonoro — biblioteca de SFX gerada e CARIMBADA (Amendment 34, FR-SPACES-137)
+> 1c30d80 feat(ep06): narração IVC com arco emocional + regra 'gerar pelo nó, não pelo CLI'
+> d29db89 feat(assets): biblioteca paginada e separada por projeto
+> ---STATUS---
+> ---DIFFSTAT---
+> ```
+
+## 🤖 Claude *(02:50:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\"; docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\"; curl -s -m 5 http://localhost:8001/api/v2/heartbeat || echo \"CHROMA_UNREACHABLE\"",
+  "description": "Status dos containers da mesh + heartbeat Chroma"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> mcorch_vision_mcp: Up 2 weeks (healthy)
+> mcorch_claude_mem: Up 7 weeks (healthy)
+> mcorch_chroma: Up 7 weeks (healthy)
+> mega-brain-dashboard: Up 7 weeks
+> mega-brain-webhook: Up 7 weeks (healthy)
+> mega-brain-daemon: Up 7 weeks (healthy)
+> {"nanosecond heartbeat":1785898202094946077}
+> ```
+
+## 🤖 Claude *(02:50:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "wc -l HANDOFF.md; ls docs/bok/ 2>/dev/null; ls scratch/ 2>/dev/null && echo \"\u26a0\ufe0f scratch/ has files\" || echo \"scratch/ clean\"; ls /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ 2>/dev/null | wc -l",
+  "description": "Tamanho do HANDOFF + su\u00edtes BoK + scratch + scratchpads vivos"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 577 HANDOFF.md
+> agentic-governance
+> agentic-workspace
+> aios-sql-bridge
+> authenticated-browser-operator
+> avatar-clone-ai
+> canvas-design
+> constellation-v2
+> content-intel
+> content-provenance
+> conteudo-v2
+> crm-inbox
+> crm-suite
+> e2e-user-zero
+> gamificacao-nodes
+> identity-fabric
+> landing-factory
+> marketing-hub
+> mcorch-constellation
+> mcorch-qa-healing
+> mercado-livre-api
+> meta-api
+> openclaw
+> orchestration-control-room
+> pipc
+> post-engine
+> predictive-swarm
+> product-opportunity-engine
+> security
+> spaces-agent
+> spaces-cadence
+> spaces-evolution
+> tiktok-login
+> video-repurpose
+> video-studio
+> viral-autopilot
+> viral-daily-canvas
+> viralmind
+> vision-mcp
+> youtube-studio
+> ⚠️ scratch/ has files
+> 281
+> ```
+
+## 🤖 Claude *(02:50:15)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to review the handoff documentation and sprint priorities, then run TypeScript type checking to validate the codebase against the app configuration.  The root tsc is a no-op, so I'll use the app-specific check which had 138 pre-existing errors as of late July. I'll also run the Book of Knowledge completeness loop across all 39 suites and check what's in the scratch directory, parallelizing these checks to move quickly.
+
+</details>
+
+
+## 🤖 Claude *(02:50:15)*
+
+Containers saudáveis e worktree limpo. Agora leituras do HANDOFF + sprint + checks de TS e BoK.
+
+## 🤖 Claude *(02:50:16)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "limit": 30
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# HANDOFF — MCORCH Constellation Orchestra
+> 2	
+> 3	## ⚡ FIRST ACTION FOR NEXT AGENT
+> 4	
+> 5	```bash
+> 6	git log --oneline -20
+> 7	# 🚀 UPDATE 2026-08-05 (AGENTE DO SPACES + esteira do episódio ponta-a-ponta): 19 commits de5bdb5..9a1fac5.
+> 8	#   ✅ ARRANQUE DO PRÓXIMO PASSO: abrir /dashboard/spaces/d0d82aeb-8c98-4e36-b526-b6bba64a4db5,
+> 9	#   dar Ctrl+Shift+R (build novo) e clicar em **EXECUTAR TUDO**. O projeto está ARMADO e AUDITADO
+> 10	#   (4 gates verdes): 8 cenas motion com 3-4 beats e duração ditada pela narração (Gancho 22s ·
+> 11	#   Incidentes 32s · Kimi K3 30s) · 9 nós de voz (8 com áudio IVC) · montador "Master EP06" ligado
+> 12	#   às 8 cenas · fila limpa · 44.395 mco. É o 1º teste E2E do ciclo Executar tudo → MASTER.
+> 13	# ⚠️ ANTES DE CLICAR: recarregue a página. O autosave da UI SOBRESCREVE escrita server-side
+> 14	#   (last-write-wins, debounce 3s, sem comparar updated_at) — foi o que estragou o 1º lote de
+> 15	#   renders (saíram com beats=0 e 10s). Memória reference_canvas_autosave_clobbers_server_writes.
+> 16	# 🆕 NÓS NOVOS no Spaces: Cena Motion (grátis, Playwright+FFmpeg) · Efeito Sonoro (motor DUPLO:
+> 17	#   síntese FFmpeg 0 mco / IA ElevenLabs 2 mco) · Montar Master (grátis) · inspector da Nota de cena.
+> 18	#   Console de execução (fila·%·tempo) e barra do agente flutuante dividem o rodapé (botão Agente ↔ X).
+> 19	# 📚 REPERTÓRIO: docs/processes/repertorio-producao-profissional.md (1.485 l) + biblioteca-sfx-como-farmar.md
+> 20	#   (386 l) + src/lib/cinematic-grammar.ts. 18 regras injetadas no spaces-agent/motion-scenes/creative-director.
+> 21	# 📺 EP05/A14 GUARDADO (anuncia o produto cedo demais). Canal vai a 2 vídeos/semana.
+> 22	# ⏭ DEPOIS DO RUN ALL: 4 presenters Veo (1.068 mco) · thumbnail · política de storage on-demand +
+> 23	#   arquivamento de projeto (só o master fica) · Fatia B (3D Glass Neon nos demais cards).
+> 24	# 🚀 UPDATE 2026-08-04b (Agente do Spaces VIVO + pivô editorial + EP06 armado): commits de5bdb5..2bcb30d.
+> 25	#   ✅ AGENTE DO SPACES (Amendment 33, FR-SPACES-121..125) EM PRODUÇÃO: chat que MONTA o canvas por
+> 26	#   conversa. migration `spaces_node_threads` aplicada · edge fn `spaces-agent-chat` deployada · dock
+> 27	#   glass+neon no editor VIVO · BoK `docs/bok/spaces-agent/` 10/10 (GATE: MVP aberto, fatias 2+ gated).
+> 28	#   Witness E2E User 0: 1 mco EXATO/msg · estorno provado no 502 · 13 nós do EP06 montados por conversa
+> 29	#   (projeto `d0d82aeb`). /security-review NO FINDINGS · tsc-app 0 · vitest 738.
+> 30	#   ⚠️ 3 anticorpos "nó nasce morto" em `src/lib/spaces-agent-actions.ts`: campo-motor por kind
+> ```
+
+## 🤖 Claude *(02:50:16)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "limit": 80
+}
+```
+
+> **Tool Result (Read)** - ❌ Error
+>
+> ```
+> File content (27668 tokens) exceeds maximum allowed tokens (25000). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file.
+> ```
+
+## 🤖 Claude *(02:50:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la scratch/ 2>/dev/null; echo \"---\"; for slug in $(ls docs/bok/ 2>/dev/null); do\n  if [ \"$slug\" = \"security\" ]; then\n    required_sec=(00-deepsearch-blueprint 01-brd-security 02-srs-secure-spec 03-sdd-hardening-architecture 04-fmea-security)\n    missing=()\n    for doc in \"${required_sec[@]}\"; do [ -f \"docs/bok/security/$doc.md\" ] || missing+=(\"$doc\"); done\n    [ ${#missing[@]} -eq 0 ] && echo \"\u2705 security (ciso-4)\" || echo \"\u26a0\ufe0f security \u2014 missing: ${missing[*]}\"\n    continue\n  fi\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=()\n  for doc in \"${required[@]}\"; do [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\"); done\n  [ ${#missing[@]} -eq 0 ] && echo \"\u2705 $slug\" || echo \"\u26a0\ufe0f $slug \u2014 missing: ${missing[*]}\"\ndone",
+  "description": "Conte\u00fado do scratch/ + verifica\u00e7\u00e3o de completude das su\u00edtes BoK"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 8
+> drwxrwxr-x  2 gcrUX gcrUX 4096 Jun 30 01:44 .
+> drwxrwx--- 32 gcrUX gcrUX 4096 Aug  4 23:26 ..
+> ---
+> ✅ agentic-governance
+> ✅ agentic-workspace
+> ✅ aios-sql-bridge
+> ✅ authenticated-browser-operator
+> ✅ avatar-clone-ai
+> ✅ canvas-design
+> ✅ constellation-v2
+> ✅ content-intel
+> ✅ content-provenance
+> ✅ conteudo-v2
+> ✅ crm-inbox
+> ✅ crm-suite
+> ✅ e2e-user-zero
+> ✅ gamificacao-nodes
+> ✅ identity-fabric
+> ✅ landing-factory
+> ✅ marketing-hub
+> ✅ mcorch-constellation
+> ✅ mcorch-qa-healing
+> ✅ mercado-livre-api
+> ✅ meta-api
+> ✅ openclaw
+> ✅ orchestration-control-room
+> ✅ pipc
+> ✅ post-engine
+> ✅ predictive-swarm
+> ✅ product-opportunity-engine
+> ✅ security (ciso-4)
+> ✅ spaces-agent
+> ✅ spaces-cadence
+> ✅ spaces-evolution
+> ✅ tiktok-login
+> ✅ video-repurpose
+> ✅ video-studio
+> ✅ viral-autopilot
+> ✅ viral-daily-canvas
+> ✅ viralmind
+> ✅ vision-mcp
+> ✅ youtube-studio
+> ```
+
+## 🤖 Claude *(02:50:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "timeout 300 npx tsc -p tsconfig.app.json --noEmit 2>&1 | tail -3; echo \"---COUNT---\"; timeout 300 npx tsc -p tsconfig.app.json --noEmit 2>&1 | grep -cE \"error TS\" || echo 0",
+  "description": "Gate de tipos real (tsc app) \u2014 contagem vs baseline 138",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: b7rs1glop. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/tasks/b7rs1glop.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(02:50:34)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The sprint-priorities file is too large to read in full, so I'm pulling the first hundred lines to find the sprint goal and identify key gaps. I'm also continuing through the handoff document—since it's 577 lines total, I'll read from near the end to capture the task state and recent updates.
+
+</details>
+
+
+## 🤖 Claude *(02:50:35)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O arquivo `sprint-priorities.md` excedeu o limite de tokens, então vou lê-lo em partes menores junto com o conteúdo principal do HANDOFF em ordem cronológica reversa.
+
+</details>
+
+
+## 🤖 Claude *(02:50:35)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 30,
+  "limit": 90
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 30	#   ⚠️ 3 anticorpos "nó nasce morto" em `src/lib/spaces-agent-actions.ts`: campo-motor por kind
+> 31	#   (scriptGenerator roda por `topic`, NÃO `prompt`) · catálogo carrega campos+PORTAS reais · handle
+> 32	#   inventado é descartado. E a cascata Groq→OpenRouter teve que virar EXPLÍCITA e tool-capable —
+> 33	#   o pool `:free` do `_shared/llm-fallback.ts` NÃO sabe chamar ferramenta e matava o turno em 502.
+> 34	# 📺 PIVÔ EDITORIAL (Sovereign): EP05/A14 GUARDADO (anuncia o produto cedo demais) · canal vai a
+> 35	#   2 vídeos/semana (documentário + tutorial estilo @iamAImaster com repos OSS + Claude Code).
+> 36	#   EP06 = compilado dos daily briefs da semana → ROTEIRO PRONTO (22 cenas, motion-first, ~1.100 mco
+> 37	#   vs 6.180 do EP05). Pauta: docs/roadmap/ai-briefs-semana-2026-07-29-a-08-04.md (briefs do Sovereign).
+> 38	# ⏭ PRÓXIMO: GO p/ produzir o EP06 (narrações IVC → 4 presenters Veo → 11 peças motion → QA A/V → thumb).
+> 39	# 🚀 UPDATE 2026-08-04 (MARATONA EP05 A6→A14 + linguagem MOTION SCENES selada): ~15 commits a131f3e..adc8965.
+> 40	#   MASTER A13 na Biblioteca (40d954c1) · frota BLOCKBUSTER 19/19 (débito exato 5.073+267) · narração
+> 41	#   100% voz IVC Sovereign eleven_v3 tom NOVIDADES · 6 peças motion (i2v/voz/imagem/retenção/biblioteca/
+> 42	#   canvas TODAS na Biblioteca) · skill motion-scenes + contratos (spaces-agent→engineer→creative-director).
+> 43	# ✅ MASTER A14 MONTADO E SUBIDO no fechamento do seal: asset 6e3175b3-61e7-4d01-9626-58893c01ece9
+> 44	#   (488.20s · 81MB · loudness ok · 'CANDIDATO DE DOMINGO'). QA A/V FINO ✅ FEITO no fechamento (spot-check 95-117s: cena 8 fim → b-roll 9 → cena 10 motion,
+> 45	#   narrações encadeadas sem colisão; frame b-roll pixels ↔ fala 'dirigindo um fotógrafo' em sync).
+> 46	#   🔄 VEREDITO SOVEREIGN 2026-08-04: A14 "ficou muito bom" MAS **GUARDADO — NÃO vai domingo** (anuncia o
+> 47	#   produto cedo demais; sai após aplicar o método com várias pessoas). Sem thumbnail por ora.
+> 48	#   Runners TODOS em scripts/ep05/ (harvest feito). Peças: motion27(esteira)/motion-{i2v,voz,imagem,retencao,biblioteca,canvas}.mp4 no $SC.
+> 49	# ⏭ FOCO NOVO (diretiva 2026-08-04): (a) spaces-agent GO'd — Amendment 33 MVP chat-por-nó + BoK em execução;
+> 50	#   (b) pivô editorial 2 vídeos/semana (documentário + tutorial @iamAImaster c/ Claude Code + repos OSS famosos,
+> 51	#   motion-first anti-custo-Veo); (c) próximo EP = compilado semanal dos daily briefs — alvo postar 2026-08-05.
+> 52	#   Memória: project_channel_two_videos_week_editorial. Retake opcional p14 (esteira, 267) fica junto do A14.
+> 53	# ⚠️ Saldo 44.393 mco · EL Creator pool único ~8k/131k usados · QA A/V sync é LEI de master.
+> 54	# 🚀 UPDATE 2026-08-03 (EP05 v2 + kind sceneNote + refinamentos Canvas): 14 commits na main.
+> 55	#   EP05 v2 completo no formato exato do motor CLI GabrielAI (gerar_cenas.py): 48 cenas numeradas, 6 atos,
+> 56	#   16:9 master YouTube, projeto Spaces vivo `/dashboard/spaces/18a21002-df9c-48b4-aff3-7aba28e812e7`
+> 57	#   com 62 nós (40 originais + 22 sceneNote), 26 edges, custo Run All ~6.180 mco de 9.733.
+> 58	#   Roteiro: docs/roadmap/ep05-roteiro-v2-formato-gabrielai-2026-08-03.md · Runbook: ep05-production-runbook-v2.
+> 59	#   Clamp Veo reference_to_video→8s deployado em prod (canvas-execute) — feature Google API rejeita ≠ 8s com
+> 60	#   refs; fecha vetor de charge+refund (2× 167 mco refundados na descoberta). UI auto-clamp + guard 422 pré-débito.
+> 61	#   Refinamentos Canvas: edges strokeWidth adaptativo (CSS var --rf-zoom-inv, zero re-render) · fitView respeita
+> 62	#   viewport salvo · LANE_HEIGHT 320→480 (cards ganham 180px de respiração) · 48 labels de lane cena-a-cena.
+> 63	#   Amendment 32 kind `sceneNote` (Master Execution Protocol §6 respeitado — BoK selada antes do código):
+> 64	#   sticky-note decorativo yellow-500/10, sem handles, sem motor, custo 0; ocupa as 22 lanes SCREENCAST/ELO.
+> 65	# ⏭ PRÓXIMA SESSÃO (decisão Sovereign): Opção C HÍBRIDO — MVP chat-por-nó no Spaces (Amendment 33 ao spaces-evolution)
+> 66	#   + em paralelo bok-curator escreve BoK completa da nova suite `spaces-agent` (chat-por-nó + agente criador + orquestração).
+> 67	#   LLM: cascata Groq→OpenRouter (padrão da casa, aios-chat-gateway + openrouter-swarm). Cobrança mco per-user.
+> 68	#   Refs enviadas: Magnific storyline (chat editor por bloco) · Buzzy AI shots · Higgsfield 2.5 (chat por vídeo).
+> 69	# ⚠️ Cena 30 (ELO MANUAL) do EP05 v2 = reuso do asset creative_assets.id=e781bdef — ação Sovereign via Cortes.
+> 70	# ⚠️ EP03 master AUSENTE do ecossistema (foi ao YouTube por fora) — upload = ação Sovereign via menu Cortes.
+> 71	# ⚠️ Anexos do chat (SendUserFile) NÃO chegam ao Sovereign — mídia via Spaces→Assets + apontar título.
+> 72	# ⚠️ Flag auth_social_login_visible segue LIGADA (review TikTok pendente). Desligar em Acesso quando aprovar.
+> 73	```
+> 74	
+> 75	---
+> 76	
+> 77	## Task State
+> 78	
+> 79	| **Agente do Spaces VIVO + esteira do episódio ponta-a-ponta no Spaces (2026-08-05)** | ✅ **19 commits `de5bdb5..9a1fac5`** pushed · tsc-app **0** · vitest **765** · build verde · `/security-review` NO FINDINGS. **(1) spaces-agent** (Amendment 33): chat que MONTA o canvas por conversa — migration `spaces_node_threads`, edge fn deployada, dock + sugestões contextuais (função pura, 0 mco), BoK `spaces-agent` 10/10. Witness: 1 mco exato/msg, estorno provado no 502, 13 nós do EP06 montados por conversa. **(2) Amendment 34 — pós-produção** (o gap CLI→UI): nós **Cena Motion** (Playwright+FFmpeg, 0 mco, color grading no encode) · **Efeito Sonoro** (motor DUPLO — síntese FFmpeg 0 mco onde a IA falha por construção, IA 2 mco onde ela brilha; licença CARIMBADA em ambos) · **Montar Master** · inspector da Nota de cena. Worker `motion-bridge` (systemd active/enabled) atende motion+sfx+assemble. **Executar tudo** passou a despachar os 3. **(3) Console de execução** com fila·%·tempo (progresso em streaming do stdout) + **barra do agente flutuante** com aurora (referência do Sovereign). **(4) Repertório profissional**: manual de 1.485 l + guia de SFX de 386 l + `cinematic-grammar.ts`; 18 regras nos agentes. **(5) EP06**: roteiro 22 cenas motion-first (−82% de custo vs EP05) + 15 narrações IVC com arco emocional (3:24). **Achados-anticorpo:** Playwright engasga sob bun (>10min vs 77s) · autosave da UI APAGA escrita server-side · LUFS não mede transiente <400ms · `register_creative_asset` tem allowlist de source_module e falha em silêncio. ⏭ **Próximo: clicar em EXECUTAR TUDO** (projeto armado, 4 gates verdes). Record abaixo. |
+> 80	
+> 81	| **MARATONA EP05 A6→A14 + linguagem MOTION SCENES selada + voz IVC eleven_v3 + frota blockbuster (2026-08-04)** | ✅ ~15 commits `a131f3e..adc8965` pushed · sessão-maratona de produção iterada por parecer do Sovereign do início ao fim. **(1) Masters A6→A13**: VFX título como abertura · trilha Lyria v2 D-major FELIZ (fix alinhamento buffer 4 bytes) · screencasts calibrados 85% (clique→painel, dblclick→modal+cede, commit `a131f3e`; scroll ATÉ o prompt; campo prompt `resize-y` deployado) · **pivô editorial NOVIDADES** (playbook §6b + gancho novo cena 1) · **narração 100% voz IVC do Sovereign** (ElevenLabs Creator assinado, pool único provado; eleven_v3 audio tags; IVC `h8e1Indc…`) · CTA engajamento · créditos template VALIDADO. **(2) Frota BLOCKBUSTER 19/19** (prompt-template ARRI/MCU/JARVIS do Sovereign; débito exato 5.073; QA A/V pegou p47 MUDA→v2 +267 e p14 esteira-ergométrica=retake opcional; guard anti-legenda no prompt). **(3) Linguagem MOTION SCENES v6 SELADA** ("Perfeito"): 6 iterações por parecer (ring perímetro NUNCA rotate · glass+3D · galáxia t=0 · assets REAIS · flow rise 2 estágios · edges TRACKEIAM nós flutuantes · respiro) → **6 peças produzidas e na Biblioteca** (i2v `50f88802` · voz `047b1a2f` · imagem `ff274f69` · retenção `4a7c90a9` · biblioteca `c7174c67` · canvas `94b566db`) → **assemble-v14 RODANDO no seal** (retomada no FIRST ACTION). **(4) Síntese**: skill `motion-scenes` + contratos 3 agentes + knowledge pack spaces-agent + Scratchpad Harvest (PHASE 1b /handoff + SOP + skill, nascido do quase-acidente) + QA A/V sync como lei + playbook dark-channel + blueprint ai-news-brief (BoK-gated). Masters/peças TODOS na Biblioteca; runners TODOS em `scripts/ep05/`. ⏭ A14 QA+upload → thumbnail → DOMINGO. Record abaixo. |
+> 82	| **EP05 MASTER produzido: áudio EP01-04 (Veo nativo + Qwen3 grosso + trilha Lyria ducada) + intro/créditos Times + VFX título 10s aprovado (2026-08-03)** | ✅ Sessão-maratona de PRODUÇÃO (entregáveis na Biblioteca, fora do repo). 32 segmentos sintéticos gerados por script (`canvas-execute`/`generate-voice` JWT User 0) todos Vision-QA: 19 apresentador + 7 b-roll 16:9 + 6 voz. Wav2Lip CPU REPROVADO (host sem GPU) → estratégia EP01-04: **áudio Veo nativo** nos apresentadores (`generate_audio:true`, lip-sync perfeito) + narração Qwen3 **mais grossa** só nas mudas + **trilha Lyria RealTime** por-ato ducada (lift emocional @28s) + timeline dirigida pela narração (sem sobreposição). Intro "GABRIEL AI APRESENTA…" + créditos Liberation Serif (=Times, replica `gerar_cartela`/`gerar_creditos`) + **VFX título 10s APROVADO** (`title.html` GSAP + Playwright frame-seek, técnica HyperFrames). Cap diário admin 10k→100k (`canvas-execute:794`, deployado, commit `563e86f`). Malha **19232** · nó `79365255`. ⏭ Próxima: juntar VFX no master · trilha mais feliz/esperança · re-gravar screencasts 1920×1080 zoom 70% colapsado. Record abaixo. |
+> 83	| **EP05 v2 formato GabrielAI (48 cenas, 62 nós) + kind sceneNote + clamp Veo refs→8s + 4 refinamentos Canvas (2026-08-03)** | ✅ **14 commits na main** (`bd94dae..5b9db1a`) · tsc-app **0** · build 25.05s · gitleaks limpo · `/security-review` NO FINDINGS · 738/740 vitest verdes · Master Execution Protocol §6 respeitado. EP05 v2 no formato exato do motor CLI Python que fez EP01-04: `docs/roadmap/ep05-roteiro-v2-formato-gabrielai-2026-08-03.md` (48 cenas §3, regex validado, 6 atos, 16:9). Projeto Spaces `/dashboard/spaces/18a21002-df9c-48b4-aff3-7aba28e812e7` com 62 nós (19P + 7 pair B-roll + 6 voz + 1 charRef + 22 sceneNote), 26 edges, custo Run ~6.180 mco. Clamp Veo `reference_to_video`→8s (server 422 pré-débito + UI auto-clamp) deployado em prod. Canvas: edges com espessura adaptável ao zoom · fitView respeita viewport salvo · LANE_HEIGHT 320→480 · 48 labels cena-a-cena. Amendment 32 kind sceneNote (BoK selada antes do código, Pattern Conformance 1y/20na). Auditoria robusta 4 lentes achou 1 blocker (n_p_1 fora do grid) e 1 important (voice_ato1 desalinhado) — ambos patchados. Malha **19176** · nó `0da058d6`. ⏭ Próxima: Opção C HÍBRIDO — MVP chat-por-nó (Amendment 33) + bok-curator escreve suite `spaces-agent`. Record abaixo. |
+> 84	| **Estratégia DEFINITIVA de shorts orgânicos + formato React provado + fábrica Spaces (2026-07-30b)** | ✅ **6 commits na main** (`61022c3..abe2a12`) · tsc-app **0** · gitleaks limpo. As 6 refs do Sovereign ERAM os deepsearches → estratégia **DEFINITIVA v1** (§D1..D7 em `docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md`). Witness react `1a98cef3` (split_grid 2v, 12 mco, Vision QA) · 8 cortes EP02 · projeto Spaces **"React Gabriel AI"** `024e1c03` armado (zero pago) · tabela de vídeos restaurada no /dashboard/youtube (Short 118 views) · pad TTS 0,5s provado · smoke cadência 7/7 + anticorpo FR-CAD-006. Malha **19120** · nó `aa7e1dc9`. ⏭ PAUSE → **EP05 formato tutorial** (parecer no Record). Record abaixo. |
+> 85	| **TikTok App Review destravado + pipeline de Publicações do Spaces (2026-07-30)** | ✅ **4 commits na main** (`266d3f0..7d4add3`) · tsc-app **0** · eslint **0** · vitest **+20 novos** (public-app-settings 9 + asset-publications 11) · 3 migrations aplicadas · 1 edge fn deployada · frontend no ar · `/security-review` NO FINDINGS ×3. **TikTok (reprovado 4×)**: conta `tiktok.review@mcorch.com` provisionada (viewer · email pré-confirmado · onboarding pré-completo · 1500 mco) + login **provado E2E** no /auth público. Achado material: botões social login atrás de `?devLogin` (invisíveis na URL do formulário) → flag admin `public_app_settings` (aba **Acesso** em /dashboard/admin, world-readable+CHECK allowlist, RLS admin-write, auditada). Sovereign gravou o vídeo e **enviou a re-submissão**. **Publicações**: aba no modal do asset (badge/timestamp/Cancelar/Remover) + trigger cascade fecha o **dead-end 409 `already_enqueued`** + **sync bidirecional** (apagar do calendário SOME de toda superfície: `scheduled`→delete, `published`→histórico). Revisão adversarial ultracode pegou 2 P0/P1 nascidos-mortos (handler 409 = código morto; `activeForSelected` sem `published`) → corrigidos+provados E2E. Malha **18985** · nó `59c4d1c2`. Record abaixo. |
+> 86	| **"Rodar não é entregar": 6 superfícies + limpeza total de branches + media_state (2026-07-29)** | ✅ **14 commits na main** (`15c84fe..7533a5a`) · tsc-app **0** · eslint **0 erros** (era 75) · vitest **712** · 3 edge fns deployadas · frontend no ar. Remoto = **só `main`** (20 branches retiradas; backup provado por `git clone` do bundle). **P0**: logrotate criava `/var/log/mcorch-*.log` como gcrUX enquanto o cron roda como ubuntu → **redirect falho = comando NÃO executa** → 4 crons mortos 3 dias (telemetria de saúde em branco). **Gate de ENTREGA** da auditoria 4Cs (worktree detached em `origin/main` + push verificado por grep no destino). **Produção estava À FRENTE da main** (dist de branch nunca mergeada) → reconciliada. **Cortes**: grade do menu era galeria decorativa + edge fn 5 dias velha → grade provada E2E por frame. **media_state** (text+CHECK) separa estado técnico do editorial + aba "Em processamento"; **IDOR MEDIUM** fechado que o próprio fix ativara. Malha **18851** · nó `32897de0`. Record abaixo. |
+> 87	| **Modal de Publicação YouTube Studio (abas Vídeo/Shorts/Histórico) — free-agent S1 (2026-07-25)** | ✅ **3 commits `free-agent/publish-modal-s1`** · tsc-app **93=baseline** · worktree limpo. **Passo 1**: widget "Vídeos do canal" extraído p/ `src/components/youtube/ChannelVideosCard.tsx` (auto-contido: `useYouTubeVideos` + `useYouTubeConnection` + `useDeleteVideo` + `useUpdateVideo`; 17 colunas + paginação + Editar/Excluir gated por `hasWriteScope`). **Passo 2**: `src/components/youtube/YouTubePublishModal.tsx` — `<Dialog>` + `<Tabs>` 3 abas: **Vídeo** (`YouTubeUploadPanel`), **Shorts** (mesmo fluxo + dica 9:16/60s), **Histórico** (`ChannelVideosCard`). **Passo 3**: `YouTubeStudioPage.tsx` header (L443) — estado `pubOpen`/`pubTab` + botões "Publicar" / "Histórico" → abrem modal com `defaultTab` dinâmico; Card inline removido do corpo. **Zero regressão** — apenas 3 arquivos tocados. Malha **18375** · nó aguardando seal. Record abaixo. |
+> 88	| **Modais publicação (terreno free-agent) + P0 EP03 destravado + doutrina de recência (2026-07-25)** | ✅ **5 commits `fbb53b3..b66396c`** pushed · tsc-app 93=baseline · worktree limpo. **P0 EP03**: selo "Armazenado" p/ masters no Storage (W2.1) destrava o botão "Não verificado" morto (`canProbe` exigia bucket='local'); EP03→YouTube nunca dependeu do selo — `useHostMasters` lista por `source_module`, worker dual-source (buildado, no ar). **Modais** YT/TikTok/IG: contrato+playbook path-resolvido p/ agente FREE (`docs/roadmap/publish-modals-*`); **Nemotron-9B:free provou tool-use real** (leu useYouTubeUpload.ts, 7 exports); Sovereign roda fcc-claude na branch `free-agent/publish-modal-s1` passo-a-passo. **Pantheon free-model via gateway `openclaw agent` PROVOU não executar código** (gemini-flash-lite = pseudo-código). **Cap edge fns DESTRAVADO** (Pro 100→500; memória stale reconciliada SUPERSEDED). **Doutrina de recência de memória** (corolário Lei 1). Malha **18348** · nó `5cc6ad2a`. Record abaixo. |
+> 89	| **Autonomia: security + P0 YouTube (pós-W2.1) + kanban de dev + grounding AIOS + AI Act Fatia 4 disclosure VIVO (2026-07-25)** | ✅ **8 commits `3766034..0e120be`** pushed · gitleaks limpo · tsc-app 93=baseline. **AI Act Art.50(4) FECHADO** antes do deadline 02-Ago (Fatia 4 disclosure server-side nunca-LLM em orchestrate-step+reshape-pillar, smoke 12/12, /security-review SAFE, deployado; OTD-CP-002 resolvida Sovereign). **Fatias 0/1/2 C2PA já vivas desde 18-jul** (SOP estava stale). **P0 YouTube** pós-W2.1 restaurado (UI source_module='external' + worker dual-source host/Storage). **W1.2** statement_timeout + revoga-anon (migrations aplicadas em prod). **Kanban** neon+fatia-2 sinal-real. **AIOS** nós Consciousness v2 auto-semeados neutralizados. Malha **18347** · nó `2f4eee7d`. Record abaixo. |
+> 90	| **Grounding do AIOS (anti-confabulação) + otimização Supabase Pro (2026-07-25)** | ✅ Sessão interativa longa. **8 commits `cb18729..00f5295`** pushed · tsc-app **93=baseline** · gitleaks limpo. **Raiz de "algo errado no ecossistema" achada+corrigida:** o chat AIOS Core-Fable confabulava arquitetura inexistente (monorepo/tabelas/`ffmpeg.wasm`) — diagnóstico por 2 workflows de verificação material. Fix (`cb18729`): **E** prompt anti-confabulação (`DEFAULT_SYSTEM`+`LIVE_SYSTEM`) + **A** RAG query-aware (`buildQueryContext` liga o `searchContext` que era dead-code) + **threshold** `search-constellation` 0.45→0.3 (**search prod 0→20 provado**) + **F1** modo voz. **Auto-ingest RESSUSCITADO** (`4001e38`): morria com 401 silencioso desde a rotação de chaves → força `SB_SECRET_KEY` + varre `src`+`supabase/functions`+`packages`; malha **9831→18324**. Menu **Orquestra→Constelação**. **Supabase Pro:** roadmap `docs/roadmap/supabase-pro-optimization.md` (cap 100 fns **destravado provado**; upload 50MB→500GB; no-pause; logs 7d) + host cleanup **~16GB** (disco 79%→71%) + **masters EP01/EP02 migrados p/ Storage** (`scripts/migrate-local-masters-to-storage.ts`, verificado, host liberado 1.8G→24M). Malha **18324** · nó `88030445`. Record abaixo. |
+> 91	| **Autonomia total: PIPC S1+S2 + CRM Contatos + cadence-fix + AI Act selada (2026-07-24)** | ✅ Sessão de autonomia total do Sovereign (migrations/deploys/schema/seal **un-gated**; público/compliance-code/editorial/credenciais **gated**). **6 commits `c58a57e..88a04dd`** pushed · toda migration `/security-review`+RLS default-deny. **S1+S2 PIPC VIVOS** (retenção YT persiste→brief por-EP; A19/A20 desbloqueado por re-OAuth) · **A4 Contatos** (`contacts`+RLS, OTD-CS-001 resolvida) · **A8 cadence-fix** (conta explícita mata null→1ª) · **A10 content-provenance selada 9/9** (Fatia 4 deferida OTD-CP-002). Todos **witness E2E**. ⚠️ cap 100 edge fns atingido. Malha **9831** · nó `36d233dc`. Record abaixo. |
+> 92	| **Diretiva 5 pontos: governança docs + cadência por-workspace + Golden Eye intake + YouTube (2026-07-23)** | ✅ Loop autônomo, **os 5 entregues** (teto 80% janela; selado a 49%). **5 commits `c2da9d3..c28d2f0`** + push · tsc-app **93=baseline** · gitleaks limpo · sem edge/migration. **(1)** agentes `docs-curator`+`bok-curator` (donos de `docs/` e `docs/bok/`, curam/revisam no lugar do Sovereign, Telegram pontual, exclusão restrita) + regra global **CLAUDE.md §6** + Key Files + memória `feedback_docs_bok_ownership`. **(2)** auditoria cadência + estratégia por-workspace (`docs/roadmap/cadence-workspace-strategy-2026-07-23.md`; gap central: sem entidade Workspace 1ª classe · `meta_config UNIQUE(user_id)`=1 Meta/user · `cadence-run social_account_id=null`→1ª conta arbitrária). **(3)** intake Golden Eye esclarecido+desenhado (`docs/roadmap/golden-eye-intake-design-2026-07-23.md`, UI Settings "Marca"; VLM=refinaria não depósito). **(4)** YouTube escopo/CASA/quota respondido+**Telegram HTTP 200** (**sem CASA** — escopo sensível não restrito). **(5)** pipeline YouTube **100% pronto** (worker resumable · `youtube_uploads` prod · canal Gabriel AI conectado · master EP02 em `repurpose-inbox/`; só habilitar service). **Extras:** Golden Eye slice 1 (`miv-probe.ts` 18/18, regra RUBRIC.md:231) · PIPC BoK 10/10 APPROVE (`docs/bok/pipc/`, Pattern 17/4/0) · vacina masters (skill `host-media-masters`) · doutrina 2×→skill (`feedback_recurring_actions_become_skills`) · MEMORY 19.9→16KB. Malha **9772** · nó `c22e2c6f`. ⏭ Gated Sovereign: revisar BoK PIPC (destrava S1-S4) · habilitar `youtube-upload.service` · imagens Golden Eye · postar cortes EP01/EP02. |
+> 93	| **Funis ML públicos + validação em massa + Conector Amazon (POE Fatia 1) (2026-07-23)** | ✅ Loop autônomo "5 pontos do Sovereign". **6 commits `dbd26a6..17cf02f`**, deployado + `/security-review` NO FINDINGS ×3 + tsc-app **93=baseline** (zero-regressão). **(Funis)** 3 funis ML PÚBLICOS vivos (posts 29/34/35: Roborock ×2 ângulos + Family Hub, atribuídos, **redirect→meli.la 302 provado**); ciclo autopilot de validação em massa **corrigido** (config `target_product_ids`=`external_id`, não UUID — 1º ciclo gastou 40 mco genérico); novo primitivo `publish-wordpress post_id` (flip rascunho→público). **(Zerar)** jornada UX E2E User 0 → produto em produção (0 P0/P1 real). **(Roadmap)** maestro+enxame `wf_04833184` (32 células S×P). **(Épico POE)** blueprint deepsearch + BoK 9/9 + **Fatia 1 conector Amazon VIVO** (dispatcher multi-rede `_shared/affiliate.ts`, `resolve` fold em `process-affiliate-link` [cap 100 fns], migrations `amazon_tag`/`affiliate_network_contract`, UI Conector de Afiliados verificada ocular, witness 402→200 `?tag=` sale). Malha **9718** · nó `89a3618d`. ⏭ POE Fatia 2/3/4 GATED (GO+jurídico); tráfego dos funis (social gated). |
+> 94	| **Sala de Controle da Orquestração (FR-OCR-001..020) + cortes de N clipes destravados (2026-07-22)** | ✅ Loop "fazer tudo". 9 commits `e0d9fe9..549a3cc`, deployado + Vision QA logado (User 0, $0) + `/security-review` NO FINDINGS. **Cortes:** reuso de browser (`renderAlphaFrames` 1 chromium/job — witness 5/5 EP01 + **11-cortes resgatado done 11/11**) + `ViralCandidatePicker` ligado no wizard. **Refocus:** BoK `orchestration-control-room` 10/10 + Vista Operacional (crew×execs+ledger) + múltiplas Orquestras persistentes (`workflows`+grafo/workflow) + nós Agente(dispatch)/Portão(N especialistas)/Publicar(mockup por rede); Cena removido; canvas reescrito controlado. **tsc-app 135→93** (Parte B limpou 42 erros de tipo pré-existentes). Malha **9681** · nó `58bd91da`. ⏭ Follow-on: nó Publicar output-flow→publish real; Fila Sovereign gated. |
+> 95	| **Loop multi-frente: cortes+picker · grid pan/crop+preview composto · dashboards TikTok/IG · squad Studio · agendamento · LGPD · render-fix · constelação leve (2026-07-22)** | ✅ Sessão-maratona GO'd (workflow adversarial 4-frentes → veredito `.claude/context/multi-front-verdict-2026-07-22.md`) + 2ª rodada de review do Sovereign. **14 commits `7ee9e79..3128d76`**, tudo deployado+build baked; tsc-app **135 (zero-regressão vs baseline; corrigi 3 pré-existentes nos cortes)** · eslint 0 · `/security-review` NO FINDINGS ×3. **(Cortes)** detector duration-aware (`top_n` omitido → `clamp(ceil(span/45),5,12)`, mín. 5 p/ 5min+, cap 12, dedup consumido, prompt+diversidade+title, max_tokens) + `ViralCandidatePicker` (escolher antes de queimar, página+nó). **(Grid)** `pan_x/pan_y/zoom` por célula (crop FFmpeg, clamp 4 camadas, sha-parity, unit 11/11) + **preview composto** (layout real, drag por célula, play). **(Agentes)** squad **Studio** no User 0 (`seed-studio-squad.ts`, drill 6/6 groq via `studio-squad-drill.ts`) + 7 SOULs Pantheon enriquecidos (template +6 seções) + `main` criado + `sync-pantheon-souls-to-admin.ts` (admin 56c→11-17k). **(Agendamento)** `publish-space-asset` `publish_at` futuro + `link` Pinterest (auto-publish/publish-social) + `schedule-episode.ts` privado-primeiro (witness auto-limpante). **(LGPD)** `erase_lead` v4 spine CRM APLICADA (FM-CS-02). **(Render)** timeout duro `renderAlphaFrames` (fim do hang 170min incident 822780e8) + preview kinetic. **(Dashboards)** TikTok+Instagram (`user.info.basic`/`business_basic`, perfil no connect via callback estendido — cap de 100 fns cheio, sem fn nova) + menu **Visão Geral** colapsável (YT/TikTok/IG). **(Constelação)** modo **leve por padrão**+toggle (CrewGraph `lite`) · respace 72° (`respace-constellation.ts`, fim dos orbits sobrepostos) · Matrix/Memória admin-only · **Matrix removida do `/orchestration`** (montava em 2º plano). **Achados:** cap de 100 edge fns CHEIO (dobrar em fn existente, não criar); `lucide` sem ícones de marca (Instagram→Camera); render sem timeout = hang eterno. Malha **9639** · nó `4950ea34`. ⏭ **PRÓXIMO HANDSON (atacar já):** refocus da Orquestração = sala de controle (visão `.claude/context/orchestration-refocus-vision-2026-07-22.md`: BoK→Vista Operacional→múltiplas Orquestras→nós). |
+> 96	| **Loop Spaces: legendas sync + engineer-spaces + nó Transcrição/SRT VIVO + nó-janela + Pipeline kanban/tabela + witness cadência (2026-07-22)** | ✅ Loop autônomo **6 slices + fechamento total** ("fecha de vez tudo"), **12 commits `646a934..948d313`**, tudo deployado+Vision-QA (build · tsc **zero-regressão vs baseline 137** · `/security-review` NO FINDINGS · auditoria Canvas 1920×1080 APROVADA). **(S1)** kinetic-stack timing **por-palavra derivado do cue + chunking** (fim do `slice(0,7)`; não é motion-graphic; capstone: re-cut real do EP01 "VOADORES/TROUXE"). **(S2)** agente+skill **`engineer-spaces`** — estreou fechando bug `category:"Video"` (invisível ao esbuild). **(S3)** nó **Transcrição/SRT** whisper.cpp US$0 **VIVO** (migration `asr` + edge `generate-subtitles` + worker `subtitle-bridge` active; unit precisa bun full-path; witness E2E 7 cues/788c sobre corte EP01). **(S4/5a)** **nó-janela** `canvas>node>janela`: sidebar **SÓ specs** (`NodeSpecsPanel`), config na janela (duplo-clique/"Personalizar"). **(S5b)** **Pipeline** de Publicações ganha **Kanban + Tabela nível-query** (filtro/ordenação/CRUD inline, sem despachar) + auditoria de prontidão. **Witness cadência** (throwaway sem credenciais): arm → `cadence-run` `{dispatched:1}` → `cadence_dispatches`+`scheduled_posts`(queued) provados, deletados na hora (zero publicação). **Achados:** `bun run build`=esbuild NÃO typa → gate real `tsc -p tsconfig.app.json` vs baseline; `cadence-run` exige apikey+Authorization = mesma chave de serviço. Malha **9566** · nó `5bd65e77`. ⏭ Sovereign-gated: EP02→YouTube (Track B); CRM Suite (BoK-first). |
+> 97	| **Prévias no /repurpose + nó Cortes do Master + Cinética empilhada + 1×3 + fixes Veo + re-cut E2E do EP01 (2026-07-21)** | ✅ Loop-maratona GO'd, **12 commits `347a4ea..4a4fe17`** + README + seal, tudo deployado+Vision-QA. **4b/4c:** prévia em loop das legendas (iframe do template real dirigindo `applyFrame` 30fps, `public/caption-templates/` via `sync-caption-templates-to-public.ts`) + grades no `/repurpose` Passo 2; E2E logado User 0 $0 (9/9 estilos animam, 0 erros console). **4d:** nó `videoRepurpose` "Cortes do Master" no Spaces (motor de repurpose via node, reusa detect+run+galeria/prévia). **Legenda nova `kinetic-stack-9x16`** ("Cinética empilhada") — pilha palavra-por-linha rampa até herói, accent ciano, registrada nos 5 allowlists. **Grade 1×3** + refino 4 legendas Tier A (Motion Graphics score 9 intocada, workflow `wf_3a54f592`). **Fixes Veo:** XOR image/refs (nó nascia morto −267 mco) + POV mudo default (Veo gerava fala) + preview vídeo na aba Assets + rótulo HyperFrames neutro. **4a VERIFICADO:** whisper ASR US$0 (129 cues) → detect → 3 cortes EP01 queimados com Cinética empilhada, Vision QA ocular sobre footage real. Malha **9560** · nó `ab67e63f`. ⏭ Próximo: refino de legibilidade do kinetic-stack p/ frases longas (scrim + cap palavras); **rail ASR-via-UI** ("Gerar transcrição" whisper.cpp host, async) p/ paridade UI; witness cadência. |
+> 98	| **Refino Spaces Canvas — grade 2×2 + carrossel hand-picked + biblioteca de legendas + Canvas mobile + 3 bugs + Stories + nginx (2026-07-21)** | ✅ Diretiva Sovereign multi-frente, tudo deployado+testemunhado+commitado. **5 commits `d2bfc58..2908885`.** **Bugs:** (F2) aba Assets do editor lia `vm_canvas_assets` legada → aponta p/ a spine `creative_assets` (todo output vídeo/Veo/voz aparece; register JÁ funcionava — c8fc8840→200c9d6a; o gap era a VIEW). (F4) POV/Veo ia sem refs: o Run All (`useCanvasPipeline`) não coletava refs p/ `imageToVideo` **E** as URLs coletadas eram públicas-mortas/assinadas-expiradas → server não baixava; fix = coletar (incl. `avatarIdentity.referenceUrls`) + **re-assinar** (`toDisplayUrls`) antes de enviar + badge de contagem no card. (F5) reconciliação revertia `running`→`success` com a exec ANTIGA (matava o pulso no re-run) → só reconcilia idle; arestas de ENTRADA de nó terminal também transmitem. **Features:** (F1 **Amendment 28**) modo `split_grid` — grade 2×2 (ou 2v), cada célula **vídeo OU foto**, `composeSplitGrid` xstack, rail hyperframes 12 mco; **witness pago 2×2** (2 vídeos+2 fotos, −12 exatos, asset 334cfea4, Vision QA). (F6 **Amendment 29**) nó **Carrossel** hand-picked — galeria multi-select + reorder dnd-kit + crop/contain por item → `carousel_assets` (rail grátis) reusa `publish-space-carousel`; **witness E2E** 3 slides 4:5 owner-scoped. (F7) biblioteca de legendas com **preview** (8 estilos, `CaptionStyleGallery` + gerador). (F3) Canvas **mobile-first** (sidebars→drawers via FABs redondos só-ícone, minimapa pequeno). **Stories** flag→publicável (rail vivo confirmado). **nginx `/api/host-probe`** aplicado+provado (401 JSON). `/security-review` **NO FINDINGS ×2** · builds verdes env-baked · malha **9523** · nó `f7195047`. ⚠️ Armadilha: `supabase functions download` clobbera o source do repo (revertido). ⏭ Próximo (loop): witness E2E de despacho da Cadência (throwaway, sem publicar) · produzir a cadência da semana. Pendências Sovereign: FM-CS-02 RPN 324 LGPD; rotação de credenciais; `youtube-upload.service`; EP02→YouTube (Track B). |
+> 99	
+> 100	| **Cadência de vídeo (FR-CAD-006) + hardening cross-tenant do video-render + recon do roadmap (2026-07-21)** | ✅ Continuação do roadmap de audiência. **3 commits `6e0d147..7bfd6ad`.** **(1) Cadência de vídeo agendável:** o dispatch de cadência de um asset de vídeo (POV/corte/split-screen) agora **anexa a mídia** — o `cadence-run` minta uma `space_publish_variant` owner-scoped (espelha publish-space-asset:173-188, reusa o resolver 160-169 do auto-publish) e referencia `space_publish_variant_id` no `metadata.reshape` (antes só `source_asset_id`, que morria em `*_no_video`); YouTube default **private** (privado-primeiro). Single-file, **sem migration**; smoke `smoke-cadence-video-dispatch` **6/6** zero-custo; `/security-review` NO FINDINGS. **(2) Hardening cross-tenant do `video-render`:** allowlist da composition persistida por modo (`split_screen`/`studio-project`/template) dropa `autopilot`/`pillar_run_id` do corpo do cliente — fecha vetor pré-existente (`{props, autopilot:{user_id:vítima}}` forjava linhas atribuídas a outro tenant via o sink service-role do worker); smoke `--live` L5-L7 net-zero; `/security-review` NO FINDINGS. **(3) Recon do roadmap** (`wf_f204f431`): Stories (rail servidor completo — único bloqueio é a flag `publishable:"preview"` em format-specs.ts:90; deploy do publish-social STORIES UNVERIFIED) e Carrossel (rail vivo, nunca exercido; gap = controle de `publish_at`/segurar na UI) mapeados. Malha **9485**. ⏭ Próximo: virar flag de Stories + verificar deploy · controle publish_at no carrossel · testar ambos na UI. Pendências herdadas: nginx `/api/host-probe`; FM-CS-02 RPN 324 LGPD; rotação de credenciais; `youtube-upload.service`. |
+> 101	
+> 102	> 📦 Linhas de Task State anteriores a 2026-07-20 → [`docs/handoff-archive/HANDOFF-taskstate-archive-2026-07-20-and-earlier.md`](docs/handoff-archive/HANDOFF-taskstate-archive-2026-07-20-and-earlier.md)
+> 103	
+> 104	## Agente do Spaces + esteira do episódio Record (2026-08-05)
+> 105	
+> 106	**ORO:** Operator = MCORCH Agent · Reviewer = Sovereign (parecer contínuo na UI ao vivo) · Owner = Sovereign (UX do Spaces · saldo · canal).
+> 107	
+> 108	**O arco da sessão:** começou com o pivô editorial (EP05/A14 guardado — "anuncia o produto cedo demais"; canal vai a 2 vídeos/semana) e terminou com a esteira de produção de episódio dentro do produto. O fio condutor foi uma correção do Sovereign no meio do caminho: **"gere pelo nó, não pelo CLI"** — que virou SOP, memória e mudou como o resto da sessão foi executado.
+> 109	
+> 110	**O que ficou VIVO (todos com witness material):**
+> 111	
+> 112	| Peça | Prova |
+> 113	|------|-------|
+> 114	| `spaces-agent-chat` (Amendment 33) | 1 mco exato/msg · estorno no 502 · 13 nós do EP06 por conversa · BoK 10/10 |
+> 115	| Sugestões contextuais | função PURA sobre o grafo (0 LLM, 0 mco) · 10 testes · achou o nó de voz vazio sozinha |
+> 116	| Nó **Cena Motion** + worker | 330 frames/11s/1,9MB · progresso 9→100% · grading no encode · systemd active |
+> 117	| Nó **Efeito Sonoro** (duplo) | whoosh −8,8 LUFS (IA) + impacto sintetizado 0 mco · licença carimbada nos dois |
+> 118	| Nó **Montar Master** | migration+fn+worker; re-encode de propósito (peças de motores diferentes) |
+> 119	| Console + barra do agente | progresso em streaming do stdout · pointer-events corrigido · aurora |
+> ```
+
+## 🤖 Claude *(02:50:36)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "limit": 60
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# 🧠 Sprint Priorities — Constellation Orchestra
+> 2	
+> 3	**Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 4	
+> 5	**90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 6	
+> 7	## 📋 FILA SOVEREIGN (ordem declarada — não reordenar sem GO)
+> 8	
+> 9	| # | Item | Estado | Gate |
+> 10	|---|------|--------|------|
+> 11	| 🎯 **AGORA-ter** | **Amendment 34 — pós-produção de episódio no Spaces (o gap CLI→UI)** — o EP05 provou a esteira completa, mas 5 elos vivem só como runner em `scripts/ep05/` e nenhum usuário alcança: **`motionScene` · `soundtrack` · `titleCard` · `episodeAssembler` · `avQaGate`** (todos de custo ZERO no host) + **design 3D Glass Neon nos cards** (FR-SPACES-136) + receita "Episódio completo". SSOT: `docs/bok/spaces-evolution/34-amendment-episode-post-production.md` (FR-SPACES-130..136 · Pattern Conformance 16y/3d/2na · OTD-EP-001..004). É [[feedback_cli_actions_must_become_ui]] aplicado: hoje o produto entrega ingredientes, não o prato. | ✅ **Amendment SELADA** (BoK antes do código, §1). Fatias: **A** `motionScene`+worker (destrava 16 das 22 cenas do EP06) → **B** 3D Glass Neon → **C** titleCard+assembler → **D** avQaGate → **E** soundtrack+receita. | 🔒 **Sovereign:** GO para arrancar a Fatia A. |
+> 12	| 🎯 **AGORA** | **PRIMEIRO RUN ALL PONTA-A-PONTA — clicar em "Executar tudo" no EP06** (`/dashboard/spaces/d0d82aeb-8c98-4e36-b526-b6bba64a4db5`). Projeto ARMADO e AUDITADO em 2026-08-05 com 4 gates verdes: 8 cenas motion com 3-4 beats e duração ditada pela narração · 9 nós de voz (8 com áudio IVC) · montador "Master EP06" ligado às 8 cenas · fila limpa · 44.395 mco. ⚠️ **RECARREGAR a página antes** — o autosave sobrescreve escrita server-side (memória `reference_canvas_autosave_clobbers_server_writes`). | ⏳ Aguardando o clique do Sovereign. | 🔒 **Sovereign:** clicar em Executar tudo após o `/handson`. |
+> 13	| ✅ ex-AGORA | **spaces-agent HÍBRIDO (Opção C) — ENTREGUE 2026-08-05** — MVP chat-por-nó (Amendment 33 ao spaces-evolution) + suite BoK `spaces-agent` completa (bok-curator em paralelo). LLM: cascata Groq→OpenRouter (aios-chat-gateway + openrouter-swarm). NOVA tabela `spaces_node_threads` (RLS per-user). Cobrança mco por mensagem. Referências: Magnific storyline + Buzzy AI shots + Higgsfield 2.5. **Caso de uso primário (diretiva 2026-08-04): criar por conversa TODOS os nós, prompts e roteiros de um episódio novo** — dogfood = próximo EP. | 🟢 Em execução (sessão 2026-08-04). | — |
+> 14	| 🎯 **AGORA-bis** | **Pivô editorial (diretiva Sovereign 2026-08-04): 2 vídeos/semana** — (a) documentário informativo: **EP06 = compilado semanal dos daily briefs** (alvo: postar 2026-08-05); (b) educacional/tutorial estilo **@iamAImaster** — ensinar Claude Code com repositórios open-source famosos. Motion-first p/ gastar MENOS com Veo. **Usar o método, não anunciá-lo.** Memória `project_channel_two_videos_week_editorial`. | ✅ **Roteiro EP06 PRONTO**: `docs/roadmap/ep06-roteiro-compilado-semana-2026-08-04.md` (22 cenas · 4 atos · 16 motion + 4 presenters · **~1.100 mco vs 6.180 do EP05 = −82%**), fundado nos 4 daily briefs colados pelo Sovereign (`ai-briefs-semana-2026-07-29-a-08-04.md`). Projeto Spaces armado PELO agente: `d0d82aeb` (13 nós). Trilha tutorial mapeada: `tutorial-track-iamaimaster-template-2026-08-04.md` (perfil real do canal + 8 repos OSS verificados na API do GitHub). | 🔒 **Sovereign:** GO para produzir (12 narrações IVC → 4 presenters Veo 1.068 mco → 11 peças motion grátis → assemble + QA A/V → thumb ciano). |
+> 15	| 🎬 EP05 A14 **GUARDADO** (2026-08-04) | **MASTER A14 COMPLETO** (asset `6e3175b3`, 488.20s, QA A/V fino verde) — veredito Sovereign: "ficou muito bom… vamos usar futuramente". **NÃO vai domingo** — anuncia o produto antes da hora; sai depois de aplicar o método com várias pessoas. | ✅ Pronto na Biblioteca, aguardando o momento editorial. Retake opcional p14 (esteira, 267 mco) fica junto. | 🔒 **Sovereign:** decidir QUANDO publicar (pós-prova social do método). |
+> 16	| ✅ ex-AGORA | **Criação do EP05 — formato TUTORIAL** — parecer registrado + decisão selada como Angle C narrative-first. | ✅ Roteiro v2 formato GabrielAI + projeto Spaces v2 armado (2026-08-03). | — |
+> 17	| ✅ ex-AGORA | **EP02/EP03 no YouTube pela plataforma (Track B)** — CUMPRIDO: EP03 master postado (2026-07-29). Encanamento vivo: `youtube-upload.service` active/enabled, worker resumable dual-source. | ✅ | — |
+> 18	| 🎯 0 | **CRM Suite completo + Marketing (diretiva Sovereign 2026-07-19)** — construir um CRM de VERDADE nativo, pilar por pilar (open-source descartado, AGPL). **Os loops NÃO param até fechar.** SSOT: `docs/roadmap/crm-suite-and-marketing.md`; memória `project_crm_suite_roadmap`. Pilares CRM: Contatos(✅ A4 2026-07-24 — tabela+RLS+CRUD, OTD-CS-001 resolvida)·Empresas·Leads(✅)·Negócios·Tickets·Produtos·Serviços·Pedidos·Compromissos·Caixa-de-entrada(✅)·Chamadas·Reuniões·Tarefas·Playbooks·Listas·Segmentos·Modelos·Snippets. Marketing: AEO·Beta(🔎)·SEO·Campanhas(✅)·E-mail·Redes(✅)·Anúncios·Eventos·Formulários·CTAs·SMS·Intenção·Pontuação(✅)·Análise·Marca. | ⏳ **Fase 0 = BoK `docs/bok/crm-suite/`** (spine de entidades + associações + timeline) ANTES dos pilares — módulo maior, Closed-Loop gate. Depois: fatias na sequência do SSOT. | 🔒 **Próximo:** GO Sovereign p/ arrancar o BoK/blueprint do crm-suite (ou apontar o 1º pilar) |
+> 19	| 1b | **Veo via Vertex AI (service account)** — Amendment 26, FR-SPACES-092..096 (2026-07-15) | ✅ **PROVADO REAL E2E 2026-07-15** (role concedida → witness pago gen `2659d78b`, `engine=veo-vertex`, 720×1280 9:16 8s, identidade preservada Read+Vision MCP, **267 mco** exatos 4263→3996, asset `bb0ec719`, nó `4e8902d2`). code-complete + `/security-review` (1 HIGH SSRF FECHADO) · 584 testes · a chave `AQ.` do Sovereign é Gemini API mas o trial GCP só cobre o Vertex (429 na AI Studio, documentado no README do repo GabrielAI). O pipeline local usa gcloud ADC; servidor usa service account. Auth SA JWT RS256→token (WebCrypto), custo Vertex 267 mco (0,15/s), poll fetchPredictOperation, UI de colar o JSON no pool. | 🔒 **Sovereign:** criar service account no projeto `gabrielai-veo` (role Vertex AI User) → JSON → cadastrar no pool nomeado. Depois: `npx supabase functions deploy canvas-execute veo-poll` + `bun run build` + witness pago com o crédito Vertex real |
+> 20	| 1 | **Vídeo com avatar/referências no Spaces (Veo 3.1)** — Amendment 25, FR-SPACES-086..091 | ✅ **PROVADO E2E EM PROD 2026-07-14** — deploy (Sovereign) + build (feito) + smoke **12/12** + **witness pago** (gen `02994319`, 720×1280 9:16 8s, **178 mco exatos** 4441→4263, **identidade facial preservada** Vision QA ocular; failover GabrielAI-429→legada funcionou) · nó malha `ccd5dba5` | ⚠️ **OTD-SPACES-046 aberta**: chave nova "GabrielAI" (a do Vertex) com prepaid AI Studio ZERADO (429); o witness rodou na chave legada via failover. Sovereign decide se recarrega a nova em ai.studio/projects |
+> 21	| 2 | **Nó de Cadência no Spaces — "além do ManyChat"** (diretiva 2026-07-14) — cadência + automação conversacional p/ TODOS os usuários, BYOK obrigatório, encaixado nos trilhos vivos (autopilot · sequences/nurture-dispatch · scheduled_posts), sem reconstruir | ✅ **BoK 9/9 SELADA 2026-07-15** (`4602b0f`, nó `d0b4fdc8`) — 10 docs + Pattern Conformance (12y/5d/4na); ESTENDE `autopilot_plans` + roteia o tick por `plan_kind` (zero pg_cron novo), reusa `scheduled_posts`/`sequences`/`nurture-dispatch`; inbound IG PROBE-GATED · **✅ Fatia 1 SHIPPADA 2026-07-15** (`6b5412a`, nó `c994c363`): migration `20260716120000` aplicada+verificada · `cadence-plan`/`cadence-run`/tick roteado deployados · `/security-review` NO FINDINGS · smoke 7/7 · build · crítico pegou 2 bugs born-dead pré-deploy | ⏳ Falta: **witness E2E de despacho** (arm→scheduled_posts, via throwaway/UI p/ não publicar real) + Fatia 2 inbound IG (PROBE-GATED FM-CAD-02) |
+> 22	| 3 | **Enxame Sensorial-Preditivo (`predictive-swarm`)** — diretiva 2026-07-14, executar **após** o loop atual. Engine de QA sensorial/psicoacústico: design·cinema·marketing como veículos sensoriais integrados. 3 superfícies MCP: `swarm.initialize_sensory_simulation` (enxames paralelos pontuam deriva de percepção) · `vision.parse_sensory_gate` (Tier 1 varredura periférica CPU-bound / pop-out da Feature Integration Theory → Tier 2 foveal só com sinal de alto valor; expande a "Essência Humana") · `mesh.consolidate_sensory_insight` (traços cognitivos → `mcorch_nodes`/`mcorch_edges`, sem PII bruta, proveniência estrita). Gates duros: telemetria+medição por execução atômica · cobrança SÓ via `deduct_mco_coins` per-tenant (ES256 JWKS contra o `sub`) · hard-fail 402/501 estruturado. Fecha com dashboard 🔄 SYNC UPDATE | ✅ **BoK 9/9 SELADA 2026-07-15** (`dc263fc`, nó `485c0f6e`) — 11 docs + Pattern Conformance (15y/6d/0na); MCP molde vision-mcp (ES256 JWKS), 3 superfícies (initialize/parse-gate Tier1 model-free→Tier2 foveal/consolidate), honesto por construção (score=predição, verdade=`creative_metrics.revenue_cents`) · **✅ Fatia 1 SHIPPADA 2026-07-15** (`65a537b`, nó `9ecba7fa`): Tier 1 gates (loudness ffmpeg + contraste WCAG/APCA + verdict) + tool `vision.parse_sensory_gate` VIVOS no container `mcorch_vision_mcp` (healthy, /health anuncia) · crítico pegou 2 blockers (ffmpeg ausente + SSRF redirect) → fechados + hardened · tsc 0 · vitest 121/121 | ⏳ Falta: `swarm:read` no CHECK do PAT allowlist (migration Fatia 2) p/ PAT externo alcançar; Fatia 2 (fan-out/job store) + Fatia 3 (retrieval) |
+> 23	| 4 | **AI Act Art. 50(2)** — marcação machine-readable de conteúdo sintético (imagem Nano Banana · vídeo HyperFrames · voz Qwen3) publicado em redes | ✅ **Escopo decidido (3 camadas) + BoK 9/9 SELADA 2026-07-15** (blueprint `531e2b0` + suite `c569416`, nó `825088c0`): C2PA (c2pa-rs) + watermark invisível (TrustMark/VideoSeal/AudioSeal) + metadata IPTC (ExifTool) — todas open-source comercial-safe USD=0; integra no spine `creative_assets` (5 colunas aditivas). Pattern Conformance 12/3/6. | ✅ Gate Closed-Loop ABERTO. **Código = fatia futura com GO Sovereign** (prazo AI Act **2026-08-02**, multa Art.99 €15M/3%) |
+> 24	| 5 | **landing-factory** — fábrica de landing pages AUTO-OTIMIZÁVEIS (loop CRO governado), beachhead do norte "agência dentro da plataforma" (2 vídeos Maestros da IA); build → publish → instrumenta PostHog → reverte-se-piora | ✅ **BoK 9/9 SELADA 2026-07-16** (blueprint deepsearch v0.2 + suite `11a5adb`, seal `b65e94b1`; MR14→BR18→PR18→FR20; Pattern Conformance 15/5/1). Decisões Owner: Open Design **v0.10.0 pinado** (single-file export não existe upstream #368) → **asset-bundler próprio** é o P0; hosting **`gcrux.com`** (domínio separado cookie-isolado, nunca `*.mcorch.com`); WordPress-page-first; PostHog self-host/BYOK. **Gate Closed-Loop ABERTO**. | ⏳ **Fatia 1 = código do `landing-bundler`** (inlina img/fonts/@import → data:); registrar wildcard `*.gcrux.com`; OTD-LF-001/003/014 + gate CRO 95% |
+> 25	
+> 26	**Sprint v6.133.0 — Agente do Spaces + esteira do episódio ponta-a-ponta (2026-08-05)** — 19 commits `de5bdb5..9a1fac5` · tsc-app 0 · vitest 765 · `/security-review` NO FINDINGS. Pivô editorial (EP05/A14 guardado; 2 vídeos/semana) + **spaces-agent VIVO** (Amendment 33: chat que monta o canvas, BoK 10/10, sugestões contextuais de custo zero) + **Amendment 34** fechando o gap CLI→UI: nós **Cena Motion** · **Efeito Sonoro** (motor duplo, licença carimbada) · **Montar Master**, todos no `Executar tudo`, com console de execução e barra do agente flutuante. **Repertório profissional** (manual 1.485 l + guia de SFX 386 l + `cinematic-grammar.ts`, 18 regras nos agentes). EP06 com roteiro motion-first (−82% de custo) e 15 narrações IVC (3:24). 5 anticorpos novos — o mais caro: **o autosave da UI apaga escrita server-side**. **Próximo:** o clique em Executar tudo.
+> 27	
+> 28	**Sprint v6.132.0 — MARATONA EP05 A6→A14 + linguagem MOTION SCENES (2026-08-03/04)** — sessão-maratona iterada por parecer: MASTER A14 COMPLETO na Biblioteca (`6e3175b3`, 488s, QA A/V verde) = VFX título + 19 presenters BLOCKBUSTER (frota 19/19, débito exato 5.073+267+267; QA A/V pegou p47 muda) + 22 cenas-conceito em MOTION SCENES v6 (6 peças na Biblioteca; veredito Sovereign: motion > telas gravadas) + narração 100% voz IVC Sovereign eleven_v3 tom NOVIDADES (EL Creator, pool único provado) + trilha v2 D-major + CTA + créditos template. Síntese: skill `motion-scenes` + contratos (spaces-agent dirige · engineer-spaces executa · creative-director produz) + Scratchpad Harvest = PHASE 1b do /handoff + QA A/V sync como lei + playbook dark-channel + pivô editorial novidades + blueprint ai-news-brief (BoK-gated). Handoff node `2622eece`. **Próximo:** parecer Sovereign no A14 → thumbnail ciano → DOMINGO; retake opcional p14; poda do HANDOFF (WARN 23.8k); spaces-agent segue AGORA gated.
+> 29	
+> 30	**Sprint v6.129.0 — Estratégia DEFINITIVA de shorts orgânicos + formato React provado + fábrica Spaces (2026-07-30b)** — correção-mãe do Sovereign no meio da sessão: as 6 referências coladas ERAM os deepsearches → estratégia promovida a DEFINITIVA v1 (§D1..D7). Workflow `wf_edbe2bc3-a59` (10 agentes, 3 planos adversariais) + loop de execução 7/7: witness react `split_grid 2v` (asset `1a98cef3`, 12 mco, Vision QA — corte EP01 + Gabriel AI reagindo) · 8 cortes EP02 (detect 3 mco, beats reais) · projeto Spaces "React Gabriel AI" `024e1c03` armado pelo engineer-spaces (13/13 vs factories, zero pago) · tabela de vídeos restaurada no /dashboard/youtube (Short `bxGA7QWvH2I` 118 views > EP03 87 — 1ª evidência do funil) · pad TTS 0,5s (silencedetect 0,633s) · smoke cadência 7/7 + anticorpo FR-CAD-006 · EP03 confirmado ausente (upload=Sovereign). Memória nova: anexos de chat não chegam ao Sovereign → mídia via Spaces→Assets. 6 commits `61022c3..06a49f6` · tsc-app 0 · SEAL ALLOWED (12/12) · malha **19120** · nó `aa7e1dc9`. **Próximo:** PAUSE → EP05 formato tutorial (parecer §EP05 no HANDOFF) → cadências + SEO/AEO.
+> 31	
+> 32	**Sprint v6.128.0 — TikTok App Review destravado + pipeline de Publicações do Spaces (2026-07-30)** — sessão pontual do Sovereign, 3 arcos. **(1)** TikTok reprovado 4× ("Website URL = login page; provide test account"): conta `tiktok.review@mcorch.com` provisionada (viewer · email pré-confirmado · onboarding pré-completo · 1500 mco) + login PROVADO E2E no /auth público real. Achado material via `agent-browser`: botões social login atrás de `?devLogin` = invisíveis na URL do formulário. **(2)** Flag admin `public_app_settings` (aba **Acesso** em /dashboard/admin, world-readable+CHECK allowlist, RLS admin-write, auditada, 2 switches: login social ≠ cadastro) substitui o param. Textos de submissão (999-char scopes + 120-char reason) montados; **Sovereign gravou o vídeo e enviou a re-submissão**. **(3)** Pipeline de Publicações: aba **Publicações** no modal do asset + trigger cascade fecha o dead-end 409 `already_enqueued` + **sync bidirecional** (apagar do calendário SOME de toda superfície). Revisão adversarial ultracode (56+20 agentes) pegou 2 P0/P1 nascidos-mortos (handler 409 = código morto pois `functions.invoke` põe non-2xx em `error`; `activeForSelected` sem `published`) → corrigidos+provados E2E. 4 commits `266d3f0..7d4add3` (→ `2c39bf1` seal) · 3 migrations · 1 edge fn · `/security-review` NO FINDINGS ×3 · tsc 0 · eslint 0 · vitest +20 · SEAL ALLOWED (16/16) · malha **18985** · nó `59c4d1c2`. **Próximo Sovereign:** aguardar veredito TikTok (se aprovar, desligar a flag social em /dashboard/admin → Acesso); foco INALTERADO = cortes/shorts orgânicos (2 planos de deepsearch pendentes).
+> 33	
+> 34	**Sprint v6.107.0 — Meta app-review privacidade + WhatsApp rail E2E + AI Act badge/reframe + CRM seed (2026-07-18)** — sessão-maratona interativa (Sovereign ao vivo no console do Meta). **(1)** `meta-privacy` (deauth + data-deletion signed_request HMAC fail-closed) — as 2 URLs de callback prontas p/ submissão do app-review; `/security-review` NO FINDINGS · smoke 4/4. **(2) WhatsApp Cloud API rail E2E:** fix decisivo `whatsapp-webhook verify_jwt=false` (rail inbound estava morto) + `POST subscribed_apps` + `meta_config` fiado (token **EAA**, não IGAA); número CLOUD_API/LIVE. Templates (create/list/delete, E2E provado) + envio (template/texto livre, plumbing provado até o Meta). **(3)** IG token manual (`connect-instagram-token`). **(4)** AI Act Fatia 2: badge "gerado por IA" (WS-C) + reframe re-mark (WS-D, RPN 294). **(5)** CRM/inbox blueprint-semente deepsearch (`docs/bok/crm-inbox/`, licenças + AI Act, gate FECHADO até BoK 9/9). 11 commits `15810be..2de10cb` (→ `b4f57ba` seal) · tsc 0 · vitest 634 · SEAL ALLOWED (16/16) · malha 9135 · nó `aa4ed885`. **Próximo Sovereign:** aprovação Meta do `promo_semana` → testar envio real; `/bok-scribe crm-inbox` + jurídico; rotação de credenciais expostas no chat (EAA/IG); agente de resposta a comentários (YouTube).
+> 35	
+> 36	**Sprint v6.100.0 — Assets: seletor de formato + pré-visualização fiel + modal responsivo (2026-07-14)** — diretiva Sovereign "UI ruim nos assets + previsualização perfeita por tipo". Amendment 21 (FR-SPACES-075..078) + SOP; `format-specs.ts` SSOT (números do seed channel_profiles, paridade 15/15); `PublicationPreview` 10 chromes fiéis (Reels/Stories/Short 9:16 + Feed 4:5/1:1 + Carrossel + Pin 2:3 + link-card + YT vídeo/comunidade + text-post, render 17/17); `AssetDetailDialog` picker + preview publicando imagem+vídeo via publish-space-asset; modal mobile-app-like (Vision QA pegou grid blowout); inspector do canvas reusa o preview. 4 commits `56bf601..0f543af` · tsc 0 · eslint 0 · +32 testes · SEAL ALLOWED (7/7) · malha 9107 · nó `66952b93`. **Próximo:** OTD-SPACES-044 (carrossel IG agendado) · OTD-SPACES-043 (reframe server-side p/ pixel-parity) · trilhos Stories/YT-comunidade (app-audit).
+> 37	
+> 38	**Sprint v6.99.0 — Motor Viral Quality + ASR self-host + pool multi-key BYOK (2026-07-14)** — repurpose completo (detector Hormozi + overlay motion-graphic, 3 shorts EP01 provados prod); ASR whisper.cpp US$0 + reconciliação roteiro-autoritativa; rota host-media (206 seek); pool multi-key BYOK (Amendment 20) p/ mineração a ~US$0; estratégia de cadência v1. 6 commits `d4972c7..623fad9` · /security-review NO FINDINGS ×4 · SEAL ALLOWED (8/8) · malha 9105 · nó `d98767ea`. **Pendente Sovereign:** aplicar migration pool + deploy canvas-execute + 3 chaves Gmail + aprovar cadência + GO publicar EP01 no YouTube.
+> 39	
+> 40	**Sprint v6.98.0 — YouTube Studio (Fatia 1) + front-door host-local do Repurpose (2026-07-13)** — sessão interativa "colocar a ferramenta pra funcionar" com o Usuário Zero. **(1)** Painel `/dashboard/youtube` (`youtube-data` lê vídeos+métricas Data v3+Analytics v2, token per-user server-side; escopos alinhados aos 3 registrados no Google, analytics adiado até habilitar a YouTube Analytics API; mapa API exaustivo 13rec/175props/52metrics/33ações via workflow multi-agente + Pattern Conformance 21 padrões + SOP). **(2)** Front-door host-local do Repurpose **admin-only** `/dashboard/repurpose`: o master (documentário 1,3GB) vai pro **disco do host** furando o cap de 50MB do Supabase free; `host-upload-server` (loopback 3220, nginx `/api/host-upload`) recebe **upload chunked** de 80MB furando o cap de 100MB do Cloudflare; JWT+admin-gate+streaming; worker lê `bucket=local` realpath-contido **sem copiar 1,3GB**. **yt-dlp do host CONFIRMADO bloqueado** pelo YouTube (bot-check no IP de datacenter). **(3)** fix legenda drawtext (truncagem por bytes-extra UTF-8 → padding). **EP01 real 1,3GB → 5 shorts 9:16 (1080×1920) provados por Vision QA** (reframe centralizado + legenda completa). 6 commits `e174988..1730c4a` · `/security-review` **NO FINDINGS ×3** · Phase 5c **SEAL ALLOWED** (8/8) · malha **9102** · handoff `9f7b191a`. **Pendente (próxima):** cadência TikTok com os 5 cortes (sai **privada até a auditoria de rebranding aprovar**) + manual LinkedIn/IG · reconectar YouTube (test-user) + habilitar YouTube Analytics API p/ métricas · reframe subject-aware (OTD-VR-002) p/ planos letterboxed · BoK youtube-studio 9/9. **Lições:** (a) Vision QA em mídia REAL é o detector honesto — pegou legenda truncada que passou em toda checagem estrutural (5 clips 9:16, durações exatas) mas estava visualmente cortada; (b) caps de plataforma (Supabase 50MB, Cloudflare 100MB) exigem furá-los materialmente (host-disk + chunked), não assumir; (c) o gate de segurança do harness bloqueou editar nginx de produção — respeitei (Lei 4), o Sovereign colou o bloco, eu validei (`nginx -t`) + reload + provei a rota E2E.
+> 41	
+> 42	**Sprint v6.97.0 — Motor de repurpose de vídeo: 1 master → N shorts + carrossel IG (2026-07-12)** — diretiva Sovereign "construa a metade que falta reusando a que existe": o MCORCH distribuía mas não produzia cortes. Sessão-maratona interativa (Sovereign aplicou 3 migrations ao vivo + testou cada gate). **BoK-first (Closed-Loop):** blueprint `docs/bok/video-repurpose/` fundamentado em 10 pointers verificados file:line + no mapa do repo `gabrielZarattini/GabrielAI` (o INVERSO — N takes Veo→1 master; fonte do master + schema de metadados + filosofia data-driven). Correções ao snapshot: segmenter=**FR-CP-012** (não OTD-CP-011); OTD-CP-009 fechada (imagem); youtube Pilar I=montagem; carrossel existente=PDF/LinkedIn. **(Fatia 1 VIVA)** `source_module='external'` + `ingest-external-asset` owner-scoped + smoke 5/5. **(Fatia 2 VIVA E2E)** worker `video-repurpose-bridge` + `segment-core` (trim frame-accurate + reframe 16:9→9:16/1:1 center-safe + legenda queimada; guarda OTD-VR-006 no read-time); **3 clipes reais provados por Vision QA** (timestamp confirma o trim). **(Fatia 3 E2E provada)** `carousel-core` (key-frames→slides 4:5) + branch `media_type=CAROUSEL` no publish-social + seam `publish-space-carousel`; **3 slides reais**. **Distribuição reusada:** cortes/slides viram `creative_assets` que o nó "Publicar em Rede Social" (**OTD-SPACES-036** `space_publish_variants`, também landado) consome. **Witness LoRA** bloqueado só em crédito Replicate BYOK (plumbing provado). Rail 100% grátis US$ 0 · `/security-review` **NO FINDINGS ×3** · Phase 5c **SEAL ALLOWED** (8/8) · mesh **9097** · handoff `f050959c` · 6 commits `ac5ca86..831f5cc`. **Pendente (ação Sovereign):** deploy Fatia 3 (`npx supabase functions deploy video-repurpose-run publish-social publish-space-carousel`) · subir master real do EP01 via Fatia 1 → rodar worker → ver cortes+carrossel do documentário real · auditoria de app IG/TikTok destrava o publish real. **Próximas fatias:** 4=mapeador metadado→legenda nativa+HTML WP · 5=fiar na distribuição E2E. **Lições:** (a) verificar cada pointer materialmente pegou que o repo andou (FR-CP-012, OTD-CP-009 fechada) e que o GabrielAI é o INVERSO — não molde do segmenter; (b) Vision QA em mídia REAL de produção é o único detector honesto (pegou truncamento de legenda longa → OTD-VR-007); (c) reusar os trilhos (o sink que eu tinha acabado de criar) fechou o loop ingest→corte→publicação sem reconstruir nada.
+> 43	**Sprint v6.96.0 — Voz clonada self-host COMPLETA + Modo Expressivo + motion design do canvas (2026-07-09/10)** — sessão-maratona interativa (Sovereign testando ao vivo; 13 commits `578f02e..eb422fd`). **(1) Rail de voz US$ 0 VIVO** no nó Clone de Voz (OTD-VOICE-001 fechada por veredito auditivo): Qwen3-TTS 0.6B+1.7B no host · fila `video_renders` engine `qwen3-voice` · worker `voice-bridge.service` com heartbeat anti-reaper (bug witnessed: reaper de 45min re-claimava job vivo) · multi-amostra FR-SPACES-059 (principal + 5 clipes ≤7s, ffprobe fail-closed) · perfil ICL `.qvoice` + `-ref.wav` (x-vector reprovado pelo ouvido; grafts são model-bound) · smoke **12/12**. **(2) Modo Expressivo**: 1.7B + assets `.expr`, witness RTF 13,9 "composed 3 spans", normalizador da sintaxe do Sovereign (`{happy}`/`<#0.5#>`/`(gasps)` → gramática real; tag desconhecida NUNCA falada), roteiro 20k, "Gerar roteiro com IA" (select pela regra perene). **(3) Reparos**: reunion migration `20260710170000` (drift de 07/jul derrubara `avatar-studio` do guard — áudio fora do spine EM SILÊNCIO; anticorpo: SEMPRE checar `error` de `supabase.rpc`, ele não lança) + aba Áudios na Biblioteca + Histórico `generate_voice` + backfills. **(4) Motion design Amendment 19**: motion=telemetria (processing/transmitting/established), FlowEdge com partículas, 1 seam p/ 12 node types, frame-diff provou. **(5) Regra perene BYOK** (`useConfiguredProviders` da view mascarada; memória `feedback_byok_only_available_options`) + ElevenLabs IVC multi-amostra + **F5-TTS/Fish Speech REJEITADOS** (pesos non-commercial). 2× `/security-review` NO FINDINGS · Phase 5c **SEAL ALLOWED** (15/15) · mesh **9094** · handoff `8c1f0e7b`. **Lições:** (a) o aside do /security-review pegou enum CHECK errado no INSERT do histórico — reviewer independente paga sempre; (b) o WAF do Management API devolve HTML-challenge (não JSON-error) em DDL grande com `DO $$` — gate de apply DEVE validar o corpo + prova material; (c) fail-soft sem log = falso-sucesso de um dia inteiro.
+> 44	**Sprint v6.83.1 — Fix Assets: exibição de mídia privada owner-scoped em TODO o ecossistema (2026-07-03)** — diretiva direta do Sovereign ("a maioria das mídias sumiu; garanta E2E que aparecem em todos os lugares"). **Diagnóstico refutou a hipótese de lixo de smoke (Lei 1):** os 90 assets são TODOS do User 0 (`ada39fae`, saldo 4571). Causa real: buckets viraram privados+owner-scoped (correto — fechou enumeração cross-tenant), mas o app resolvia URL **pública** (400 em bucket privado) e o cliente não assinava objeto com prefixo ≠ uid (`owner=NULL` service-role). Escopo: 84 creative_assets + 68 vm_canvas_executions + 32 graphs + 1 space. **Fix:** migration `20260703030000` (3 policies owner-scoped 4-rotas `=auth.uid()` + triggers de id server-side INSERT+UPDATE anti-claim/PK-swap + data-repair is_public) + fix bug vivo `canvas-execute:555` + lib `asset-url.ts` (`toDisplayUrl`/`useDisplayUrl` re-assina no render, cura pública-morta E assinada-expirada) + `<StorageImg/Video/Audio>` em **13 superfícies** + `resolveAssetUrl` chaveia pelo bucket real. **Segurança:** `/security-review` independente **CLOSED 9/10** — achou e me fez fechar 1 HIGH cross-tenant que a 1ª versão introduziu (claim via `vm_canvas_projects` id-squat + PK-swap). Cross-tenant **BLOCKED ao vivo** (throwaway: sign/claim/PK-swap). **Prova:** signing antes FAIL→SIGNED 200 · tsc 0 · build+deploy · deploy canvas-execute · **E2E local determinístico: Biblioteca 67/71 imgs+19 vídeos, Canvas 17/17+4 vídeos, 0 dead-public, Vision-QA APROVADO ×2 + confirmação ocular (90 assets)** · Phase 5c **SEAL ALLOWED** (6/6) · mesh **9047** · handoff `6e2b32b2` · commits `6e5e005`/`459cd25`. **Lição:** o classificador do harness bloqueou o apply de DDL sob /loop genérico → respeitei o gate (Lei 4), o Sovereign rodou `!`, e o `/security-review` ANTES do apply-final pegou meu próprio HIGH — o gate de RLS provou seu valor de novo (FMEA-011). SOP `private-bucket-asset-signing.md`.
+> 45	
+> 46	**Sprint v6.83.0 — Spaces 2d compose VIVO E2E: drift do Higgsfield resolvido (OTD-SPACES-003) (2026-07-03)** — loop autônomo fechou a única pendência real da Fase 2d. **Nunca chutei semântica de provider (Lei 1):** sonda 422 zero-custo (type-poisoning revela schema Pydantic sem enfileirar job pago) provou que `soul/compose` **nunca existiu** — path é `soul/{mode}` (mode literal `reference|character|standard`), refs exigem `custom_reference_id` cunhado async (`/v1/custom-references`, fila de minutos, incompatível com janela sync). **Fix:** compose migrado p/ **OpenRouter Nano Banana multimodal** (motor da 2b já provado), custo re-pinado 18→10 (o 18 precificava ficção), BYOK openrouter fail-closed (gate C4), `generateHiggsfield` throw honesto p/ compose (OTD-SPACES-005). **Achado colateral P1:** `canvas-assets` privado desde a criação → `getPublicUrl` = URLs 400 mortas em 4 call-sites → tudo assina (server 7d, refs client 365d). **Anticorpo:** `smoke-higgsfield-schema.ts` 7/7 pina o contrato vivo (drift = exit 1). **Prova:** smoke Spaces **31/31** (C3 refund+pinned 10 · C4 402 pré-débito) · vitest **398** · tsc 0 · deno check · **E2E pago** (space `4909d024`, generation `cc789ada` done, PNG 919KB URL assinada HTTP 200, saldo 4581→4571 exato, Vision QA high) · review 3-lentes inline (Opus, após créditos Fable esgotarem) · Phase 5c **SEAL ALLOWED** (6/6) · mesh **9045** · handoff `8733cab`. **Direção Sovereign registrada — OTD-SPACES-007:** conector per-user do **MCP oficial Higgsfield** (`mcp.higgsfield.ai`; Bearer BYOK=catálogo, conta=OAuth com DCR+refresh provados) → 30+ modelos auto-descritivos atrás de 1 integração; BoK-gated antes do código. **Pending:** OTD-SPACES-004/006/007 · Workflow Apps/FX/multi-page (Fase 2) · voz clonada (biometria) · app-registration YT/TikTok · Universe cutover. **Lição:** a sonda de schema por payload-inválido é a técnica canônica p/ fechar drift de provider externo sem gastar — e vira sentinel permanente, não one-off.
+> 47	
+> 48	**Sprint v6.82.1 — Sprint Spaces 1b→2d SELADO: canvas pago com 4 modalidades (2026-07-02)** — 6 iterações autônomas do loop pós-GO Sovereign. **(1b LIVE)** GO executado: migration `20260702190000` aplicada+registrada+provada (DDL 8/8) · **drift do ledger de migrations FECHADO** (10 registradas por sonda DDL, audit exit 0) · fix ordem de guards · smoke 13/13 · E2E pago magic_prompt (saldo −1 exato, Vision QA high). **(2a vídeo)** ledger-first no submit + webhook hash-safe (SHA-256-only, migration `20260702210000`) + supressão do deduct legado; review **NO P0/HIGH** (MEDIUM+2 LOW corrigidos); **canvas→vídeo REAL** MP4 11.3MB via webhook Higgsfield, saldo −40 exato, Vision QA no vídeo (space-demo `51b229cf` vivo). **(2b)** References picker upload real, cap honesto 4 = verdade do server. **(2c voz)** 8 vozes stock via `tts-speak` com JWT do usuário; review **APPROVED** + F1 pinado (gate A4); WAV 9s real, saldo −2 exato (space-demo `1d77b500` vivo). **(2d composer)** código-completo + **ACHADO**: Higgsfield dropou `mode=compose` → compose legado do Canvas Studio quebrado por API drift; estorno integral provado; **OTD-SPACES-003**. **Prova:** smoke **30/30** · vitest **398** · tsc 0 · SOPs S14-S32 ANTES do código · Phase 5c **SEAL ALLOWED** · mesh **9043** · handoff `f85d3cf4`. **Pending:** OTD-SPACES-001/002/003 · Workflow Apps/FX/multi-page (Fase 2) · voz clonada (biometria, Fila) · app-registration YT/TikTok (Fila). **Lição:** parar no erro material do provider (compose 422) em vez de chutar semântica = Lei 1 aplicada a APIs externas; e o pin de custo contra payload forjado (F1/A4/C3) virou padrão obrigatório de todo custo declarado.
+> 49	
+> 50	**Sprint v6.76.0 — Spaces Fase 1b: execução runGraph + ledger generations CÓDIGO-COMPLETO, apply em prod GATED (2026-07-02)** — loop re-armado, ciclo fechado completo até o portão de produção: mapeamento ultracode `wf_b4abf175-410` (24 contradições BoK↔código resolvidas) → SOP Lei 2 `spaces-graph-execution.md` (S1-S13) → migration `20260702190000` (ledger `generations` + RPCs atômicas `begin/finalize_space_generation` service-role-only, **NÃO aplicada**) → branch ledger-first exclusivo no `canvas-execute` (422 pré-débito · cap IN-list · `refund_pending` honesto · done-fallback) → client `useGenerationLedger`/clusters/Estimar+Rodar → **/security-review independente SOUND** (4 achados corrigidos, incl. `self-heal-spaces.sh`). **Prova:** vitest **17/17** (+ mirror-parity mecânico) · deno check · eslint 0 · tsc 0 · Phase 5c **SEAL ALLOWED** (11/11) · mesh **9034** · handoff `209cbcd8`. **🔒 Pendente GO Sovereign:** apply da migration (classificador negou 4× sob modo auto — `! bash scripts/qa/apply-spaces-1b-migration.sh` destrava) → deploy fn → smoke 8 gates → E2E+Vision QA. **Achado:** 6 migrations `202607*` aplicadas-mas-não-registradas no ledger remoto (db push INSEGURO). **Lição:** o portão de permissão do harness é um Owner-gate real — 4 recusas respeitadas sem contorno é o protocolo de Lei 4 funcionando.
+> 51	
+> 52	**Sprint v6.75.0 — loop it.2-3 (selo final): reward_weights config-as-data + Spaces Fase 1a canvas vivo (2026-07-02)** — **(it.2)** NFR-VA-010: pesos do reward do Viral Autopilot viram DADO por plano (`autopilot_plans.reward_weights` jsonb; `resolveRewardConfig` valida+normaliza, inválido→fail-safe; auditoria `weights_source`). /security-review NO FINDINGS · smoke **16/16** (`6058e78`). **(it.3)** Spaces Fase 1a: **canvas infinito 72/28 VIVO** em `/dashboard/spaces` (home + `:id`), Spotlight 26 tipos, conexão tipada, persistência `spaces.graph` jsonb RLS-own — zero execução/ledger (Fase 1b depois). /security-review NO FINDINGS · vitest 5/5 · **E2E browser User 0 (DB graph=2 nós) + Vision-QA APROVADO** (`9ea6ac0`). **Prova:** tsc 0 · Phase 5c **SEAL ALLOWED** (6/6) · mesh **9033** · handoff `13fd6fe0`. **Loop PARADO** (janela alta + Fatia 1b grande à frente). **Pending:** Spaces Fase 1b (`runGraph`→`canvas-execute`+ledger+clusters — fecha canvas→conteúdo pago) · Universe cutover (Sovereign) · V4-2 (experiment-gated). **Lição:** selar antes de uma Fatia grande protege trabalho durável sem desperdício (Lei 3 calibrada).
+> 53	
+> 54	**Sprint v6.74.0 — spaces-evolution BoK 9/9 + loop re-armado it.1: B5 Pauta de Receita (2026-07-02)** — **(1)** A pedido direto do Sovereign, a única suíte BoK incompleta foi fechada ANTES de continuar o roadmap: 06/07/08 grounded no scaffold Phase 0 promovido + **Pattern Conformance §11** (4 yes · 8 deferred nomeados · 9 n-a) + renames canônicos → **25/25 suítes verdes**, seal `8f5fd3fd` DERIVES_FROM viralmind, **BoK Gate do Spaces Fase 1 ABERTO** (`4a8fee0`). Verificação mecânica corrigiu 2 imprecisões pré-commit (Lei 1). **(2)** Loop autônomo re-armado (prompt canônico) — it.1 = **B5 Pauta de Receita FR-VA-031 (HITL)**: SOP Lei 2 → ranking puro vitest 7/7 → seção na AutopilotPage → browser-verify User 0 (linha #1 ↔ `content_library e27a09e7`) → **Vision-QA APROVADO high** (`367db9b`). **Prova:** tsc 0 · Phase 5c **SEAL ALLOWED** (8/8) · mesh **9032** · handoff `10d8c70b`. ⚠️ Workflows quota-blocked até 4:20am → execução inline. **Pending:** `reward_weights` config-as-data (NFR-VA-010) · Spaces Fase 1 MVP · V4-2 · witness G7 imagem multi-canal no próximo ciclo pago.
+> 55	
+> 56	**Sprint v6.73.4 — Loop it.4 (selo final): B4 EWMA multi-ciclo no analyze (2026-07-02)** — reward sobre janela M=5 ciclos peso 0.5^idade (anti-thrash; janela lembra, plano virgem não inventa; auditoria `reward_vector.ewma`). Smoke **13/13** (L7: evidência acumulada 7 vence recente 3 — single-cycle flipava) · deployado · SOP amendada · Phase 5c SEAL ALLOWED · mesh **9023** · handoff `1ddd4e86`. **Loop PARADO (janela ~95%).** Restam desbloqueados: B5 pauta de receita (FR-VA-031) · V4-2 · `reward_weights` config-as-data.
+> 57	
+> 58	**Sprint v6.73.3 — Loop it.2-3: Vision-gate mecânico nos 2 harnesses (2026-07-02)** — diretiva 2026-06-26 fechada: `audit-canvas-ui` (veredito APROVADO obrigatório, fail-closed sem PAT, print público `dist/canvas_e2e_latest.png` REMOVIDO — era dashboard logado em URL pública) + `e2e-user-zero` (`lib/vision-gate.ts`, REPROVADO→Finding P1/ux→NO-GO, fecha heurística deferida (c)). **Prova:** run E2E prod APROVADO high cost 0 · **adversarial: PNG branco→REPROVADO→P1** · vitest 6/6 · tsc 0 · Phase 5c SEAL ALLOWED · mesh **9022** · handoff `8ddca90b`. Commits `8a41457`/`e511862`/`adf849b`. **Pending:** B4 EWMA · B5 pauta de receita · V4-2.
+> 59	
+> 60	**Sprint v6.73.2 — Loop it.1: render-decoupling resolvido por arquitetura + G7 imagem-pilar + fan-out hygiene (2026-07-02)** — iteração 1 do loop re-armado (instância standby assumiu após o stop limpo da primária v6.73.1; anticorpo de concorrência: Monitor 30s + cessão enquanto a primária vivia — zero colisão). **(1) Achado material:** o item "render-decoupling YT/TikTok" da charter era STALE — o ciclo pago `77e02fca` já produzia `channel_variants` de vídeo `reused_master` p/ 7 canais (1 master 9:16/ciclo via reshaper + kick do video-bridge); último salto = OAuth/app-registration (Fila). **(2) Fatia G7** (`d16ca88`): imagem-pilar resolvida por âncora `metadata.pillar_run_id` (fix do `gap` das 5 surfaces de imagem — autopilot nunca cunha campaign; `campaigns` é FK) + fallback de campanha preservado. **(3) Fan-out hygiene** (`autopilot-run`): plataformas sem step não pré-debitam (antes: 10 mco em run knowledge_mesh-only) + telemetria. **Prova:** SOPs Lei 2 amendadas ANTES do código · deno check 3/3 · tsc 0 · 3 fns deployadas · smoke-reframe-image **18/18** (cenário B campaign-NULL draft-only) · regressão reshape-pillar PASS · Phase 5c **SEAL ALLOWED** (4/4) · mesh **9021** · handoff `b31c1336`. **Pending:** próximo ciclo pago testemunha imagem multi-canal `ready` em prod · confirmar sumiço dos 4 scheduled_posts do ciclo (limpeza manual?) · B4 EWMA · B5 pauta de receita · V4-2 experimento · wirar Vision QA em audit-canvas-ui/e2e. **Lição:** provar o estado no DB vivo ANTES de codar matou uma fatia inteira planejada errada (re-render por sub-run) e revelou os 2 bugs reais que valiam o código.
+> ```
+
+## 🤖 Claude *(02:50:47)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm waiting on a couple of things to move forward — the TypeScript compilation task result and some specific metrics from the Knowledge Mesh, particularly the malha counts from the recent task state records. Looking at the available data, the most recent entries don't explicitly mention the malha numbers I need, so I'm checking back through earlier records to find the right reference point.
+
+</details>
+
+
+## 🤖 Claude *(02:50:48)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O brief está quase pronto, faltando apenas o miolo do Record 2026-08-05 com a malha e pendências, além do resultado do gate de tipos. Vou completar essas partes agora.
+
+</details>
+
+
+## 🤖 Claude *(02:50:48)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 119,
+  "limit": 85
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 119	| Console + barra do agente | progresso em streaming do stdout · pointer-events corrigido · aurora |
+> 120	| Narração EP06 | 15 falas IVC, 3:24, arco emocional declarado, QA por whisper |
+> 121	
+> 122	**Achados que viraram anticorpo (cada um custou tempo real):**
+> 123	1. **Playwright engasga sob bun** — render travou >10min no que o probe em Node fez em 77s. Passo de frames virou subprocesso node.
+> 124	2. **Autosave da UI APAGA escrita server-side** — last-write-wins, debounce 3s, sem comparar `updated_at`. Comeu 8 nós de voz e as durações da narração; o 1º lote de renders saiu com `beats=0`. É a prova material de "gerar pelo nó".
+> 125	3. **LUFS não mede transiente curto** — EBU R128 usa blocos de 400ms; um clique de 240ms deu −70 LUFS (silêncio aparente) com pico real de −0,18 dB. Em som curto a métrica é PEAK.
+> 126	4. **`register_creative_asset` tem allowlist de `source_module`** e a chamada era fail-soft silenciosa — 4 vídeos ficaram órfãos da Biblioteca sem ninguém perceber.
+> 127	5. **IA generativa é estruturalmente ruim em hard SFX** — difusão latente a ~93ms/token não acerta ataque de <2ms. Corrigiu a recomendação que eu mesmo tinha dado.
+> 128	
+> 129	**Limpeza de fechamento (a pedido do Sovereign):** 31 assets + 15 jobs + 4 threads do projeto removidos, 8 outputs zerados, **11 mco estornados**. Projeto reconstruído e auditado com 4 gates verdes para o primeiro Run All ponta-a-ponta.
+> 130	
+> 131	**Survival Laws Self-audit:** Lei 1 ✅ (todo claim com witness — render id, LUFS medido, saldo exato, frame olhado) · Lei 2 ✅ (SOPs `gerar-pelo-no-nao-pelo-cli`, `repertorio-producao-profissional`, `biblioteca-sfx-como-farmar`; Amendments 33/34 antes do código) · Lei 3 ✅ (poda do HANDOFF no início; seal no limite da janela) · Lei 4 ✅ (ORO declarado; habilitar serviço foi ação do Sovereign).
+> 132	
+> 133	## MARATONA EP05 — A6→A14 + Motion Scenes Record (2026-08-04)
+> 134	
+> 135	**ORO:** Operator = MCORCH Agent · Reviewer = Sovereign (parecer por take, ~15 rodadas) · Owner = Sovereign (marca, saldo, canal).
+> 136	
+> 137	**Scratchpad Harvest (PHASE 1b — estreia):** workdir da sessão = `/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/3f7d28b7-c49d-499c-8107-083d3f48925c/scratchpad` (+ o da sessão anterior `2cf8e553…/scratchpad/master` com segs/masters). **Promovidos:** todos os runners → `scripts/ep05/` (motion-*.html, render-*.ts, assemble-v6..v14, retake-fleet, gen-ivc*, screencast-v4, hud/nebula/callout) · entregáveis → Biblioteca (A13 `40d954c1`, motion v6 `0636b31d`, 6 peças, 20+2 takes, IVC/A-B voz). **Descartáveis:** frames intermediários, wavs de mix, venvs. **Pendente no workdir:** `master_A14.mp4` (assemble rodava no seal — retomada no FIRST ACTION).
+> 138	
+> 139	**Aprendizados-chave (sintetizados em skills/agents/SOPs):** motion > screencast (skill `motion-scenes` + contratos spaces-agent/engineer/creative-director) · QA A/V sync é lei (whisper pegou p47 muda + redundância cena 1↔5) · ring de perímetro nunca-rotate · edges trackeiam floats · CDN mata render headless · eleven_v3 audio tags na voz IVC · ElevenLabs pool único (free não clona; Creator $22 assinado) · guard anti-legenda no prompt Veo · Scratchpad Harvest agora é protocolo (`docs/processes/scratchpad-harvest.md`).
+> 140	
+> 141	**Survival Laws Self-audit:** Lei 1 ✅ (todo claim com asset id/commit/saldo exato; QA A/V material) · Lei 2 ✅ (SOPs scratchpad-harvest; skill motion-scenes; blueprint ai-news-brief BoK-gated SEM código) · Lei 3 ✅ (seal a ~90% da janela por alerta do Sovereign; podas por path/hash a sessão toda) · Lei 4 ✅ (ORO declarado; gates Sovereign respeitados — spaces-agent segue gated).
+> 142	
+> 143	## EP05 MASTER — produção áudio EP01-04 + trilha Lyria + VFX título Record (2026-08-03)
+> 144	
+> 145	**ORO:** Operator = MCORCH Master Execution Agent · Reviewer = Sovereign (parecer ocular/auditivo a cada iteração) · Owner = Sovereign (marca EP05, saldo mco, canal Gabriel AI).
+> 146	
+> 147	**Sessão-maratona de PRODUÇÃO de vídeo — o master do EP05 evoluiu por várias iterações guiadas por parecer do Sovereign; TODOS os entregáveis vivem na Biblioteca `/dashboard/spaces/assets` (mídia grande não vai ao repo).** O código tocado no repo foi mínimo: só o teto diário do `canvas-execute`.
+> 148	
+> 149	**Geração dos 32 segmentos sintéticos (projeto `18a21002` em `vm_canvas_projects`, por SCRIPT com JWT do User 0):** runner scratchpad dispara `canvas-execute` (generateImage síncrono · imageToVideo Veo→`veo-poll`) e `generate-voice` (voiceClone qwen3-local, 0 mco, async→`video_renders`). Contrato de posse: `project_id`+`node_run_id` sem `space_id` valida `vm_canvas_projects.user_id`. **Gate testemunha-primeiro pagou-se 2×:** (1) Nano Banana SEMPRE devolve 1:1 (`generateOpenRouter` não passa aspecto ao Gemini) → b-roll nano→firstFrame nascia quadrado em pillarbox + Veo queimava a linha `Audio:` como legenda → **redesenho: b-roll vira Veo texto→vídeo 16:9** (charRef nos 3 de retrato, texto puro nos 4 abstratos), strip da linha Audio; (2) `text_to_video` só aceita {4,6,8}s (5s = 422+estorno). Custo total ~6.620 mco; 19/19 apresentador + 7/7 b-roll + 6/6 voz Vision-QA.
+> 150	
+> 151	**Áudio — a jornada A2→A5 (o A2/A3 falharam por sync):** o Sovereign reprovou o overlay de narração sobre apresentador mudo ("fala fora de hora"). Wav2Lip self-host CPU testado (torch 2.13 + s3fd + wav2lip_gan, 4m23s/clip a 360p) e **reprovado** (boca datada, host sem GPU). Estratégia final = **EP01-04**: regerar os 19 apresentadores com `veoGenerateAudio:true` (áudio Veo nativo = lip-sync perfeito por construção) — bateu no cap diário aos 8/19 (spent_today 9.801/10.000, guardrail MCORCH `enforceDailyCanvasCap`, NÃO Google) → cap admin 10k→100k + deploy → 11 restantes. Narração clonada **mais grossa** (`asetrate=24000*0.90,atempo=1/0.90`+highpass+comp) SÓ nas cenas mudas (regra: cena com som = só áudio Veo + trilha). Timeline **dirigida pela narração** (cenas mudas estendidas com tpad p/ caber a fala → sem bleed) + áudio colocado por-offset sobre base silenciosa (NÃO confiar no áudio do concat — vários segs sem stream de áudio truncavam). Trilha **Lyria RealTime** (`ep05-trilha.py`, por-ato + lift emocional @28s + resiliente a 1011 do WebSocket) ducada por sidechaincompress. loudnorm −16 LUFS.
+> 152	
+> 153	**Abertura + créditos + VFX:** replicam `gerar_cartela.py`/`gerar_creditos.py` — **Liberation Serif** (=Times New Roman, `/usr/share/fonts/truetype/liberation/`), cores BRANCO/CINZA/OURO. Intro "GABRIEL AI APRESENTA…" (blur→nítido→blur) + créditos rolando ~110px/s (equipe EP05 real). **VFX título 10s APROVADO ("ficou show"):** `title/title.html` (GSAP timeline determinística) + `render-title.ts` (Playwright frame-seek → 300 PNG → MP4) — técnica HyperFrames reusável. "GABRIEL AI APRESENTA…"→"EU NÃO EXISTO"+subtítulo com blur-reveal + glow + glitch de aberração cromática + vinheta + grão.
+> 154	
+> 155	| Ação | Resultado |
+> 156	|------|-----------|
+> 157	| 32 segmentos sintéticos (`18a21002`) | ✅ 19 apresentador Veo áudio-nativo + 7 b-roll 16:9 + 6 voz Qwen3, Vision-QA · ~6.620 mco |
+> 158	| `canvas-execute:794` (deployado, `563e86f`) | ✅ teto diário admin 10.000→100.000 mco (guardrail MCORCH, não Google) |
+> 159	| `ep05-trilha.py` (Lyria RealTime) | ✅ trilha por-ato 411s + lift emocional @28s + resiliente a queda do WebSocket + cue de créditos |
+> 160	| Cartela + créditos (Liberation Serif) | ✅ intro "GABRIEL AI APRESENTA…" blur/fade + créditos rolando (replica motor GabrielAI) |
+> 161	| `title/title.html` + `render-title.ts` | ✅ **VFX título 10s APROVADO** (GSAP+Playwright determinístico, técnica HyperFrames) · take `b7da3f30` |
+> 162	| Estratégia áudio EP01-04 | ✅ Veo nativo (apresentador) + Qwen3 grosso (narração muda) + Lyria ducada · timeline dirigida por narração |
+> 163	
+> 164	| Commit | Conteúdo |
+> 165	|--------|----------|
+> 166	| `563e86f` | chore(canvas-execute): teto diário admin 10k→100k mcoCoins (deployado) |
+> 167	| `70d5d81` | docs(readme): v6.131.0 — EP05 master produzido |
+> 168	
+> 169	### ⏭ PRÓXIMA SESSÃO — LAPIDAR o EP05 (direção Sovereign 2026-08-03)
+> 170	1. **Juntar o VFX 10s (`b7da3f30`) no master** como abertura (o Sovereign apagou o A5; re-montar juntando o VFX) → cena 1.
+> 171	2. **Trilha NOVA mais EMOCIONANTE + FELIZ + que dê ESPERANÇA** (ajustar cues Lyria: warm/uplifting/hopeful, major, brilho).
+> 172	3. **RE-GRAVAR screencasts calibrados JUNTOS:** 1920×1080, **zoom do navegador 70%**, COLAPSAR tudo (menu principal, sub-abas Receitas›Tendências›Históricos do painel de assets, RightPanel de propriedades). Comportamento: clicar no nó → RightPanel abre auto; duplo-clique → modal do nó abre E sidebar esconde (modal só por duplo-clique ou botão expandir). Reusar `screencast-batch.ts`.
+> 173	
+> 174	## EP05 v2 formato GabrielAI + kind sceneNote + refinamentos Canvas Record (2026-08-03)
+> 175	
+> 176	**ORO triplet:** Operator = MCORCH Master Execution Agent (+ engineer-spaces L2 para nós Spaces + bok-curator para Amendment 32) · Reviewer = Sovereign + `/security-review` + 4 auditores adversariais + Vision QA · Owner = Sovereign (marca EP05 + saldo mco + produção do canal Gabriel AI).
+> 177	
+> 178	**Sessão-maratona 4 arcos com 5 workflows ultracode encadeados** (2.7M subagent tokens totais). Arco 1 (EP05 v2 no formato exato do motor CLI GabrielAI que fez EP01-04): recon do `github.com/gabrielZarattini/GabrielAI` (gerar_cenas.py + ep04.json + mapa_transicoes.py) revelou o padrão de produção — 52 cenas de 8s Veo alternando presenter (com char refs) + broll com `+` (firstFrame do último frame do clipe anterior), narração PT-BR ~90-120 chars embarcada no prompt Veo, 6 atos declarados com cena-início, mapa de transições com 5 verbos "corte seco banido". Workflow `wf_666f9be7` (7 agentes: 3 rascunhos concorrentes → 3 críticos adversariais [retenção · materialidade · narrativa] → síntese) produziu **48 cenas** no formato regex-exato do motor (Angle C narrative-first venceu 237/300). Roteiro em `docs/roadmap/ep05-roteiro-v2-formato-gabrielai-2026-08-03.md` + Runbook v2 + spec da fábrica. Engineer-spaces materializou como projeto Spaces v2 `18a21002-df9c-48b4-aff3-7aba28e812e7` "EP05 v2 — 48 cenas GabrielAI-format": 40 nós (19P imageToVideo+charRef 8s obrigatório · 7 par B-roll generateImage→imageToVideo firstFrame · 6 voz Qwen3 por ato · 1 charRef reuso do `n_d3jbjjjg` do projeto 024e1c03 = mesmo rosto do canal), 26 edges, custo Run All ~6.180 mco de 9.733 (folga 3.553). Description do projeto carrega checklist dos 21 screencasts + 8 gates G1-G8 + cena 30 ELO MANUAL.
+> 179	
+> 180	Arco 2 (**clamp Veo `reference_to_video`→8s**, descoberto em produção): A1 rodou com dur=5 + charRef → 422 do Google `Unsupported output video duration 5 seconds, supported durations are [8] for feature reference_to_video` → **charge+refund** de 2× 167 mco (Vertex fast 720p 5s). Nosso clamp em `canvas-execute:1352-1372` validava 4-8 e 1080p→8s, mas NÃO refs→8s. Workflow `wf_ba47e53d` (6 agentes: 3 impl paralelas + 2 verify + doc) escreveu função pura `veoAllowedDurations()` em `veo.ts`, guard 422 pré-débito em `canvas-execute:1367` (mesmo padrão do 1080p clamp), UI auto-clamp em `ImageToVideoInspector` + linha de ajuda, 6 unit tests, SOP Lei 2 (`docs/processes/veo-refs-8s-guard.md`), Amendment 25 atualizado. `/security-review` NO FINDINGS · tsc-app 0 · lint 0 err · vitest 738/740 · build 24.78s. Sovereign deployou `canvas-execute` em prod (script size 194.6kB). Memória permanente `reference_veo_refs_require_8s`.
+> 181	
+> 182	Arco 3 (**4 refinamentos do Canvas UX** direcionados por prints do Sovereign): (a) edges INVISÍVEIS em zoom-out porque ReactFlow escala SVG por `transform:scale(zoom)` → strokeWidth de 2px vira 0.03px na tela em zoom=0.02. Fix: CSS var `--rf-zoom-inv` no wrapper via `onMove` callback + edges usando `strokeWidth: calc(base * var(...))` — zero rerender React. (b) `fitView` do ReactFlow atropelava `defaultViewport` → cards touching. Fix: `fitView` só quando `!project.viewport || é o default (0,0,1)` — projetos com viewport intencional respeitam o preset salvo. (c) Cards custom ~280-300px "travavam" na lane de 320px (só 20px de margem). Fix: `LANE_HEIGHT` 320→480 (comentário explica impacto nos 3 projetos com pipelineMode). (d) 22 lanes vazias visualmente ("faltando"): workflow `wf_c998bd99` (3 agentes: extractor 48 cenas → adversarial critic → synth) populou `graph.lanes: LaneConfig[]` com 48 labels rotulados cena-a-cena (`"3 · S · Curta final 9:16 fullscreen"`, PASS 0 blockers 2 NITs corrigidos), max 42 chars, ficando visíveis.
+> 183	
+> 184	Arco 4 (**auditoria robusta 4 lentes + Amendment 32 kind sceneNote**): Sovereign ainda via "várias cenas faltando" — workflow `wf_9414d733` (6 agentes: collector + 4 lentes adversariais paralelas [count/type · prompt-fidelity · edges topology · position] + reporter) descobriu **1 BLOCKER real** (n_p_1 em `(-26.15, 8.49)` — drag manual acidental) + **1 IMPORTANT** (n_voice_ato1 em X=320 em vez de 940) + **1 NIT** (prompts B-roll usam prefixo derivado "Cinematic 16:9 first frame:"). Ambos os gaps patchados via PATCH único; SELECT read-back independente confirmou. 22 lanes SCREENCAST/ELO restantes = gap-de-UX-por-design. Sovereign confirmou lista exata `[3,4,8,10,11,13,16,17,18,20,26,27,29,30,34,37,38,39,40,42,44,48]` = match perfeito. Sovereign escolheu opção B via AskUserQuestion: **Amendment BoK + kind estrutural**. Workflow `wf_6b60d46a` (6 agentes: BoK Amendment 32 → 3 impl paralelas [factory+types · registry · component+register] + gate tsc/build → apply 22 nós). Master Execution Protocol §6 respeitado: **BoK selada ANTES do código** (`docs/bok/spaces-evolution/32-amendment-scene-note.md`, 7906 B, FR-SPACES-120, Pattern Conformance 1 yes Human-in-the-Loop · 20 n-a — decorativo). Código: interface SceneNoteData + factory `makeDefaultSceneNote` em canvas.ts:980+1420 · entrada `sceneNote` em canvas-node-registry.ts:236-244 (category Transform, cost 0, icon StickyNote) · `SceneNoteNode.tsx` (36 linhas, card yellow-500/10, ZERO Handles) · registro em `CanvasEditorPage.tsx:70,94`. tsc-app 0 · build 25.05s. Aplicação: 22 nós `n_note_<cena>` no banco, posições exatas (x=240, y=(cena-1)*480), labels verbatim das lanes. Total EP05 v2 agora: **62 nós** — todas as 48 lanes preenchidas visualmente.
+> 185	
+> 186	| Ação | Resultado |
+> 187	|------|-----------|
+> 188	| `docs/roadmap/ep05-roteiro-v2-formato-gabrielai-2026-08-03.md` | ✅ 48 cenas formato exato motor CLI (regex validado), 6 atos, 16:9 · workflow 3 rascunhos + 3 críticos + síntese · Angle C 237/300 |
+> 189	| `docs/roadmap/ep05-production-runbook-v2-2026-08-03.md` | ✅ Fase 0 (8 gates G1-G8) → Fase 1 (segmentos sintéticos 6.180 mco) → Fase 2 (21 screencasts) → Fase 3 (união HyperFrames Studio) → Fase 4 (publicar+medir) |
+> 190	| `docs/bok/spaces-evolution/32-amendment-scene-note.md` | ✅ Amendment BoK selado ANTES do código (Master Execution Protocol §6). FR-SPACES-120. Pattern Conformance 1y/20na. |
+> 191	| `src/types/canvas.ts` + `src/lib/canvas-node-registry.ts` + `src/components/canvas/nodes/SceneNoteNode.tsx` + `src/pages/CanvasEditorPage.tsx` | ✅ Kind sceneNote (sticky-note yellow-500/10, sem handles, sem motor, cost 0) registrado no canvas |
+> 192	| `supabase/functions/canvas-execute/index.ts` (deployado prod) | ✅ Guard 422 `veo_refs_require_8s` pré-débito — fecha vetor charge+refund de reference_to_video |
+> 193	| `src/lib/veo.ts` + `src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx` | ✅ Helper `veoAllowedDurations()` + UI auto-clamp respeitando allowedDurations |
+> 194	| `src/components/canvas/edges/{FlowEdge,PipelineEdge}.tsx` + `src/pages/CanvasEditorPage.tsx` | ✅ Edges strokeWidth adaptativo via CSS var --rf-zoom-inv (zero rerender React) |
+> 195	| `src/pages/CanvasEditorPage.tsx` (fitView condicional) | ✅ fitView só em projetos novos — respeita viewport intencional salvo |
+> 196	| `src/types/canvas.ts` (LANE_HEIGHT 320→480) | ✅ +180px de respiração por card no pipelineMode; 3 projetos afetados (EP05 v2 reposicionado; outros 2 manuais) |
+> 197	| `docs/roadmap/refs-sovereign-shorts-2026-07-30.md` | ✅ 6 refs deepsearch do Sovereign arquivadas verbatim (só existiam no transcript) |
+> 198	| `docs/processes/veo-refs-8s-guard.md` + Amendment 25 update | ✅ SOP Lei 2 documentando a regra |
+> 199	| `src/test/veo-refs-guard.test.ts` (6 tests) | ✅ 4 combos hasRefs × useFirstFrame + sanity + drift-gate — todos verdes |
+> 200	| Projeto Spaces `18a21002` | ✅ 62 nós (19P + 7 par B-roll + 6 voz + 1 charRef + 22 sceneNote) · 26 edges · 48 lanes rotuladas · custo Run 6.180 mco · A1 provado (gen `e20bbae2` done 267 mco Vertex fast 720p 16:9 8s) |
+> 201	| Auditoria robusta 4 lentes | ✅ Zero cenas faltando materialmente · 1 blocker + 1 important patchados (n_p_1 + voice_ato1 realinhados) · 0 drift de prompt |
+> 202	
+> 203	| Commit | Conteúdo |
+> ```
+
+## 🤖 Claude *(02:50:57)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Looking at the mesh count records across these dates — the 2026-08-05 entry doesn't have a "Malha" number, the 2026-08-04 sprint shows a handoff node but no mesh count, and the 2026-08-03 record has malha 19232 with node 79365255, which is the most recent explicit total I can find. Now I need to check the tsc result and verify the first action in the scratchpad mentions peças.
+
+</details>
+
+
+## 🤖 Claude *(02:50:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sleep 45; cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/tasks/b7rs1glop.output 2>/dev/null | tail -6",
+  "description": "Aguarda e l\u00ea o resultado do gate de tipos tsc-app"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> <tool_use_error>Blocked: sleep 45 followed by: cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/tasks/b7rs1glop.output tail -6. To wait for a condition, use Monitor with an until-loop (e.g. `until <check>; do sleep 2; done`). To wait for a command you started, use run_in_background: true. Do not chain shorter sleeps to work around this block.</tool_use_error>
+> ```
+
+## 🤖 Claude *(02:51:04)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The TypeScript compilation is still running from a minute ago, so rather than wait I'll just check the output file directly to see what's been generated so far.
+
+</details>
+
+
+## 🤖 Claude *(02:51:04)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/tasks/b7rs1glop.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---COUNT---
+> 2	
+> ```
+
+## 🤖 Claude *(02:51:19)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The first TypeScript run finished with no errors since `tail -3` produced nothing before the count marker appeared. The second run is still executing, so I'm waiting for the grep count to complete.
+
+</details>
+
+
+## 🤖 Claude *(02:51:19)*
+
+A primeira execução do `tsc` terminou sem nenhuma linha de erro (saída vazia antes do `---COUNT---`). Vou aguardar a contagem confirmatória:
+
+## 🤖 Claude *(02:51:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "timeout 240 bash -c 'until grep -qE \"^[0-9]+$\" /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/tasks/b7rs1glop.output 2>/dev/null; do sleep 5; done'; tail -3 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/tasks/b7rs1glop.output",
+  "description": "Aguarda a contagem de erros TS do gate de tipos"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ---COUNT---
+> 0
+> 0
+> ```
+
+## 🤖 Claude *(02:52:20)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The TypeScript compilation is clean with zero errors, confirming the baseline improvement from 138 down to nothing. I'm pulling together the summary now: the sealed release is v6.133.0 with the Spaces VIVO agent and end-to-end episode pipeline deployed on August 5th, 2026, backed by the recent commits.
+
+Infrastructure is stable across the board—the vision MCP, Claude memory service, and Chroma vector store have all been running healthy for weeks with good heartbeat signals. Knowledge Mesh is holding at 19,232+ entries from the August 3rd snapshot since the August 5th seal didn't publish a new count. The test suite is fully green at 39/39 suites, the handoff documentation is lean at 577 lines, and the scratch directory is clean. There are some scratchpad directories lingering in the temp project folder from the prior session, but those aren't needed for the next step which is a UI interaction.
+
+Looking at the sprint priorities and the FILA table, the immediate action is to click "EXECUTAR TUDO" in EP06 for the Sovereign action. Amendment 34 was already sealed and mostly shipped in v6.133.0 with the motion scene, sound effects, and master assembly complete—so the FILA row 11 gate is GO for Slice A, though the sprint table might be slightly stale since Slices A and C are partially delivered while B (3D Glass Neon) is still pending, D is at the QA gate, and E needs the soundtrack and revenue work. The first action after the run-all is to handle four Veo presenters with their thumbnails and policy details. Checking the saved state of EP05 A14, reviewing alerts like the TypeScript worktree being clean and containers healthy, noting the social login flag is active pending TikTok review, and tracking that EP03 is missing from the ecosystem since it was uploaded via Sovereign. The editorial target remains posting EP06 today by 2026-08-05, with a current balance of 44.395 mco and an autosave clobber warning to watch for before running the full test cycle.
+
+The seal is dated 2026-08-05 but today is actually 2026-08-04, so the post target is tomorrow. For the mesh topology, I'm using the last published node count of 19.232 from the 2026-08-03 record since the v6.133.0 seal didn't include a fresh count, and I'm sticking to documented GraphRAG State rather than estimating edge counts.
+
+For Vitest, I'll cite the 765 figure from the seal as stated without re-running verification, and I'll write the brief in Portuguese as required.
+
+</details>
+
+
+## 🤖 Claude *(02:52:39)*
+
+O gate de tipos confirmou: **0 erros** no `tsc -p tsconfig.app.json` (baseline histórico era 138 → o seal v6.133.0 dizia 0, e a contagem literal deste turno bateu). Todos os checks do pré-voo concluídos — segue o brief.
+
+```
+═══════════════════════════════════════════════════════════
+  HANDSON — v6.133.0 · AGENTE DO SPACES + ESTEIRA DO
+  EPISÓDIO PONTA-A-PONTA (selado 2026-08-05)
+═══════════════════════════════════════════════════════════
+```
+
+🏁 **ESTADO ATUAL**
+- Fase selada: **Agente do Spaces VIVO (Amendment 33) + pós-produção no Spaces (Amendment 34)** — 19 commits `de5bdb5..9a1fac5`, tsc-app 0, vitest 765, `/security-review` NO FINDINGS.
+- Últimos commits:
+  - `3a8bf2d` — docs(handoff): seal v6.133.0
+  - `9a1fac5` — feat(spaces): montador do MASTER + preview no hover + barra do agente flutuante
+  - `3e83f1c` — feat(spaces): 'Executar tudo' despacha Cena Motion e Efeito Sonoro
+  - `8fab68b` — feat(spaces): motor DUPLO no Efeito Sonoro (FFmpeg grátis + IA)
+
+📂 **MUDANÇAS PENDENTES** — Worktree limpo ✅ (status vazio, diff vazio)
+
+🏗️ **INFRA**
+- `mcorch_chroma`: Up 7 weeks (healthy) — heartbeat API v2 **OK** ✅
+- `mcorch_claude_mem`: Up 7 weeks (healthy) · `mcorch_vision_mcp`: Up 2 weeks (healthy)
+- `mega-brain-{daemon,webhook,dashboard}`: Up 7 weeks (daemon/webhook healthy)
+
+🧠 **KNOWLEDGE MESH** — **19.232 nós** (última contagem publicada — Record 2026-08-03, nó `79365255`). O seal v6.133.0 não publicou contagem nova; não invento números (Lei 1).
+
+🔧 **TYPESCRIPT** — **Zero erros ✅** (gate real `tsc -p tsconfig.app.json --noEmit`, contagem literal `0` neste turno)
+
+📚 **BoK SUITES** — **39/39 completas ✅** (todas verdes no check mecânico, incluindo `spaces-agent` 10/10 e `security` ciso-4). Nenhuma incompleta. Gate Closed-Loop sem bloqueio para o trabalho em curso — Amendments 33/34 foram seladas ANTES do código.
+
+📌 **SPRINT**
+- Goal: Distribuição social autônoma operacional (LinkedIn auto; Twitter/IG gated por tier/review).
+- Topo da FILA SOVEREIGN: **PRIMEIRO RUN ALL ponta-a-ponta do EP06** + Amendment 34 (fatias B/D/E restantes).
+
+⚡ **PRÓXIMOS PASSOS (prioridade)**
+1. 🔒 **Sovereign: clicar em EXECUTAR TUDO** no EP06 — abrir `/dashboard/spaces/d0d82aeb-8c98-4e36-b526-b6bba64a4db5`, **recarregar a página primeiro (Ctrl+Shift+R)** e só então rodar. É o 1º teste E2E do ciclo Executar tudo → MASTER. Projeto armado e auditado (4 gates verdes: 8 cenas motion · 9 nós de voz/8 com áudio IVC · montador ligado · fila limpa). Saldo: 44.395 mco.
+2. **Depois do Run All:** 4 presenters Veo (1.068 mco) → thumbnail ciano → QA A/V do Master EP06 (lei de master) — alvo editorial: postar **2026-08-05** (amanhã).
+3. **Fatia B do Amendment 34** (3D Glass Neon nos demais cards) + política de storage on-demand/arquivamento de projeto (só o master fica).
+
+⚠️ **ALERTAS**
+- **Anticorpo crítico antes do Run All:** o autosave da UI **sobrescreve escrita server-side** (last-write-wins, debounce 3s) — foi o que estragou o 1º lote de renders (`beats=0`). Recarregar a página antes de clicar é obrigatório.
+- Flag `auth_social_login_visible` segue **LIGADA** (review TikTok re-submetido, aguardando) — desligar em Admin→Acesso quando aprovar.
+- EP03 master segue **ausente** do ecossistema (upload = ação Sovereign via menu Cortes).
+- EP05/A14 **GUARDADO** por decisão editorial (asset `6e3175b3` pronto na Biblioteca).
+- `scratch/` vazio ✅ · HANDOFF.md com 577 linhas (saudável, pós-poda) ✅ · Sem erros TS ✅.
+- Nota de harness: vários conectores MCP (Figma, Linear, Slack, HubSpot etc.) pedem OAuth — se precisar deles, autorize via configurações de conectores do claude.ai ou `/mcp` numa sessão interativa.
+
+```
+═══════════════════════════════════════════════════════════
+  Pronto para trabalhar. Aguardando direção.
+═══════════════════════════════════════════════════════════
+```
+
+**Fase 7 (opcional):** se quiser, disparo o **`pmo-curator`** para materializar o plano de ação priorizado em `NEXT-STEPS.md` (un-gated vs gated, com o comando exato de cada passo). É plan-only — só peça "gere os próximos passos".
+
+O passo nº 1 da fila é literalmente **seu clique** no Executar tudo do EP06 — tudo do lado da máquina está verde para recebê-lo.
+
+## 👤 User *(02:56:36)*
+
+Parece que está executando, mas o console log sumiu não estou vendo o que esta sendo executado de fato, era só pra remover o efeito de mouse hover, agora cuidado para restaurar sem perder o elo e a conexão de foto Feitei aqui na aba para o auto save não atrapalahar mas parece que agora esta errado, euqnato eu escrevia percebi que não parece estar tudo ok. Caso tenha algum erro corrija, audite e refatore tudo para finalmente tentar novamente o Run ALL "Executar Tudo"
+
+## 🤖 Claude *(02:57:17)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O Sovereign clicou em "Executar tudo" no EP06 e agora tem 8 cenas motion renderizando, mas o console de execução desapareceu — ele não consegue ver o que está acontecendo de fato. Parece que ele tinha pedido apenas para remover o efeito de mouse hover, mas algo deu errado no processo.
+
+Ele fechou a aba para evitar que o autosave interferisse, mas percebeu que algo não está certo. Preciso auditar o estado real do projeto — verificar os nós, beats, durações, narrações, a fila de video_renders e se o Run All foi disparado corretamente — além de investigar por que o console de execução desapareceu da interface.
+
+Também preciso remover o efeito de hover preview que foi adicionado no commit 9a1fac5, mantendo intactos o elo (edge) e a conexão de foto. Depois vou corrigir qualquer erro, refatorar o código e disparar o Run All novamente. Pelo print, vejo 8 cenas em motion com badges mostrando beats e durações variadas.
+
+Mas há alguns problemas: os nós de narração mostram 0:00/0:00 nos players, o que pode significar que o áudio desapareceu (talvez outro autosave clobber) ou apenas que a metadata não carregou. O nó "Master EP06" está aguardando cenas, e o rodapé mostra "0 execuções" mesmo que Run All tenha sido disparado — além disso, o autosave está ativo ("Salvo há 14s"). O usuário menciona que parece estar executando mas não consegue ver o console porque fechou a aba.
+
+Meu plano é fazer reconhecimento do estado do banco de dados (projeto d0d82aeb com beats/durations, video_renders na fila, generations/executions), verificar o worker motion-bridge (systemd, logs) e investigar o código da UI (console de execução, preview no hover). Preciso diagnosticar por que o console desapareceu — provavelmente a barra do agente flutuante está cobrindo o rodapé, ou o console só aparece quando há jobs na fila client-side, e como ele recarregou a página perdeu o estado em memória das execuções disparadas antes do reload. Também preciso remover o preview no hover do montador conforme solicitado, mantendo a conexão de foto.
+
+Vou auditar o grafo do EP06 (beats, durações, áudios de voz) para verificar se o autosave corrompeu algo — os renders saíram com beats=0 na primeira vez. Depois vou corrigir, buildar, deployar e deixar tudo pronto para o Run All.
+
+Começando com reconhecimento paralelo inline (estado da fila + worker + git log dos arquivos relevantes), depois uso Workflow para auditoria multi-frente. Primeiro, vou fazer recon rápido inline consultando a fila de video_renders para o usuário/projeto.
+
+Preciso acessar o DB com a SB_SECRET_KEY do .env usando um script deno/bun, verificar o status do motion-bridge.service com journalctl, e examinar os commits recentes para encontrar o componente do console de execução e do hover preview. O screenshot mostra "renderizando a animação…" — preciso determinar se é status client-side ou servidor. Se os jobs foram enfileirados, video_renders terá registros, mas "0 execuções" no rodapé sugere que o ledger de execuções não registrou nada. Vou fazer o recon material primeiro, depois a auditoria e correção. Design; Owner = Sovereign (balance/channel/UX). I'm going to parallelize these tasks.
+
+</details>
+
+
+## 🤖 Claude *(02:57:19)*
+
+Entendido — o Run All disparou mas há três sintomas para tratar: (1) console de execução sumiu, (2) o preview no hover do montador deve ser removido sem quebrar elo/conexão, (3) suspeita de estado errado no grafo (autosave / reload no meio). Vou primeiro levantar prova material do que está REALMENTE acontecendo (fila, worker, grafo no banco) antes de mexer em qualquer coisa.
+
+**ORO desta task:** Operator = MCORCH Agent · Reviewer = Sovereign · Owner = Sovereign (saldo mco + UX do Spaces + EP06).
+
+## 🤖 Claude *(02:57:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "systemctl --user status motion-bridge.service --no-pager -n 0 2>&1 | head -8; echo \"---JOURNAL---\"; journalctl --user -u motion-bridge.service --no-pager -n 40 --since \"30 min ago\" 2>&1 | tail -40",
+  "description": "Status e logs recentes do worker motion-bridge"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ● motion-bridge.service - MCORCH motion-bridge (Cena Motion — Playwright + FFmpeg, engine=motion)
+>      Loaded: loaded (/home/ubuntu/.config/systemd/user/motion-bridge.service; enabled; preset: enabled)
+>      Active: active (running) since Tue 2026-08-04 23:11:08 -03; 46min ago
+>    Main PID: 3470489 (bun)
+>       Tasks: 9 (limit: 28691)
+>      Memory: 32.6M (peak: 445.2M)
+>         CPU: 7min 40.747s
+>      CGroup: /user.slice/user-1001.slice/user@1001.service/app.slice/motion-bridge.service
+> ---JOURNAL---
+> -- No entries --
+> ```
+
+## 🤖 Claude *(02:57:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git show --stat 9a1fac5 | head -40; echo \"===\"; git show --stat 3e83f1c | head -25",
+  "description": "Arquivos tocados nos commits do montador/hover e do Executar tudo"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> commit 9a1fac5fa7875b84628cd35f201e6b070f9b4f75
+> Author: Gabriel Zarattini <gabrielcall@gmail.com>
+> Date:   Tue Aug 4 23:27:11 2026 -0300
+> 
+>     feat(spaces): montador do MASTER + preview no hover + barra do agente flutuante
+>     
+>     MASTER (FR-SPACES-133) — o último elo do 'Executar tudo → MASTER'. Nó terminal que junta os clipes
+>     prontos conectados, na ordem em que estão no canvas (o que se vê é o que se monta), e entrega um
+>     arquivo publicável. Grátis: o que custou foram as peças, não juntá-las.
+>     - migration engine 'assemble' · edge fn assemble-master (clipes resolvidos SERVER-SIDE na spine,
+>       owner-scoped — caminho do cliente nunca vira caminho de arquivo) · worker no motion-bridge
+>     - re-encode em vez de stream copy DE PROPÓSITO: as peças vêm de motores diferentes (motion 720p sem
+>       áudio, Veo com áudio, cortes com outro fps) e '-c copy' só funciona com parâmetros idênticos —
+>       produziria arquivo quebrado ou mudo
+>     - só entram cenas com status success: cena em fila viraria frame preto no meio do filme
+>     - lib master-clips compartilhada entre o inspector e o Run All (senão o botão mostra uma coisa e o
+>       Executar tudo monta outra)
+>     
+>     PREVIEW NO HOVER: o vídeo do card toca ao passar o mouse, como na Biblioteca. StorageVideo virou
+>     forwardRef — sem encaminhar a ref o videoRef ficava null e o hover não fazia NADA, em silêncio.
+>     
+>     CONSOLE ANCORADO: era 'pointer-events-auto' no container inteiro, então capturava o mouse sobre toda
+>     a área e o pan do canvas grudava nele — parecia quebrado. Agora o container é pointer-events-none e
+>     só os controles recebem clique.
+>     
+>     BARRA DO AGENTE (referência do Sovereign): console e agente dividem o rodapé — o botão 'Agente'
+>     troca, o X volta. Campo central flutuante com aurora colorida por baixo (respira devagar,
+>     compositor-only, morre sob prefers-reduced-motion), última resposta flutuando acima e sugestões sob
+>     demanda. O canvas continua inteiro à vista: a conversa não rouba a tela como o dock lateral.
+>     
+>     tsc-app 0 · vitest 765 · build verde.
+> 
+>  scripts/motion-bridge.ts                           | 108 ++++++++++++++++-
+>  src/components/StorageMedia.tsx                    |  15 ++-
+>  src/components/canvas/AgentCommandBar.tsx          | 128 +++++++++++++++++++++
+>  src/components/canvas/RenderConsole.tsx            |  25 +++-
+>  .../canvas/RightPanel/NodeInspectorBody.tsx        |   3 +
+>  .../inspectors/EpisodeAssemblerInspector.tsx       | 123 ++++++++++++++++++++
+>  .../canvas/nodes/EpisodeAssemblerNode.tsx          |  85 ++++++++++++++
+>  src/components/canvas/nodes/MotionSceneNode.tsx    |  20 +++-
+> ===
+> commit 3e83f1c1ea7c55782e6de94a3b0f8e17b859d3cd
+> Author: Gabriel Zarattini <gabrielcall@gmail.com>
+> Date:   Tue Aug 4 22:59:48 2026 -0300
+> 
+>     feat(spaces): 'Executar tudo' passa a despachar Cena Motion e Efeito Sonoro
+>     
+>     Diretiva Sovereign: 'tudo pelo nó no spaces para que o próximo projeto consiga sair com o MASTER
+>     após clicar em Executar Tudo'. O Run All não enxergava os nós novos por dois motivos:
+>     
+>     1. `runnable` exigia `prompt` não-vazio — motionScene roda por `description` e soundDesign
+>        sintetizado roda por `recipe`. Ambos caíam no teste genérico e ficavam INVISÍVEIS ao Executar
+>        tudo. Agora cada um tem sua guarda; sceneNote (decorativo) fica explicitamente de fora.
+>     2. O dispatch só conhecia canvas-execute. Agora há branch para motion-render e sfx-generate — os
+>        dois assíncronos, com o useMotionRenderSync reconciliando quando o worker termina.
+>     
+>     ACHADO no caminho (virou anticorpo): escrita server-side no `graph` é APAGADA pelo autosave da UI
+>     se a aba estiver aberta. Last-write-wins com debounce de 3s, sem comparar updated_at. Os 8 nós de
+>     voz e as durações dirigidas pela narração sumiram minutos depois de gravadas — UPDATE com sucesso,
+>     nenhum erro em lugar nenhum. É a prova MATERIAL da regra 'gerar pelo nó': escrita por fora não só
+>     cria reconciliação, ela COMPETE com a UI e perde. Memória
+>     reference_canvas_autosave_clobbers_server_writes; correção estrutural (optimistic concurrency no
+>     autosave) fica registrada como pendente.
+>     
+>     Estado reaplicado e conferido 10s depois: 8 cenas com a duração da fala (Gancho 22s · Incidentes
+>     32s · Kimi K3 30s) e 9 nós de voz. tsc-app 0 · vitest 765 · build verde.
+> ```
+
+## 🤖 Claude *(02:57:46)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O worker está rodando normalmente há 46 minutos, mas o journal não mostra entradas recentes — pode ser que os logs estejam sendo direcionados para outro lugar, como StandardOutput, ou que journalctl precise de flags diferentes. O consumo de CPU de 7 minutos e 40 segundos em 46 minutos de execução sugere que ele está processando trabalho de forma consistente.
+
+Preciso investigar o estado da fila video_renders no banco de dados usando um script de reconhecimento com as variáveis de ambiente disponíveis. Também vou verificar por que o RenderConsole desapareceu — provavelmente porque ele lê o estado da fila em memória do useCanvasStore, que foi limpo no reload da página, ou porque a condição de exibição depende de queue.length > 0. O "0 execuções" no rodapé pode indicar que o motion não está criando registros de execução no ledger legado.
+
+Meus próximos passos são: consultar o banco para ver os video_renders do usuário dos últimos 60 minutos com seus status, examinar o grafo atual do projeto para entender os nós de motion, voz e assembly, e revisar o código do RenderConsole e MotionSceneNode para entender a lógica de renderização e o comportamento de hover que foi solicitado remover.
+
+Sobre o pedido do Sovereign: ele quer que eu remova o efeito de preview de vídeo ao passar o mouse, mas com cuidado para preservar as conexões (edges) e as ligações de imagem nos nós — provavelmente referindo-se ao mood board ou charRef. A ação é clara: desabilitar o hover preview mantendo a integridade das conexões do grafo.
+
+</details>
+
+
+## 🤖 Claude *(02:57:47)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The `motion-bridge` worker is active and heavily utilized (7min40s CPU in 46min, peak 445MB RAM), but the journal is empty, so I need to check the queue in the database for the actual state. I'll bring up the DB and console/hover code in parallel.
+
+</details>
+
+
+## 🤖 Claude *(02:57:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -oE \"^(VITE_SUPABASE_URL|SB_SECRET_KEY|SUPABASE_URL)=\" .env 2>/dev/null; ls -la ~/.config/systemd/user/motion-bridge.service 2>/dev/null; grep -E \"StandardOutput|ExecStart|Environment\" /home/ubuntu/.config/systemd/user/motion-bridge.service 2>/dev/null",
+  "description": "Verifica credenciais no .env e config do servi\u00e7o motion-bridge"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> SUPABASE_URL=
+> VITE_SUPABASE_URL=
+> SB_SECRET_KEY=
+> -rw-rw-r-- 1 ubuntu ubuntu 1502 Aug  4 20:08 /home/ubuntu/.config/systemd/user/motion-bridge.service
+> # SEM EnvironmentFile: o bun já lê o .env do WorkingDirectory (mesmo contrato do subtitle-bridge);
+> ExecStart=/home/ubuntu/.bun/bin/bun run scripts/motion-bridge.ts
+> Environment=HOME=/home/ubuntu
+> Environment=TMPDIR=/tmp
+> Environment=NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+> Environment=PATH=/home/ubuntu/.bun/bin:/home/ubuntu/.local/bin:/usr/local/bin:/usr/bin:/bin
+> ```
+
+## 🤖 Claude *(02:57:49)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RenderConsole.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useState } from "react";
+> 2	import { ChevronDown, ChevronUp, Clock, Loader2, MessageSquare, Terminal, XCircle, CheckCircle2 } from "lucide-react";
+> 3	import { cn } from "@/lib/utils";
+> 4	import { useCanvasStore } from "@/store/useCanvasStore";
+> 5	import type { MotionJobView } from "@/hooks/useMotionRenderSync";
+> 6	
+> 7	// Amendment 34 — Console de execução.
+> 8	// Diretiva Sovereign 2026-08-04: "precisamos de um console log para entender o que está acontecendo,
+> 9	// se tem coisas na fila, rodando em execução a quanto tempo e quantos por cento já está."
+> 10	// Fica recolhido por padrão (o canvas é o protagonista) e SÓ aparece quando há algo acontecendo.
+> 11	
+> 12	function fmtElapsed(sec: number): string {
+> 13	  if (sec < 60) return `${sec}s`;
+> 14	  const m = Math.floor(sec / 60);
+> 15	  return `${m}m${String(sec % 60).padStart(2, "0")}s`;
+> 16	}
+> 17	
+> 18	const STATE_META: Record<string, { label: string; cls: string }> = {
+> 19	  queued: { label: "na fila", cls: "text-muted-foreground" },
+> 20	  running: { label: "renderizando", cls: "text-accent" },
+> 21	  done: { label: "pronto", cls: "text-emerald-400" },
+> 22	  failed: { label: "falhou", cls: "text-destructive" },
+> 23	  error: { label: "falhou", cls: "text-destructive" },
+> 24	};
+> 25	
+> 26	export function RenderConsole({ jobs }: { jobs: MotionJobView[] }) {
+> 27	  const [open, setOpen] = useState(true);
+> 28	  const selectNode = useCanvasStore((s) => s.selectNode);
+> 29	  const openChat = useCanvasStore((s) => s.openChat);
+> 30	
+> 31	  if (!jobs.length) return null;
+> 32	
+> 33	  const running = jobs.filter((j) => j.state === "running").length;
+> 34	  const queued = jobs.filter((j) => j.state === "queued").length;
+> 35	  const failed = jobs.filter((j) => j.state === "failed" || j.state === "error").length;
+> 36	
+> 37	  return (
+> 38	    <div
+> 39	      className={cn(
+> 40	        // `pointer-events-none` no container + `auto` só nos controles: antes o console capturava o
+> 41	        // mouse sobre toda a sua área e o pan do canvas "grudava" nele — parecia quebrado.
+> 42	        // `will-change:auto` e nenhuma transição de posição: ele fica ANCORADO, não persegue nada.
+> 43	        "mc-glass-card pointer-events-none absolute bottom-4 left-1/2 z-20 w-[min(560px,90vw)] -translate-x-1/2 rounded-xl border",
+> 44	        failed ? "border-destructive/40" : running ? "border-accent/40" : "border-border/70",
+> 45	        running && "mc-glass-card-busy",
+> 46	      )}
+> 47	    >
+> 48	      <span aria-hidden className="mc-glass-shine rounded-t-xl" />
+> 49	      <button
+> 50	        type="button"
+> 51	        onClick={() => setOpen((v) => !v)}
+> 52	        className="pointer-events-auto relative flex w-full items-center gap-2 px-3 py-2 text-left"
+> 53	      >
+> 54	        <Terminal className={cn("h-3.5 w-3.5", running ? "text-accent" : "text-muted-foreground")} />
+> 55	        <span className="text-[11px] font-medium text-foreground">Console de execução</span>
+> 56	        <span className="flex items-center gap-2 font-mono text-[10px] text-muted-foreground">
+> 57	          {running > 0 && <span className="text-accent">{running} rodando</span>}
+> 58	          {queued > 0 && <span>{queued} na fila</span>}
+> 59	          {failed > 0 && <span className="text-destructive">{failed} com erro</span>}
+> 60	        </span>
+> 61	        <span className="ml-auto flex items-center gap-1">
+> 62	          {open ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />}
+> 63	        </span>
+> 64	      </button>
+> 65	
+> 66	      {/* Toggle para o modo conversa — o console e o agente dividem o mesmo lugar na tela, como nos
+> 67	          apps de geração: a barra de baixo é onde se fala com a ferramenta. */}
+> 68	      <button
+> 69	        type="button"
+> 70	        onClick={(e) => { e.stopPropagation(); openChat(null); }}
+> 71	        title="Falar com o Agente do Spaces"
+> 72	        className="pointer-events-auto absolute right-2 top-1.5 flex items-center gap-1 rounded-full border border-accent/30 bg-accent/10 px-2 py-1 text-[9.5px] text-accent transition-all hover:bg-accent/20 hover:shadow-[0_0_14px_-4px_hsl(184_100%_50%/0.6)]"
+> 73	      >
+> 74	        <MessageSquare className="h-3 w-3" /> Agente
+> 75	      </button>
+> 76	
+> 77	      {open && (
+> 78	        <div className="pointer-events-auto relative max-h-56 space-y-1 overflow-y-auto border-t border-border/60 p-2">
+> 79	          {jobs.map((j) => {
+> 80	            const meta = STATE_META[j.state] ?? { label: j.state, cls: "text-muted-foreground" };
+> 81	            return (
+> 82	              <button
+> 83	                key={j.id}
+> 84	                type="button"
+> 85	                onClick={() => j.nodeId && selectNode(j.nodeId)}
+> 86	                className="w-full rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent/5"
+> 87	              >
+> 88	                <div className="flex items-center gap-2">
+> 89	                  {j.state === "running" ? (
+> 90	                    <Loader2 className="h-3 w-3 shrink-0 animate-spin text-accent" />
+> 91	                  ) : j.state === "done" ? (
+> 92	                    <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-400" />
+> 93	                  ) : j.state === "failed" || j.state === "error" ? (
+> 94	                    <XCircle className="h-3 w-3 shrink-0 text-destructive" />
+> 95	                  ) : (
+> 96	                    <Clock className="h-3 w-3 shrink-0 text-muted-foreground" />
+> 97	                  )}
+> 98	                  <span className="truncate text-[11px] text-foreground">{j.nodeLabel}</span>
+> 99	                  <span className={cn("shrink-0 font-mono text-[9.5px]", meta.cls)}>{meta.label}</span>
+> 100	                  <span className="ml-auto shrink-0 font-mono text-[9.5px] text-muted-foreground">
+> 101	                    {fmtElapsed(j.elapsedSec)}
+> 102	                    {j.progressPct !== null && <span className="ml-1.5 text-accent">{j.progressPct}%</span>}
+> 103	                  </span>
+> 104	                </div>
+> 105	
+> 106	                {j.state === "running" && (
+> 107	                  <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-muted/40">
+> 108	                    <div
+> 109	                      className="h-full rounded-full bg-accent shadow-[0_0_8px_hsl(184_100%_50%/0.8)] transition-[width] duration-500"
+> 110	                      style={{ width: `${j.progressPct ?? 3}%` }}
+> 111	                    />
+> 112	                  </div>
+> 113	                )}
+> 114	                {j.framesDone !== null && j.framesTotal && j.state === "running" && (
+> 115	                  <p className="mt-0.5 font-mono text-[9px] text-muted-foreground">
+> 116	                    frame {j.framesDone}/{j.framesTotal}
+> 117	                  </p>
+> 118	                )}
+> 119	                {j.error && <p className="mt-0.5 line-clamp-2 text-[9px] text-destructive">{j.error}</p>}
+> 120	              </button>
+> 121	            );
+> 122	          })}
+> 123	        </div>
+> 124	      )}
+> 125	    </div>
+> 126	  );
+> 127	}
+> 128	
+> ```
+
+## 🤖 Claude *(02:58:01)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+RenderConsole returns null when there are no jobs, and those jobs come from useMotionRenderSync as an array of MotionJobView objects. I need to understand how useMotionRenderSync populates this list — whether it's polling video_renders from the server or relying on client-side state tracking jobs initiated in the current session, since a page reload would clear that. I also need to check where RenderConsole is being mounted in the component tree.
+
+The AgentCommandBar might be overlaying or replacing the console display, and if the openChat state persists as "open" across reloads, that could be hiding the console. Let me examine useMotionRenderSync.ts to see how the console gets its data, and I'll write a database reconciliation script in the scratchpad to investigate further.
+
+</details>
+
+
+## 🤖 Claude *(02:58:02)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O console retorna `null` quando não há jobs, vindo de `useMotionRenderSync`. Vou investigar como os jobs são montados e verificar o estado real da fila no banco.
+
+</details>
+
+
+## 🤖 Claude *(02:58:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls src/hooks/useMotionRenderSync.ts 2>/dev/null && wc -l src/hooks/useMotionRenderSync.ts; grep -n \"RenderConsole\\|useMotionRenderSync\\|AgentCommandBar\" src/pages/CanvasEditorPage.tsx | head -20",
+  "description": "Localiza hook de sync e montagem do console no editor"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> src/hooks/useMotionRenderSync.ts
+> 133 src/hooks/useMotionRenderSync.ts
+> 17:import { RenderConsole } from "@/components/canvas/RenderConsole";
+> 18:import { AgentCommandBar } from "@/components/canvas/AgentCommandBar";
+> 19:import { useMotionRenderSync } from "@/hooks/useMotionRenderSync";
+> 338:  const motionJobs = useMotionRenderSync(projectId);
+> 491:          {chatOpen && !isMobile ? <AgentCommandBar /> : <RenderConsole jobs={motionJobs} />}
+> ```
+
+## 🤖 Claude *(02:58:20)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/scratchpad/recon-ep06.ts",
+  "content": "// Recon EP06 \u2014 estado material da fila + grafo (read-only, Lei 1)\nimport { createClient } from \"@supabase/supabase-js\";\n\nconst url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL!;\nconst key = process.env.SB_SECRET_KEY!;\nconst sb = createClient(url, key, { auth: { persistSession: false } });\n\nconst PROJECT = \"d0d82aeb-8c98-4e36-b526-b6bba64a4db5\";\n\n// 1) Fila video_renders das \u00faltimas 2h (engines novas)\nconst { data: renders, error: e1 } = await sb\n  .from(\"video_renders\")\n  .select(\"id,state,engine,charged_mco,created_at,started_at,finished_at,error,composition\")\n  .in(\"engine\", [\"motion\", \"sfx\", \"assemble\", \"hyperframes\"])\n  .gte(\"created_at\", new Date(Date.now() - 2 * 3600_000).toISOString())\n  .order(\"created_at\", { ascending: true });\nif (e1) console.log(\"ERR renders:\", e1.message);\nelse {\n  console.log(`== video_renders (2h): ${renders!.length}`);\n  for (const r of renders!) {\n    const c: any = r.composition || {};\n    const label = c?.props?.label || c?.node_id || c?.mode || \"?\";\n    console.log(\n      `${r.id.slice(0, 8)} ${r.engine} ${r.state} node=${c?.node_id ?? \"?\"} label=${JSON.stringify(label).slice(0, 40)} beats=${c?.props?.beats?.length ?? c?.beats?.length ?? \"?\"} dur=${c?.props?.duration_sec ?? c?.duration_sec ?? \"?\"} created=${r.created_at} finished=${r.finished_at ?? \"-\"} err=${r.error ? String(r.error).slice(0, 80) : \"-\"}`,\n    );\n  }\n}\n\n// 2) Grafo atual do projeto \u2014 n\u00f3s e sanidade\nconst { data: proj, error: e2 } = await sb\n  .from(\"spaces\")\n  .select(\"id,title,graph,updated_at\")\n  .eq(\"id\", PROJECT)\n  .maybeSingle();\nif (e2 || !proj) {\n  // fallback: vm_canvas_projects\n  const { data: p2, error: e3 } = await sb\n    .from(\"vm_canvas_projects\")\n    .select(\"id,name,graph,updated_at\")\n    .eq(\"id\", PROJECT)\n    .maybeSingle();\n  if (e3 || !p2) console.log(\"ERR proj:\", e2?.message, e3?.message);\n  else report(p2.graph, p2.updated_at, \"vm_canvas_projects\");\n} else report(proj.graph, proj.updated_at, \"spaces\");\n\nfunction report(graph: any, updatedAt: string, src: string) {\n  const nodes: any[] = graph?.nodes ?? [];\n  const edges: any[] = graph?.edges ?? [];\n  console.log(`\\n== grafo (${src}) updated_at=${updatedAt} nodes=${nodes.length} edges=${edges.length}`);\n  for (const n of nodes) {\n    const d = n.data ?? {};\n    const kind = d.kind ?? n.type;\n    const label = d.label ?? d.title ?? \"\";\n    let extra = \"\";\n    if (kind === \"motionScene\") {\n      const beats = d.beats?.length ?? d.config?.beats?.length ?? 0;\n      const dur = d.durationSec ?? d.duration_sec ?? d.config?.durationSec ?? \"?\";\n      extra = `beats=${beats} dur=${dur} status=${d.status ?? \"-\"} out=${d.outputAssetId ?? d.outputUrl ? \"yes\" : \"no\"}`;\n    } else if (kind === \"voiceClone\" || kind === \"textToSpeech\" || String(kind).toLowerCase().includes(\"voice\")) {\n      extra = `audio=${d.outputAudioUrl || d.outputUrl || d.audioUrl ? \"YES\" : \"NO\"} status=${d.status ?? \"-\"}`;\n    } else if (kind === \"episodeAssembler\") {\n      extra = `status=${d.status ?? \"-\"} out=${d.outputAssetId ?? \"-\"}`;\n    } else if (kind === \"soundDesign\") {\n      extra = `status=${d.status ?? \"-\"}`;\n    }\n    console.log(`  ${n.id}  ${kind}  \"${String(label).slice(0, 34)}\"  ${extra}`);\n  }\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/scratchpad/recon-ep06.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(02:58:27)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei o problema: quando `chatOpen` é true, o console desaparece porque a renderização condicional mostra a barra de comandos em vez do console. E o RenderConsole retorna null quando não há jobs. Preciso examinar o useMotionRenderSync.ts para entender de onde vêm os jobs e verificar o estado do banco de dados.
+
+</details>
+
+
+## 🤖 Claude *(02:58:27)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useMotionRenderSync.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useEffect, useState } from "react";
+> 2	import { supabase } from "@/integrations/supabase/client";
+> 3	import { useCanvasStore } from "@/store/useCanvasStore";
+> 4	import type { MotionSceneData } from "@/types/canvas";
+> 5	
+> 6	// Amendment 34 — sincronizador de renders no nível da PÁGINA.
+> 7	//
+> 8	// Achado da auditoria (2026-08-04): o poll do resultado vivia dentro do MotionSceneInspector. Se o
+> 9	// usuário clicasse em "Renderizar animação" e fechasse a janela — o comportamento natural, já que o
+> 10	// render leva ~90s — o nó ficava "running" para sempre na tela, mesmo com o MP4 pronto no banco.
+> 11	// O preview do card é a promessa da UI; ela não pode depender de um painel estar aberto.
+> 12	//
+> 13	// Este hook observa TODOS os nós de motion em voo e reconcilia o grafo, aberto ou fechado o inspector.
+> 14	// Também expõe a fila para o console de execução (fila · em execução · progresso · tempo).
+> 15	
+> 16	export interface MotionJobView {
+> 17	  id: string;
+> 18	  nodeId: string | null;
+> 19	  nodeLabel: string;
+> 20	  state: "queued" | "running" | "done" | "failed" | string;
+> 21	  progressPct: number | null;
+> 22	  framesDone: number | null;
+> 23	  framesTotal: number | null;
+> 24	  startedAt: string;
+> 25	  elapsedSec: number;
+> 26	  error?: string;
+> 27	}
+> 28	
+> 29	const POLL_MS = 4000;
+> 30	
+> 31	interface RenderRow {
+> 32	  id: string;
+> 33	  state: string;
+> 34	  storage_key: string | null;
+> 35	  qa: Record<string, unknown> | null;
+> 36	  composition: Record<string, unknown> | null;
+> 37	  created_at: string;
+> 38	  updated_at: string;
+> 39	}
+> 40	
+> 41	export function useMotionRenderSync(projectId: string | undefined) {
+> 42	  const [jobs, setJobs] = useState<MotionJobView[]>([]);
+> 43	
+> 44	  useEffect(() => {
+> 45	    if (!projectId) return;
+> 46	    let cancelled = false;
+> 47	
+> 48	    const sync = async () => {
+> 49	      // Só as linhas deste projeto (RLS já limita ao dono; o filtro evita ruído de outros canvases).
+> 50	      const { data } = await supabase
+> 51	        .from("video_renders")
+> 52	        .select("id, state, storage_key, qa, composition, created_at, updated_at")
+> 53	        .in("engine", ["motion", "sfx", "assemble"])
+> 54	        .order("created_at", { ascending: false })
+> 55	        .limit(40);
+> 56	
+> 57	      if (cancelled) return;
+> 58	      const rows = ((data ?? []) as unknown as RenderRow[]).filter(
+> 59	        (r) => (r.composition as { project_id?: string } | null)?.project_id === projectId,
+> 60	      );
+> 61	
+> 62	      const nodes = useCanvasStore.getState().nodes;
+> 63	      const view: MotionJobView[] = [];
+> 64	
+> 65	      for (const r of rows) {
+> 66	        const comp = (r.composition ?? {}) as { node_id?: string | null; title?: string };
+> 67	        const nodeId = comp.node_id ?? null;
+> 68	        const node = nodeId ? nodes.find((n) => n.id === nodeId) : undefined;
+> 69	        const qa = (r.qa ?? {}) as Record<string, unknown>;
+> 70	        const framesDone = typeof qa.frames_done === "number" ? qa.frames_done : null;
+> 71	        const framesTotal = typeof qa.frames_total === "number" ? qa.frames_total
+> 72	          : typeof qa.frames === "number" ? qa.frames : null;
+> 73	        const pct = r.state === "done" ? 100
+> 74	          : framesDone !== null && framesTotal ? Math.min(99, Math.round((framesDone / framesTotal) * 100))
+> 75	          : null;
+> 76	
+> 77	        // só mostra no console o que está vivo ou terminou há pouco
+> 78	        const ageMs = Date.now() - new Date(r.updated_at).getTime();
+> 79	        if (r.state === "done" && ageMs > 5 * 60 * 1000) continue;
+> 80	
+> 81	        view.push({
+> 82	          id: r.id,
+> 83	          nodeId,
+> 84	          nodeLabel: String((node?.data as unknown as { label?: string })?.label ?? comp.title ?? "Cena"),
+> 85	          state: r.state,
+> 86	          progressPct: pct,
+> 87	          framesDone,
+> 88	          framesTotal,
+> 89	          startedAt: r.created_at,
+> 90	          elapsedSec: Math.max(0, Math.round((Date.now() - new Date(r.created_at).getTime()) / 1000)),
+> 91	          error: typeof qa.error === "string" ? qa.error : undefined,
+> 92	        });
+> 93	
+> 94	        // ── reconciliação do grafo (o motivo deste hook existir) ──────────────────────────
+> 95	        const nodeKind = (node?.data as unknown as { kind?: string })?.kind;
+> 96	        if (!node || !["motionScene", "soundDesign", "episodeAssembler"].includes(nodeKind ?? "")) continue;
+> 97	        const d = node.data as unknown as MotionSceneData;
+> 98	        // o campo de saída difere por kind: som devolve audioUrl, os demais videoUrl
+> 99	        const outKey = nodeKind === "soundDesign" ? "audioUrl" : "videoUrl";
+> 100	        if (r.state === "done" && d.status !== "success" && r.storage_key) {
+> 101	          useCanvasStore.getState().updateNodeData(node.id, {
+> 102	            status: "success",
+> 103	            renderId: undefined,
+> 104	            error: undefined,
+> 105	            output: {
+> 106	              [outKey]: r.storage_key,
+> 107	              generatedAt: r.updated_at,
+> 108	              ...(nodeKind === "episodeAssembler"
+> 109	                ? { sceneCount: Number(qa.scenes) || undefined, durationSec: Number(qa.duration_sec) || undefined }
+> 110	                : {}),
+> 111	            },
+> 112	          } as Partial<MotionSceneData>);
+> 113	        } else if ((r.state === "failed" || r.state === "error") && d.status !== "failed") {
+> 114	          useCanvasStore.getState().updateNodeData(node.id, {
+> 115	            status: "failed",
+> 116	            renderId: undefined,
+> 117	            error: String(qa.error ?? "Falha no render."),
+> 118	          } as Partial<MotionSceneData>);
+> 119	        } else if (r.state === "running" && d.status !== "running") {
+> 120	          useCanvasStore.getState().updateNodeData(node.id, { status: "running", renderId: r.id } as Partial<MotionSceneData>);
+> 121	        }
+> 122	      }
+> 123	
+> 124	      setJobs(view);
+> 125	    };
+> 126	
+> 127	    void sync();
+> 128	    const t = setInterval(sync, POLL_MS);
+> 129	    return () => { cancelled = true; clearInterval(t); };
+> 130	  }, [projectId]);
+> 131	
+> 132	  return jobs;
+> 133	}
+> 134	
+> ```
+
+## 🤖 Claude *(02:58:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/scratchpad && cp /home/gcrUX/htdocs/constellation-orchestra/.env .env 2>/dev/null; bun run recon-ep06.ts 2>&1 | head -80",
+  "description": "Roda recon read-only do estado EP06 no banco"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ERR renders: column video_renders.started_at does not exist
+> 
+> == grafo (vm_canvas_projects) updated_at=2026-08-05T02:55:42.254848+00:00 nodes=22 edges=25
+>   n_tjcmwhhv  scriptGenerator  "Roteiro EP06"  
+>   n_wni7en8f  characterReference  "Apresentador"  
+>   n_f9pbxfas  voiceClone  "Voz do Apresentador"  audio=NO status=idle
+>   n_fatmp2n3  motionScene  "Gancho"  beats=3 dur=22 status=queued out=no
+>   n_q42phhmb  motionScene  "Kimi K3"  beats=3 dur=30 status=queued out=no
+>   n_2ikvq47d  motionScene  "Qwen3.8-Max"  beats=3 dur=14 status=queued out=no
+>   n_3ugfcswj  motionScene  "Claude Mythos"  beats=3 dur=26 status=queued out=no
+>   n_n9cxmyxy  motionScene  "Aceleração"  beats=3 dur=15 status=queued out=no
+>   n_du7duo9w  motionScene  "Amazon"  beats=3 dur=23 status=queued out=no
+>   n_i2wqxjjb  motionScene  "Incidentes"  beats=4 dur=32 status=queued out=no
+>   n_23gsnf1z  motionScene  "MCP"  beats=3 dur=28 status=queued out=no
+>   n_1o8vdyvu  sceneNote  "Abertura"  
+>   n_afupyy7a  sceneNote  "Fecho"  
+>   n_5b7wzfed  voiceClone  "Narração · Gancho"  audio=NO status=success
+>   n_4gra2dik  voiceClone  "Narração · Kimi K3"  audio=NO status=success
+>   n_dad4zgp1  voiceClone  "Narração · Qwen3.8-Max"  audio=NO status=success
+>   n_nd38mdzj  voiceClone  "Narração · Claude Mythos"  audio=NO status=success
+>   n_kd6mavj1  voiceClone  "Narração · Aceleração"  audio=NO status=success
+>   n_afyytj51  voiceClone  "Narração · Amazon"  audio=NO status=success
+>   n_lhp5ey4n  voiceClone  "Narração · Incidentes"  audio=NO status=success
+>   n_23tg6izb  voiceClone  "Narração · MCP"  audio=NO status=success
+>   n_yasbqivx  episodeAssembler  "Master EP06"  status=idle out=-
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(02:59:09)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei dados importantes no banco de dados: o grafo tem 22 nós e 25 edges, com 8 cenas de motion em status queued e durações que correspondem ao esperado (Gancho 22s, Incidentes 32s, Kimi K3 30s), além de 8 nós de voz associados.
+
+Porém, há um problema: meu script de verificação pode estar consultando os campos errados para o áudio — a saída de voz pode estar em `d.output.audioUrl` em vez de `d.outputAudioUrl`, então preciso validar a estrutura real antes de confirmar se o áudio desapareceu. O player na UI mostrava 0:00/0:00, o que pode indicar que a metadata não carregou ou que o áudio realmente está faltando.
+
+Também descobri que a query de video_renders falhou porque a coluna `started_at` não existe, então ainda não tenho clareza sobre o estado da fila de renderização. As cenas motion estão marcadas como queued no banco com `out=no`, mas a interface mostrava "renderizando a animação…" — um estado apenas client-side. Comparando as durações salvas com o que aparecia no screenshot, a maioria bate (Gancho 22s, Kimi K3 30s), mas há uma discrepância em Qwen3.8-Max que pode ter sido 16s na interface enquanto o banco registra 14s.
+
+Voltando ao ponto principal: o FIRST ACTION mencionava 9 nós de voz (8 com áudio IVC), e aqui vejo exatamente 9 voiceClone — "Voz do Apresentador" (idle, sem áudio — este é o 9º, o clone da voz) mais 8 narrações com `status=success`. Meu probe de áudio está provavelmente incorreto, marcando `audio=NO` em todos apesar do status de sucesso.
+
+Preciso revisar a estrutura do VoiceCloneData — o campo de áudio pode estar em `output.audioUrl` em vez dos caminhos que estava checando. Também preciso refazer a query da fila de video_renders removendo o filtro `started_at`, e investigar por que o console desapareceu — parece que ele só aparece quando `chatOpen=false` E há jobs para renderizar, com a sincronização filtrando por `project_id` client-side.
+
+Agora estou considerando por que os jobs não aparecem: ou `chatOpen` está persistido como true (o que explicaria por que não vejo nem o console nem a barra do agente), ou `jobs.length=0` porque a query não retorna nada, o filtro de `project_id` não bate, ou os jobs nunca foram enfileirados em primeiro lugar.
+
+Os cards mostram "renderizando a animação…" mas isso pode ser apenas o status client-side definido pelo dispatch do Run All antes do enfileiramento real acontecer — a fila pode estar morta. O grafo salvo mostra status=queued nas 8 cenas (não "running"), o que significa que a UI capturou esse estado no autosave há 14 segundos. Preciso verificar a fila de verdade para entender se o enqueue falhou silenciosamente ou se os jobs ficaram "running" client-side sem uma linha correspondente no banco.
+
+Também tem a questão do hover nos nós — preciso remover o preview ao passar o mouse sem quebrar as conexões de borda e a ligação da imagem. E o worker consumiu 7 minutos e 40 segundos de CPU, então estava processando algo, mas o journal está vazio, o que é estranho já que o service usa StandardOutput padrão — os logs podem estar indo para o journal com um nome de unit diferente.
+
+Vou refazer o reconhecimento da fila sem o filtro de started_at, verificar a estrutura do output de áudio, contar quantos jobs estão em cada estado e puxar os logs completos do journal desde que o serviço iniciou.
+
+</details>
+
+
+## 🤖 Claude *(02:59:10)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei que as 8 cenas motion no grafo salvo têm beats e durações corretos mas estão com status=queued, e ainda não consegui visualizar a fila porque estava consultando a coluna errada. Vou refinar a consulta agora.
+
+</details>
+
+
+## 🤖 Claude *(02:59:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/scratchpad && cat > recon2.ts <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nconst sb = createClient(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL!, process.env.SB_SECRET_KEY!, { auth: { persistSession: false } });\nconst PROJECT = \"d0d82aeb-8c98-4e36-b526-b6bba64a4db5\";\n\nconst { data: renders, error } = await sb.from(\"video_renders\")\n  .select(\"id,state,engine,charged_mco,created_at,updated_at,storage_key,qa,composition\")\n  .in(\"engine\", [\"motion\",\"sfx\",\"assemble\"])\n  .gte(\"created_at\", new Date(Date.now()-6*3600_000).toISOString())\n  .order(\"created_at\",{ascending:true});\nif (error) { console.log(\"ERR:\", error.message); process.exit(1); }\nconsole.log(`== video_renders (6h, motion/sfx/assemble): ${renders!.length}`);\nfor (const r of renders!) {\n  const c:any = r.composition||{}; const qa:any = r.qa||{};\n  console.log(`${r.id.slice(0,8)} ${r.engine} [${r.state}] proj=${(c.project_id||\"?\").slice(0,8)} node=${c.node_id||\"?\"} title=${JSON.stringify(c.title||\"\").slice(0,30)} beats=${c.beats?.length ?? c.props?.beats?.length ?? \"?\"} dur=${c.duration_sec ?? c.props?.duration_sec ?? \"?\"} key=${r.storage_key? \"yes\":\"-\"} qa.err=${qa.error?String(qa.error).slice(0,90):\"-\"} created=${r.created_at.slice(11,19)} upd=${r.updated_at?.slice(11,19)}`);\n}\n\n// shape real de um n\u00f3 de voz + um motion (dump data completo de 2 n\u00f3s)\nconst { data: p } = await sb.from(\"vm_canvas_projects\").select(\"graph\").eq(\"id\", PROJECT).maybeSingle();\nconst nodes:any[] = p?.graph?.nodes||[];\nconst voice = nodes.find((n:any)=>n.id===\"n_5b7wzfed\");\nconst motion = nodes.find((n:any)=>n.id===\"n_fatmp2n3\");\nconst asm = nodes.find((n:any)=>n.id===\"n_yasbqivx\");\nconsole.log(\"\\n== voz Gancho data:\", JSON.stringify(voice?.data).slice(0,900));\nconsole.log(\"\\n== motion Gancho data:\", JSON.stringify(motion?.data).slice(0,900));\nconsole.log(\"\\n== assembler data:\", JSON.stringify(asm?.data).slice(0,600));\nEOF\nbun run recon2.ts 2>&1 | head -60",
+  "description": "Fila real no banco + shape dos n\u00f3s de voz/motion/assembler"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> == video_renders (6h, motion/sfx/assemble): 0
+> 
+> == voz Gancho data: {"kind":"voiceClone","label":"Narração · Gancho","output":{"audioUrl":"ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep06/narration/01-gancho.mp3","generatedAt":"2026-08-05T02:35:14.892Z"},"prompt":"","status":"success","language":"pt-BR","provider":"elevenlabs"}
+> 
+> == motion Gancho data: {"kind":"motionScene","beats":[{"word":"invadiu","event":"primeiro servidor acende em alerta"},{"word":"três empresas","event":"o segundo e o terceiro acendem em sequência"},{"word":"ninguém mandou","event":"a câmera recua e revela o mapa inteiro"}],"label":"Gancho","title":"","aspect":"16:9","status":"queued","elements":["nodes","runningRing","edges","badges"],"background":"galaxia","description":"Três servidores acendem em vermelho, um a um; a câmera recua e eles viram três pontos minúsculos num mapa inteiro aceso em ciano","durationSec":22}
+> 
+> == assembler data: {"kind":"episodeAssembler","label":"Master EP06","order":"canvas","aspect":"16:9","status":"idle","fadeSec":0.3,"transition":"cut","loudnormLufs":-16}
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(02:59:55)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Descobri algo crítico: a fila de renderização está completamente vazia nas últimas 6 horas — nenhum job de motion, efeitos ou montagem foi enfileirado. Os spinners de "renderizando" que aparecem na interface são apenas estado visual do cliente, não refletem processamento real. O console de execução está vazio porque literalmente não há trabalho na fila, então o worker que consumiu 7 minutos e 40 segundos de CPU deve ter sido de algo anterior.
+
+Agora estou investigando por que o "Executar tudo" não despachou nada para o servidor. Minhas hipóteses principais: a função edge `motion-render` pode ter falhado silenciosamente (erro 401, 404, CORS, ou não está deployada), ou talvez o build servido esteja desatualizado — mas o seal confirma que o build está verde e deployado, então isso é improvável.
+
+Preciso verificar se essas funções edge (`motion-render`, `sfx-generate`, `assemble`) existem e estão realmente deployadas, e depois rastrear como o dispatch funciona no código do "Executar tudo" para ver como ele despacha a cena de movimento.
+
+Ótima notícia sobre os áudios: as narrações existem mesmo (os caminhos estão no bucket), e os players mostrando 0:00/0:00 provavelmente é porque o bucket é privado e precisa de URLs assinadas, ou o player só carrega metadados ao iniciar a reprodução. O status de sucesso confirma que as narrações estão funcionando.
+
+O grafo está inteiro (beats, durações, narrações, assembler pronto), mas o problema real é que o dispatch não está enfileirando nenhum job. Vejo que as cenas mostram "renderizando a animação..." com status rodando no cliente, e o grafo salvo diz "queued" — mas se o dispatch setou o status como queued/running no cliente e falhou ao enfileirar, deveria ter revertido, mas não reverteu. Então o bug é: no "Executar tudo", quando chama a função edge para motion, se ela retorna 404 ou falha, o status fica preso em queued/running para sempre — spinner fantasma sem nada no console.
+
+Preciso verificar se as funções edge existem no repositório e se estão deployadas, depois montar um plano de correção que cubra o dispatch/enqueue, remova a preview ao passar o mouse preservando a conexão, e faça auditoria do fluxo completo.
+
+</details>
+
+
+## 🤖 Claude *(02:59:57)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei que a fila `video_renders` está vazia nas últimas 6h — o "renderizando" é apenas um spinner client-side e o botão Executar tudo não enfileirou nada no servidor, embora as narrações estejam intactas. Agora vou investigar o dispatch e as edge functions para encontrar por que o enqueue falhou.
+
+</details>
+
+
+## 🤖 Claude *(02:59:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls supabase/functions/ | grep -iE \"motion|sfx|sound|assemble\"; echo \"---GREP-DISPATCH---\"; grep -rn \"motion-render\\|sfx-generate\\|assemble-master\" src/ --include=\"*.ts\" --include=\"*.tsx\" -l; echo \"---RUNALL---\"; grep -rn \"motionScene\\|soundDesign\\|episodeAssembler\" src/hooks/useCanvasPipeline.ts 2>/dev/null | head -30",
+  "description": "Verifica exist\u00eancia das edge fns e pontos de dispatch no cliente"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> assemble-master
+> motion-render
+> sfx-generate
+> ---GREP-DISPATCH---
+> src/components/canvas/RightPanel/inspectors/SoundDesignInspector.tsx
+> src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx
+> src/components/canvas/RightPanel/inspectors/EpisodeAssemblerInspector.tsx
+> src/hooks/useCanvasPipeline.ts
+> ---RUNALL---
+> src/hooks/useCanvasPipeline.ts:47:      // Amendment 34: os nós novos NÃO são dirigidos por `prompt` — motionScene roda por
+> src/hooks/useCanvasPipeline.ts:48:      // `description` e soundDesign sintetizado roda por `recipe`. Sem estas guardas eles caíam no
+> src/hooks/useCanvasPipeline.ts:51:      if (n.data.kind === "motionScene") {
+> src/hooks/useCanvasPipeline.ts:57:      if (n.data.kind === "episodeAssembler") {
+> src/hooks/useCanvasPipeline.ts:60:      if (n.data.kind === "soundDesign") {
+> src/hooks/useCanvasPipeline.ts:215:      if (n.data.kind === "motionScene") {
+> src/hooks/useCanvasPipeline.ts:233:      if (n.data.kind === "episodeAssembler") {
+> src/hooks/useCanvasPipeline.ts:253:      if (n.data.kind === "soundDesign") {
+> ```
+
+## 🤖 Claude *(03:00:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCanvasPipeline.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useState, useCallback, useMemo, useEffect } from "react";
+> 2	import { toast } from "sonner";
+> 3	import { useCanvasStore } from "@/store/useCanvasStore";
+> 4	import { useCanvasExecute } from "@/hooks/useCanvasStudio";
+> 5	import { getTopologicalLayers } from "@/lib/canvas-dag";
+> 6	import { findUpstreamImage, findUpstreamImages, findUpstreamHandleAsset, findUpstreamProductItems } from "@/lib/canvas-utils";
+> 7	import { toDisplayUrl, toDisplayUrls } from "@/lib/asset-url";
+> 8	import { assertExecuteSuccess } from "@/lib/canvas-execute-result";
+> 9	import { expandProductRuns, type ProductListItem } from "@/lib/product-list";
+> 10	import {
+> 11	  CanvasNode,
+> 12	  estimateNodeCost,
+> 13	  resolveExecutePayload,
+> 14	} from "@/types/canvas";
+> 15	import { supabase } from "@/integrations/supabase/client";
+> 16	import { edgeErrorMessage } from "@/lib/edge";
+> 17	import { collectMasterClips } from "@/lib/master-clips";
+> 18	
+> 19	export type PipelineStatus = "pending" | "running" | "done" | "error" | "blocked";
+> 20	
+> 21	export function useCanvasPipeline({
+> 22	  projectId,
+> 23	  refetchDashboard,
+> 24	}: {
+> 25	  projectId?: string;
+> 26	  refetchDashboard?: () => void;
+> 27	}) {
+> 28	  const [pipelineStatus, setPipelineStatus] = useState<PipelineStatus>("pending");
+> 29	
+> 30	  const nodes = useCanvasStore((s) => s.nodes);
+> 31	  const edges = useCanvasStore((s) => s.edges);
+> 32	  const updateNodeData = useCanvasStore((s) => s.updateNodeData);
+> 33	  const styleSettings = useCanvasStore((s) => s.styleSettings);
+> 34	  const executeNode = useCanvasExecute();
+> 35	
+> 36	  // Determine if a node is currently runnable
+> 37	  const runnable = useMemo(() => {
+> 38	    return nodes.filter((n) => {
+> 39	      if (n.data.kind === "characterReference" || n.data.kind === "productList") return false;
+> 40	      // spaces-cadence FR-CAD-001: the Cadência node ARMS a plan from its inspector (cadence-plan) — it is not
+> 41	      // a "runnable" generate step and carries no prompt, so it is excluded from the Run All gate (SDD §2.1).
+> 42	      if (n.data.kind === "cadence") return false;
+> 43	      // sceneNote é decorativo (sem motor); nunca entra no Run All.
+> 44	      if (n.data.kind === "sceneNote") return false;
+> 45	      if (n.data.status === "running" || n.data.status === "queued") return false;
+> 46	
+> 47	      // Amendment 34: os nós novos NÃO são dirigidos por `prompt` — motionScene roda por
+> 48	      // `description` e soundDesign sintetizado roda por `recipe`. Sem estas guardas eles caíam no
+> 49	      // teste genérico de prompt abaixo e ficavam INVISÍVEIS ao "Executar tudo" (o objetivo é sair
+> 50	      // do Run All com o master pronto — diretiva Sovereign 2026-08-05).
+> 51	      if (n.data.kind === "motionScene") {
+> 52	        const desc: unknown = "description" in n.data ? n.data.description : "";
+> 53	        return typeof desc === "string" && desc.trim().length > 3;
+> 54	      }
+> 55	      // O montador é o nó TERMINAL: entra no Run All quando há ao menos um clipe PRONTO ligado nele.
+> 56	      // A topologia já o coloca na última camada (todas as cenas são upstream dele).
+> 57	      if (n.data.kind === "episodeAssembler") {
+> 58	        return collectMasterClips(nodes, edges, n.id, "canvas").length > 0;
+> 59	      }
+> 60	      if (n.data.kind === "soundDesign") {
+> 61	        const engine: unknown = "engine" in n.data ? n.data.engine : "elevenlabs";
+> 62	        if (engine === "ffmpeg") return true; // a receita já é o comando
+> 63	        const p: unknown = "prompt" in n.data ? n.data.prompt : "";
+> 64	        return typeof p === "string" && p.trim().length > 0;
+> 65	      }
+> 66	
+> 67	      // it.4c: upscale has no prompt — it's runnable when it has an upstream image edge.
+> 68	      if (n.data.kind === "upscale") {
+> 69	        return edges.some((e) => e.target === n.id);
+> 70	      }
+> 71	
+> 72	      // `n.data` is `CanvasNodeData & Record<string, unknown>` (ReactFlow's constraint), so `.prompt`
+> 73	      // widens to `unknown` for the union members that don't declare it. Narrow explicitly instead of
+> 74	      // asserting `string`: a non-string value used to reach `.trim()` and throw at runtime.
+> 75	      const rawPrompt: unknown = "prompt" in n.data ? n.data.prompt : "";
+> 76	      if (typeof rawPrompt !== "string" || !rawPrompt.trim()) return false;
+> 77	
+> 78	      if (n.data.kind === "imageToVideo") {
+> 79	        const hasUpstream = edges.some((e) => e.target === n.id);
+> 80	        if (!hasUpstream) return false;
+> 81	      }
+> 82	      return true;
+> 83	    });
+> 84	  }, [nodes, edges]);
+> 85	
+> 86	  const runnableCount = runnable.length;
+> 87	
+> 88	  const runAllCost = useMemo(() => {
+> 89	    return runnable.reduce((sum, n) => sum + estimateNodeCost(n.data), 0);
+> 90	  }, [runnable]);
+> 91	
+> 92	  // Check on load/graph change if there's any cycle
+> 93	  useEffect(() => {
+> 94	    if (nodes.length === 0) {
+> 95	      setPipelineStatus("pending");
+> 96	      return;
+> 97	    }
+> 98	    try {
+> 99	      getTopologicalLayers(nodes, edges);
+> 100	      setPipelineStatus((prev) => (prev === "blocked" ? "pending" : prev));
+> 101	    } catch (e) {
+> 102	      setPipelineStatus("blocked");
+> 103	    }
+> 104	  }, [nodes, edges]);
+> 105	
+> 106	  // Run a single node
+> 107	  const runSingleNode = useCallback(
+> 108	    async (nodeId: string) => {
+> 109	      const currentNodes = useCanvasStore.getState().nodes;
+> 110	      const currentEdges = useCanvasStore.getState().edges;
+> 111	      const currentStyleSettings = useCanvasStore.getState().styleSettings;
+> 112	
+> 113	      const n = currentNodes.find((node) => node.id === nodeId);
+> 114	      if (!n) return;
+> 115	
+> 116	      const payload = resolveExecutePayload(n.data, currentStyleSettings);
+> 117	      if (!payload) return;
+> 118	
+> 119	      const isVideo = n.data.kind === "imageToVideo";
+> 120	      // Veo (provider 'google') does text→video and consumes upstream images as IDENTITY REFERENCES;
+> 121	      // it only wants a first-frame when the node explicitly opts in (veoUseFirstFrame). Higgsfield i2v +
+> 122	      // upscale REQUIRE an upstream first-frame image.
+> 123	      const isVeoVideo = isVideo && payload.provider === "google";
+> 124	      const veoUseFirstFrame =
+> 125	        isVeoVideo && (n.data as { veoUseFirstFrame?: boolean }).veoUseFirstFrame === true;
+> 126	      // it.4c: upscale (like Higgsfield video) needs the upstream image as its input_asset_url.
+> 127	      const wantsInputImage = (isVideo && !isVeoVideo) || n.data.kind === "upscale";
+> 128	      const inputAssetUrl = (wantsInputImage || veoUseFirstFrame)
+> 129	        ? findUpstreamImage(n.id, currentNodes, currentEdges)
+> 130	        : undefined;
+> 131	
+> 132	      if (wantsInputImage && !inputAssetUrl) {
+> 133	        updateNodeData(n.id, {
+> 134	          status: "failed",
+> 135	          error: "Imagem de entrada não disponível",
+> 136	        });
+> 137	        return;
+> 138	      }
+> 139	
+> 140	      const isSceneCompose = n.data.kind === "sceneCompose";
+> 141	      const sceneComposeInputs = isSceneCompose
+> 142	        ? {
+> 143	            input_image_1: findUpstreamHandleAsset(n.id, "input_image_1", currentNodes, currentEdges),
+> 144	            input_image_2: findUpstreamHandleAsset(n.id, "input_image_2", currentNodes, currentEdges),
+> 145	            input_layout: findUpstreamHandleAsset(n.id, "input_layout", currentNodes, currentEdges),
+> 146	          }
+> 147	        : {};
+> 148	
+> 149	      // Cross-node consistency (Phase 4.3): image/style nodes inherit the
+> 150	      // upstream connected creative(s) as reference images so identity is
+> 151	      // preserved across the chain. SOP: docs/processes/canvas-node-consistency.md.
+> 152	      // F4: video nodes (POV/Veo) MUST inherit the connected identity references too. Previously only
+> 153	      // generateImage/styleTransfer collected them, so Run All sent the Veo node ZERO references and the
+> 154	      // face came out generic. When the node uses its first-frame, drop that image from the reference set.
+> 155	      // Veo forbids sending a first-frame image AND identity references together ("Image and reference images
+> 156	      // cannot be both set"). So Veo nodes collect references ONLY in reference mode (veoUseFirstFrame=false).
+> 157	      // In first-frame mode the video is generated FROM the connected image and references do not apply — a
+> 158	      // true XOR at the source (born-dead POV crash 2026-07-21; server also guards). generateImage/styleTransfer
+> 159	      // always inherit refs for cross-node consistency.
+> 160	      const wantsReference =
+> 161	        n.data.kind === "generateImage" ||
+> 162	        n.data.kind === "styleTransfer" ||
+> 163	        (isVeoVideo && !veoUseFirstFrame);
+> 164	      const rawReferenceUrls = wantsReference
+> 165	        ? findUpstreamImages(n.id, currentNodes, currentEdges)
+> 166	        : [];
+> 167	
+> 168	      // ── it.4a (FR-SPACES-029): generateImage with an upstream productList EXPANDS into one
+> 169	      // independent ledger run per item (template×items → N consistent creatives). Each run gets a
+> 170	      // fresh node_run_id (minted in useCanvasExecute) + the item's own reference image. Skip
+> 171	      // expansion when the list is empty/absent — falls through to the single-run path below.
+> 172	      if (n.data.kind === "generateImage") {
+> 173	        const items = findUpstreamProductItems(n.id, currentNodes, currentEdges);
+> 174	        const runs = items ? expandProductRuns(n.data.prompt, items as ProductListItem[]) : [];
+> 175	        if (runs.length > 0) {
+> 176	          updateNodeData(n.id, { status: "running", error: undefined });
+> 177	          let lastUrl: string | undefined;
+> 178	          let firstError: string | undefined;
+> 179	          let okCount = 0;
+> 180	          for (const run of runs) {
+> 181	            try {
+> 182	              const raw = await executeNode.mutateAsync({
+> 183	                project_id: projectId!,
+> 184	                node_id: n.id,
+> 185	                ...payload,
+> 186	                prompt: run.prompt,
+> 187	                ...(run.referenceImageUrl ? { reference_image_urls: [run.referenceImageUrl] } : {}),
+> 188	              });
+> 189	              const result = assertExecuteSuccess(raw);
+> 190	              lastUrl = result.output_url ?? lastUrl;
+> 191	              okCount++;
+> 192	            } catch (e) {
+> 193	              if (!firstError) firstError = e instanceof Error ? e.message : String(e);
+> 194	            }
+> 195	          }
+> 196	          if (okCount > 0) {
+> 197	            updateNodeData(n.id, {
+> 198	              status: "success",
+> 199	              output: { imageUrl: lastUrl, generatedAt: new Date().toISOString() },
+> 200	              error: firstError ? `${okCount}/${runs.length} — ${firstError}` : undefined,
+> 201	            });
+> 202	            toast.success(`Lote gerado: ${okCount}/${runs.length} criativos na Biblioteca`);
+> 203	          } else {
+> 204	            updateNodeData(n.id, { status: "failed", error: firstError ?? "Falha no lote" });
+> 205	          }
+> 206	          return;
+> 207	        }
+> 208	      }
+> 209	
+> 210	      updateNodeData(n.id, { status: "running", error: undefined });
+> 211	
+> 212	      // ── Amendment 34: motores próprios (fila do host) — despacham por edge fn dedicada, não pelo
+> 213	      //    canvas-execute. Ambos são assíncronos: o useMotionRenderSync reconcilia o nó quando o
+> 214	      //    worker termina, então aqui basta marcar `running` e sair.
+> 215	      if (n.data.kind === "motionScene") {
+> 216	        const d = n.data as unknown as {
+> 217	          title?: string; description?: string; beats?: unknown[]; elements?: unknown[];
+> 218	          background?: string; aspect?: string; durationSec?: number;
+> 219	        };
+> 220	        const { data, error } = await supabase.functions.invoke<{ render_id: string }>("motion-render", {
+> 221	          body: {
+> 222	            project_id: projectId, node_id: n.id,
+> 223	            title: d.title ?? "", description: d.description ?? "",
+> 224	            beats: d.beats ?? [], elements: d.elements ?? [],
+> 225	            background: d.background ?? "galaxia", aspect: d.aspect ?? "16:9",
+> 226	            duration_sec: d.durationSec ?? 8,
+> 227	          },
+> 228	        });
+> 229	        if (error) throw new Error(await edgeErrorMessage(error, "Falha ao enfileirar a animação."));
+> 230	        updateNodeData(n.id, { status: "running", renderId: data?.render_id } as never);
+> 231	        return;
+> 232	      }
+> 233	      if (n.data.kind === "episodeAssembler") {
+> 234	        const d = n.data as unknown as {
+> 235	          order?: "canvas" | "connection"; aspect?: string; loudnormLufs?: number;
+> 236	          transition?: string; fadeSec?: number;
+> 237	        };
+> 238	        const { nodes: freshNodes, edges: freshEdges } = useCanvasStore.getState();
+> 239	        const clips = collectMasterClips(freshNodes, freshEdges, n.id, d.order ?? "canvas");
+> 240	        if (!clips.length) throw new Error("Nenhuma cena pronta conectada ao montador.");
+> 241	        const { data, error } = await supabase.functions.invoke<{ render_id: string }>("assemble-master", {
+> 242	          body: {
+> 243	            project_id: projectId, node_id: n.id,
+> 244	            storage_keys: clips.map((c) => c.key),
+> 245	            aspect: d.aspect ?? "16:9", loudnorm_lufs: d.loudnormLufs ?? -16,
+> 246	            transition: d.transition ?? "cut", fade_sec: d.fadeSec ?? 0.3,
+> 247	          },
+> 248	        });
+> 249	        if (error) throw new Error(await edgeErrorMessage(error, "Falha ao montar o master."));
+> 250	        updateNodeData(n.id, { status: "running", renderId: data?.render_id } as never);
+> 251	        return;
+> 252	      }
+> 253	      if (n.data.kind === "soundDesign") {
+> 254	        const d = n.data as unknown as {
+> 255	          engine?: string; recipe?: string; prompt?: string; soundType?: string;
+> 256	          durationSec?: number; promptInfluence?: number; loop?: boolean;
+> 257	        };
+> 258	        const { data, error } = await supabase.functions.invoke<{ render_id?: string; storage_key?: string; asset_id?: string; duration_sec?: number }>(
+> 259	          "sfx-generate",
+> 260	          {
+> 261	            body: {
+> 262	              project_id: projectId, node_id: n.id,
+> 263	              engine: d.engine ?? "ffmpeg", recipe: d.recipe,
+> 264	              prompt: (d.prompt ?? "").trim() || (d.recipe ?? "sfx"),
+> 265	              sound_type: d.soundType ?? "hard_sfx",
+> 266	              duration_sec: d.durationSec ?? 4,
+> 267	              prompt_influence: d.promptInfluence ?? 0.4,
+> 268	              loop: d.loop ?? false,
+> 269	            },
+> 270	          },
+> 271	        );
+> 272	        if (error) throw new Error(await edgeErrorMessage(error, "Falha ao gerar o som."));
+> 273	        if (data?.render_id) updateNodeData(n.id, { status: "running", renderId: data.render_id } as never);
+> 274	        else updateNodeData(n.id, {
+> 275	          status: "success",
+> 276	          output: { audioUrl: data?.storage_key, assetId: data?.asset_id, generatedAt: new Date().toISOString() },
+> 277	        } as never);
+> 278	        return;
+> 279	      }
+> 280	
+> 281	      // Re-sign upstream URLs to FRESH owner-scoped URLs — a node output persisted at generation time
+> 282	      // becomes a dead public URL / expired signed URL weeks later, and the server download drops it
+> 283	      // silently (the "refs ignored" bug). SOP: private-bucket-asset-signing.
+> 284	      const referenceImageUrls = await toDisplayUrls(rawReferenceUrls);
+> 285	      const freshInputAssetUrl = inputAssetUrl ? await toDisplayUrl(inputAssetUrl) : undefined;
+> 286	
+> 287	      try {
+> 288	        const raw = await executeNode.mutateAsync({
+> 289	          project_id: projectId!,
+> 290	          node_id: n.id,
+> 291	          ...payload,
+> 292	          ...(freshInputAssetUrl ? { input_asset_url: freshInputAssetUrl } : {}),
+> 293	          ...sceneComposeInputs,
+> 294	          ...(referenceImageUrls.length ? { reference_image_urls: referenceImageUrls } : {}),
+> 295	        });
+> 296	        const result = assertExecuteSuccess(raw);
+> 297	
+> 298	        if (isVideo) {
+> 299	          // Async job submitted — let Realtime or polling finalize it
+> 300	        } else {
+> 301	          updateNodeData(n.id, {
+> 302	            status: "success",
+> 303	            output: {
+> 304	              imageUrl: result.output_url ?? undefined,
+> 305	              generatedAt: new Date().toISOString(),
+> 306	            },
+> 307	            error: undefined,
+> 308	          });
+> 309	        }
+> 310	      } catch (e) {
+> 311	        const msg = e instanceof Error ? e.message : String(e);
+> 312	        updateNodeData(n.id, { status: "failed", error: msg });
+> 313	      }
+> 314	    },
+> 315	    [projectId, updateNodeData, executeNode]
+> 316	  );
+> 317	
+> 318	  // Helper: wait for nodes to complete in Zustand
+> 319	  const waitForNodesToComplete = useCallback(async (nodeIds: string[]): Promise<boolean> => {
+> 320	    return new Promise((resolve) => {
+> 321	      const checkComplete = () => {
+> 322	        const currentNodes = useCanvasStore.getState().nodes;
+> 323	        const relevantNodes = currentNodes.filter((n) => nodeIds.includes(n.id));
+> 324	
+> 325	        const allDone = relevantNodes.every(
+> 326	          (n) => n.data.status === "success" || n.data.status === "failed"
+> 327	        );
+> 328	        const anyFailed = relevantNodes.some((n) => n.data.status === "failed");
+> 329	
+> 330	        return { allDone, anyFailed };
+> 331	      };
+> 332	
+> 333	      const initial = checkComplete();
+> 334	      if (initial.allDone) {
+> 335	        resolve(!initial.anyFailed);
+> 336	        return;
+> 337	      }
+> 338	
+> 339	      const unsubscribe = useCanvasStore.subscribe(() => {
+> 340	        const { allDone, anyFailed } = checkComplete();
+> 341	        if (allDone) {
+> 342	          unsubscribe();
+> 343	          resolve(!anyFailed);
+> 344	        }
+> 345	      });
+> 346	    });
+> 347	  }, []);
+> 348	
+> 349	  // Execute pipeline
+> 350	  const runPipeline = useCallback(async () => {
+> 351	    if (!projectId) return;
+> 352	
+> 353	    let layers: CanvasNode[][];
+> 354	    try {
+> 355	      layers = getTopologicalLayers(nodes, edges);
+> 356	    } catch (e) {
+> 357	      setPipelineStatus("blocked");
+> 358	      toast.error("Ciclo detectado no grafo! O pipeline não pode ser executado.");
+> 359	      return;
+> 360	    }
+> 361	
+> 362	    const runnableIds = runnable.map((n) => n.id);
+> 363	    if (runnableIds.length === 0) {
+> 364	      toast.error("Nenhum nó qualificado para execução.");
+> 365	      return;
+> 366	    }
+> 367	
+> 368	    setPipelineStatus("running");
+> 369	    toast.info(`Iniciando execução em camadas de ${runnableIds.length} nós...`);
+> 370	
+> 371	    let executionSuccess = true;
+> 372	
+> 373	    for (let i = 0; i < layers.length; i++) {
+> 374	      const layer = layers[i];
+> 375	      const layerRunnable = layer.filter((n) => runnableIds.includes(n.id));
+> 376	
+> 377	      if (layerRunnable.length === 0) {
+> 378	        continue;
+> 379	      }
+> 380	
+> 381	      // Mark layer nodes as queued
+> 382	      for (const n of layerRunnable) {
+> 383	        updateNodeData(n.id, { status: "queued", error: undefined });
+> 384	      }
+> 385	
+> 386	      // Wait 100ms for UI status update
+> 387	      await new Promise((resolve) => setTimeout(resolve, 100));
+> 388	
+> 389	      // Execute all nodes in this layer in parallel
+> 390	      const runPromises = layerRunnable.map((n) => runSingleNode(n.id));
+> 391	      await Promise.all(runPromises);
+> 392	
+> 393	      // Wait for all nodes in this layer to reach success/failed
+> 394	      const layerIds = layerRunnable.map((n) => n.id);
+> 395	      const layerSuccess = await waitForNodesToComplete(layerIds);
+> 396	
+> 397	      if (!layerSuccess) {
+> 398	        executionSuccess = false;
+> 399	        break;
+> 400	      }
+> 401	    }
+> 402	
+> 403	    if (executionSuccess) {
+> 404	      setPipelineStatus("done");
+> 405	      toast.success("Pipeline executado com sucesso!");
+> 406	    } else {
+> 407	      setPipelineStatus("error");
+> 408	      toast.error("Erro na execução do pipeline. Algumas etapas falharam.");
+> 409	    }
+> 410	
+> 411	    refetchDashboard?.();
+> 412	  }, [nodes, edges, runnable, projectId, runSingleNode, waitForNodesToComplete, updateNodeData, refetchDashboard]);
+> 413	
+> 414	  const resetPipeline = useCallback(() => {
+> 415	    setPipelineStatus("pending");
+> 416	  }, []);
+> 417	
+> 418	  return {
+> 419	    pipelineStatus,
+> 420	    runPipeline,
+> 421	    resetPipeline,
+> 422	    runnable,
+> 423	    runnableCount,
+> 424	    runAllCost,
+> 425	    runSingleNode,
+> 426	  };
+> 427	}
+> 428	
+> ```
+
+## 🤖 Claude *(03:01:43)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm spotting a potential bug in the motionScene branch where an error thrown on line 229 isn't wrapped in try/catch, unlike the canvas-execute path. This means if motion-render fails, the error propagates uncaught and rejects the entire Promise.all in runPipeline.
+
+But wait — motion-render was actually deployed and working yesterday since those jobs were queued and rendered. The real issue might be that waitForNodesToComplete never resolves for async nodes in motionScene.
+
+js — it marks status as "running" and returns, so runPipeline waits indefinitely for all layer nodes to reach success/failed. For motion rendering (~90 seconds per render × serial queue = 12+ minutes for 8 scenes), the Run All button stays stuck waiting until useMotionRenderSync reconciles to success through polling. The queue shows zero rows though, which means either the invoke never fired or it failed silently. The new code is definitely in the bundle since the UI shows the motion cards with beats, so either the invoke itself is failing or something else is blocking the dispatch. Promise.all rejeita no meio → nós ficam "running" para sempre (spinner fantasma) → fila vazia, o que bate com todos os sintomas. Mas o grafo salvo mostra `status=queued` nas 8 cenas, não "running" — o autosave foi 14s antes do screenshot. Preciso verificar o que MotionSceneNode renderiza para queued vs running, porque "renderizando a animação…" pode aparecer para ambos, mas o grafo diz queued.
+
+Olhando para o fluxo: runPipeline marca a camada como "queued" (linha 383), depois SingleNode marca "running" (linha 210). Se o grafo salvo diz "queued", talvez o dispatch nem chegou à linha 210 — ou seja, runSingleNode nem rodou para as cenas. Isso faz sentido porque as cenas motion estão numa camada N do DAG, e as camadas anteriores (scriptGenerator → voiceClone) têm dependências: as narrações com voiceClone têm `prompt:""` vazio, então não são runnable e não entram na fila, bloqueando o progresso.
+
+Agora estou rastreando a sequência real do clique dele para entender onde exatamente o fluxo trava. Ah, so the strong hypothesis is that he clicked Run All once before (maybe before the screenshot), something failed, the nodes got stuck in "queued" status, autosave persisted that state, then on reload those nodes loaded as already queued — and now the runnable filter on line 45 excludes them, so clicking Execute All either shows "no nodes qualified" or only runs the few that aren't queued yet. The updated_at timestamp would tell us when this state was last saved. Então o fluxo provavelmente foi: as 8 cenas ficaram com status queued após o reset de ontem, e quando o Sovereign clicou Executar tudo hoje, elas transitaram para running e tentaram invocar a função de renderização, mas a fila acabou vazia sem retorno. Preciso verificar o que a edge function retornou — sem acesso ao console do navegador dele, posso testar a função diretamente com uma requisição autenticada para confirmar se está deployada e respondendo. Agora preciso mapear o plano de correção: envolver os três branches assíncronos (motion, assembler, sfx) em try/catch para marcar como falha com a mensagem de erro, mantendo o Promise.all intacto. Também preciso considerar o comportamento quando a aba fecha durante operações assíncronas — o assembler na última camada só executa se a aba estiver viva, o que por enquanto é aceitável, mas idealmente o Run All enfileiraria tudo no servidor e o assembler esperaria a conclusão. Também preciso de um watchdog client-side que detecte nós em estado queued/running sem renderId ou registro no banco e os reverta para failed após um tempo limite, com mensagem de erro clara. Para o Fix 4, vou remover o hover preview conforme solicitado, mantendo a estrutura de conexão de foto — isso envolve ajustar os handlers de hover em MotionSceneNode e limpar o uso em StorageMedia. E para o Fix 5, preciso resetar o grafo do EP06 removendo aquele status queued fantasma, mas isso deve ser feito server-side com a aba fechada para evitar conflito com autosave.
+
+A melhor abordagem é implementar um reconciliador na UI que rode a cada 4 segundos e detecte automaticamente nós em estado running/queued sem uma linha correspondente na tabela video_renders, revertendo-os para idle ou failed — é um mecanismo de autocura que não depende de ações manuais. Preciso ter cuidado com a janela de corrida entre o despacho de um job e a visibilidade da linha no banco, então vou usar o renderId como chave para validação.
+
+Agora preciso investigar por que o invoke falhou — vou examinar o arquivo motion-render/index.ts para entender melhor. Também notei que os voiceClones com prompt vazio retornam runnable como false, então as narrações não re-rodam no Run All (o que é correto, já que já têm áudio), e o nó "Voz do Apresentador" em idle sem áudio é justamente o nó de clone que sobe a amostra.
+
+Para o scriptGenerator, ele roda baseado no topic, não no prompt — então se o prompt está vazio, não é runnable, o que explica por que "Roteiro EP06" não re-roda desnecessariamente. O characterReference "Apresentador" foi excluído com sucesso.
+
+Mas há algo preocupante: a fila tinha 0 linhas ontem mesmo depois que os 4 gates confirmaram "fila limpa" e o worker mostrou 7 minutos e 40 segundos de CPU — isso não bate.
+
+O serviço reiniciou às 23:11:08 de ontem (2026-08-04), mas não há registros no journal. Checando o journal do serviço inteiro — se não há logs, o worker pode estar silencioso durante idle, apenas fazendo polls. Com 7 minutos e 40 segundos de CPU em 46 minutos de uptime, considerando polls a cada 3-5 segundos com bun e supabase-js, isso daria 600-900 polls — talvez 0,5 segundos de CPU por poll, o que é alto mas possível. O pico de 445MB de memória sugere que houve um render em algum momento.
+
+Agora entendo: a fila de 6 horas está vazia porque o seal limpou as linhas de video_renders — removeu 31 assets e 15 jobs. O pico de RAM foi de um render que ocorreu entre 23:11 e 23:26 (quando o seal fechou), depois foi deletado durante a limpeza.
+
+Próximo passo é examinar a função edge do motion-render, a MotionSceneNode, e fazer um probe na função deployada com JWT para verificar seu comportamento.
+
+</details>
+
+
+## 🤖 Claude *(03:01:44)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei o defeito: nos 3 branches novos, o `throw` do invoke fica fora do try/catch, então se `motion-render` falhar, a promise rejeita sem handler e deixa os nós em spinner. Agora vou investigar por que o invoke está falhando, checando a edge function, o card e a função deployada.
+
+</details>
+
+
+## 🤖 Claude *(03:01:44)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/motion-render/index.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+> 2	import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+> 3	
+> 4	// ─────────────────────────────────────────────────────────────────────────────
+> 5	// motion-render — Amendment 34 (FR-SPACES-130). Keyless, async 202.
+> 6	// Enfileira uma linha em video_renders (engine 'motion', charged_mco 0) que o worker do host
+> 7	// scripts/motion-bridge.ts reivindica → HTML determinístico + Playwright frame-seek + FFmpeg → MP4.
+> 8	// A edge fn não alcança o motor do host, então ela só ENFILEIRA (molde generate-subtitles).
+> 9	//
+> 10	// Custo: ZERO por construção. Não há débito aqui nem no worker — o rail é o mesmo do 'asr'/'repurpose'.
+> 11	// Tenancy: o projeto é validado owner-scoped; nada do corpo do cliente vira caminho de arquivo.
+> 12	// BoK: docs/bok/spaces-evolution/34-amendment-episode-post-production.md
+> 13	// ─────────────────────────────────────────────────────────────────────────────
+> 14	
+> 15	const corsHeaders = {
+> 16	  "Access-Control-Allow-Origin": "*",
+> 17	  "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 18	  "Access-Control-Allow-Headers":
+> 19	    "authorization, x-client-info, apikey, content-type, x-user-token, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+> 20	};
+> 21	
+> 22	const SERVICE = "motion-render";
+> 23	const ASPECTS = new Set(["16:9", "9:16"]);
+> 24	const BACKGROUNDS = new Set(["galaxia", "limpo"]);
+> 25	const ELEMENTS = new Set(["nodes", "runningRing", "edges", "counter", "chart", "typewriter", "assets", "badges"]);
+> 26	const MAX_BEATS = 40;
+> 27	const MAX_TEXT = 1_200;
+> 28	const MIN_SEC = 2;
+> 29	const MAX_SEC = 120;
+> 30	
+> 31	function json(body: unknown, status = 200): Response {
+> 32	  return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+> 33	}
+> 34	
+> 35	serve(async (req) => {
+> 36	  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+> 37	
+> 38	  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+> 39	  const serviceKey = (Deno.env.get("SB_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"))!;
+> 40	  const admin = createClient(supabaseUrl, serviceKey);
+> 41	
+> 42	  const pulse = (status: string, event: string, metadata: Record<string, unknown> = {}) =>
+> 43	    admin.from("infra_health_logs").insert({ service: SERVICE, status, event, metadata }).then(() => {}, () => {});
+> 44	
+> 45	  try {
+> 46	    const authHeader = req.headers.get("Authorization");
+> 47	    if (!authHeader) return json({ error: "unauthorized", message: "Sessão ausente." }, 401);
+> 48	
+> 49	    const isServiceRole = authHeader === `Bearer ${serviceKey}`;
+> 50	    const body = await req.json().catch(() => ({}));
+> 51	
+> 52	    let userId: string;
+> 53	    if (isServiceRole) {
+> 54	      if (!body?.user_id || typeof body.user_id !== "string") {
+> 55	        return json({ error: "user_id_required", message: "user_id é obrigatório em chamadas service-role." }, 400);
+> 56	      }
+> 57	      userId = body.user_id;
+> 58	    } else {
+> 59	      const anonKey = (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!;
+> 60	      const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
+> 61	      const { data: { user }, error: authErr } = await userClient.auth.getUser();
+> 62	      if (authErr || !user) return json({ error: "unauthorized", message: "Sessão inválida." }, 401);
+> 63	      userId = user.id;
+> 64	    }
+> 65	
+> 66	    // ── Validação (401 → 422 → 404, ordem canônica SOP S5) ──────────────────────────────
+> 67	    const description = String(body?.description ?? "").trim();
+> 68	    if (!description) return json({ error: "description_required", message: "Descreva o que a animação mostra." }, 422);
+> 69	    if (description.length > MAX_TEXT) return json({ error: "description_too_long", message: "Descrição longa demais." }, 422);
+> 70	
+> 71	    const title = String(body?.title ?? "").slice(0, 120);
+> 72	    const aspect = ASPECTS.has(String(body?.aspect)) ? String(body.aspect) : "16:9";
+> 73	    const background = BACKGROUNDS.has(String(body?.background)) ? String(body.background) : "galaxia";
+> 74	    const durationSec = Math.min(MAX_SEC, Math.max(MIN_SEC, Math.round(Number(body?.duration_sec) || 8)));
+> 75	
+> 76	    const elements = Array.isArray(body?.elements)
+> 77	      ? [...new Set(body.elements.map(String).filter((e: string) => ELEMENTS.has(e)))]
+> 78	      : ["nodes", "runningRing", "edges"];
+> 79	
+> 80	    const rawBeats = Array.isArray(body?.beats) ? body.beats.slice(0, MAX_BEATS) : [];
+> 81	    const beats = rawBeats
+> 82	      .map((b: unknown) => {
+> 83	        const o = (b ?? {}) as Record<string, unknown>;
+> 84	        return { word: String(o.word ?? "").slice(0, 120), event: String(o.event ?? "").slice(0, 240) };
+> 85	      })
+> 86	      .filter((b: { word: string; event: string }) => b.word || b.event);
+> 87	
+> 88	    // Posse do projeto quando informado (404 cobre projeto de outro tenant).
+> 89	    const projectId = typeof body?.project_id === "string" && body.project_id ? body.project_id : null;
+> 90	    if (projectId) {
+> 91	      const { data: project } = await admin
+> 92	        .from("vm_canvas_projects").select("id").eq("id", projectId).eq("user_id", userId).maybeSingle();
+> 93	      if (!project) return json({ error: "project_not_found", message: "Projeto não encontrado." }, 404);
+> 94	    }
+> 95	
+> 96	    // Narração conectada (opcional): resolvida SERVER-SIDE pelo id do asset, nunca por caminho do cliente.
+> 97	    let voice: { bucket: string; key: string } | null = null;
+> 98	    const voiceAssetId = typeof body?.voice_asset_id === "string" ? body.voice_asset_id : null;
+> 99	    if (voiceAssetId) {
+> 100	      const { data: asset } = await admin.from("creative_assets")
+> 101	        .select("storage_bucket, storage_key").eq("id", voiceAssetId).eq("user_id", userId).maybeSingle();
+> 102	      if (asset?.storage_bucket && asset?.storage_key) {
+> 103	        const key = String(asset.storage_key);
+> 104	        if (key.startsWith(`${userId}/`) && !key.includes("..")) {
+> 105	          voice = { bucket: String(asset.storage_bucket), key };
+> 106	        }
+> 107	      }
+> 108	    }
+> 109	
+> 110	    // ── Enfileira para o worker do host ─────────────────────────────────────────────────
+> 111	    const { data: render, error: qErr } = await admin.from("video_renders").insert({
+> 112	      user_id: userId, engine: "motion", state: "queued", charged_mco: 0,
+> 113	      composition: {
+> 114	        kind: "motion",
+> 115	        title, description, beats, elements, background, aspect,
+> 116	        duration_sec: durationSec,
+> 117	        project_id: projectId,
+> 118	        node_id: typeof body?.node_id === "string" ? body.node_id.slice(0, 64) : null,
+> 119	        voice_bucket: voice?.bucket ?? null,
+> 120	        voice_key: voice?.key ?? null,
+> 121	      },
+> 122	    }).select("id").single();
+> 123	
+> 124	    if (qErr || !render) {
+> 125	      console.error("[motion-render] enqueue error:", qErr);
+> 126	      await pulse("unhealthy", "motion", { error: "enqueue_failed" });
+> 127	      return json({ error: "motion_enqueue_failed", message: "Não consegui enfileirar a animação." }, 500);
+> 128	    }
+> 129	
+> 130	    await pulse("healthy", "motion", {
+> 131	      render_id: render.id, aspect, background, beats: beats.length, elements: elements.length, duration_sec: durationSec,
+> 132	    });
+> 133	    return json({ status: "queued", render_id: render.id }, 202);
+> 134	  } catch (err) {
+> 135	    console.error("[motion-render] fatal:", err);
+> 136	    await pulse("unhealthy", "motion", { error: String((err as Error)?.message ?? err) });
+> 137	    return json(
+> 138	      { error: "internal_error", message: "Erro ao enfileirar a animação.", detail: String((err as Error)?.message ?? err) },
+> 139	      500,
+> 140	    );
+> 141	  }
+> 142	});
+> 143	
+> ```
+
+## 🤖 Claude *(03:01:44)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/MotionSceneNode.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { memo, useRef } from "react";
+> 2	import { Handle, Position, type NodeProps } from "@xyflow/react";
+> 3	import { Loader2, Sparkles, Wand2 } from "lucide-react";
+> 4	import { StorageVideo } from "@/components/StorageMedia";
+> 5	import { cn } from "@/lib/utils";
+> 6	import { type MotionSceneData } from "@/types/canvas";
+> 7	
+> 8	const HANDLE_CLASS = "!h-3 !w-3 !rounded-full !border-2 !border-border !bg-card";
+> 9	
+> 10	// Amendment 34 · FR-SPACES-130/136 — card da Cena Motion.
+> 11	// Display-only (a lógica vive no MotionSceneInspector). É o primeiro card na linguagem 3D Glass Neon:
+> 12	// glass com shine especular no topo, profundidade no hover, glow em camadas e estado legível por
+> 13	// cor+luz. Mesma gramática visual das peças de motion que o canal publica — o produto se parece com
+> 14	// o próprio material. Animações são compositor-only e morrem sob prefers-reduced-motion (index.css).
+> 15	export const MotionSceneNode = memo(function MotionSceneNode({ data, selected }: NodeProps) {
+> 16	  const d = data as unknown as MotionSceneData;
+> 17	  const vidRef = useRef<HTMLVideoElement>(null);
+> 18	  const busy = d.status === "running" || d.status === "queued";
+> 19	  const videoUrl = d.output?.videoUrl;
+> 20	  const beats = d.beats?.length ?? 0;
+> 21	
+> 22	  return (
+> 23	    <div
+> 24	      onMouseEnter={() => { const v = vidRef.current; if (v) { v.currentTime = 0; void v.play().catch(() => {}); } }}
+> 25	      onMouseLeave={() => { const v = vidRef.current; if (v) { v.pause(); v.currentTime = 0; } }}
+> 26	      className={cn(
+> 27	        "mc-glass-card group/card relative w-[260px] overflow-hidden rounded-xl border text-foreground transition-all",
+> 28	        selected ? "border-accent ring-2 ring-accent/30" : "border-border/70",
+> 29	        busy && "mc-glass-card-busy",
+> 30	        d.status === "success" && "border-emerald-500/40",
+> 31	        d.status === "failed" && "border-destructive/50",
+> 32	      )}
+> 33	    >
+> 34	      {/* shine especular — a linha de luz que dá volume ao vidro */}
+> 35	      <span aria-hidden className="mc-glass-shine" />
+> 36	
+> 37	      <Handle type="target" position={Position.Left} id="input_voice" className={HANDLE_CLASS} />
+> 38	      <Handle type="target" position={Position.Top} id="input_asset" className={HANDLE_CLASS} />
+> 39	      <Handle type="source" position={Position.Right} id="output_video" className={HANDLE_CLASS} />
+> 40	
+> 41	      <header className="relative flex items-center justify-between gap-1.5 border-b border-border/60 px-2.5 py-1.5">
+> 42	        <div className="flex min-w-0 items-center gap-1.5">
+> 43	          <Sparkles className={cn("h-3 w-3 shrink-0 text-accent", busy && "animate-pulse")} />
+> 44	          <span className="truncate text-[11px] font-medium">{d.label}</span>
+> 45	        </div>
+> 46	        <span className="shrink-0 rounded-full bg-accent/15 px-1.5 py-0.5 font-mono text-[9px] uppercase text-accent">
+> 47	          {d.aspect}
+> 48	        </span>
+> 49	      </header>
+> 50	
+> 51	      <div className="relative aspect-video w-full bg-muted/30">
+> 52	        {busy ? (
+> 53	          <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-[10px] text-accent">
+> 54	            <Loader2 className="h-4 w-4 animate-spin" />
+> 55	            renderizando a animação…
+> 56	          </div>
+> 57	        ) : videoUrl ? (
+> 58	          <>
+> 59	            <StorageVideo
+> 60	              ref={vidRef}
+> 61	              src={videoUrl}
+> 62	              className="h-full w-full object-cover"
+> 63	              muted loop playsInline preload="metadata"
+> 64	            />
+> 65	            {/* selo de "passe o mouse": sem ele o preview parece um still quebrado */}
+> 66	            <span className="pointer-events-none absolute bottom-1 right-1 rounded bg-black/60 px-1.5 py-0.5 font-mono text-[8px] text-white/70 opacity-100 transition-opacity group-hover/card:opacity-0">
+> 67	              ▶ hover
+> 68	            </span>
+> 69	          </>
+> 70	        ) : (
+> 71	          <div className="flex h-full w-full flex-col items-center justify-center gap-1 px-3 text-center">
+> 72	            <Wand2 className="h-4 w-4 text-muted-foreground/60" />
+> 73	            <p className="line-clamp-2 text-[10px] leading-snug text-muted-foreground">
+> 74	              {d.description || "Descreva o que a animação mostra"}
+> 75	            </p>
+> 76	          </div>
+> 77	        )}
+> 78	      </div>
+> 79	
+> 80	      {d.status === "failed" && d.error && (
+> 81	        <p className="relative line-clamp-2 px-2.5 pt-1.5 text-[9px] text-destructive">{d.error}</p>
+> 82	      )}
+> 83	
+> 84	      <div className="relative flex items-center justify-between gap-2 px-2.5 py-1.5 font-mono text-[9px] text-muted-foreground">
+> 85	        <span className="truncate">
+> 86	          {beats > 0 ? `${beats} beat${beats > 1 ? "s" : ""}` : "sem beats"}
+> 87	          <span className="mx-1 opacity-40">·</span>
+> 88	          {d.durationSec}s
+> 89	        </span>
+> 90	        <span className="shrink-0 text-accent">grátis</span>
+> 91	      </div>
+> 92	    </div>
+> 93	  );
+> 94	});
+> 95	
+> ```
+
+## 🤖 Claude *(03:02:15)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Confirmado que `busy = running || queued` mostra "renderizando a animação…" para ambos os estados. O grafo indica que os nós ficaram em queued (linha 383 do pipeline) e o `runSingleNode` provavelmente não completou o dispatch para eles. Estou rastreando a sequência: runPipeline marca a camada como queued e chama Promise.all com runSingleNode, mas algo falha no dispatch do motionScene.
+
+Agora vejo uma hipótese mais provável — o Promise.all da camada anterior pode ter explodido antes de chegar à camada das cenas. As camadas anteriores (Roteiro não-runnable, narrações voiceClone com prompt vazio) são skipped, mas quando chega à camada das cenas motion marcadas como queued, o `resolveExecutePayload` na linha 116 pode estar retornando null silenciosamente para motionScene, fazendo com que `runSingleNode` retorne antes de qualquer atualização de estado — deixando o nó preso em queued. O teste E2E do Run All nunca foi executado — apenas o clique individual no inspector funcionou, que usa um caminho diferente (MotionSceneInspector chama motion-render direto). Os gates verdes confirmavam o estado do projeto, não o dispatch em si. Preciso verificar se resolveExecutePayload em types/canvas.ts tem suporte para motionScene, soundDesign e episodeAssembler, ou se esses branches adicionados no commit 3e83f1c ficam inacessíveis porque a função retorna null antes deles serem alcançados.
+
+A solução seria reposicionar esses branches antes do check de resolveExecutePayload ou adicionar casos que retornem um payload dummy, e envolver os invokes em try/catch para marcar falhas. Isso explicaria por que há zero execuções e a fila fica vazia — o console mostra o estado correto, mas o fluxo real nunca chega lá.
+
+</details>
+
+
+## 🤖 Claude *(03:02:16)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei o problema: `busy = running || queued` mantém os cards em spinner como queued, e em `runSingleNode`, o `resolveExecutePayload(...)` retorna silenciosamente se não conhecer `motionScene`, deixando o nó travado sem erro ou log. Vou confirmar isso agora.
+
+</details>
+
+
+## 🤖 Claude *(03:02:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"resolveExecutePayload\" src/types/canvas.ts | head -3; sed -n \"$(grep -n 'export function resolveExecutePayload' src/types/canvas.ts | cut -d: -f1),+70p\" src/types/canvas.ts",
+  "description": "Inspeciona resolveExecutePayload \u2014 cobre os kinds do Amendment 34?"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 648: *  fail-closed); default DRAFT (opt-in publish, FR-SPACES-039). resolveExecutePayload → null
+> 668: *  default DRAFT (opt-in publish, HITL). resolveExecutePayload → null (the inspector calls the seam directly). */
+> 689: *  package is v2 (OTD-CS-002, generate-script-package fn). TEXT SOURCE; resolveExecutePayload → null
+> export function resolveExecutePayload(
+>   data: CanvasNodeData,
+>   styleSettings?: StyleSettings,
+> ): {
+>   node_type: string;
+>   /** `google` entrou com o Veo (Amendment 25) — os demais motores seguem sendo `ProviderId`. */
+>   provider: ProviderId | "google";
+>   model: string;
+>   prompt: string;
+>   negative_prompt?: string;
+>   parameters: Record<string, unknown>;
+> } | null {
+>   switch (data.kind) {
+>     case "generateImage": {
+>       const info = getImageModelInfo(data.modelId);
+>       const parameters: Record<string, unknown> = {
+>         aspect_ratio: data.aspectRatio,
+>         controls: data.controls,
+>         seed: data.fixedSeed && data.seed != null ? data.seed : undefined,
+>       };
+>       if (info.resolution) parameters.resolution = info.resolution;
+>       if (info.batch) parameters.batch = info.batch;
+>       return {
+>         node_type: "generate_image",
+>         provider: info.provider,
+>         model: info.modelParam,
+>         prompt: compileFinalPrompt(data.prompt, styleSettings, data.inheritStyle),
+>         negative_prompt: data.negativePrompt || undefined,
+>         parameters,
+>       };
+>     }
+>     case "sceneCompose": {
+>       const info = getImageModelInfo(data.modelId);
+>       const parameters: Record<string, unknown> = {
+>         aspect_ratio: data.aspectRatio,
+>       };
+>       if (info.resolution) parameters.resolution = info.resolution;
+>       if (info.batch) parameters.batch = info.batch;
+>       return {
+>         node_type: "scene_compose",
+>         provider: info.provider,
+>         model: info.modelParam,
+>         prompt: compileFinalPrompt(data.prompt, styleSettings, data.inheritStyle),
+>         parameters,
+>       };
+>     }
+>     case "styleTransfer": {
+>       const preset = STYLE_TRANSFER_PRESETS.find((p) => p.id === data.presetId);
+>       return {
+>         node_type: "style_transfer",
+>         provider: "higgsfield",
+>         model: "soul",
+>         prompt: preset?.suffix ?? "",
+>         parameters: {
+>           strength: data.strength,
+>           preset_id: data.presetId,
+>           resolution: "720p",
+>           batch: 1,
+>         },
+>       };
+>     }
+>     case "imageToVideo": {
+>       const info = getVideoModelInfo(data.videoModel);
+>       // Amendment 25: o Veo tem contrato PRÓPRIO (duração 4..8 + resolução; 9:16/16:9 apenas).
+>       // Um payload com o shape do Higgsfield seria 422 no servidor — o motor decide o shape.
+>       if (isVeoTier(info.modelParam)) {
+>         return {
+>           node_type: "image_to_video",
+>           provider: "google",
+>           model: info.modelParam,
+>           prompt: data.prompt,
+> ```
+
+## 🤖 Claude *(03:02:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "awk '/export function resolveExecutePayload/,/^}/' src/types/canvas.ts | grep -nE 'case \"|return null|default' | head -40",
+  "description": "Lista todos os cases do resolveExecutePayload"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude *(03:02:32)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The awk range pattern approach didn't work as expected, so I need to find the exact line number and extract a section of the file to examine it more closely.
+
+</details>
+
+
+## 🤖 Claude *(03:02:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "START=$(grep -n 'export function resolveExecutePayload' src/types/canvas.ts | cut -d: -f1); sed -n \"${START},$((START+260))p\" src/types/canvas.ts | grep -nE 'case \"|return null|default:' ",
+  "description": "Enumera cases e return null do resolveExecutePayload"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 14:    case "generateImage": {
+> 32:    case "sceneCompose": {
+> 47:    case "styleTransfer": {
+> 62:    case "imageToVideo": {
+> 98:    case "characterReference":
+> 101:      return null;
+> 102:    case "productList":
+> 105:      return null;
+> 106:    case "upscale":
+> 116:    case "voiceClone":
+> 119:      return null;
+> 120:    case "avatarIdentity":
+> 123:      return null;
+> 124:    case "publishWordpress":
+> 127:      return null;
+> 128:    case "scriptGenerator":
+> 131:      return null;
+> 132:    case "cinematicVideo":
+> 135:      return null;
+> 136:    case "splitScreen":
+> 139:      return null;
+> 140:    case "carousel":
+> 143:      return null;
+> 144:    case "publishSocial":
+> 147:      return null;
+> 148:    case "cadence":
+> 151:      return null;
+> 184:    case "generateImage":
+> 186:    case "sceneCompose":
+> 189:    case "styleTransfer":
+> 191:    case "imageToVideo":
+> 193:    case "characterReference":
+> 195:    case "productList":
+> 197:    case "upscale":
+> 199:    case "voiceClone":
+> 203:    case "avatarIdentity":
+> 205:    case "publishWordpress":
+> 207:    case "scriptGenerator":
+> 209:    case "cinematicVideo":
+> 211:    case "splitScreen":
+> 213:    case "carousel":
+> 215:    case "publishSocial":
+> 217:    case "cadence":
+> 219:    case "motionScene":
+> 221:    case "soundDesign":
+> 224:    case "episodeAssembler":
+> ```
+
+## 🤖 Claude *(03:02:47)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei o bug raiz — `resolveExecutePayload` está faltando cases para `motionScene`, `soundDesign`, `episodeAssembler`, `sceneNote`, `videoRepurpose` e possivelmente `transcribe` no primeiro switch statement, então esses kinds do Amendment 34 caem em um comportamento indefinido em vez de serem tratados corretamente.
+
+Preciso verificar o que acontece após o switch — se há um `return null;` implícito, isso causaria um retorno silencioso em `runSingleNode:117`, deixando o nó eternamente na fila. Também preciso identificar se o segundo bloco de cases (linhas 219-224) pertence a uma função diferente como `estimateNodeCost`, já que ele contém os cases que faltam no primeiro switch.
+
+</details>
+
+
+## 🤖 Claude *(03:02:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "START=$(grep -n 'export function resolveExecutePayload' src/types/canvas.ts | cut -d: -f1); sed -n \"$((START+148)),$((START+185))p\" src/types/canvas.ts",
+  "description": "V\u00ea o fim do switch do resolveExecutePayload (fallthrough dos kinds novos)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>       // Cadência ARMS a recurring plan via cadence-plan (FR-CAD-005) from its inspector — it does NOT generate
+>       // media and never goes through canvas-execute (spaces-cadence SDD §1 execution rail).
+>       return null;
+>   }
+> }
+> 
+> /**
+>  * Type-guard helpers (used by node components and inspectors to narrow
+>  * the union via switch/case on `kind`).
+>  */
+> export function isGenerateImage(data: CanvasNodeData): data is GenerateImageData {
+>   return data.kind === "generateImage";
+> }
+> export function isCharacterReference(data: CanvasNodeData): data is CharacterReferenceData {
+>   return data.kind === "characterReference";
+> }
+> export function isSceneCompose(data: CanvasNodeData): data is SceneComposeData {
+>   return data.kind === "sceneCompose";
+> }
+> export function isStyleTransfer(data: CanvasNodeData): data is StyleTransferData {
+>   return data.kind === "styleTransfer";
+> }
+> export function isImageToVideo(data: CanvasNodeData): data is ImageToVideoData {
+>   return data.kind === "imageToVideo";
+> }
+> export function isVoiceClone(data: CanvasNodeData): data is VoiceCloneData {
+>   return data.kind === "voiceClone";
+> }
+> export function isAvatarIdentity(data: CanvasNodeData): data is AvatarIdentityData {
+>   return data.kind === "avatarIdentity";
+> }
+> 
+> /** Resolve the mcoCoins cost of a single node from MODEL_INFO/VIDEO_MODEL_INFO. */
+> export function estimateNodeCost(data: CanvasNodeData): number {
+>   switch (data.kind) {
+>     case "generateImage":
+>       return getImageModelInfo(data.modelId).coinCost;
+>     case "sceneCompose":
+> ```
+
+## 🤖 Claude *(03:04:02)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Checking the switch statement in `resolveExecutePayload` — it handles `cadence` and returns null, but the kinds `motionScene`, `soundDesign`, `episodeAssembler`, `sceneNote`, `transcribe`, and `videoRepurpose` don't have cases, so they fall through without a return statement, which would cause a TypeScript error in an exhaustive switch.
+
+But wait — if those kinds are part of the union, TypeScript should complain about missing cases unless `noImplicitReturns` is disabled in the config. That would allow implicit undefined returns. Yet those same kinds have cases in `estimateNodeCost`, so they must be in the union. This suggests `noImplicitReturns` is probably off, letting the function compile despite the missing return paths.
+
+So the root cause is confirmed: the `video_renders` queue stays empty, `resolveExecutePayload` returns undefined for those unhandled kinds, the payload check kills the dispatch before the Amendment 34 branches execute, nodes get stuck in queued state, and the pipeline hangs silently while the UI shows a phantom animation.
+
+The test yesterday passed because it bypassed `resolveExecutePayload` entirely—the inspector called `motion-render` directly. The full Run All path was never actually tested until now, and that's where it failed. The fix is straightforward: move those three branches for motionScene, episodeAssembler, and soundDesign to execute before the payload validation check in `runSingleNode`.
+
+I also need to wrap them in try/catch to mark failures properly, otherwise an uncaught error will break the entire Promise.all. And I should add explicit `return null` cases in `resolveExecutePayload` for these new kinds—plus sceneNote, transcribe, and videoRepurpose if they're missing—to document the contract clearly.
+
+For the self-healing mechanism, I'm looking at what `useMotionRenderSync` needs to do to prevent these phantom failures from happening again... Na carga da página, nós queued/running sem linha no banco vão resetar direto (sem risco de corrida). Também preciso remover o efeito de hover nos MotionSceneNode e EpisodeAssemblerNode — tirar os listeners de mouse e o selo visual, mantendo o vídeo com poster estático, os handles de conexão e a ligação com a foto de entrada intactos.
+
+Relendo o pedido do usuário, ele quer apenas que o hover-play desapareça; o vídeo fica com o primeiro frame visível e o inspector disponível para assistir, simples e fácil de reverter se necessário.
+
+Agora sobre o reset do grafo EP06: os 8 nós motionScene estão na fila do banco, e com o fix deployado, recarregar a página deveria resetar os fantasmas para idle/failed. Mas preciso limpar isso também no servidor — cuidado com a armadilha do autosave: se a aba dele ainda estiver aberta, vai sobrescrever minhas mudanças.
+
+A estratégia é implementar o anticorpo client-side (a UI se auto-cura ao carregar) e fazer o reset server-side também. Ele mencionou "Fechei aqui a aba para o autosave não atrapalhar", então a aba está fechada e posso escrever no servidor com segurança. Mesmo que o anticorpo client-side resolva, o reset server-side deixa o projeto limpo.
+
+Agora preciso fazer uma auditoria adversarial do fluxo completo do Run All — dispatch → fila → worker → reconciler → assembler — procurando por outros problemas born-dead. Por exemplo, o dispatch do useCanvasPipeline não envia voice_asset_id, mas o motion-render aceita voz conectada. As cenas do EP06 têm narração (input_voice edges), então se o Run All não enviar a voz, isso vai quebrar.
+
+Preciso verificar como o MotionSceneInspector resolve o voice_asset_id e replicar isso no pipeline. A questão é: o worker mixa o áudio da narração no MP4 usando voice_bucket/voice_key, ou isso acontece no assembler? Se o motion-bridge verifica composition.voice_key para mixar, preciso confirmar se o inspector manda voice_asset_id e garantir que o dispatch do Run All também resolva o asset da narração corretamente. The fixes are tightly coupled across just a few files, so parallel implementation would create conflicts—better to code them inline as a single writer, then use a workflow to audit the full path adversarially from multiple angles and catch any other issues along the way. Actually, with ultracode enabled, maybe the right approach is to run an audit workflow first to find all the gaps before coding, then implement, then verify with another workflow pass.
+
+That's expensive on time though. The middle ground: do a quick targeted read inline to know exactly what I'm looking for, implement the fixes, then run one adversarial verification workflow plus smoke tests. The /security-review isn't necessary since there's no new migration and the changes are client-side plus maybe an edge function redeploy. Now I need to check the missing pieces: MotionSceneInspector's voice dispatch, the motion-bridge for voice mixing and assembly, EpisodeAssemblerNode's hover behavior, collectMasterClips, and useCanvasStore's chat persistence logic—specifically whether chatOpen stays true when saved and how that affects the console versus the sidebar.
+
+</details>
+
+
+## 🤖 Claude *(03:04:04)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei o bug: o switch em `resolveExecutePayload` não tem cases para `motionScene`, `soundDesign` e `episodeAssembler`, retornando `undefined` e matando o dispatch antes dos branches do Amendment 34, deixando 8 nós em `queued` e a pipeline pendurada. Vou mapear completamente o fluxo de renderização antes de codificar a solução.
+
+</details>
+
+
+## 🤖 Claude *(03:04:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"voice_asset_id\\|voiceAssetId\\|input_voice\" src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx | head; echo \"---BRIDGE-VOICE---\"; grep -n \"voice_key\\|voice_bucket\\|amix\\|adelay\\|narration\" scripts/motion-bridge.ts | head -15; echo \"---ASM-NODE-HOVER---\"; grep -n \"onMouseEnter\\|hover\\|vidRef\" src/components/canvas/nodes/EpisodeAssemblerNode.tsx; echo \"---CHATOPEN---\"; grep -n \"chatOpen\\|openChat\" src/store/useCanvasStore.ts | head -10; echo \"---PARTIALIZE---\"; grep -n \"partialize\" src/store/useCanvasStore.ts",
+  "description": "Mapa: voz no inspector/worker, hover no assembler, persist\u00eancia do chatOpen"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ---BRIDGE-VOICE---
+> 116:  voice_bucket?: string | null;
+> 117:  voice_key?: string | null;
+> 145:    if (comp.voice_bucket && comp.voice_key) {
+> 146:      const vd = await voiceDuration(comp.voice_bucket, comp.voice_key, workDir);
+> 233:      beats: spec.beats.length, voice_driven: Boolean(comp.voice_key),
+> ---ASM-NODE-HOVER---
+> 14:  const vidRef = useRef<HTMLVideoElement>(null);
+> 20:      onMouseEnter={() => { const v = vidRef.current; if (v) { v.currentTime = 0; void v.play().catch(() => {}); } }}
+> 21:      onMouseLeave={() => { const v = vidRef.current; if (v) { v.pause(); v.currentTime = 0; } }}
+> 52:              ref={vidRef}
+> 58:            <span className="pointer-events-none absolute bottom-1 right-1 rounded bg-black/60 px-1.5 py-0.5 font-mono text-[8px] text-white/70 opacity-100 transition-opacity group-hover/card:opacity-0">
+> 59:              ▶ hover
+> ---CHATOPEN---
+> 34:  chatOpen: boolean;
+> 50:  openChat: (anchorNodeId?: string | null) => void;
+> 78:      chatOpen: false,
+> 116:      openChat: (anchorNodeId = null) => set({ chatOpen: true, chatAnchorNodeId: anchorNodeId }),
+> 117:      closeChat: () => set({ chatOpen: false }),
+> ---PARTIALIZE---
+> 30:   *  state — outside temporal partialize (nodes/edges only) and not persisted. */
+> 167:      partialize: (state) => ({ nodes: state.nodes, edges: state.edges }),
+> ```
+
+## 🤖 Claude *(03:05:36)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei que o MotionSceneInspector não tem voice_asset_id, então a narração não está sendo enviada pelo inspector — mas o motion-bridge suporta voice_bucket/voice_key e a edge function aceita voice_asset_id. As durações foram gravadas server-side no grafo (22s etc.), então a narração não é mixada durante o render da cena, e estou verificando como o worker processa isso.
+
+Agora vejo que o grafo tem 25 edges de narração→cena (o design prevê que a cena motion receba a voz conectada e o render mixe a voz via voice_bucket/key na composition), mas se ninguém envia voice_asset_id pela UI, esse caminho nunca ativa — as cenas sairiam mudas com duração fixa, e a narração desapareceria no fluxo de montagem final. Isso é um gap grave: o EP06 renderizaria cenas silenciosas, o assembler juntaria clipes sem áudio, e o master sairia mudo ou só com SFX.
+
+O problema real é que o dispatch (inspector e pipeline) não resolve ou envia voice_asset_id — o inspector grep deu vazio. Preciso verificar se o MotionSceneInspector envia outro nome ou se o voiceClone output (que tem audioUrl mas não assetId) precisa ser mapeado para asset id. O edge function resolve server-side por asset id para evitar path-injection, mas poderia aceitar voice_node_id e resolver do grafo, ou o dispatch poderia enviar a storage key diretamente — mas isso violaria a segurança. Preciso rastrear onde o asset id deveria ser registrado no generate-voice.
+
+Duas opções: (a) query creative_assets por storage_key == audioUrl para obter o id, ou (b) estender motion-render para aceitar voice_storage_key com validação de prefixo userId/ — mais simples e robusto, mas a SOP diz que caminho do cliente nunca vira caminho de arquivo, então preciso validar startsWith(userId/) e sem `..` antes de usar.
+
+A via mais limpa é motion-render aceitar voice_storage_key e fazer lookup reverso em creative_assets (owner-scoped) — se encontrar, usa o bucket/key da linha, preservando o contrato de que o caminho vem da spine e o cliente só dá a dica; se não encontrar, retorna 422. Mas preciso verificar se os áudios de narração do EP06 estão registrados na spine ou foram gerados pelo nó.
+
+Parece que as narrações foram geradas pelo runner IVC ontem e semeadas diretamente nos nós server — o padrão do caminho "ada39fae/ep06/narration/01-gancho.mp3" não corresponde ao que o rail generate-voice normalmente produz, sugerindo que foram injetadas por script em vez de registradas via register_creative_asset.
+
+Preciso verificar se há linhas na spine para esses áudios consultando creative_assets com storage_key contendo "ep06/narration". Se não existem registros, o remédio é fazer backfill — registrar os 8 áudios na spine via register_creative_asset ou inserção direta — já que a spine é a fonte de verdade e áudios órfãos na biblioteca violam a integridade. Vou checar a spine e depois examinar o MotionSceneInspector para ver o que o dispatch está enviando atualmente sem voice_asset_id.
+
+Também preciso remover o mesmo hover do EpisodeAssemblerNode que está em outro lugar, confirmar que chatOpen não persiste (apenas nodes/edges são salvos), e validar que o Run All aguarda todas as 8 cenas completarem via reconciler antes de rodar o assembler com collectMasterClips — precisando de output.videoUrl e status success, mas isso exige manter a aba aberta por 15-20 minutos durante os renders seriais.
+
+Há um detalhe importante sobre as camadas topológicas: as cenas dependem das narrações através das edges, mas as narrações (voiceClone) não são runnable e já estão em success, então waitForNodesToComplete filtra apenas os nós runnable de cada camada e pula as narrações. Agora preciso verificar se a camada 1 (Roteiro EP06 com scriptGenerator) é realmente runnable, já que resolveExecutePayload retorna null para scriptGenerator.
+
+O scriptGenerator precisa de um prompt não-vazio para ser considerado runnable, mas usa topic em vez de prompt. Se o prompt estiver vazio, não é runnable e tudo funciona. Mas se o scriptGenerator FOR runnable com prompt preenchido, resolveExecutePayload retorna null, deixando o nó queued e travando o pipeline na camada 1 — nada mais roda. Porém, os cards de cena já estão queued no grafo, o que sugere que o pipeline passou da camada do Roteiro, a menos que runPipeline esteja marcando apenas os nós runnable da camada atual e travando ali.
+
+Agora vejo: se o Roteiro tivesse travado na camada 1, as cenas nunca ficariam queued. Como estão queued, o pipeline chegou à camada das cenas, então o Roteiro não era runnable ou completou. O scriptGenerator com prompt vazio não é runnable, o que é consistente. Também preciso verificar o "Voz do Apresentador" (voiceClone idle) — prompt vazio, então também não-runnable. Depois do fix, as cenas rodam de forma assíncrona e o reconciler resolve, deixando o assembler na última camada para coletar os clipes quando o Run All chega lá.
+
+Mas aqui está o problema: o check de runnable original (capturado no momento do clique) avaliou o assembler com zero clipes porque nenhuma cena tinha output naquele instante. Então o assembler não entra em runnableIds e não roda no Run All. O useMemo na linha 58 exige que `collectMasterClips(...).length > 0` no momento do clique, e como nenhuma cena estava pronta, o assembler ficou de fora. O Run All termina com as 8 cenas prontas mas sem montar o master — o "Executar tudo → MASTER" nasce morto por essa razão também.
+
+A solução é ajustar quando o assembler é considerado runnable: ele deve ser runnable se há pelo menos uma cena ou clipe conectado a ele (verificando se há edges apontando para o assembler de nós que podem produzir clipe). Depois, quando o dispatch dele roda na última camada após waitForNodesToComplete das cenas, ele coleta os clipes frescos. Se no momento do dispatch não houver clipes, lança um erro claro. Também preciso revisar waitForNodesToComplete para garantir que se uma cena falhar, o assembler não tenta rodar.
+
+Mas tem um problema: runnable já exclui nós com status queued ou running, e os nós do EP06 estão queued no banco agora. Depois do fix e deploy, ao recarregar a página eles continuam queued, então "Executar tudo" diria que nenhum nó está qualificado. Por isso o reset é obrigatório antes do próximo clique — tanto server-side (quando a aba fecha) quanto client-side como anticorpo. Também preciso implementar um anticorpo no useMotionRenderSync que detecta nós motion-family com status queued ou running sem linha correspondente e faz reset, usando contagem de polls para evitar loops. Preciso exigir 3 polls consecutivos sem linha e sem mudança de estado para resetar um nó, já que a linha pode ter sido deletada pela limpeza — renderId presente ou ausente no banco é tratado igual. O console agora mostra o estado real da fila sem precisar listar nós em despacho, pois o dispatch marca failed corretamente. Para as narrações nas cenas, preciso confirmar spine + inspector e fazer backfill server-side das que faltam creative_asset, depois o dispatch envia o voice_asset_id resolvido.
+
+Para o cliente encontrar o asset id da narração, posso fazer uma query reversa na spine procurando por storage_key, ou — mais simples — gravar o assetId no nó voiceClone quando gera (futuro), e para EP06 fazer backfill escrevendo no grafo. Mas escrever no grafo exige aba fechada, o que é frágil. O caminho robusto é motion-render aceitar voice_storage_key e resolver owner-scoped na spine, enquanto o cliente manda output.audioUrl.
+
+No servidor, busco creative_assets por (user_id, storage_key) usando a chave do bucket — se não encontrar, retorno 422 "narração fora da Biblioteca". Esse backfill da spine é necessário mesmo para EP06 e corrige o anticorpo #4 do Record sobre áudio órfão.
+
+Preciso verificar a spine agora, ler o dispatch do MotionSceneInspector e collectMasterClips, depois criar uma TaskCreate para organizar implementação e workflow de verificação adversarial. Também confirmar se generate-voice/elevenlabs registra o asset e rastrear de onde vieram as narrações do runner.
+
+</details>
+
+
+## 🤖 Claude *(03:05:38)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei dois problemas críticos: o inspector e o pipeline não enviam o identificador de voz ao motion-render, deixando as cenas mudas, e o assembler exige clipes prontos no momento do clique, o que nunca acontece na primeira execução. Vou verificar a spine e o inspector para mapear a solução.
+
+</details>
+
+
+## 🤖 Claude *(03:05:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/scratchpad && cat > recon3.ts <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nconst sb = createClient(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL!, process.env.SB_SECRET_KEY!, { auth: { persistSession: false } });\n// Narra\u00e7\u00f5es EP06 na spine?\nconst { data: a } = await sb.from(\"creative_assets\").select(\"id,storage_bucket,storage_key,asset_type,source_module,created_at\")\n  .like(\"storage_key\", \"%ep06/narration%\").order(\"created_at\");\nconsole.log(\"== spine ep06/narration:\", a?.length ?? 0);\nfor (const r of a ?? []) console.log(`  ${r.id.slice(0,8)} ${r.storage_bucket}/${r.storage_key} type=${r.asset_type} src=${r.source_module}`);\n// O bucket dos arquivos existe? Lista direta no Storage\nconst { data: files, error: se } = await sb.storage.from(\"canvas-assets\").list(\"ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep06/narration\", { limit: 20 });\nconsole.log(\"\\n== storage canvas-assets/\u2026/ep06/narration:\", se?.message ?? files?.map(f=>`${f.name} ${(f.metadata as any)?.size??\"?\"}B`).join(\" \u00b7 \"));\nif (se || !files?.length) {\n  for (const b of [\"generated-videos\",\"video-studio-assets\",\"voice-assets\",\"creative-assets\"]) {\n    const { data: f2 } = await sb.storage.from(b).list(\"ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep06/narration\", { limit: 5 });\n    if (f2?.length) console.log(`  found in bucket=${b}: ${f2.map(f=>f.name).join(\", \")}`);\n  }\n}\nEOF\nbun run recon3.ts 2>&1 | head -30",
+  "description": "Narra\u00e7\u00f5es EP06: existem na spine creative_assets e no Storage?"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> == spine ep06/narration: 0
+> 
+> == storage canvas-assets/…/ep06/narration: 
+>   found in bucket=video-studio-assets: 01-gancho.mp3, 02-ponte.mp3, 03-kimi.mp3, 04-kimi-bench.mp3, 05-qwen.mp3
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(03:05:46)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useEffect, useState } from "react";
+> 2	import { toast } from "sonner";
+> 3	import { Loader2, Plus, Sparkles, Trash2, Wand2 } from "lucide-react";
+> 4	import { useMutation } from "@tanstack/react-query";
+> 5	import { Button } from "@/components/ui/button";
+> 6	import { Textarea } from "@/components/ui/textarea";
+> 7	import { Input } from "@/components/ui/input";
+> 8	import { supabase } from "@/integrations/supabase/client";
+> 9	import { edgeErrorMessage } from "@/lib/edge";
+> 10	import { cn } from "@/lib/utils";
+> 11	import { useCanvasStore } from "@/store/useCanvasStore";
+> 12	import { useRenderStatus } from "@/hooks/useVideoRepurpose";
+> 13	import { StorageVideo } from "@/components/StorageMedia";
+> 14	import { Section, InspectorHeader } from "../shared";
+> 15	import type { MotionElement, MotionSceneData } from "@/types/canvas";
+> 16	
+> 17	// Amendment 34 · FR-SPACES-130 — inspector da Cena Motion.
+> 18	// O motor é o mesmo que produziu as 6 peças do EP05 (Playwright frame-seek + FFmpeg), agora atrás de
+> 19	// uma UI: descreva o que a cena mostra, mapeie os beats (palavra da narração → evento na tela),
+> 20	// escolha os elementos e renderize. Custo ZERO — a fila cobra charged_mco:0.
+> 21	
+> 22	const ELEMENT_LABEL: Record<MotionElement, string> = {
+> 23	  nodes: "Nós glass 3D",
+> 24	  runningRing: "Anel de progresso",
+> 25	  edges: "Arestas vivas",
+> 26	  counter: "Contador numérico",
+> 27	  chart: "Gráfico / curva",
+> 28	  typewriter: "Prompt digitando",
+> 29	  assets: "Imagens do projeto",
+> 30	  badges: "Selos e custos",
+> 31	};
+> 32	
+> 33	const selectClass = "w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm";
+> 34	
+> 35	export function MotionSceneInspector({
+> 36	  node,
+> 37	  projectId,
+> 38	}: {
+> 39	  node: { id: string; data: MotionSceneData };
+> 40	  projectId: string;
+> 41	}) {
+> 42	  const updateNodeData = useCanvasStore((s) => s.updateNodeData);
+> 43	  const d = node.data;
+> 44	  const render = useRenderStatus(d.renderId ?? null);
+> 45	  const [busy, setBusy] = useState(false);
+> 46	
+> 47	  const patch = (p: Partial<MotionSceneData>) => updateNodeData(node.id, p);
+> 48	
+> 49	  const toggleElement = (el: MotionElement) => {
+> 50	    const has = d.elements.includes(el);
+> 51	    patch({ elements: has ? d.elements.filter((x) => x !== el) : [...d.elements, el] });
+> 52	  };
+> 53	
+> 54	  const setBeat = (i: number, field: "word" | "event", value: string) => {
+> 55	    const next = d.beats.map((b, idx) => (idx === i ? { ...b, [field]: value } : b));
+> 56	    patch({ beats: next });
+> 57	  };
+> 58	
+> 59	  const enqueue = useMutation<{ render_id: string }, Error, void>({
+> 60	    mutationFn: async () => {
+> 61	      const { data, error } = await supabase.functions.invoke<{ render_id: string }>("motion-render", {
+> 62	        body: {
+> 63	          project_id: projectId,
+> 64	          node_id: node.id,
+> 65	          title: d.title,
+> 66	          description: d.description,
+> 67	          beats: d.beats,
+> 68	          elements: d.elements,
+> 69	          background: d.background,
+> 70	          aspect: d.aspect,
+> 71	          duration_sec: d.durationSec,
+> 72	        },
+> 73	      });
+> 74	      if (error) throw new Error(await edgeErrorMessage(error, "Falha ao enfileirar a animação."));
+> 75	      if (!data?.render_id) throw new Error("Enfileiramento sem render_id.");
+> 76	      return data;
+> 77	    },
+> 78	  });
+> 79	
+> 80	  // Reconcilia pelo poll da fila: done → success, failed → failed.
+> 81	  useEffect(() => {
+> 82	    const row = render.data as { state?: string; output_url?: string; error?: string } | undefined;
+> 83	    if (!row?.state || d.status !== "running") return;
+> 84	    if (row.state === "done") {
+> 85	      patch({
+> 86	        status: "success",
+> 87	        output: { videoUrl: row.output_url, generatedAt: new Date().toISOString() },
+> 88	        renderId: undefined,
+> 89	      });
+> 90	      toast.success("Cena motion pronta.");
+> 91	    } else if (row.state === "failed" || row.state === "error") {
+> 92	      patch({ status: "failed", error: row.error ?? "Falha no render.", renderId: undefined });
+> 93	      toast.error("A animação falhou.");
+> 94	    }
+> 95	    // eslint-disable-next-line react-hooks/exhaustive-deps
+> 96	  }, [render.data, d.status, node.id]);
+> 97	
+> 98	  const canRender = d.description.trim().length > 3 && !busy && d.status !== "running";
+> 99	
+> 100	  const run = async () => {
+> 101	    if (!canRender) return;
+> 102	    setBusy(true);
+> 103	    try {
+> 104	      const res = await enqueue.mutateAsync();
+> 105	      patch({ status: "running", renderId: res.render_id, error: undefined });
+> 106	      toast.info("Animação na fila — o render roda no host, sem custo.");
+> 107	    } catch (err) {
+> 108	      toast.error((err as Error).message);
+> 109	    } finally {
+> 110	      setBusy(false);
+> 111	    }
+> 112	  };
+> 113	
+> 114	  return (
+> 115	    <div className="flex h-full flex-col">
+> 116	      <div className="flex-1 overflow-y-auto">
+> 117	        <InspectorHeader icon={<Sparkles className="h-3.5 w-3.5" />} label={d.label} id={node.id} />
+> 118	
+> 119	        <Section title="O que a animação mostra">
+> 120	          <Textarea
+> 121	            value={d.description}
+> 122	            onChange={(e) => patch({ description: e.target.value.slice(0, 1200) })}
+> 123	            placeholder="Ex: contador de dinheiro subindo até 1,8 milhão enquanto a linha do orçamento fica minúscula lá embaixo"
+> 124	            rows={4}
+> 125	            className="resize-y text-sm"
+> 126	          />
+> 127	          <p className="mt-1 text-[10px] text-muted-foreground">
+> 128	            Este é o campo que dirige o motor — específico rende cena melhor.
+> 129	          </p>
+> 130	        </Section>
+> 131	
+> 132	        <Section title="Título na tela (opcional)">
+> 133	          <Input
+> 134	            value={d.title}
+> 135	            onChange={(e) => patch({ title: e.target.value.slice(0, 120) })}
+> 136	            placeholder="Deixe vazio se a cena for só animação"
+> 137	            className="text-sm"
+> 138	          />
+> 139	        </Section>
+> 140	
+> 141	        <Section title="Beats — palavra da narração → evento">
+> 142	          <div className="space-y-1.5">
+> 143	            {d.beats.map((b, i) => (
+> 144	              <div key={i} className="flex items-center gap-1.5">
+> 145	                <Input
+> 146	                  value={b.word}
+> 147	                  onChange={(e) => setBeat(i, "word", e.target.value)}
+> 148	                  placeholder="palavra"
+> 149	                  className="h-8 w-[38%] text-[11px]"
+> 150	                />
+> 151	                <Input
+> 152	                  value={b.event}
+> 153	                  onChange={(e) => setBeat(i, "event", e.target.value)}
+> 154	                  placeholder="o que acontece"
+> 155	                  className="h-8 flex-1 text-[11px]"
+> 156	                />
+> 157	                <Button
+> 158	                  type="button"
+> 159	                  size="icon"
+> 160	                  variant="ghost"
+> 161	                  className="h-8 w-8 shrink-0"
+> 162	                  onClick={() => patch({ beats: d.beats.filter((_, idx) => idx !== i) })}
+> 163	                  aria-label="Remover beat"
+> 164	                >
+> 165	                  <Trash2 className="h-3.5 w-3.5" />
+> 166	                </Button>
+> 167	              </div>
+> 168	            ))}
+> 169	          </div>
+> 170	          <Button
+> 171	            type="button"
+> 172	            variant="outline"
+> 173	            size="sm"
+> 174	            className="mt-1.5 w-full gap-1.5"
+> 175	            onClick={() => patch({ beats: [...d.beats, { word: "", event: "" }] })}
+> 176	          >
+> 177	            <Plus className="h-3.5 w-3.5" /> Adicionar beat
+> 178	          </Button>
+> 179	          <p className="mt-1 text-[10px] text-muted-foreground">
+> 180	            Sem beats, o motor distribui os elementos ao longo da duração.
+> 181	          </p>
+> 182	        </Section>
+> 183	
+> 184	        <Section title="Elementos em cena">
+> 185	          <div className="flex flex-wrap gap-1.5">
+> 186	            {(Object.keys(ELEMENT_LABEL) as MotionElement[]).map((el) => {
+> 187	              const on = d.elements.includes(el);
+> 188	              return (
+> 189	                <button
+> 190	                  key={el}
+> 191	                  type="button"
+> 192	                  onClick={() => toggleElement(el)}
+> 193	                  className={cn(
+> 194	                    "rounded-full border px-2.5 py-1 text-[10.5px] transition-all",
+> 195	                    on
+> 196	                      ? "border-accent/50 bg-accent/15 text-accent shadow-[0_0_12px_-4px_hsl(184_100%_50%/0.5)]"
+> 197	                      : "border-border bg-card/60 text-muted-foreground hover:border-accent/30",
+> 198	                  )}
+> 199	                >
+> 200	                  {ELEMENT_LABEL[el]}
+> 201	                </button>
+> 202	              );
+> 203	            })}
+> 204	          </div>
+> 205	        </Section>
+> 206	
+> 207	        <div className="grid grid-cols-2 gap-2 px-3">
+> 208	          <div>
+> 209	            <label className="mb-1 block text-[10px] text-muted-foreground">Formato</label>
+> 210	            <select
+> 211	              className={selectClass}
+> 212	              value={d.aspect}
+> 213	              onChange={(e) => patch({ aspect: e.target.value as MotionSceneData["aspect"] })}
+> 214	            >
+> 215	              <option value="16:9">16:9 (YouTube)</option>
+> 216	              <option value="9:16">9:16 (Shorts)</option>
+> 217	            </select>
+> 218	          </div>
+> 219	          <div>
+> 220	            <label className="mb-1 block text-[10px] text-muted-foreground">Fundo</label>
+> 221	            <select
+> 222	              className={selectClass}
+> 223	              value={d.background}
+> 224	              onChange={(e) => patch({ background: e.target.value as MotionSceneData["background"] })}
+> 225	            >
+> 226	              <option value="galaxia">Galáxia</option>
+> 227	              <option value="limpo">Limpo</option>
+> 228	            </select>
+> 229	          </div>
+> 230	        </div>
+> 231	
+> 232	        <Section title={`Duração — ${d.durationSec}s`}>
+> 233	          <input
+> 234	            type="range"
+> 235	            min={4}
+> 236	            max={60}
+> 237	            step={1}
+> 238	            value={d.durationSec}
+> 239	            onChange={(e) => patch({ durationSec: Number(e.target.value) })}
+> 240	            className="w-full accent-[hsl(var(--accent))]"
+> 241	          />
+> 242	          <p className="mt-1 text-[10px] text-muted-foreground">
+> 243	            Com narração conectada, o motor usa a duração da fala.
+> 244	          </p>
+> 245	        </Section>
+> 246	
+> 247	        {d.output?.videoUrl && (
+> 248	          <Section title="Resultado">
+> 249	            <StorageVideo src={d.output.videoUrl} controls className="w-full rounded-md" />
+> 250	          </Section>
+> 251	        )}
+> 252	
+> 253	        {d.status === "failed" && d.error && (
+> 254	          <p className="px-3 pb-2 text-[11px] text-destructive">{d.error}</p>
+> 255	        )}
+> 256	      </div>
+> 257	
+> 258	      <div className="border-t border-border bg-card p-3">
+> 259	        <Button type="button" variant="accent" className="w-full gap-2" disabled={!canRender} onClick={run}>
+> 260	          {d.status === "running" || busy ? (
+> 261	            <><Loader2 className="h-4 w-4 animate-spin" /> Renderizando…</>
+> 262	          ) : (
+> 263	            <><Wand2 className="h-4 w-4" /> Renderizar animação</>
+> 264	          )}
+> 265	        </Button>
+> 266	        <p className="mt-1.5 text-center text-[9px] text-muted-foreground">
+> 267	          Render no host · <span className="text-accent">grátis</span> · não consome mcoCoins
+> 268	        </p>
+> 269	      </div>
+> 270	    </div>
+> 271	  );
+> 272	}
+> 273	
+> ```
+
+## 🤖 Claude *(03:06:57)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Estou mapeando onde as narrações do EP06 realmente estão armazenadas — no bucket `video-studio-assets` e não na spine `creative_assets` como esperado, o que as deixa órfãs do sistema. Além disso, o inspector não está enviando o `voice_asset_id` no body, então mesmo que a UI prometa usar a duração da fala, isso não está acontecendo na prática.
+
+Agora preciso resolver como o cliente identifica e envia a voz para o motor — o `voiceClone.output.audioUrl` vem sem bucket, então preciso de um lookup reverso server-side usando a `storage_key` para conectar tudo. Tenho uma lista de defeitos críticos: o `resolveExecutePayload` está faltando cases para motionScene, soundDesign e episodeAssembler, com branches do Amendment 34 posicionadas depois do `if (!payload) return` quando deveriam estar antes; e o pipeline de dispatch nunca envia a narração conectada, então preciso coletar o voiceClone upstream via handle `input_voice` e enviar a `voice_storage_key` para o motor.
+
+Além disso, as 8 narrações do EP06 estão órfãs na spine e precisam ser backfilled, o runnable exige clips prontos no clique mas não valida isso claramente, há throws async sem handler que deixam o pipeline morrer sem marcar como failed, e nós queued/running sem job no banco ficam travados — preciso de um anticorpo no `useMotionRenderSync` que reseta após 3 polls sem linha.
+
+O grafo do EP06 tem 8 cenas queued no banco que ficam com `runnable=false`, bloqueando o próximo Run All, então preciso resetar server-side quando a aba fecha e fazer backfill da spine. Também vou remover o preview no hover dos nós de MotionScene e EpisodeAssembler conforme pedido, mantendo handles e edges intactos. Com as correções de P1-4 e P1-5, o console vai refletir a verdade automaticamente.
+
+Ainda tenho uma dúvida técnica sobre a shape do worker — preciso confirmar se é `composition.voice_bucket/voice_key`.
+
+Agora estou decidindo entre duas abordagens para resolver o asset id: deixar o edge function intocado e fazer uma query client-side para mapear a storage key para asset id, ou modificar o edge function para aceitar voice_storage_key e resolver reverso. A primeira opção é menos invasiva e mantém o contrato existente, então vou com ela.
+
+No dispatch, vou pegar o voiceClone upstream via o input_voice do edge handle, mapear output.audioUrl para a storage_key, fazer uma query na tabela creative_assets para encontrar o id correspondente, e então incluir esse voice_asset_id no body. Se não encontrar na spine, o motor roda sem voz mas com a duração já salva — não quebra nada, e para EP06 o backfill garante que o asset existe. O inspector usa o mesmo collector.
+
+Preciso tomar cuidado com a duração: o worker com voz usa voiceDuration para dirigir a duração pela fala, e as durações atuais já vieram da fala. Quando a voz está conectada e enviada, fica ainda melhor.
+
+O assembler então produz o master com a narração mixada — cenas com áudio combinado, re-encode, master com fala. Os SFX não estão no grafo atual (22 nós, nenhum soundDesign), então ficam fora do escopo do EP06, mas o fix do dispatch cobre o kind igualmente. Os 4 presenters Veo também não estão no grafo — ficam para depois do Run All, conforme decisão do Sovereign; os sceneNotes já marcam os lugares. Não é bug.
+
+Agora preciso executar o plano: criar as tasks, implementar inline nos arquivos relevantes (useCanvasPipeline, types, useMotionRenderSync, componentes de cena e assembler, inspector com suporte a voz, talvez utilitários de coleta de voz upstream), fazer backfill da spine e reset do grafo server-side com um script. Sovereign fechou a aba, então vou reler o grafo antes e depois para confirmar as mudanças.
+
+Depois vem a verificação: rodar tsc-app contra baseline, vitest, build e deploy no repo principal, validar a dist. E o workflow adversarial — examinar o diff para regressões, simular o fluxo completo do EP06 contra o grafo real, e varrer outros kinds que podem ser afetados pelo runnable/resolveExecutePayload, especialmente transcribe e videoRepurpose que parecem estar faltando cases no resolver. Dispatch é client-side, então preciso de um browser real pra validar — posso usar e2e local com preview do vite e sessão injetada, mas isso consome tempo. Melhor estratégia: witness do edge function + worker (rail servidor) com um job pequeno via curl pra provar fila e worker vivos, testes unitários do dispatch com vitest, e type gates — o clique real do Sovereign fica pro E2E final, dessa vez com console mostrando a fila de verdade e logs que gritam em vez de travar. O ideal mesmo seria um witness browser do Run All inteiro com projeto descartável, rodando localmente com sessão gerada.
+
+Vou tentar isso: witness browser com projeto-teste pequeno (1 cena motion de 4s sem voz + assembler) via vite preview + agent-browser, provando o caminho completo do clique sem tocar no EP06. Preciso ler as peças que vou mexer: collectMasterClips, EpisodeAssemblerNode inteiro, canvas-utils findUpstream* pro collector de voz, e o trecho do motion-bridge pra entender o formato aceito (mp3 ok? voiceDuration via ffprobe).
+
+Também preciso checar se MotionSceneData em canvas.ts tem voiceAssetId — provavelmente não tem.
+
+</details>
+
+
+## 🤖 Claude *(03:06:57)*
+
+Mapa fechado. Consolidando o diagnóstico completo — são **6 defeitos reais**, 3 deles matariam o Run All de novo mesmo se eu só "restaurasse o console":
+
+| # | Defeito | Efeito |
+|---|---------|--------|
+| P0-1 | `resolveExecutePayload` sem case p/ os 3 kinds novos + branches do dispatch DEPOIS do `if (!payload) return` | Run All não enfileira NADA (o de hoje) |
+| P0-2 | Ninguém envia a narração conectada ao `motion-render` (nem inspector, nem Run All) | Cenas sairiam **mudas** → master sem narração |
+| P0-3 | Assembler só é `runnable` se já há clipe pronto **no clique** | Master nunca monta no 1º Run All |
+| P1-4 | `throw` dos 3 branches fora de try/catch | Pipeline morre sem marcar `failed` (spinner eterno) |
+| P1-5 | Nó `queued`/`running` sem job no banco não se auto-cura | Fantasmas após reload/limpeza |
+| P1-6 | As 8 narrações EP06 estão **órfãs da spine** + 8 cenas presas em `queued` no grafo | Sem backfill, a voz não é resolvível owner-scoped; sem reset, o próximo Run All diz "nenhum nó qualificado" |
+
+Mais o pedido explícito: remover o preview no hover (MotionSceneNode **e** EpisodeAssemblerNode têm o mesmo efeito), preservando handles/elos/conexão de foto.
+
+Vou organizar e executar:
+
+## 🤖 Claude *(03:06:58)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:TaskCreate,TaskUpdate",
+  "max_results": 2
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'TaskCreate'}, {'type': 'tool_reference', 'tool_name': 'TaskUpdate'}]
+> ```
+
+## 🤖 Claude *(03:07:06)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Corrigir dispatch do Run All (P0-1/P1-4): branches Amendment 34 antes do resolveExecutePayload + try/catch",
+  "description": "useCanvasPipeline.ts: mover os branches motionScene/episodeAssembler/soundDesign para ANTES de resolveExecutePayload/if(!payload)return; envolver em try/catch marcando status failed. types/canvas.ts: adicionar cases documentais return null aos kinds novos.",
+  "activeForm": "Corrigindo dispatch do Run All"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #1 created successfully: Corrigir dispatch do Run All (P0-1/P1-4): branches Amendment 34 antes do resolveExecutePayload + try/catch
+> ```
+
+## 🤖 Claude *(03:07:09)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Fiar narra\u00e7\u00e3o conectada no motion-render (P0-2): dispatch envia voz upstream + backfill spine EP06",
+  "description": "Coletar upstream voiceClone via handle input_voice \u2192 resolver creative_asset id por storage_key (RLS own) \u2192 body.voice_asset_id no motion-render (pipeline + inspector). Backfill: registrar as 8 narra\u00e7\u00f5es EP06 (bucket video-studio-assets) na spine creative_assets.",
+  "activeForm": "Fiando narra\u00e7\u00e3o no motion-render"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #2 created successfully: Fiar narração conectada no motion-render (P0-2): dispatch envia voz upstream + backfill spine EP06
+> ```
+
+## 🤖 Claude *(03:07:11)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Assembler runnable no 1\u00ba Run All (P0-3)",
+  "description": "useCanvasPipeline runnable: episodeAssembler qualifica quando tem edge de entrada (n\u00e3o clipes prontos no clique); no dispatch, erro claro se 0 clipes prontos na hora de montar.",
+  "activeForm": "Corrigindo runnable do assembler"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #3 created successfully: Assembler runnable no 1º Run All (P0-3)
+> ```
+
+## 🤖 Claude *(03:07:13)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Anticorpo anti-fantasma no useMotionRenderSync (P1-5)",
+  "description": "N\u00f3 motion-family queued/running sem linha correspondente em video_renders por 3 polls consecutivos (~12s) \u2192 reset para idle (limpa renderId/erro). Cobre fantasmas de reload/limpeza.",
+  "activeForm": "Implementando anticorpo anti-fantasma"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #4 created successfully: Anticorpo anti-fantasma no useMotionRenderSync (P1-5)
+> ```
+
+## 🤖 Claude *(03:07:19)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Remover preview no hover (MotionSceneNode + EpisodeAssemblerNode) preservando elos/handles",
+  "description": "Tirar onMouseEnter/onMouseLeave + selo \"\u25b6 hover\"; manter StorageVideo est\u00e1tico, Handles input_voice/input_asset/output_video e edges intactos.",
+  "activeForm": "Removendo preview no hover"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #5 created successfully: Remover preview no hover (MotionSceneNode + EpisodeAssemblerNode) preservando elos/handles
+> ```
+
+## 🤖 Claude *(03:07:22)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Reset server-side do grafo EP06 (8 cenas queued\u2192idle) com verifica\u00e7\u00e3o anti-clobber",
+  "description": "Com a aba fechada (Sovereign confirmou), resetar status das 8 motionScene para idle no vm_canvas_projects.graph; reler 10s depois (mem\u00f3ria reference_canvas_autosave_clobbers_server_writes).",
+  "activeForm": "Resetando grafo EP06"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #6 created successfully: Reset server-side do grafo EP06 (8 cenas queued→idle) com verificação anti-clobber
+> ```
+
+## 🤖 Claude *(03:07:24)*
+
+
+🛠️ **Tool Call**: `TaskCreate`
+```json
+{
+  "subject": "Gates + revis\u00e3o adversarial (workflow) + build/deploy + witness E2E browser do Run All",
+  "description": "tsc-app vs baseline 0, vitest, workflow adversarial sobre o diff (born-dead/regress\u00e3o/simula\u00e7\u00e3o EP06), bun run build no repo principal (deploy nginx), witness browser em projeto-teste descart\u00e1vel (1 cena motion + assembler) via vite preview + sess\u00e3o User 0.",
+  "activeForm": "Rodando gates e witness E2E"
+}
+```
+
+> **Tool Result (TaskCreate)** - ✅ Success
+>
+> ```
+> Task #7 created successfully: Gates + revisão adversarial (workflow) + build/deploy + witness E2E browser do Run All
+> ```
+
+## 🤖 Claude *(03:07:32)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Agora preciso implementar isso. Vou começar revisando os arquivos que vou modificar: master-clips.ts, o componente EpisodeAssemblerNode completo, os helpers de canvas para modelar o coletor de voz, as definições de tipos para MotionSceneData e VoiceCloneData, e verificar no motion-bridge se o mp3 funciona corretamente com a duração da voz e a mixagem.
+
+</details>
+
+
+## 🤖 Claude *(03:07:32)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "1",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #1 status
+> ```
+
+## 🤖 Claude *(03:07:32)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/master-clips.ts"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import type { CanvasEdge, CanvasNode } from "@/types/canvas";
+> 2	
+> 3	// Amendment 34 · FR-SPACES-133 — quem entra no master e em que ordem.
+> 4	// Lib ÚNICA: o inspector e o "Executar tudo" precisam concordar, senão o botão mostra uma coisa e
+> 5	// o Run All monta outra.
+> 6	
+> 7	export interface MasterClip { key: string; label: string }
+> 8	
+> 9	/** Nós cujo output de VÍDEO pode entrar num master. */
+> 10	const CLIP_KINDS = new Set(["motionScene", "imageToVideo", "povVideo", "cinematicVideo", "splitScreen", "videoRepurpose"]);
+> 11	
+> 12	/**
+> 13	 * Clipes prontos conectados ao montador, na ordem escolhida.
+> 14	 * `canvas` = posição X (o que se vê é o que se monta) · `connection` = ordem das arestas.
+> 15	 */
+> 16	export function collectMasterClips(
+> 17	  nodes: CanvasNode[],
+> 18	  edges: CanvasEdge[],
+> 19	  assemblerId: string,
+> 20	  order: "canvas" | "connection" = "canvas",
+> 21	): MasterClip[] {
+> 22	  const incoming = edges.filter((e) => e.target === assemblerId);
+> 23	  const found: Array<{ key: string; label: string; x: number; seq: number }> = [];
+> 24	
+> 25	  incoming.forEach((e, seq) => {
+> 26	    const n = nodes.find((x) => x.id === e.source);
+> 27	    if (!n) return;
+> 28	    const d = n.data as unknown as { kind?: string; label?: string; status?: string; output?: { videoUrl?: string } };
+> 29	    if (!d.kind || !CLIP_KINDS.has(d.kind)) return;
+> 30	    const key = d.output?.videoUrl;
+> 31	    // só entra o que ESTÁ pronto — cena em fila não vira frame preto no meio do filme
+> 32	    if (!key || d.status !== "success") return;
+> 33	    found.push({ key, label: String(d.label ?? d.kind), x: n.position?.x ?? 0, seq });
+> 34	  });
+> 35	
+> 36	  found.sort((a, b) => (order === "canvas" ? a.x - b.x : a.seq - b.seq));
+> 37	  return found.map((f) => ({ key: f.key, label: f.label }));
+> 38	}
+> 39	
+> ```
+
+## 🤖 Claude *(03:07:32)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/EpisodeAssemblerNode.tsx"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { memo, useRef } from "react";
+> 2	import { Handle, Position, type NodeProps } from "@xyflow/react";
+> 3	import { Clapperboard, Film, Loader2 } from "lucide-react";
+> 4	import { StorageVideo } from "@/components/StorageMedia";
+> 5	import { cn } from "@/lib/utils";
+> 6	import { type EpisodeAssemblerData } from "@/types/canvas";
+> 7	
+> 8	const HANDLE_CLASS = "!h-3 !w-3 !rounded-full !border-2 !border-border !bg-card";
+> 9	
+> 10	// Amendment 34 · FR-SPACES-133 — card do Montar Master (3D Glass Neon, display-only).
+> 11	// É o nó terminal do grafo: tudo converge aqui e sai um arquivo publicável.
+> 12	export const EpisodeAssemblerNode = memo(function EpisodeAssemblerNode({ data, selected }: NodeProps) {
+> 13	  const d = data as unknown as EpisodeAssemblerData;
+> 14	  const vidRef = useRef<HTMLVideoElement>(null);
+> 15	  const busy = d.status === "running" || d.status === "queued";
+> 16	  const videoUrl = d.output?.videoUrl;
+> 17	
+> 18	  return (
+> 19	    <div
+> 20	      onMouseEnter={() => { const v = vidRef.current; if (v) { v.currentTime = 0; void v.play().catch(() => {}); } }}
+> 21	      onMouseLeave={() => { const v = vidRef.current; if (v) { v.pause(); v.currentTime = 0; } }}
+> 22	      className={cn(
+> 23	        "mc-glass-card group/card relative w-[270px] overflow-hidden rounded-xl border text-foreground transition-all",
+> 24	        selected ? "border-accent ring-2 ring-accent/30" : "border-border/70",
+> 25	        busy && "mc-glass-card-busy",
+> 26	        d.status === "success" && "border-emerald-500/50",
+> 27	        d.status === "failed" && "border-destructive/50",
+> 28	      )}
+> 29	    >
+> 30	      <span aria-hidden className="mc-glass-shine" />
+> 31	      <Handle type="target" position={Position.Left} id="input_clip" className={HANDLE_CLASS} />
+> 32	      <Handle type="source" position={Position.Right} id="output_master" className={HANDLE_CLASS} />
+> 33	
+> 34	      <header className="relative flex items-center justify-between gap-1.5 border-b border-border/60 px-2.5 py-1.5">
+> 35	        <div className="flex min-w-0 items-center gap-1.5">
+> 36	          <Clapperboard className={cn("h-3 w-3 shrink-0 text-accent", busy && "animate-pulse")} />
+> 37	          <span className="truncate text-[11px] font-medium">{d.label}</span>
+> 38	        </div>
+> 39	        <span className="shrink-0 rounded-full bg-accent/15 px-1.5 py-0.5 font-mono text-[9px] uppercase text-accent">
+> 40	          {d.aspect}
+> 41	        </span>
+> 42	      </header>
+> 43	
+> 44	      <div className="relative aspect-video w-full bg-muted/30">
+> 45	        {busy ? (
+> 46	          <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-[10px] text-accent">
+> 47	            <Loader2 className="h-4 w-4 animate-spin" /> montando o master…
+> 48	          </div>
+> 49	        ) : videoUrl ? (
+> 50	          <>
+> 51	            <StorageVideo
+> 52	              ref={vidRef}
+> 53	              src={videoUrl}
+> 54	              className="h-full w-full object-cover"
+> 55	              muted loop playsInline preload="metadata"
+> 56	            />
+> 57	            {/* selo de "passe o mouse": sem ele o preview parece um still quebrado */}
+> 58	            <span className="pointer-events-none absolute bottom-1 right-1 rounded bg-black/60 px-1.5 py-0.5 font-mono text-[8px] text-white/70 opacity-100 transition-opacity group-hover/card:opacity-0">
+> 59	              ▶ hover
+> 60	            </span>
+> 61	          </>
+> 62	        ) : (
+> 63	          <div className="flex h-full w-full flex-col items-center justify-center gap-1 px-3 text-center">
+> 64	            <Film className="h-4 w-4 text-muted-foreground/60" />
+> 65	            <p className="text-[10px] leading-snug text-muted-foreground">
+> 66	              Conecte as cenas — elas entram na ordem em que estão no canvas
+> 67	            </p>
+> 68	          </div>
+> 69	        )}
+> 70	      </div>
+> 71	
+> 72	      {d.status === "failed" && d.error && (
+> 73	        <p className="relative line-clamp-2 px-2.5 pt-1.5 text-[9px] text-destructive">{d.error}</p>
+> 74	      )}
+> 75	
+> 76	      <div className="relative flex items-center justify-between gap-2 px-2.5 py-1.5 font-mono text-[9px] text-muted-foreground">
+> 77	        <span>
+> 78	          {d.output?.sceneCount ? `${d.output.sceneCount} cenas` : "aguardando cenas"}
+> 79	          {d.output?.durationSec ? ` · ${Math.round(d.output.durationSec)}s` : ""}
+> 80	        </span>
+> 81	        <span className="shrink-0 text-accent">grátis</span>
+> 82	      </div>
+> 83	    </div>
+> 84	  );
+> 85	});
+> 86	
+> ```
+
+## 🤖 Claude *(03:07:40)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Preciso examinar os tipos de dados MotionSceneData e VoiceCloneData, além de ver como o motion-bridge consome a voz, para estruturar o collector adequadamente. Também vou verificar as definições de handles e edges do EP06, especialmente se a narração se conecta à cena através do handle input_voice.
+
+</details>
+
+
+## 🤖 Claude *(03:07:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"interface MotionSceneData\" -A 30 src/types/canvas.ts | head -40; echo \"---VOICE-DATA---\"; grep -n \"interface VoiceCloneData\" -A 25 src/types/canvas.ts | head -30",
+  "description": "Shapes de MotionSceneData e VoiceCloneData"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 1021:export interface MotionSceneData {
+> 1022-  kind: "motionScene";
+> 1023-  label: string;
+> 1024-  /** Título curto que aparece na peça (opcional — muitas cenas são só animação). */
+> 1025-  title: string;
+> 1026-  /** O que a animação mostra, em pt-BR. É o campo que dirige o motor. */
+> 1027-  description: string;
+> 1028-  /** Mapa palavra→evento. Vazio = o motor distribui os elementos uniformemente na duração. */
+> 1029-  beats: MotionBeat[];
+> 1030-  elements: MotionElement[];
+> 1031-  background: "galaxia" | "limpo";
+> 1032-  aspect: "16:9" | "9:16";
+> 1033-  /** Duração em segundos. Quando há narração conectada, o motor usa a duração dela. */
+> 1034-  durationSec: number;
+> 1035-  status: NodeStatus;
+> 1036-  /** Job na fila `video_renders` (engine 'motion') enquanto renderiza. */
+> 1037-  renderId?: string;
+> 1038-  output?: {
+> 1039-    videoUrl?: string;
+> 1040-    posterUrl?: string;
+> 1041-    durationSec?: number;
+> 1042-    generatedAt: string;
+> 1043-  };
+> 1044-  error?: string;
+> 1045-}
+> 1046-
+> 1047-/* ── Amendment 34 · FR-SPACES-137 — `soundDesign`: efeito sonoro GERADO e carimbado.
+> 1048- *    Fecha o GAP do manual profissional (hard SFX/wallah/foley sem fonte). A licença nasce com o
+> 1049- *    asset — a biblioteca é nossa e datada, não "achada" num banco de terceiro. ── */
+> 1050-export type SoundType = "hard_sfx" | "ambience" | "wallah" | "foley" | "riser" | "stinger";
+> 1051-
+> ---VOICE-DATA---
+> 556:export interface VoiceCloneData {
+> 557-  kind: "voiceClone";
+> 558-  label: string;
+> 559-  /** Provider for both the clone and the synthesis. qwen3-local = free self-host engine (Amendment 18). */
+> 560-  provider: "elevenlabs" | "cartesia" | "qwen3-local";
+> 561-  /** Single language per generation — never code-switch intra-sentence (FM-AC-013). */
+> 562-  language: "en" | "pt-BR";
+> 563-  /** Uploaded reference-audio sample used to clone the voice. */
+> 564-  sampleAudioUrl?: string;
+> 565-  sampleStoragePath?: string;
+> 566-  /** FR-SPACES-059 — up to 5 short clips (≤7s each) enriching the composite reference
+> 567-   *  (personality, timbres, mannerisms, accents). qwen3-local engine only. */
+> 568-  validationSamples?: { url: string; path: string; duration: number }[];
+> 569-  /** voice_profiles row id — set after a successful clone; required to synthesize. */
+> 570-  voiceProfileId?: string;
+> 571-  /** Text to synthesize with the cloned voice. */
+> 572-  prompt: string;
+> 573-  status: NodeStatus;
+> 574-  /** qwen3-local async: video_renders row being polled (survives refresh via graph persistence). */
+> 575-  pendingRenderId?: string;
+> 576-  pendingKind?: "clone" | "synthesize";
+> 577-  /** FR-SPACES-060 — expressive mode: 1.7B engine + inline emotion tags in the script (slower). */
+> 578-  expressive?: boolean;
+> 579-  output?: {
+> 580-    audioUrl?: string;
+> 581-    creativeAssetId?: string;
+> ```
+
+## 🤖 Claude *(03:07:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '100,260p' scripts/motion-bridge.ts",
+  "description": "Trecho do worker: consumo da voz + render"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   await supabase.rpc("finalize_video_render", {
+>     p_render_id: renderId, p_state: state, p_storage_key: storageKey, p_qa: qa, p_node_id: null, p_refund: 0,
+>   }).then(() => {}, () => {});
+> }
+> 
+> interface MotionComposition {
+>   kind: "motion";
+>   title?: string;
+>   description?: string;
+>   beats?: Array<{ word?: string; event?: string }>;
+>   elements?: string[];
+>   background?: "galaxia" | "limpo";
+>   aspect?: "16:9" | "9:16";
+>   duration_sec?: number;
+>   project_id?: string | null;
+>   node_id?: string | null;
+>   voice_bucket?: string | null;
+>   voice_key?: string | null;
+> }
+> 
+> /** Duração da narração conectada (quando houver) — a cena passa a ser dirigida pela fala. */
+> async function voiceDuration(bucket: string, key: string, workDir: string): Promise<number | null> {
+>   try {
+>     const { data, error } = await supabase.storage.from(bucket).download(key);
+>     if (error || !data) return null;
+>     const local = join(workDir, "voice.audio");
+>     writeFileSync(local, Buffer.from(await data.arrayBuffer()));
+>     const probe = Bun.spawnSync([
+>       "ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", local,
+>     ]);
+>     const secs = Number(new TextDecoder().decode(probe.stdout).trim());
+>     return Number.isFinite(secs) && secs > 0 ? secs : null;
+>   } catch {
+>     return null;
+>   }
+> }
+> 
+> async function processMotion(renderId: string, userId: string, comp: MotionComposition) {
+>   const workDir = join(WORK_BASE, renderId);
+>   rmSync(workDir, { recursive: true, force: true });
+>   mkdirSync(join(workDir, "frames"), { recursive: true });
+> 
+>   try {
+>     // 1) duração: a narração manda quando está conectada (regra da timeline dirigida pela fala)
+>     let duration = Math.max(2, Math.min(120, Number(comp.duration_sec) || 8));
+>     if (comp.voice_bucket && comp.voice_key) {
+>       const vd = await voiceDuration(comp.voice_bucket, comp.voice_key, workDir);
+>       if (vd) duration = Math.max(2, Math.min(120, Math.ceil(vd * 10) / 10));
+>     }
+> 
+>     const spec: SceneSpec = {
+>       title: String(comp.title ?? ""),
+>       description: String(comp.description ?? ""),
+>       beats: (comp.beats ?? []).map((b) => ({ word: String(b?.word ?? ""), event: String(b?.event ?? "") })),
+>       elements: Array.isArray(comp.elements) && comp.elements.length ? comp.elements.map(String) : ["nodes", "runningRing", "edges"],
+>       background: comp.background === "limpo" ? "limpo" : "galaxia",
+>       aspect: comp.aspect === "9:16" ? "9:16" : "16:9",
+>       durationSec: duration,
+>     };
+> 
+>     // 2) HTML determinístico em disco (file:// — zero rede, zero CDN)
+>     const htmlPath = join(workDir, "scene.html");
+>     writeFileSync(htmlPath, buildSceneHtml(spec));
+>     const { w, h } = sceneDimensions(spec.aspect);
+>     const frames = Math.round(duration * FPS);
+> 
+>     // 3) frame-seek num subprocesso NODE: o Playwright é confiável sob Node e engasga sob bun
+>     //    (o primeiro witness travou >10min num render que o probe em Node fez em 77s).
+>     await run([
+>       "node", resolve(__dirname, "motion/render-frames.mjs"),
+>       htmlPath, join(workDir, "frames"), String(frames), String(w), String(h), String(FPS),
+>     ], 20 * 60 * 1000, (line) => {
+>       const m = line.match(/^PROGRESS (\d+) (\d+)$/);
+>       if (m) publishProgress(renderId, Number(m[1]), Number(m[2]));
+>     });
+> 
+>     // 4) encode + COLOR GRADING (o passo que separa "renderizado" de "cinematográfico").
+>     //    Correction primeiro (técnico: contraste/exposição), grading depois (artístico: a paleta da
+>     //    marca). Cadeia: curves lifta o preto para cinza-carvão — preto puro é a marca de material
+>     //    barato; eq dá contraste e saturação; colorbalance empurra sombras para o teal e altas para
+>     //    um âmbar sutil (o "teal & orange" do cinema, aqui puxado ao ciano do MIV); unsharp devolve
+>     //    a definição que a compressão come; vignette fecha o olhar no centro.
+>     const GRADE = [
+>       "curves=all='0/0.02 0.5/0.52 1/0.98'",
+>       "eq=contrast=1.06:saturation=1.10:gamma=0.98",
+>       "colorbalance=rs=-0.03:gs=0.01:bs=0.05:rh=0.04:gh=0.01:bh=-0.02",
+>       "unsharp=5:5:0.35:5:5:0.0",
+>       "vignette=PI/5",
+>     ].join(",");
+>     const out = join(workDir, "motion.mp4");
+>     await run([
+>       "ffmpeg", "-y", "-framerate", String(FPS),
+>       "-i", join(workDir, "frames", "f_%05d.png"),
+>       "-vf", GRADE,
+>       "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18",
+>       "-preset", "slow", "-profile:v", "high", "-movflags", "+faststart",
+>       out, "-loglevel", "error",
+>     ], 15 * 60 * 1000);
+> 
+>     const bytes = readFileSync(out);
+>     if (bytes.length < MIN_MP4_BYTES) throw new Error(`mp4 too small (${bytes.length} bytes)`);
+> 
+>     // 5) upload owner-prefixed (mesma convenção de RLS dos demais rails)
+>     const key = `${userId}/motion/${renderId}.mp4`;
+>     const { error: upErr } = await supabase.storage.from(BUCKET)
+>       .upload(key, bytes, { contentType: "video/mp4", upsert: true });
+>     if (upErr) throw new Error(`upload: ${upErr.message}`);
+> 
+>     // 6) spine de assets (proveniência). `source_module` tem ALLOWLIST no RPC — 'spaces-motion' era
+>     //    recusado e, como a chamada é fail-soft, os 4 primeiros vídeos ficaram órfãos da Biblioteca
+>     //    sem ninguém perceber (achado da auditoria 2026-08-04). O módulo é 'spaces'; o que distingue
+>     //    a cena motion é o metadata.motion.
+>     const reg = await supabase.rpc("register_creative_asset", {
+>       p_user_id: userId,
+>       p_kind: "video",
+>       p_storage_bucket: BUCKET,
+>       p_storage_key: key,
+>       p_source_module: "spaces",
+>       p_metadata: {
+>         motion: { beats: spec.beats.length, elements: spec.elements, aspect: spec.aspect, duration_sec: duration },
+>         project_id: comp.project_id ?? null,
+>         node_id: comp.node_id ?? null,
+>       },
+>     });
+>     // fail-soft no vídeo, mas NUNCA em silêncio: um asset que não entra na spine é invisível na
+>     // Biblioteca, e o usuário não tem como saber.
+>     if (reg.error) {
+>       console.error(`⚠️  register_creative_asset falhou: ${reg.error.message}`);
+>       logHealth("degraded", "motion", { render_id: renderId, register_error: reg.error.message.slice(0, 200) });
+>     }
+> 
+>     await finalize(renderId, "done", key, {
+>       duration_sec: duration, frames, bytes: bytes.length, aspect: spec.aspect,
+>       beats: spec.beats.length, voice_driven: Boolean(comp.voice_key),
+>     });
+>     logHealth("healthy", "motion", { render_id: renderId, frames, duration_sec: duration, bytes: bytes.length });
+>     console.log(`✅ motion ${renderId}: ${frames} frames · ${duration}s · ${(bytes.length / 1024).toFixed(0)}KB`);
+>   } finally {
+>     rmSync(workDir, { recursive: true, force: true });
+>   }
+> }
+> 
+> /** Síntese de SFX em FFmpeg — o motor determinístico onde a IA falha por construção (ataque <2ms). */
+> async function processSfx(renderId: string, userId: string, comp: Record<string, unknown>) {
+>   const workDir = join(WORK_BASE, renderId);
+>   rmSync(workDir, { recursive: true, force: true });
+>   mkdirSync(workDir, { recursive: true });
+>   try {
+>     const recipe = String(comp.recipe ?? "whoosh") as SynthRecipeId;
+>     if (!SYNTH_RECIPES[recipe]) throw new Error(`receita desconhecida: ${recipe}`);
+>     const sec = Math.max(0.2, Math.min(30, Number(comp.duration_sec) || SYNTH_RECIPES[recipe].defaultSec));
+>     const out = join(workDir, "sfx.mp3");
+> 
+>     await run(buildSynthArgs(recipe, sec, out), 2 * 60 * 1000);
+>     const bytes = readFileSync(out);
+>     if (bytes.length < 1_500) throw new Error(`áudio pequeno demais (${bytes.length}B)`);
+> 
+>     const key = `${userId}/sfx/synth/${recipe}/${renderId}.mp3`;
+>     const { error: upErr } = await supabase.storage.from(BUCKET)
+>       .upload(key, bytes, { contentType: "audio/mpeg", upsert: true });
+>     if (upErr) throw new Error(`upload: ${upErr.message}`);
+> ```
+
+## 🤖 Claude *(03:08:22)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Descobri um detalhe crucial sobre o worker: `processMotion` usa a voz apenas para calcular a duração, mas não mistura o áudio no MP4 final — o FFmpeg codifica apenas a sequência de imagens em vídeo sem stream de áudio. Então mesmo com a voz conectada, o clipe sai mudo, o que significa que a narração provavelmente precisa entrar no estágio de `processAssemble`.
+
+A solução é clara: mixar a narração no `processMotion` desde o início. O worker já baixa o arquivo de áudio da voz para o diretório de trabalho, então bastaria incluir esse áudio no encode FFmpeg com padding até a duração do vídeo — cada cena sairia já com sua fala integrada, e o assemble apenas concatenaria os clipes com áudio preservado. Isso é muito mais simples e robusto do que tentar mixar por offsets no assemble depois.
+
+Preciso verificar como o `processAssemble` lida com a concatenação de clipes que têm streams de áudio diferentes ou ausentes, porque no EP05 havia problemas com segmentos mudos truncando o resultado final. O backfill também precisa gravar o creativeAssetId nos nós do grafo (escrita server-side), ou o dispatch resolve pela storage_key como fallback — vou implementar ambos para robustez, com o dispatch tentando output.creativeAssetId primeiro e depois consultando storage_key se necessário, enquanto o backfill registra na spine e escreve no grafo com proteção contra sobrescrita. Depois preciso revisar o processAssemble e começar a implementação, que está bem mapeada nos arquivos canvas.ts e hooks. Adding helper utilities...
+
+</details>
+
+
+## 🤖 Claude *(03:08:23)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei um problema grave: o `processMotion` usa a narração apenas para calcular duração, mas o encode final não inclui áudio, então o vídeo sairia mudo mesmo com a voz enviada. Vou verificar como o `processAssemble` trata áudio para determinar onde fazer o mix.
+
+</details>
+
+
+## 🤖 Claude *(03:08:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '260,400p' scripts/motion-bridge.ts",
+  "description": "processAssemble e helpers do worker"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>     if (upErr) throw new Error(`upload: ${upErr.message}`);
+> 
+>     const reg = await supabase.rpc("register_creative_asset", {
+>       p_user_id: userId, p_kind: "audio",
+>       p_storage_bucket: BUCKET, p_storage_key: key,
+>       p_source_module: "spaces",
+>       p_title: `${SYNTH_RECIPES[recipe].label} · ${sec}s`,
+>       p_metadata: {
+>         project_id: comp.project_id ?? null, node_id: comp.node_id ?? null,
+>         sfx: { recipe, duration_sec: sec, engine: "ffmpeg" },
+>         // Carimbo: síntese própria é a proveniência mais limpa que existe — sem terceiro na cadeia.
+>         license: { source: "synthesized", provider: "mcorch-ffmpeg", commercial_use: true,
+>                    generated_at: new Date().toISOString(), recipe, deterministic: true },
+>       },
+>     });
+>     if (reg.error) {
+>       console.error(`⚠️  register falhou: ${reg.error.message}`);
+>       logHealth("degraded", "sfx", { render_id: renderId, register_error: reg.error.message.slice(0, 200) });
+>     }
+>     await finalize(renderId, "done", key, { recipe, duration_sec: sec, bytes: bytes.length, engine: "ffmpeg" });
+>     logHealth("healthy", "sfx", { render_id: renderId, recipe, bytes: bytes.length });
+>     console.log(`✅ sfx ${renderId}: ${recipe} · ${sec}s · ${(bytes.length / 1024).toFixed(0)}KB`);
+>   } finally {
+>     rmSync(workDir, { recursive: true, force: true });
+>   }
+> }
+> 
+> /**
+>  * Montagem do MASTER — concatena os clipes na ordem recebida e normaliza o loudness.
+>  *
+>  * Por que re-encodar em vez de usar concat demuxer com `-c copy`: as peças vêm de motores
+>  * diferentes (motion 1280x720 sem áudio, Veo com áudio, cortes com outro fps). Stream copy só
+>  * funciona com parâmetros idênticos — aqui ele produziria um arquivo quebrado ou mudo. O filtro
+>  * `concat` com normalização de escala/fps/áudio é o caminho honesto.
+>  *
+>  * Cena sem áudio ganha silêncio (anullsrc): sem isso o `concat` com `a=1` falha ou desalinha —
+>  * é a mesma armadilha que truncou a faixa do EP05 ("não confiar no áudio do concat").
+>  */
+> async function processAssemble(renderId: string, userId: string, comp: Record<string, unknown>) {
+>   const workDir = join(WORK_BASE, renderId);
+>   rmSync(workDir, { recursive: true, force: true });
+>   mkdirSync(workDir, { recursive: true });
+>   try {
+>     const clips = (comp.clips ?? []) as Array<{ bucket: string; key: string }>;
+>     if (!clips.length) throw new Error("sem clipes");
+>     const aspect = comp.aspect === "9:16" ? "9:16" : "16:9";
+>     const W = aspect === "9:16" ? 1080 : 1920;
+>     const H = aspect === "9:16" ? 1920 : 1080;
+>     const lufs = Number(comp.loudnorm_lufs) || -16;
+> 
+>     // baixa cada clipe (a ordem da lista É a ordem do filme)
+>     const locals: string[] = [];
+>     for (let i = 0; i < clips.length; i++) {
+>       const { data, error } = await supabase.storage.from(clips[i].bucket).download(clips[i].key);
+>       if (error || !data) { console.error(`⚠️  clipe ${i} indisponível: ${error?.message}`); continue; }
+>       const local = join(workDir, `c${String(i).padStart(3, "0")}.mp4`);
+>       writeFileSync(local, Buffer.from(await data.arrayBuffer()));
+>       locals.push(local);
+>     }
+>     if (!locals.length) throw new Error("nenhum clipe baixou");
+> 
+>     // normaliza cada entrada (escala + pad + fps + áudio garantido) e concatena
+>     const inputs: string[] = [];
+>     const parts: string[] = [];
+>     locals.forEach((f, i) => {
+>       inputs.push("-i", f);
+>       parts.push(
+>         `[${i}:v]scale=${W}:${H}:force_original_aspect_ratio=decrease,` +
+>         `pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=black,fps=30,setsar=1[v${i}]`,
+>       );
+>     });
+>     // trilha de silêncio para casar com clipes mudos
+>     inputs.push("-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100");
+>     const silentIdx = locals.length;
+>     locals.forEach((_, i) => {
+>       // se o clipe tem áudio usa o dele; senão o silêncio (o `?` do amerge não existe em ffmpeg,
+>       // então usamos o silêncio cortado ao tamanho do vídeo — simples e previsível)
+>       parts.push(`[${silentIdx}:a]atrim=0:3600,asetpts=N/SR/TB[s${i}]`);
+>     });
+>     const vConcat = locals.map((_, i) => `[v${i}]`).join("");
+>     parts.push(`${vConcat}concat=n=${locals.length}:v=1:a=0[vout]`);
+> 
+>     const filter = parts.join(";");
+>     const out = join(workDir, "master.mp4");
+>     await run([
+>       "ffmpeg", "-y", ...inputs,
+>       "-filter_complex", filter,
+>       "-map", "[vout]",
+>       "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "19", "-preset", "medium",
+>       "-movflags", "+faststart",
+>       out, "-loglevel", "error",
+>     ], 40 * 60 * 1000);
+> 
+>     const bytes = readFileSync(out);
+>     if (bytes.length < 50_000) throw new Error(`master pequeno demais (${bytes.length}B)`);
+>     const probe = Bun.spawnSync(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", out]);
+>     const dur = Number(new TextDecoder().decode(probe.stdout).trim()) || 0;
+> 
+>     const key = `${userId}/masters/${renderId}.mp4`;
+>     const { error: upErr } = await supabase.storage.from(BUCKET)
+>       .upload(key, bytes, { contentType: "video/mp4", upsert: true });
+>     if (upErr) throw new Error(`upload: ${upErr.message}`);
+> 
+>     const reg = await supabase.rpc("register_creative_asset", {
+>       p_user_id: userId, p_kind: "video",
+>       p_storage_bucket: BUCKET, p_storage_key: key,
+>       p_source_module: "spaces",
+>       p_title: `MASTER · ${String(comp.title ?? "Episódio")}`,
+>       p_metadata: {
+>         project_id: comp.project_id ?? null, node_id: comp.node_id ?? null,
+>         master: { scenes: locals.length, duration_sec: Math.round(dur), aspect, loudnorm_lufs: lufs },
+>       },
+>     });
+>     if (reg.error) {
+>       console.error(`⚠️  register do master falhou: ${reg.error.message}`);
+>       logHealth("degraded", "assemble", { render_id: renderId, register_error: reg.error.message.slice(0, 200) });
+>     }
+> 
+>     await finalize(renderId, "done", key, {
+>       scenes: locals.length, duration_sec: Math.round(dur), bytes: bytes.length, aspect,
+>     });
+>     logHealth("healthy", "assemble", { render_id: renderId, scenes: locals.length, duration_sec: Math.round(dur) });
+>     console.log(`✅ master ${renderId}: ${locals.length} cenas · ${Math.round(dur)}s · ${(bytes.length / 1048576).toFixed(1)}MB`);
+>   } finally {
+>     rmSync(workDir, { recursive: true, force: true });
+>   }
+> }
+> 
+> /** Devolve à fila jobs 'running' presos além do teto (worker morto no meio). */
+> async function reapStale() {
+>   const cutoff = new Date(Date.now() - RUNNING_TIMEOUT_MS).toISOString();
+>   await supabase.from("video_renders")
+>     .update({ state: "queued" })
+>     .in("engine", ["motion", "sfx", "assemble"]).eq("state", "running").lt("updated_at", cutoff)
+>     .then(() => {}, () => {});
+> }
+> 
+> async function tick() {
+>   await reapStale();
+>   const { data: rows } = await supabase
+>     .from("video_renders")
+> ```
+
+## 🤖 Claude *(03:09:35)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Ah, isso é revelador — o `processAssemble` está configurando o concat com `a=0`, o que silencia completamente a saída master. O código cria streams de silêncio para cenas sem áudio, mas eles nunca são realmente usados porque o mapeamento final só pega o vídeo.
+
+Pior ainda, esses streams órfãos — criados mas não consumidos no filter graph — causam erro fatal no ffmpeg ("Filter has an unconnected output"). Então o assemble provavelmente falha na execução, o que significa que nunca foi testado de verdade. Não há witness de render do assemble no histórico de tasks, apenas para motion e sfx. A correção precisa não só conectar os streams de áudio corretamente, mas também garantir que cada clipe use seu próprio áudio quando disponível. Configurando o ffmpeg para mixar a voz no clipe — usando `-i voice.audio` com `apad` e `-shortest` para garantir que o áudio se estenda pela duração do vídeo sem truncar. O voiceDuration já escreve o arquivo de áudio no diretório de trabalho.
+
+Sem voz, o novo assemble descarta o stream de áudio para manter consistência. O motion-render edge function já suporta voice_asset_id, e o assemble-master resolve os clipes motion server-side na spine através dos storage_keys do body, com registro feito pelo worker.
+
+Os 4 vídeos órfãos de ontem serão registrados pelos novos renders, mas preciso verificar se a validação de clipes motion contra creative_assets owner funciona corretamente. Também há um detalhe menor sobre o `-map [vout]` e a falta de áudio, além do title não ser enviado pelo dispatch do pipeline.
+
+Vou revisar o assemble-master/index.ts para confirmar o contrato de validação dos clipes.
+
+Agora o escopo está bem definido: preciso adicionar os casos `motionScene`, `soundDesign` e `episodeAssembler` no types/canvas.ts retornando null no resolveExecutePayload, reorganizar os 3 branches no useCanvasPipeline.ts antes dessa função, adicionar try/catch para marcar falhas, e para motionScene coletar a voz upstream — seja pelo input_voice ou procurando o voice_asset_id na tabela creative_assets usando a storage_key.
+
+Para episodeAssembler, preciso validar se há cenas prontas checando se alguma edge aponta para o nó atual usando CLIP_KINDS para precisão, e o dispatch já tem a mensagem de erro apropriada que será capturada pelo try/catch.
+
+No useMotionRenderSync.ts, vou implementar um mecanismo de ghost antibody — 3 misses consecutivos disparam reset idle — além de detectar nós com status running/queued que perderam o renderId do banco ou que estão queued/running sem renderId, contando misses igualmente.
+
+Por fim, remover o hover hand dos componentes MotionSceneNode e EpisodeAssemblerNode.
+
+Agora para a interface, o MotionSceneInspector precisa enviar o voice_asset_id junto com a resolução para manter paridade com RunAll, e o StorageVideo fica estático com preload de metadata e poster, sem controls já que o inspector fornece esses.
+
+No servidor, vou mixar áudio no processMotion com padding e shortest, codificando em AAC 192k, e reescrever o filter graph do processAssemble para fazer probe de áudio e duração por clipe, concatenar vídeo e áudio, aplicar loudnorm, e codificar em AAC.
+
+Para o backfill das 8 narrações do EP06, preciso registrá-las como creative assets de áudio no spaces, gravar os IDs nos nós voiceClone, resetar as motionScenes de queued para idle, e depois reiniciar o worker para carregar as mudanças. Nos testes, vou extrair o predicate `isRunnable` como função pura exportada no mesmo arquivo para testabilidade sem mover imports pesados.
+
+Agora preciso verificar se já existem testes para esse arquivo no vitest — com 765 testes existentes, devo procurar primeiro. Vou adicionar testes focados em: validar que `resolveExecutePayload` retorna null para os 3 kinds, confirmar que `collectMasterClips` permanece inalterado, e extrair o builder do ffmpeg filter do assemble como função pura testável.
+
+A questão é onde colocar isso — o filter builder vive em `scripts/motion-bridge`, mas scripts não entram no vitest do src. Vou exportar a função do próprio motion-bridge ou criar um módulo separado em `scripts/motion/filter.ts`, depois validar com um teste manual rápido usando ffmpeg real, gerando dois clipes de teste (um com áudio, outro sem) e rodando o filter para confirmar que funciona.
+
+Para o teste E2E do browser, em vez de montar um projeto-teste complexo com vite preview, vou aproveitar que o deploy nginx é instantâneo — rodo `bun run build` no repo principal e faço o witness direto na própria prod com um usuário descartável via agent-browser logado, clicando em "Executar tudo" para testar a fila, worker e master end-to-end. Leva uns 5 minutos com uma cena de 4 segundos, mas é exatamente o teste que faltou.
+
+Depois vou rodar um workflow adversarial com verificadores paralelos sobre o diff usando 4-6 agentes. A sequência é: ler assemble-master → implementar client → worker → testes/gates → backfill+reset → build/deploy → reiniciar worker → workflow adversarial → witness browser.
+
+</details>
+
+
+## 🤖 Claude *(03:09:36)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei que o `processAssemble` cria streams de silêncio que nunca são consumidos, causando um erro fatal no FFmpeg e deixando o áudio mudo, além de o `loudnorm_lufs` nunca ser aplicado — e o `processMotion` também não mixa a voz. Vou revisar o contrato do `assemble-master` agora.
+
+</details>
+
+
+## 🤖 Claude *(03:09:36)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/assemble-master/index.ts",
+  "limit": 120,
+  "offset": 40
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 40	    const authHeader = req.headers.get("Authorization");
+> 41	    if (!authHeader) return json({ error: "unauthorized", message: "Sessão ausente." }, 401);
+> 42	    const anonKey = (Deno.env.get("SB_PUBLISHABLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY"))!;
+> 43	    const userClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });
+> 44	    const { data: { user }, error: authErr } = await userClient.auth.getUser();
+> 45	    if (authErr || !user) return json({ error: "unauthorized", message: "Sessão inválida." }, 401);
+> 46	
+> 47	    const body = await req.json().catch(() => ({}));
+> 48	    const projectId = typeof body?.project_id === "string" ? body.project_id : "";
+> 49	    if (!projectId) return json({ error: "project_id_required", message: "Projeto não informado." }, 422);
+> 50	
+> 51	    const rawKeys = Array.isArray(body?.storage_keys) ? body.storage_keys.slice(0, MAX_CLIPS) : [];
+> 52	    if (!rawKeys.length) {
+> 53	      return json({ error: "no_clips", message: "Conecte ao menos uma cena pronta no montador." }, 422);
+> 54	    }
+> 55	
+> 56	    const { data: project } = await admin.from("vm_canvas_projects")
+> 57	      .select("id, name").eq("id", projectId).eq("user_id", user.id).maybeSingle();
+> 58	    if (!project) return json({ error: "project_not_found", message: "Projeto não encontrado." }, 404);
+> 59	
+> 60	    const clips: Array<{ bucket: string; key: string }> = [];
+> 61	    for (const k of rawKeys) {
+> 62	      const key = String(k ?? "");
+> 63	      if (!key || !key.startsWith(`${user.id}/`) || key.includes("..")) continue;
+> 64	      const { data: asset } = await admin.from("creative_assets")
+> 65	        .select("storage_bucket, storage_key")
+> 66	        .eq("storage_key", key).eq("user_id", user.id).maybeSingle();
+> 67	      if (!asset) continue;
+> 68	      const bucket = String(asset.storage_bucket);
+> 69	      if (!MEDIA_BUCKETS.has(bucket)) continue;
+> 70	      clips.push({ bucket, key });
+> 71	    }
+> 72	    if (!clips.length) {
+> 73	      return json({ error: "no_valid_clips", message: "Nenhuma cena pronta foi encontrada no seu acervo." }, 422);
+> 74	    }
+> 75	
+> 76	    const { data: render, error: qErr } = await admin.from("video_renders").insert({
+> 77	      user_id: user.id, engine: "assemble", state: "queued", charged_mco: 0,
+> 78	      composition: {
+> 79	        kind: "assemble-master",
+> 80	        clips,
+> 81	        aspect: body?.aspect === "9:16" ? "9:16" : "16:9",
+> 82	        loudnorm_lufs: Number(body?.loudnorm_lufs) || -16,
+> 83	        transition: body?.transition === "fade" ? "fade" : "cut",
+> 84	        fade_sec: Math.min(2, Math.max(0.1, Number(body?.fade_sec) || 0.3)),
+> 85	        project_id: projectId,
+> 86	        node_id: typeof body?.node_id === "string" ? body.node_id.slice(0, 64) : null,
+> 87	        title: String(project.name ?? "Master").slice(0, 120),
+> 88	      },
+> 89	    }).select("id").single();
+> 90	
+> 91	    if (qErr || !render) {
+> 92	      await pulse("unhealthy", "assemble", { error: "enqueue_failed" });
+> 93	      return json({ error: "assemble_enqueue_failed", message: "Não consegui enfileirar a montagem." }, 500);
+> 94	    }
+> 95	    await pulse("healthy", "assemble", { render_id: render.id, clips: clips.length });
+> 96	    return json({ status: "queued", render_id: render.id, clips: clips.length }, 202);
+> 97	  } catch (err) {
+> 98	    await pulse("unhealthy", "assemble", { error: String((err as Error)?.message ?? err).slice(0, 200) });
+> 99	    return json({ error: "internal_error", message: "Erro ao enfileirar a montagem." }, 500);
+> 100	  }
+> 101	});
+> 102	
+> ```
+
+## 🤖 Claude *(03:11:10)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Validating each storage key against the spine for creative assets, and the new motion clips will be registered by the worker. Now I'm moving into implementation with a final summary of seven issues to address: dispatch ordering and error handling in the canvas pipeline, plus voice-related problems where dispatch isn't sending data, the worker isn't mixing, and narrations need fixing.
+
+I'm also tackling the assembler runnable, fixing the processAssemble filter graph and master audio issues, handling phantom antibodies, resetting the graph for episode six with backfill, and removing hover effects. Starting with the types file, I need to add case handlers for scene notes, transcription, video repurposing, motion scenes, sound design, and episode assembler — these have their own execution engines that dispatch before the canvas pipeline resolves, so they should return null and never pass through canvas-execute. Implementing the conditional branches for those three node kinds before the payload resolution, handling their execution flow separately with status updates and specific logic for each type.
+
+Now I'm working on a helper function to resolve the connected voice asset by finding the incoming edge that targets the voice input handle, then tracing back to locate the source node with the audio URL. Checking whether the creative_assets query works client-side with RLS, and since storage_key contains the user ID it's effectively unique per user. For the episodeAssembler, I need to verify it's runnable by checking if any clip producer is connected to it — the actual readiness check happens during assembly since the topological layer runs the assembler after all scenes. I should import CLIP_KINDS from the master-clips module to make the source kind check more precise, but it's not currently exported so I need to add that export first.
+
+For the runnable check itself, I'm replacing the current collectMasterClips call with a dedicated hasClipProducers function that I'll add to master-clips.ts. The soundDesign dispatch is already scheduled to move earlier in the pipeline and its current implementation using d.prompt is fine. For MotionSceneInspector, I need to pass voice_asset_id alongside the same resolution — the inspector can access nodes and edges through useCanvasStore, so I'll resolve the voice asset in the mutationFn and include it in the request body.
+
+For the useMotionRenderSync safeguard, I'm tracking missed syncs with a ref-based map that counts how many times a queued or running motion node fails to appear in the rows — if it hits 3 misses, I reset to idle. The key insight is comparing against all project rows (not just the filtered view), since the 40-row limit and age filtering only affect what's displayed, not what actually exists. Nodes with done status older than 5 minutes are excluded from the view but still in rows, and they're not phantom entries — they're legitimately completed. I need to handle the reload edge case carefully.
+
+But there's a subtle bug lurking: when a node is running and its corresponding row is done but older than 5 minutes, the age check skips the entire reconciliation loop before it even tries to match the node to the row. So if a tab closes during render and reopens 10 minutes later, that old done line never reconciles with the running node.
+
+The fix is to move the age filter to happen after reconciliation instead of before — that way it only affects the view cleanup, not the core matching logic.
+
+For MotionSceneNode and EpisodeAssemblerNode, I'm stripping out the mouse event handlers, video refs, and seal elements, though StorageVideo keeps its metadata preloading and muted state. I'm also removing the forwardRef usage from those components, but leaving it intact in StorageMedia since other parts of the codebase might depend on it.
+
+In the motion-bridge worker, the voice audio gets written inside the voice_b conditional block.
+
+Refactoring the voice handling to track whether a download succeeded with a flag, then returning both duration and file path so the encode step can conditionally add voice arguments to ffmpeg...
+
+Adding the audio input and codec arguments...
+
+The ffmpeg argument order matters here—the audio filter applies to the output stream, and pairing apad with -shortest ensures the audio extends infinitely but gets trimmed to match the video length, which is the standard approach. With two inputs, ffmpeg automatically maps the first to video and second to audio without explicit mapping needed.
+
+Now I'm probing each clip to check for audio presence and duration, then building the filter graph to scale and pad video streams to a consistent frame rate while resampling audio to a standard format. Building filter graph... Extraindo `buildAssembleFilter` e `probeClip` para um módulo puro em `scripts/motion/assemble-graph.ts` que o bridge pode importar, depois criando um teste permanente em `scripts/qa/smoke-assemble-graph.ts` que roda ffmpeg real com clipes sintéticos. Vou fazer o mesmo para o mix de voz — um smoke test que valida a invocação ffmpeg com os padrões apad+shortest, cobrindo ambos os casos (mix e assemble).
+
+As funções motion-render e assemble-master ficam intocadas com seus contratos spine preservados. Agora preciso fazer o backfill server-side: registrar as 8 narrações como creative assets via RPC (com service role), depois atualizar o grafo para marcar os motionScenes como idle e linkar os voiceClones aos assets criados, verificando depois se tudo foi persistido corretamente.
+
+Preciso garantir que o updated_at do grafo fica estável por alguns segundos antes de escrever — o Sovereign fechou a aba, então não há mais autosave tocando os timestamps. As narrações já estão em video-studio-assets, então o register vai usar esse bucket real, e preciso confirmar que o assemble-master inclui esse bucket na lista de MEDIA_BUCKETS e que o motion-bridge está apontando para o bucket correto nos uploads dos clipes.
+
+Agora vou adicionar os testes no Vitest para cobrir os novos kinds da union e o resolveExecutePayload, rodar a suite completa, passar pelo tsc gate e build, reiniciar o worker, fazer o backfill e reset, executar um workflow de verificação adversarial do diff completo, e finalmente testar tudo no browser em produção com um projeto descartável — uma cena motion de 4 segundos com montador até o master done — antes de dar o GO de volta ao Sovereign.
+
+Vou fazer uns checks rápidos: validar os kinds do union em CanvasNodeData, confirmar o BUCKET no motion-bridge, e revisar a assinatura do helper run() com timeout e onLine.
+
+</details>
+
+
+## 🤖 Claude *(03:11:11)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The assemble-master contract is closed with valid spine owner-scoped keys and new motion clips registered by the worker. Recon is complete, so I'm starting implementation after three contract checks.
+
+</details>
+
+
+## 🤖 Claude *(03:11:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"export type CanvasNodeData\" -A 30 src/types/canvas.ts | head -35; echo \"---BUCKET+RUN---\"; sed -n '1,99p' scripts/motion-bridge.ts | grep -nE \"const BUCKET|function run|MIN_MP4|WORK_BASE|FPS =|async function run\" ",
+  "description": "Union de kinds + constantes e helper run do worker"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 902:export type CanvasNodeData =
+> 903-  | GenerateImageData
+> 904-  | CharacterReferenceData
+> 905-  | ProductListData
+> 906-  | SceneComposeData
+> 907-  | StyleTransferData
+> 908-  | UpscaleData
+> 909-  | ImageToVideoData
+> 910-  | VoiceCloneData
+> 911-  | AvatarIdentityData
+> 912-  | PublishWordpressData
+> 913-  | PublishSocialData
+> 914-  | ScriptGeneratorData
+> 915-  | CinematicVideoData
+> 916-  | SplitScreenData
+> 917-  | CarouselData
+> 918-  | CadenceData
+> 919-  | VideoRepurposeData
+> 920-  | TranscribeData
+> 921-  | SceneNoteData
+> 922-  | MotionSceneData
+> 923-  | SoundDesignData
+> 924-  | EpisodeAssemblerData;
+> 925-
+> 926-/* ── Cortes do Master (video-repurpose como nó) — 1 master longo → N cortes 9:16 com legenda queimada, no
+> 927- *    MESMO motor do /dashboard/repurpose (detect-viral-moments + video-repurpose-run), rail grátis US$0. ── */
+> 928-/** Um candidato de corte detectado. Espelha ViralClip (src/hooks/useVideoRepurpose) — shape auto-contido aqui
+> 929- *  para não acoplar canvas.ts a um módulo de hook; estruturalmente compatível (assignável nos dois sentidos). */
+> 930-export interface ViralCandidate {
+> 931-  in_sec: number;
+> 932-  out_sec: number;
+> ---BUCKET+RUN---
+> 30:const BUCKET = "video-studio-assets";
+> 33:const FPS = 30;
+> 34:const WORK_BASE = process.env.MOTION_WORK_DIR ?? "/tmp/mcorch-motion";
+> 35:const MIN_MP4_BYTES = 20_000; // piso Lei 1 — abaixo disso é stub/falha, não vídeo
+> 43:async function run(cmd: string[], timeoutMs: number, onLine?: (line: string) => void): Promise<void> {
+> ```
+
+## 🤖 Claude *(03:11:23)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Checking the union types — there are 22 kinds total, with the switch statement covering 16, so I need to add the missing six: VideoRepurpose, Transcribe, SceneNote, MotionScene, SoundDesign, and EpisodeAssembler. The bucket for video assets is already set up correctly with the narrations in place. Now I'm writing the implementation starting with the type definitions and then the helper functions.
+
+</details>
+
+
+## 🤖 Claude *(03:11:24)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Confirmei 6 tipos fora do switch e o bucket correto para os assets. Agora vou editar `types/canvas.ts` para documentar os casos e adicionar proteção contra undefined.
+
+</details>
+
+
+## 🤖 Claude *(03:11:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts",
+  "old_string": "      // Cad\u00eancia ARMS a recurring plan via cadence-plan (FR-CAD-005) from its inspector \u2014 it does NOT generate\n      // media and never goes through canvas-execute (spaces-cadence SDD \u00a71 execution rail).\n      return null;\n  }\n}",
+  "new_string": "      // Cad\u00eancia ARMS a recurring plan via cadence-plan (FR-CAD-005) from its inspector \u2014 it does NOT generate\n      // media and never goes through canvas-execute (spaces-cadence SDD \u00a71 execution rail).\n      return null;\n    case \"videoRepurpose\":\n    case \"transcribe\":\n    case \"sceneNote\":\n    case \"motionScene\":\n    case \"soundDesign\":\n    case \"episodeAssembler\":\n      // Host-rail kinds (Amendment 30/34): dispatched via their DEDICATED edge fns\n      // (video-repurpose-run \u00b7 generate-subtitles \u00b7 motion-render \u00b7 sfx-generate \u00b7 assemble-master)\n      // BEFORE resolveExecutePayload is consulted (useCanvasPipeline.runSingleNode); sceneNote is\n      // decorative. None of them ever goes through canvas-execute.\n      // \u26a0\ufe0f A kind missing from this switch used to fall through to an implicit `undefined` return \u2014\n      // runSingleNode's `if (!payload) return` then killed the dispatch SILENTLY (the born-dead\n      // Run All of 2026-08-05, EP06). Every kind must have an explicit case.\n      return null;\n  }\n  // Safety net for future kinds: an unhandled kind must read as \"no canvas-execute payload\",\n  // never as implicit `undefined` (same born-dead failure mode as above).\n  return null;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:11:37)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm editing master-clips.ts to add a predicate so the assembler qualifies on the first Run All.
+
+</details>
+
+
+## 🤖 Claude *(03:11:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/master-clips.ts",
+  "old_string": "/** N\u00f3s cujo output de V\u00cdDEO pode entrar num master. */\nconst CLIP_KINDS = new Set([\"motionScene\", \"imageToVideo\", \"povVideo\", \"cinematicVideo\", \"splitScreen\", \"videoRepurpose\"]);",
+  "new_string": "/** N\u00f3s cujo output de V\u00cdDEO pode entrar num master. */\nexport const CLIP_KINDS = new Set([\"motionScene\", \"imageToVideo\", \"povVideo\", \"cinematicVideo\", \"splitScreen\", \"videoRepurpose\"]);\n\n/**\n * H\u00e1 PRODUTORES de clipe conectados ao montador? (prontos ou n\u00e3o.)\n * \u00c9 o teste de qualifica\u00e7\u00e3o do Run All: no primeiro clique nenhuma cena est\u00e1 pronta ainda \u2014\n * exigir clipe PRONTO aqui fazia o montador nunca entrar no run (born-dead 2026-08-05). A checagem\n * de \"pronto\" pertence \u00e0 hora de MONTAR (collectMasterClips), depois que as camadas upstream rodaram.\n */\nexport function hasClipProducers(nodes: CanvasNode[], edges: CanvasEdge[], assemblerId: string): boolean {\n  return edges.some((e) => {\n    if (e.target !== assemblerId) return false;\n    const n = nodes.find((x) => x.id === e.source);\n    const kind = (n?.data as unknown as { kind?: string } | undefined)?.kind;\n    return Boolean(kind && CLIP_KINDS.has(kind));\n  });\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/lib/master-clips.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:11:55)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Agora preciso fazer as mudanças principais no useCanvasPipeline.ts — vou trocar runnable de episodeAssembler para hasClipProducers, e reorganizar o runSingleNode movendo os três branches para o topo antes de resolveExecutePayload com tratamento de erro e voz. Vou precisar de um helper para resolver a voz conectada, provavelmente adicionando ao canvas-utils onde já existem as funções findUpstream.
+
+Mas canvas-utils é puro (sem dependências async), enquanto resolver a voz precisa de uma query ao Supabase. Vou criar um novo arquivo src/lib/canvas-voice.ts com duas funções — uma para encontrar a voz conectada no grafo e outra assíncrona para resolver o ID do asset de voz — e exportar de lá para usar tanto no useCanvasPipeline quanto no inspector.
+
+</details>
+
+
+## 🤖 Claude *(03:11:55)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm creating a new file `src/lib/canvas-voice.ts` to handle the connected narration resolver, which needs to be shared between Run All and the inspector with mandatory parity.
+
+</details>
+
+
+## 🤖 Claude *(03:12:07)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-voice.ts",
+  "content": "import { supabase } from \"@/integrations/supabase/client\";\nimport type { CanvasEdge, CanvasNode, VoiceCloneData } from \"@/types/canvas\";\n\n// Amendment 34 \u2014 narra\u00e7\u00e3o conectada \u00e0 Cena Motion.\n// Lib \u00daNICA para o Run All e o inspector resolverem a MESMA voz (sen\u00e3o o bot\u00e3o do inspector\n// renderiza com fala e o Executar tudo renderiza mudo \u2014 paridade \u00e9 contrato, ver master-clips).\n//\n// O motion-render s\u00f3 aceita `voice_asset_id` e resolve bucket/key SERVER-SIDE na spine\n// (caminho do cliente nunca vira caminho de arquivo). Aqui o cliente descobre o id:\n// 1\u00ba pelo `output.creativeAssetId` gravado no n\u00f3 de voz; sen\u00e3o por lookup RLS-own do\n// `storage_key` na spine (narra\u00e7\u00f5es semeadas por runner antes do backfill n\u00e3o carregavam o id).\n\n/** N\u00f3 de voz conectado (qualquer aresta de entrada cujo source seja um voiceClone com \u00e1udio pronto). */\nexport function findConnectedVoice(\n  nodeId: string,\n  nodes: CanvasNode[],\n  edges: CanvasEdge[],\n): { audioUrl: string; creativeAssetId?: string } | null {\n  for (const e of edges) {\n    if (e.target !== nodeId) continue;\n    const src = nodes.find((n) => n.id === e.source);\n    const d = src?.data as unknown as VoiceCloneData | undefined;\n    if (d?.kind !== \"voiceClone\") continue;\n    const audioUrl = d.output?.audioUrl;\n    if (!audioUrl) continue;\n    return { audioUrl, creativeAssetId: d.output?.creativeAssetId };\n  }\n  return null;\n}\n\n/**\n * `creative_assets.id` da narra\u00e7\u00e3o conectada, ou undefined quando n\u00e3o h\u00e1 voz.\n * Fail-soft consciente: narra\u00e7\u00e3o conectada mas FORA da spine \u2192 undefined + warning no console \u2014\n * a cena renderiza muda com a dura\u00e7\u00e3o do n\u00f3 em vez de derrubar o run inteiro (a spine \u00e9 repar\u00e1vel\n * por backfill; um master sem UMA fala \u00e9 recuper\u00e1vel, um run abortado no meio n\u00e3o entrega nada).\n */\nexport async function resolveVoiceAssetId(\n  nodeId: string,\n  nodes: CanvasNode[],\n  edges: CanvasEdge[],\n): Promise<string | undefined> {\n  const voice = findConnectedVoice(nodeId, nodes, edges);\n  if (!voice) return undefined;\n  if (voice.creativeAssetId) return voice.creativeAssetId;\n  const { data, error } = await supabase\n    .from(\"creative_assets\")\n    .select(\"id\")\n    .eq(\"storage_key\", voice.audioUrl)\n    .maybeSingle();\n  if (error || !data?.id) {\n    console.warn(`[canvas-voice] narra\u00e7\u00e3o conectada a ${nodeId} n\u00e3o est\u00e1 na spine (${voice.audioUrl})`);\n    return undefined;\n  }\n  return data.id as string;\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/lib/canvas-voice.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:12:14)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm editing useCanvasPipeline.ts, focusing on the main surgery—branches before the payload gate, try/catch handling, voice in motion, and the assembler runnable.
+
+</details>
+
+
+## 🤖 Claude *(03:12:18)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCanvasPipeline.ts",
+  "old_string": "      // O montador \u00e9 o n\u00f3 TERMINAL: entra no Run All quando h\u00e1 ao menos um clipe PRONTO ligado nele.\n      // A topologia j\u00e1 o coloca na \u00faltima camada (todas as cenas s\u00e3o upstream dele).\n      if (n.data.kind === \"episodeAssembler\") {\n        return collectMasterClips(nodes, edges, n.id, \"canvas\").length > 0;\n      }",
+  "new_string": "      // O montador \u00e9 o n\u00f3 TERMINAL: qualifica quando h\u00e1 PRODUTORES de clipe conectados \u2014 prontos ou\n      // n\u00e3o. No primeiro clique nenhuma cena est\u00e1 pronta ainda; exigir clipe PRONTO aqui fazia o\n      // montador nunca entrar no run (born-dead 2026-08-05). A topologia o coloca na \u00faltima camada,\n      // ent\u00e3o na hora de MONTAR as cenas upstream j\u00e1 rodaram (collectMasterClips checa \"pronto\" l\u00e1).\n      if (n.data.kind === \"episodeAssembler\") {\n        return hasClipProducers(nodes, edges, n.id);\n      }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCanvasPipeline.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:12:24)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCanvasPipeline.ts",
+  "old_string": "import { collectMasterClips } from \"@/lib/master-clips\";",
+  "new_string": "import { collectMasterClips, hasClipProducers } from \"@/lib/master-clips\";\nimport { resolveVoiceAssetId } from \"@/lib/canvas-voice\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCanvasPipeline.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:12:35)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Agora preciso fazer uma refatoração maior no runSingleNode: vou mover os três branches para antes do resolveExecutePayload e envolvê-los em try/catch com tratamento de erro. Estou substituindo o trecho inicial que encontra o nó e resolve o payload.
+
+Inserindo os branches host-rail entre a verificação do nó e a chamada do resolveExecutePayload, depois removo os branches antigos que estavam nas linhas 212-279.
+
+</details>
+
+
+## 🤖 Claude *(03:12:52)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCanvasPipeline.ts",
+  "old_string": "      const n = currentNodes.find((node) => node.id === nodeId);\n      if (!n) return;\n\n      const payload = resolveExecutePayload(n.data, currentStyleSettings);\n      if (!payload) return;",
+  "new_string": "      const n = currentNodes.find((node) => node.id === nodeId);\n      if (!n) return;\n\n      // \u2500\u2500 Amendment 34: motores pr\u00f3prios (fila do host) \u2014 despacham por edge fn dedicada, n\u00e3o pelo\n      //    canvas-execute. T\u00caM que vir ANTES do resolveExecutePayload: esses kinds resolvem payload\n      //    null e o `if (!payload) return` abaixo matava o dispatch EM SIL\u00caNCIO \u2014 o n\u00f3 ficava\n      //    \"queued\" para sempre, fila vazia, console vazio (born-dead Run All 2026-08-05).\n      //    E TODO caminho aqui marca success/failed: um throw solto rejeitava o Promise.all da\n      //    camada e o pipeline morria sem marcar nada.\n      if (\n        n.data.kind === \"motionScene\" ||\n        n.data.kind === \"episodeAssembler\" ||\n        n.data.kind === \"soundDesign\"\n      ) {\n        updateNodeData(n.id, { status: \"running\", error: undefined });\n        try {\n          if (n.data.kind === \"motionScene\") {\n            const d = n.data as unknown as {\n              title?: string; description?: string; beats?: unknown[]; elements?: unknown[];\n              background?: string; aspect?: string; durationSec?: number;\n            };\n            // Narra\u00e7\u00e3o conectada: o motor mixa a fala no clipe e a dura\u00e7\u00e3o passa a ser a da fala.\n            // Sem voz resolv\u00edvel, a cena renderiza muda com a dura\u00e7\u00e3o do n\u00f3 (fail-soft consciente).\n            const voiceAssetId = await resolveVoiceAssetId(n.id, currentNodes, currentEdges);\n            const { data, error } = await supabase.functions.invoke<{ render_id: string }>(\"motion-render\", {\n              body: {\n                project_id: projectId, node_id: n.id,\n                title: d.title ?? \"\", description: d.description ?? \"\",\n                beats: d.beats ?? [], elements: d.elements ?? [],\n                background: d.background ?? \"galaxia\", aspect: d.aspect ?? \"16:9\",\n                duration_sec: d.durationSec ?? 8,\n                ...(voiceAssetId ? { voice_asset_id: voiceAssetId } : {}),\n              },\n            });\n            if (error) throw new Error(await edgeErrorMessage(error, \"Falha ao enfileirar a anima\u00e7\u00e3o.\"));\n            updateNodeData(n.id, { status: \"running\", renderId: data?.render_id } as never);\n          } else if (n.data.kind === \"episodeAssembler\") {\n            const d = n.data as unknown as {\n              order?: \"canvas\" | \"connection\"; aspect?: string; loudnormLufs?: number;\n              transition?: string; fadeSec?: number;\n            };\n            const { nodes: freshNodes, edges: freshEdges } = useCanvasStore.getState();\n            const clips = collectMasterClips(freshNodes, freshEdges, n.id, d.order ?? \"canvas\");\n            if (!clips.length) throw new Error(\"Nenhuma cena pronta conectada ao montador.\");\n            const { data, error } = await supabase.functions.invoke<{ render_id: string }>(\"assemble-master\", {\n              body: {\n                project_id: projectId, node_id: n.id,\n                storage_keys: clips.map((c) => c.key),\n                aspect: d.aspect ?? \"16:9\", loudnorm_lufs: d.loudnormLufs ?? -16,\n                transition: d.transition ?? \"cut\", fade_sec: d.fadeSec ?? 0.3,\n              },\n            });\n            if (error) throw new Error(await edgeErrorMessage(error, \"Falha ao montar o master.\"));\n            updateNodeData(n.id, { status: \"running\", renderId: data?.render_id } as never);\n          } else {\n            const d = n.data as unknown as {\n              engine?: string; recipe?: string; prompt?: string; soundType?: string;\n              durationSec?: number; promptInfluence?: number; loop?: boolean;\n            };\n            const { data, error } = await supabase.functions.invoke<{ render_id?: string; storage_key?: string; asset_id?: string; duration_sec?: number }>(\n              \"sfx-generate\",\n              {\n                body: {\n                  project_id: projectId, node_id: n.id,\n                  engine: d.engine ?? \"ffmpeg\", recipe: d.recipe,\n                  prompt: (d.prompt ?? \"\").trim() || (d.recipe ?? \"sfx\"),\n                  sound_type: d.soundType ?? \"hard_sfx\",\n                  duration_sec: d.durationSec ?? 4,\n                  prompt_influence: d.promptInfluence ?? 0.4,\n                  loop: d.loop ?? false,\n                },\n              },\n            );\n            if (error) throw new Error(await edgeErrorMessage(error, \"Falha ao gerar o som.\"));\n            if (data?.render_id) updateNodeData(n.id, { status: \"running\", renderId: data.render_id } as never);\n            else updateNodeData(n.id, {\n              status: \"success\",\n              output: { audioUrl: data?.storage_key, assetId: data?.asset_id, generatedAt: new Date().toISOString() },\n            } as never);\n          }\n        } catch (e) {\n          const msg = e instanceof Error ? e.message : String(e);\n          updateNodeData(n.id, { status: \"failed\", error: msg });\n        }\n        return;\n      }\n\n      const payload = resolveExecutePayload(n.data, currentStyleSettings);\n      if (!payload) return;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCanvasPipeline.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:12:57)*
+
+Agora removo os branches antigos (duplicados, inalcançáveis para esses kinds mas mortos no lugar errado):
+
+## 🤖 Claude *(03:13:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCanvasPipeline.ts",
+  "old_string": "      updateNodeData(n.id, { status: \"running\", error: undefined });\n\n      // \u2500\u2500 Amendment 34: motores pr\u00f3prios (fila do host) \u2014 despacham por edge fn dedicada, n\u00e3o pelo\n      //    canvas-execute. Ambos s\u00e3o ass\u00edncronos: o useMotionRenderSync reconcilia o n\u00f3 quando o\n      //    worker termina, ent\u00e3o aqui basta marcar `running` e sair.\n      if (n.data.kind === \"motionScene\") {\n        const d = n.data as unknown as {\n          title?: string; description?: string; beats?: unknown[]; elements?: unknown[];\n          background?: string; aspect?: string; durationSec?: number;\n        };\n        const { data, error } = await supabase.functions.invoke<{ render_id: string }>(\"motion-render\", {\n          body: {\n            project_id: projectId, node_id: n.id,\n            title: d.title ?? \"\", description: d.description ?? \"\",\n            beats: d.beats ?? [], elements: d.elements ?? [],\n            background: d.background ?? \"galaxia\", aspect: d.aspect ?? \"16:9\",\n            duration_sec: d.durationSec ?? 8,\n          },\n        });\n        if (error) throw new Error(await edgeErrorMessage(error, \"Falha ao enfileirar a anima\u00e7\u00e3o.\"));\n        updateNodeData(n.id, { status: \"running\", renderId: data?.render_id } as never);\n        return;\n      }\n      if (n.data.kind === \"episodeAssembler\") {\n        const d = n.data as unknown as {\n          order?: \"canvas\" | \"connection\"; aspect?: string; loudnormLufs?: number;\n          transition?: string; fadeSec?: number;\n        };\n        const { nodes: freshNodes, edges: freshEdges } = useCanvasStore.getState();\n        const clips = collectMasterClips(freshNodes, freshEdges, n.id, d.order ?? \"canvas\");\n        if (!clips.length) throw new Error(\"Nenhuma cena pronta conectada ao montador.\");\n        const { data, error } = await supabase.functions.invoke<{ render_id: string }>(\"assemble-master\", {\n          body: {\n            project_id: projectId, node_id: n.id,\n            storage_keys: clips.map((c) => c.key),\n            aspect: d.aspect ?? \"16:9\", loudnorm_lufs: d.loudnormLufs ?? -16,\n            transition: d.transition ?? \"cut\", fade_sec: d.fadeSec ?? 0.3,\n          },\n        });\n        if (error) throw new Error(await edgeErrorMessage(error, \"Falha ao montar o master.\"));\n        updateNodeData(n.id, { status: \"running\", renderId: data?.render_id } as never);\n        return;\n      }\n      if (n.data.kind === \"soundDesign\") {\n        const d = n.data as unknown as {\n          engine?: string; recipe?: string; prompt?: string; soundType?: string;\n          durationSec?: number; promptInfluence?: number; loop?: boolean;\n        };\n        const { data, error } = await supabase.functions.invoke<{ render_id?: string; storage_key?: string; asset_id?: string; duration_sec?: number }>(\n          \"sfx-generate\",\n          {\n            body: {\n              project_id: projectId, node_id: n.id,\n              engine: d.engine ?? \"ffmpeg\", recipe: d.recipe,\n              prompt: (d.prompt ?? \"\").trim() || (d.recipe ?? \"sfx\"),\n              sound_type: d.soundType ?? \"hard_sfx\",\n              duration_sec: d.durationSec ?? 4,\n              prompt_influence: d.promptInfluence ?? 0.4,\n              loop: d.loop ?? false,\n            },\n          },\n        );\n        if (error) throw new Error(await edgeErrorMessage(error, \"Falha ao gerar o som.\"));\n        if (data?.render_id) updateNodeData(n.id, { status: \"running\", renderId: data.render_id } as never);\n        else updateNodeData(n.id, {\n          status: \"success\",\n          output: { audioUrl: data?.storage_key, assetId: data?.asset_id, generatedAt: new Date().toISOString() },\n        } as never);\n        return;\n      }\n\n      // Re-sign upstream URLs to FRESH owner-scoped URLs",
+  "new_string": "      updateNodeData(n.id, { status: \"running\", error: undefined });\n\n      // Re-sign upstream URLs to FRESH owner-scoped URLs"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useCanvasPipeline.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:13:20)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Tasks 1, 3, e metade do 2 estão prontos. Agora preciso corrigir o useMotionRenderSync.ts com dois ajustes: o filtro de idade que pula a reconciliação precisa ser movido para afetar só a view, e adicionar um reset de id quando um nó motion-family fica queued ou running sem linha correspondente por três polls seguidos.
+
+</details>
+
+
+## 🤖 Claude *(03:13:22)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've edited `useMotionRenderSync.ts` to fix a ghost animation issue and correct a `continue` bug that was preventing old `done` lines from being reconciled, which would leave nodes stuck in `running` state when reopening the tab after 5 minutes.
+
+</details>
+
+
+## 🤖 Claude *(03:13:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useMotionRenderSync.ts",
+  "old_string": "import { useEffect, useState } from \"react\";\nimport { supabase } from \"@/integrations/supabase/client\";\nimport { useCanvasStore } from \"@/store/useCanvasStore\";\nimport type { MotionSceneData } from \"@/types/canvas\";",
+  "new_string": "import { useEffect, useRef, useState } from \"react\";\nimport { supabase } from \"@/integrations/supabase/client\";\nimport { useCanvasStore } from \"@/store/useCanvasStore\";\nimport type { MotionSceneData } from \"@/types/canvas\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useMotionRenderSync.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:13:34)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useMotionRenderSync.ts",
+  "old_string": "export function useMotionRenderSync(projectId: string | undefined) {\n  const [jobs, setJobs] = useState<MotionJobView[]>([]);\n\n  useEffect(() => {\n    if (!projectId) return;\n    let cancelled = false;",
+  "new_string": "const MOTION_KINDS = [\"motionScene\", \"soundDesign\", \"episodeAssembler\"];\n/** Polls consecutivos sem linha na fila antes de declarar um n\u00f3 busy FANTASMA (~12s). */\nconst GHOST_MISS_LIMIT = 3;\n\nexport function useMotionRenderSync(projectId: string | undefined) {\n  const [jobs, setJobs] = useState<MotionJobView[]>([]);\n  // nodeId \u2192 n\u00ba de polls consecutivos em que o n\u00f3 estava busy SEM linha correspondente na fila.\n  const ghostMisses = useRef<Map<string, number>>(new Map());\n\n  useEffect(() => {\n    if (!projectId) return;\n    let cancelled = false;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useMotionRenderSync.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:13:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useMotionRenderSync.ts",
+  "old_string": "        // s\u00f3 mostra no console o que est\u00e1 vivo ou terminou h\u00e1 pouco\n        const ageMs = Date.now() - new Date(r.updated_at).getTime();\n        if (r.state === \"done\" && ageMs > 5 * 60 * 1000) continue;\n\n        view.push({",
+  "new_string": "        // s\u00f3 mostra no console o que est\u00e1 vivo ou terminou h\u00e1 pouco \u2014 mas NUNCA pula a\n        // reconcilia\u00e7\u00e3o: um `continue` aqui deixava um n\u00f3 \"running\" eterno quando a aba reabria\n        // depois que a linha `done` envelhecia (>5min).\n        const ageMs = Date.now() - new Date(r.updated_at).getTime();\n        const inConsole = !(r.state === \"done\" && ageMs > 5 * 60 * 1000);\n\n        if (inConsole) view.push({"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useMotionRenderSync.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:13:54)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Agora vou verificar o anticorpo fantasma ao final do `sync()`.
+
+</details>
+
+
+## 🤖 Claude *(03:14:03)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/hooks/useMotionRenderSync.ts",
+  "old_string": "      setJobs(view);\n    };",
+  "new_string": "      // \u2500\u2500 Anticorpo anti-FANTASMA \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n      // Um n\u00f3 busy sem NENHUMA linha na fila \u00e9 uma promessa \u00f3rf\u00e3 (dispatch que morreu antes do\n      // enqueue, limpeza server-side, reload no meio). Sem isto ele gira \"renderizando\u2026\" para\n      // sempre com a fila vazia \u2014 o sintoma do Run All born-dead de 2026-08-05. Tr\u00eas polls\n      // consecutivos sem linha (~12s, folga sobre a janela dispatch\u2192insert) \u2192 volta a idle.\n      const rowByNode = new Map<string, RenderRow>();\n      const rowById = new Map<string, RenderRow>();\n      for (const r of rows) {\n        rowById.set(r.id, r);\n        const nid = (r.composition as { node_id?: string | null } | null)?.node_id;\n        if (nid) rowByNode.set(nid, r);\n      }\n      for (const node of nodes) {\n        const d = node.data as unknown as MotionSceneData;\n        const kind = (node.data as unknown as { kind?: string }).kind ?? \"\";\n        if (!MOTION_KINDS.includes(kind)) continue;\n        const busy = d.status === \"running\" || d.status === \"queued\";\n        if (!busy) { ghostMisses.current.delete(node.id); continue; }\n        const hasRow = (d.renderId && rowById.has(d.renderId)) || rowByNode.has(node.id);\n        if (hasRow) { ghostMisses.current.delete(node.id); continue; }\n        const misses = (ghostMisses.current.get(node.id) ?? 0) + 1;\n        ghostMisses.current.set(node.id, misses);\n        if (misses >= GHOST_MISS_LIMIT) {\n          ghostMisses.current.delete(node.id);\n          useCanvasStore.getState().updateNodeData(node.id, {\n            status: \"idle\", renderId: undefined, error: undefined,\n          } as Partial<MotionSceneData>);\n        }\n      }\n\n      setJobs(view);\n    };"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/hooks/useMotionRenderSync.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:14:15)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Checking the syntax of the conditional push statement — wrapping `view.push()` in an `if (inConsole)` check while keeping the closing braces intact looks correct. Now I'm looking at the next part where `const nodes = use` appears to be cut off.
+
+The nodes variable is being read from the store right after the fetch, and it's the same reference used throughout the loop, so that's consistent. The status field includes "idle" as a valid NodeStatus value based on the graph dump. For the next edit, I need to strip out the hover handlers and refs from both the MotionSceneNode and EpisodeAssemblerNode cards.
+
+</details>
+
+
+## 🤖 Claude *(03:14:15)*
+
+**Edit 6: remoção do hover** nos dois cards (preservando handles/edges e o vídeo estático):
+
+## 🤖 Claude *(03:14:17)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/MotionSceneNode.tsx",
+  "old_string": "import { memo, useRef } from \"react\";\nimport { Handle, Position, type NodeProps } from \"@xyflow/react\";\nimport { Loader2, Sparkles, Wand2 } from \"lucide-react\";\nimport { StorageVideo } from \"@/components/StorageMedia\";\nimport { cn } from \"@/lib/utils\";\nimport { type MotionSceneData } from \"@/types/canvas\";",
+  "new_string": "import { memo } from \"react\";\nimport { Handle, Position, type NodeProps } from \"@xyflow/react\";\nimport { Loader2, Sparkles, Wand2 } from \"lucide-react\";\nimport { StorageVideo } from \"@/components/StorageMedia\";\nimport { cn } from \"@/lib/utils\";\nimport { type MotionSceneData } from \"@/types/canvas\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/MotionSceneNode.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:14:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/MotionSceneNode.tsx",
+  "old_string": "  const d = data as unknown as MotionSceneData;\n  const vidRef = useRef<HTMLVideoElement>(null);\n  const busy = d.status === \"running\" || d.status === \"queued\";\n  const videoUrl = d.output?.videoUrl;\n  const beats = d.beats?.length ?? 0;\n\n  return (\n    <div\n      onMouseEnter={() => { const v = vidRef.current; if (v) { v.currentTime = 0; void v.play().catch(() => {}); } }}\n      onMouseLeave={() => { const v = vidRef.current; if (v) { v.pause(); v.currentTime = 0; } }}\n      className={cn(",
+  "new_string": "  const d = data as unknown as MotionSceneData;\n  const busy = d.status === \"running\" || d.status === \"queued\";\n  const videoUrl = d.output?.videoUrl;\n  const beats = d.beats?.length ?? 0;\n\n  // Sem preview no hover (pedido Sovereign 2026-08-05): o card mostra o primeiro frame parado;\n  // assistir \u00e9 papel do inspector. Handles e conex\u00f5es (voz/foto) ficam intactos.\n  return (\n    <div\n      className={cn("
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/MotionSceneNode.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:14:26)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/MotionSceneNode.tsx",
+  "old_string": "        ) : videoUrl ? (\n          <>\n            <StorageVideo\n              ref={vidRef}\n              src={videoUrl}\n              className=\"h-full w-full object-cover\"\n              muted loop playsInline preload=\"metadata\"\n            />\n            {/* selo de \"passe o mouse\": sem ele o preview parece um still quebrado */}\n            <span className=\"pointer-events-none absolute bottom-1 right-1 rounded bg-black/60 px-1.5 py-0.5 font-mono text-[8px] text-white/70 opacity-100 transition-opacity group-hover/card:opacity-0\">\n              \u25b6 hover\n            </span>\n          </>\n        ) : (",
+  "new_string": "        ) : videoUrl ? (\n          <StorageVideo\n            src={videoUrl}\n            className=\"h-full w-full object-cover\"\n            muted playsInline preload=\"metadata\"\n          />\n        ) : ("
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/MotionSceneNode.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:14:35)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/EpisodeAssemblerNode.tsx",
+  "old_string": "import { memo, useRef } from \"react\";\nimport { Handle, Position, type NodeProps } from \"@xyflow/react\";\nimport { Clapperboard, Film, Loader2 } from \"lucide-react\";\nimport { StorageVideo } from \"@/components/StorageMedia\";\nimport { cn } from \"@/lib/utils\";\nimport { type EpisodeAssemblerData } from \"@/types/canvas\";",
+  "new_string": "import { memo } from \"react\";\nimport { Handle, Position, type NodeProps } from \"@xyflow/react\";\nimport { Clapperboard, Film, Loader2 } from \"lucide-react\";\nimport { StorageVideo } from \"@/components/StorageMedia\";\nimport { cn } from \"@/lib/utils\";\nimport { type EpisodeAssemblerData } from \"@/types/canvas\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/EpisodeAssemblerNode.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:14:38)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/EpisodeAssemblerNode.tsx",
+  "old_string": "  const d = data as unknown as EpisodeAssemblerData;\n  const vidRef = useRef<HTMLVideoElement>(null);\n  const busy = d.status === \"running\" || d.status === \"queued\";\n  const videoUrl = d.output?.videoUrl;\n\n  return (\n    <div\n      onMouseEnter={() => { const v = vidRef.current; if (v) { v.currentTime = 0; void v.play().catch(() => {}); } }}\n      onMouseLeave={() => { const v = vidRef.current; if (v) { v.pause(); v.currentTime = 0; } }}\n      className={cn(",
+  "new_string": "  const d = data as unknown as EpisodeAssemblerData;\n  const busy = d.status === \"running\" || d.status === \"queued\";\n  const videoUrl = d.output?.videoUrl;\n\n  // Sem preview no hover (pedido Sovereign 2026-08-05) \u2014 ver MotionSceneNode.\n  return (\n    <div\n      className={cn("
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/EpisodeAssemblerNode.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:14:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/EpisodeAssemblerNode.tsx",
+  "old_string": "        ) : videoUrl ? (\n          <>\n            <StorageVideo\n              ref={vidRef}\n              src={videoUrl}\n              className=\"h-full w-full object-cover\"\n              muted loop playsInline preload=\"metadata\"\n            />\n            {/* selo de \"passe o mouse\": sem ele o preview parece um still quebrado */}\n            <span className=\"pointer-events-none absolute bottom-1 right-1 rounded bg-black/60 px-1.5 py-0.5 font-mono text-[8px] text-white/70 opacity-100 transition-opacity group-hover/card:opacity-0\">\n              \u25b6 hover\n            </span>\n          </>\n        ) : (",
+  "new_string": "        ) : videoUrl ? (\n          <StorageVideo\n            src={videoUrl}\n            className=\"h-full w-full object-cover\"\n            muted playsInline preload=\"metadata\"\n          />\n        ) : ("
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/nodes/EpisodeAssemblerNode.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:14:48)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've updated the MotionSceneInspector.tsx file so the inspector button also sends the connected narration, maintaining parity across the interface.
+
+</details>
+
+
+## 🤖 Claude *(03:14:54)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx",
+  "old_string": "  const enqueue = useMutation<{ render_id: string }, Error, void>({\n    mutationFn: async () => {\n      const { data, error } = await supabase.functions.invoke<{ render_id: string }>(\"motion-render\", {\n        body: {\n          project_id: projectId,\n          node_id: node.id,\n          title: d.title,\n          description: d.description,\n          beats: d.beats,\n          elements: d.elements,\n          background: d.background,\n          aspect: d.aspect,\n          duration_sec: d.durationSec,\n        },\n      });",
+  "new_string": "  const enqueue = useMutation<{ render_id: string }, Error, void>({\n    mutationFn: async () => {\n      // Narra\u00e7\u00e3o conectada entra no render (mix + dura\u00e7\u00e3o dirigida pela fala) \u2014 MESMA resolu\u00e7\u00e3o\n      // do Run All (lib canvas-voice; paridade \u00e9 contrato, sen\u00e3o o bot\u00e3o renderiza com fala e o\n      // Executar tudo renderiza mudo).\n      const { nodes, edges } = useCanvasStore.getState();\n      const voiceAssetId = await resolveVoiceAssetId(node.id, nodes, edges);\n      const { data, error } = await supabase.functions.invoke<{ render_id: string }>(\"motion-render\", {\n        body: {\n          project_id: projectId,\n          node_id: node.id,\n          title: d.title,\n          description: d.description,\n          beats: d.beats,\n          elements: d.elements,\n          background: d.background,\n          aspect: d.aspect,\n          duration_sec: d.durationSec,\n          ...(voiceAssetId ? { voice_asset_id: voiceAssetId } : {}),\n        },\n      });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:14:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx",
+  "old_string": "import { useCanvasStore } from \"@/store/useCanvasStore\";\nimport { useRenderStatus } from \"@/hooks/useVideoRepurpose\";",
+  "new_string": "import { useCanvasStore } from \"@/store/useCanvasStore\";\nimport { resolveVoiceAssetId } from \"@/lib/canvas-voice\";\nimport { useRenderStatus } from \"@/hooks/useVideoRepurpose\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:15:31)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Agora preciso trabalhar no worker para processar o áudio. Vou modificar a função `processMotion` para armazenar o arquivo de voz local e depois codificá-lo junto com o vídeo, usando as flags apropriadas do FFmpeg para áudio AAC com padding. The ffmpeg command order is correct with output options before the filename, and `-loglevel` as a global flag works fine even after the output path since that's what the existing code does. The audio padding and shortest flag ensure the audio extends while the video (which is longer based on the frame count) gets trimmed to match. I should update the metadata to use `voiceLocal` instead of just checking for the voice key, and add a `voice_mixed` flag to accurately reflect whether audio was actually mixed in. Now I need to rewrite the filter graph in the processAssemble function.
+
+I'm extracting the filter graph logic into a pure module that takes clip metadata and builds the complete ffmpeg filter chain, handling video scaling with aspect ratio preservation and padding, plus audio format normalization... Writing the probe function... Construindo o processAssemble... Now I need to write the module itself, starting with the imports at the top of the bridge file.
+
+</details>
+
+
+## 🤖 Claude *(03:15:32)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've completed the client-side work for most tasks and now I'm moving to the worker side with a new pure module for assembling the motion graph with testable filtering and probing.
+
+</details>
+
+
+## 🤖 Claude *(03:15:45)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/motion/assemble-graph.ts",
+  "content": "// Amendment 34 \u00b7 FR-SPACES-133 \u2014 grafo de filtros da montagem do MASTER.\n//\n// M\u00f3dulo PURO (test\u00e1vel pelo smoke scripts/qa/smoke-assemble-graph.ts) que constr\u00f3i o\n// filter_complex da montagem. Nasceu da auditoria 2026-08-05: o graph anterior criava streams de\n// sil\u00eancio [sN] que NUNCA eram consumidos (concat a=0 + map s\u00f3 do v\u00eddeo) \u2014 filter_complex com\n// output \u00f3rf\u00e3o \u00e9 ERRO FATAL no ffmpeg; e mesmo sem o erro o master sairia MUDO, com o\n// loudnorm_lufs lido e nunca aplicado.\n//\n// Regras:\n// - cada clipe entra com o PR\u00d3PRIO \u00e1udio (aformat normaliza p/ concat) ou com sil\u00eancio da MESMA\n//   dura\u00e7\u00e3o (anullsrc + atrim) \u2014 clipes de motores diferentes convivem (motion mudo \u00b7 Veo falado);\n// - concat v=1:a=1 com pares [vi][ai] intercalados;\n// - loudnorm one-pass no fim (I=lufs, o mesmo alvo -16 LUFS da casa).\n\nexport interface ClipMeta {\n  durationSec: number;\n  hasAudio: boolean;\n}\n\nexport function buildAssembleGraph(\n  metas: ClipMeta[],\n  w: number,\n  h: number,\n  lufs: number,\n): { filter: string; maps: [string, string] } {\n  if (!metas.length) throw new Error(\"buildAssembleGraph: sem clipes\");\n  const parts: string[] = [];\n  metas.forEach((m, i) => {\n    parts.push(\n      `[${i}:v]scale=${w}:${h}:force_original_aspect_ratio=decrease,` +\n        `pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2:color=black,fps=30,setsar=1[v${i}]`,\n    );\n    if (m.hasAudio) {\n      parts.push(\n        `[${i}:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,asetpts=N/SR/TB[a${i}]`,\n      );\n    } else {\n      // sil\u00eancio exatamente do tamanho do clipe \u2014 sem ele o concat a=1 desalinha A/V\n      const dur = Math.max(0.05, m.durationSec).toFixed(3);\n      parts.push(\n        `anullsrc=channel_layout=stereo:sample_rate=44100,atrim=0:${dur},asetpts=N/SR/TB[a${i}]`,\n      );\n    }\n  });\n  const pairs = metas.map((_, i) => `[v${i}][a${i}]`).join(\"\");\n  parts.push(`${pairs}concat=n=${metas.length}:v=1:a=1[vcat][acat]`);\n  parts.push(`[acat]loudnorm=I=${lufs}:TP=-1.5:LRA=11[aout]`);\n  return { filter: parts.join(\";\"), maps: [\"[vcat]\", \"[aout]\"] };\n}\n\n/** ffprobe de um clipe local: dura\u00e7\u00e3o + presen\u00e7a de stream de \u00e1udio. */\nexport function probeClip(path: string): ClipMeta {\n  const durOut = Bun.spawnSync([\n    \"ffprobe\", \"-v\", \"error\", \"-show_entries\", \"format=duration\", \"-of\", \"csv=p=0\", path,\n  ]);\n  const durationSec = Number(new TextDecoder().decode(durOut.stdout).trim()) || 0;\n  const audOut = Bun.spawnSync([\n    \"ffprobe\", \"-v\", \"error\", \"-select_streams\", \"a\", \"-show_entries\", \"stream=codec_type\", \"-of\", \"csv=p=0\", path,\n  ]);\n  const hasAudio = new TextDecoder().decode(audOut.stdout).trim().length > 0;\n  return { durationSec, hasAudio };\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/motion/assemble-graph.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:15:53)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm editing motion-bridge.ts to mix the voice-over into the motion clip and sync it with the real audio in the montage.
+
+</details>
+
+
+## 🤖 Claude *(03:15:59)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/motion-bridge.ts",
+  "old_string": "    // 1) dura\u00e7\u00e3o: a narra\u00e7\u00e3o manda quando est\u00e1 conectada (regra da timeline dirigida pela fala)\n    let duration = Math.max(2, Math.min(120, Number(comp.duration_sec) || 8));\n    if (comp.voice_bucket && comp.voice_key) {\n      const vd = await voiceDuration(comp.voice_bucket, comp.voice_key, workDir);\n      if (vd) duration = Math.max(2, Math.min(120, Math.ceil(vd * 10) / 10));\n    }",
+  "new_string": "    // 1) dura\u00e7\u00e3o: a narra\u00e7\u00e3o manda quando est\u00e1 conectada (regra da timeline dirigida pela fala).\n    //    O download da voz fica no workDir e \u00e9 MIXADO no encode \u2014 antes disto a voz s\u00f3 ditava a\n    //    dura\u00e7\u00e3o e o clipe sa\u00eda MUDO (achado da auditoria 2026-08-05: o mix n\u00e3o existia em lugar\n    //    nenhum do rail, nem aqui nem no assemble).\n    let duration = Math.max(2, Math.min(120, Number(comp.duration_sec) || 8));\n    let voiceLocal: string | null = null;\n    if (comp.voice_bucket && comp.voice_key) {\n      const vd = await voiceDuration(comp.voice_bucket, comp.voice_key, workDir);\n      if (vd) {\n        duration = Math.max(2, Math.min(120, Math.ceil(vd * 10) / 10));\n        voiceLocal = join(workDir, \"voice.audio\");\n      }\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/motion-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:16:04)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/motion-bridge.ts",
+  "old_string": "    const out = join(workDir, \"motion.mp4\");\n    await run([\n      \"ffmpeg\", \"-y\", \"-framerate\", String(FPS),\n      \"-i\", join(workDir, \"frames\", \"f_%05d.png\"),\n      \"-vf\", GRADE,\n      \"-c:v\", \"libx264\", \"-pix_fmt\", \"yuv420p\", \"-crf\", \"18\",\n      \"-preset\", \"slow\", \"-profile:v\", \"high\", \"-movflags\", \"+faststart\",\n      out, \"-loglevel\", \"error\",\n    ], 15 * 60 * 1000);",
+  "new_string": "    const out = join(workDir, \"motion.mp4\");\n    await run([\n      \"ffmpeg\", \"-y\", \"-framerate\", String(FPS),\n      \"-i\", join(workDir, \"frames\", \"f_%05d.png\"),\n      // narra\u00e7\u00e3o conectada: 2\u00ba input; apad estende o \u00e1udio e -shortest corta no fim do v\u00eddeo\n      // (duration \u2265 fala por constru\u00e7\u00e3o \u2014 ceil na d\u00e9cima acima)\n      ...(voiceLocal ? [\"-i\", voiceLocal] : []),\n      \"-vf\", GRADE,\n      \"-c:v\", \"libx264\", \"-pix_fmt\", \"yuv420p\", \"-crf\", \"18\",\n      \"-preset\", \"slow\", \"-profile:v\", \"high\", \"-movflags\", \"+faststart\",\n      ...(voiceLocal ? [\"-c:a\", \"aac\", \"-b:a\", \"192k\", \"-af\", \"apad\", \"-shortest\"] : []),\n      out, \"-loglevel\", \"error\",\n    ], 15 * 60 * 1000);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/motion-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:16:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/motion-bridge.ts",
+  "old_string": "    await finalize(renderId, \"done\", key, {\n      duration_sec: duration, frames, bytes: bytes.length, aspect: spec.aspect,\n      beats: spec.beats.length, voice_driven: Boolean(comp.voice_key),\n    });",
+  "new_string": "    await finalize(renderId, \"done\", key, {\n      duration_sec: duration, frames, bytes: bytes.length, aspect: spec.aspect,\n      beats: spec.beats.length, voice_driven: Boolean(voiceLocal), voice_mixed: Boolean(voiceLocal),\n    });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/motion-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:16:14)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Agora vou processar o `processAssemble`, substituindo o filter graph quebrado pelo módulo novo.
+
+</details>
+
+
+## 🤖 Claude *(03:16:23)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/motion-bridge.ts",
+  "old_string": "    // normaliza cada entrada (escala + pad + fps + \u00e1udio garantido) e concatena\n    const inputs: string[] = [];\n    const parts: string[] = [];\n    locals.forEach((f, i) => {\n      inputs.push(\"-i\", f);\n      parts.push(\n        `[${i}:v]scale=${W}:${H}:force_original_aspect_ratio=decrease,` +\n        `pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=black,fps=30,setsar=1[v${i}]`,\n      );\n    });\n    // trilha de sil\u00eancio para casar com clipes mudos\n    inputs.push(\"-f\", \"lavfi\", \"-i\", \"anullsrc=channel_layout=stereo:sample_rate=44100\");\n    const silentIdx = locals.length;\n    locals.forEach((_, i) => {\n      // se o clipe tem \u00e1udio usa o dele; sen\u00e3o o sil\u00eancio (o `?` do amerge n\u00e3o existe em ffmpeg,\n      // ent\u00e3o usamos o sil\u00eancio cortado ao tamanho do v\u00eddeo \u2014 simples e previs\u00edvel)\n      parts.push(`[${silentIdx}:a]atrim=0:3600,asetpts=N/SR/TB[s${i}]`);\n    });\n    const vConcat = locals.map((_, i) => `[v${i}]`).join(\"\");\n    parts.push(`${vConcat}concat=n=${locals.length}:v=1:a=0[vout]`);\n\n    const filter = parts.join(\";\");\n    const out = join(workDir, \"master.mp4\");\n    await run([\n      \"ffmpeg\", \"-y\", ...inputs,\n      \"-filter_complex\", filter,\n      \"-map\", \"[vout]\",\n      \"-c:v\", \"libx264\", \"-pix_fmt\", \"yuv420p\", \"-crf\", \"19\", \"-preset\", \"medium\",\n      \"-movflags\", \"+faststart\",\n      out, \"-loglevel\", \"error\",\n    ], 40 * 60 * 1000);",
+  "new_string": "    // Normaliza cada entrada e concatena V\u00cdDEO E \u00c1UDIO (assemble-graph.ts). O graph anterior\n    // criava streams de sil\u00eancio [sN] nunca consumidos (concat a=0 + map s\u00f3 do v\u00eddeo) \u2014\n    // filter_complex com output \u00f3rf\u00e3o \u00e9 ERRO FATAL no ffmpeg, e mesmo sem o erro o master sairia\n    // MUDO com o loudnorm configurado e nunca aplicado (auditoria 2026-08-05).\n    const metas = locals.map((f) => probeClip(f));\n    const { filter, maps } = buildAssembleGraph(metas, W, H, lufs);\n    const inputs: string[] = [];\n    locals.forEach((f) => inputs.push(\"-i\", f));\n    const out = join(workDir, \"master.mp4\");\n    await run([\n      \"ffmpeg\", \"-y\", ...inputs,\n      \"-filter_complex\", filter,\n      \"-map\", maps[0], \"-map\", maps[1],\n      \"-c:v\", \"libx264\", \"-pix_fmt\", \"yuv420p\", \"-crf\", \"19\", \"-preset\", \"medium\",\n      \"-c:a\", \"aac\", \"-b:a\", \"192k\",\n      \"-movflags\", \"+faststart\",\n      out, \"-loglevel\", \"error\",\n    ], 40 * 60 * 1000);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/motion-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:16:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/motion-bridge.ts",
+  "old_string": "interface MotionComposition {",
+  "new_string": "import { buildAssembleGraph, probeClip } from \"./motion/assemble-graph\";\n\ninterface MotionComposition {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/motion-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:16:46)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Agora que o código está pronto, preciso focar em testes e validação. Vou criar um smoke test que gera clipes sintéticos com e sem áudio, executa o filtro e testa a mistura de voz para validar o FFmpeg em um cenário real. Depois vou escrever testes com vitest para cobrir os diferentes tipos de payload e verificar o comportamento do hasClipPro.
+
+</details>
+
+
+## 🤖 Claude *(03:16:47)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Tenho o código completo pronto, e agora vou usar um smoke test real com FFmpeg para validar os dois novos padrões — mistura de voz e montagem audiovisual — como verificação permanente.
+
+</details>
+
+
+## 🤖 Claude *(03:17:14)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-assemble-graph.ts",
+  "content": "// smoke-assemble-graph \u2014 prova MATERIAL (ffmpeg real, zero rede/custo) dos dois padr\u00f5es de \u00e1udio\n// do rail motion (Amendment 34), nascida da auditoria 2026-08-05 que pegou o assemble com filter\n// graph inv\u00e1lido (streams \u00f3rf\u00e3os) e master mudo por constru\u00e7\u00e3o.\n//\n// G1  probeClip detecta \u00e1udio presente/ausente e dura\u00e7\u00e3o\n// G2  buildAssembleGraph + ffmpeg: clipes COM e SEM \u00e1udio concatenam \u2192 master com 1v+1a, dura\u00e7\u00e3o = soma\n// G3  master tem loudnorm aplicado (stream de \u00e1udio decodifica at\u00e9 o fim)\n// G4  padr\u00e3o do mix de voz do processMotion (frames + voz + apad + -shortest) \u2192 clipe COM \u00e1udio na dura\u00e7\u00e3o do v\u00eddeo\n//\n// Uso: bun run scripts/qa/smoke-assemble-graph.ts\n\nimport { mkdirSync, rmSync } from \"node:fs\";\nimport { join } from \"node:path\";\nimport { buildAssembleGraph, probeClip } from \"../motion/assemble-graph\";\n\nconst WORK = join(process.env.TMPDIR ?? \"/tmp\", `smoke-assemble-${Date.now()}`);\nmkdirSync(WORK, { recursive: true });\n\nlet pass = 0, fail = 0;\nfunction gate(name: string, ok: boolean, detail = \"\") {\n  if (ok) { pass++; console.log(`\u2705 ${name}${detail ? ` \u2014 ${detail}` : \"\"}`); }\n  else { fail++; console.log(`\u274c ${name}${detail ? ` \u2014 ${detail}` : \"\"}`); }\n}\n\nfunction sh(args: string[]): { ok: boolean; err: string } {\n  const p = Bun.spawnSync(args, { stderr: \"pipe\" });\n  return { ok: p.exitCode === 0, err: new TextDecoder().decode(p.stderr).slice(0, 400) };\n}\n\nfunction probeFmt(path: string): { dur: number; v: number; a: number } {\n  const d = Bun.spawnSync([\"ffprobe\", \"-v\", \"error\", \"-show_entries\", \"format=duration\", \"-of\", \"csv=p=0\", path]);\n  const dur = Number(new TextDecoder().decode(d.stdout).trim()) || 0;\n  const s = Bun.spawnSync([\"ffprobe\", \"-v\", \"error\", \"-show_entries\", \"stream=codec_type\", \"-of\", \"csv=p=0\", path]);\n  const kinds = new TextDecoder().decode(s.stdout).trim().split(\"\\n\").filter(Boolean);\n  return { dur, v: kinds.filter((k) => k.includes(\"video\")).length, a: kinds.filter((k) => k.includes(\"audio\")).length };\n}\n\ntry {\n  // \u2500\u2500 fixtures: A (2s COM \u00e1udio) \u00b7 B (1.5s SEM \u00e1udio) \u00b7 C (2s 720p COM \u00e1udio) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n  const A = join(WORK, \"a.mp4\"), B = join(WORK, \"b.mp4\"), C = join(WORK, \"c.mp4\");\n  sh([\"ffmpeg\", \"-y\", \"-f\", \"lavfi\", \"-i\", \"color=c=red:s=1280x720:d=2\", \"-f\", \"lavfi\", \"-i\",\n    \"sine=frequency=440:duration=2\", \"-c:v\", \"libx264\", \"-c:a\", \"aac\", \"-shortest\", A, \"-loglevel\", \"error\"]);\n  sh([\"ffmpeg\", \"-y\", \"-f\", \"lavfi\", \"-i\", \"color=c=blue:s=1920x1080:d=1.5\", \"-c:v\", \"libx264\", B, \"-loglevel\", \"error\"]);\n  sh([\"ffmpeg\", \"-y\", \"-f\", \"lavfi\", \"-i\", \"color=c=green:s=854x480:d=2\", \"-f\", \"lavfi\", \"-i\",\n    \"sine=frequency=880:duration=2\", \"-c:v\", \"libx264\", \"-c:a\", \"aac\", \"-shortest\", C, \"-loglevel\", \"error\"]);\n\n  // G1 \u2014 probe\n  const mA = probeClip(A), mB = probeClip(B), mC = probeClip(C);\n  gate(\"G1 probeClip\", mA.hasAudio && !mB.hasAudio && mC.hasAudio &&\n    Math.abs(mA.durationSec - 2) < 0.2 && Math.abs(mB.durationSec - 1.5) < 0.2,\n    `A=${mA.durationSec.toFixed(2)}s/audio:${mA.hasAudio} B=${mB.durationSec.toFixed(2)}s/audio:${mB.hasAudio}`);\n\n  // G2/G3 \u2014 assemble misto (o caso que quebrava: mudo no meio de falados)\n  const { filter, maps } = buildAssembleGraph([mA, mB, mC], 1920, 1080, -16);\n  const master = join(WORK, \"master.mp4\");\n  const r = sh([\"ffmpeg\", \"-y\", \"-i\", A, \"-i\", B, \"-i\", C,\n    \"-filter_complex\", filter, \"-map\", maps[0], \"-map\", maps[1],\n    \"-c:v\", \"libx264\", \"-pix_fmt\", \"yuv420p\", \"-crf\", \"23\", \"-preset\", \"veryfast\",\n    \"-c:a\", \"aac\", \"-b:a\", \"192k\", master, \"-loglevel\", \"error\"]);\n  gate(\"G2 assemble misto roda\", r.ok, r.ok ? \"\" : r.err);\n  if (r.ok) {\n    const pm = probeFmt(master);\n    const expected = mA.durationSec + mB.durationSec + mC.durationSec;\n    gate(\"G2b master 1v+1a e dura\u00e7\u00e3o=soma\", pm.v === 1 && pm.a === 1 && Math.abs(pm.dur - expected) < 0.6,\n      `v=${pm.v} a=${pm.a} dur=${pm.dur.toFixed(2)}s (esperado ~${expected.toFixed(2)}s)`);\n    const dec = sh([\"ffmpeg\", \"-v\", \"error\", \"-i\", master, \"-f\", \"null\", \"-\"]);\n    gate(\"G3 decodifica at\u00e9 o fim (loudnorm aplicado sem erro)\", dec.ok, dec.ok ? \"\" : dec.err);\n  } else { fail += 2; }\n\n  // G4 \u2014 padr\u00e3o do mix de voz do processMotion: frames PNG + voz curta + apad + -shortest\n  const frames = join(WORK, \"frames\"); mkdirSync(frames, { recursive: true });\n  sh([\"ffmpeg\", \"-y\", \"-f\", \"lavfi\", \"-i\", \"color=c=purple:s=640x360:d=1\", \"-r\", \"30\",\n    join(frames, \"f_%05d.png\"), \"-loglevel\", \"error\"]);\n  const voice = join(WORK, \"voice.wav\");\n  sh([\"ffmpeg\", \"-y\", \"-f\", \"lavfi\", \"-i\", \"sine=frequency=330:duration=0.8\", voice, \"-loglevel\", \"error\"]);\n  const clip = join(WORK, \"motion.mp4\");\n  const rm = sh([\"ffmpeg\", \"-y\", \"-framerate\", \"30\", \"-i\", join(frames, \"f_%05d.png\"), \"-i\", voice,\n    \"-c:v\", \"libx264\", \"-pix_fmt\", \"yuv420p\", \"-crf\", \"23\", \"-preset\", \"veryfast\",\n    \"-c:a\", \"aac\", \"-b:a\", \"192k\", \"-af\", \"apad\", \"-shortest\", clip, \"-loglevel\", \"error\"]);\n  if (rm.ok) {\n    const pc = probeFmt(clip);\n    gate(\"G4 mix de voz (apad+shortest)\", pc.a === 1 && Math.abs(pc.dur - 1.0) < 0.35,\n      `a=${pc.a} dur=${pc.dur.toFixed(2)}s (v\u00eddeo 1s manda; voz 0.8s + pad)`);\n  } else gate(\"G4 mix de voz (apad+shortest)\", false, rm.err);\n} finally {\n  rmSync(WORK, { recursive: true, force: true });\n}\n\nconsole.log(`\\n${pass} pass \u00b7 ${fail} fail`);\nprocess.exit(fail > 0 ? 1 : 0);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-assemble-graph.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:17:20)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Estou rodando testes vitest para os predicates client-side e executando o smoke em paralelo.
+
+</details>
+
+
+## 🤖 Claude *(03:17:39)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/test/run-all-dispatch.test.ts",
+  "content": "import { describe, expect, it } from \"vitest\";\nimport { resolveExecutePayload, type CanvasNodeData } from \"@/types/canvas\";\nimport { CLIP_KINDS, collectMasterClips, hasClipProducers } from \"@/lib/master-clips\";\nimport { findConnectedVoice } from \"@/lib/canvas-voice\";\nimport type { CanvasEdge, CanvasNode } from \"@/types/canvas\";\n\n// Anticorpos do Run All born-dead de 2026-08-05 (EP06): kinds do rail do host ca\u00edam no\n// `if (!payload) return` como `undefined` impl\u00edcito e o dispatch morria em sil\u00eancio; o montador\n// exigia clipe PRONTO no clique e nunca entrava no primeiro run; a narra\u00e7\u00e3o conectada n\u00e3o era\n// resolvida por caminho nenhum.\n\nconst node = (id: string, data: Record<string, unknown>, x = 0): CanvasNode =>\n  ({ id, type: \"canvasNode\", position: { x, y: 0 }, data } as unknown as CanvasNode);\nconst edge = (source: string, target: string): CanvasEdge =>\n  ({ id: `${source}->${target}`, source, target } as unknown as CanvasEdge);\n\ndescribe(\"resolveExecutePayload \u2014 kinds do rail do host resolvem null EXPL\u00cdCITO\", () => {\n  const kinds = [\"motionScene\", \"soundDesign\", \"episodeAssembler\", \"sceneNote\", \"transcribe\", \"videoRepurpose\"];\n  for (const kind of kinds) {\n    it(`${kind} \u2192 null (nunca undefined)`, () => {\n      const out = resolveExecutePayload({ kind } as unknown as CanvasNodeData, undefined);\n      expect(out).toBeNull(); // toBeNull falha para undefined \u2014 \u00e9 exatamente o ponto\n    });\n  }\n});\n\ndescribe(\"hasClipProducers \u2014 qualifica\u00e7\u00e3o do montador no PRIMEIRO Run All\", () => {\n  const assembler = node(\"asm\", { kind: \"episodeAssembler\", label: \"Master\", status: \"idle\" });\n  const scene = node(\"m1\", { kind: \"motionScene\", label: \"Gancho\", status: \"idle\" }); // SEM output ainda\n  const voice = node(\"v1\", { kind: \"voiceClone\", label: \"Narr\", status: \"success\" });\n\n  it(\"cena conectada AINDA N\u00c3O pronta qualifica (a checagem de pronto \u00e9 na hora de montar)\", () => {\n    expect(hasClipProducers([assembler, scene], [edge(\"m1\", \"asm\")], \"asm\")).toBe(true);\n  });\n  it(\"sem produtores de clipe \u2192 n\u00e3o qualifica\", () => {\n    expect(hasClipProducers([assembler, voice], [edge(\"v1\", \"asm\")], \"asm\")).toBe(false);\n    expect(hasClipProducers([assembler], [], \"asm\")).toBe(false);\n  });\n  it(\"collectMasterClips continua estrito: s\u00f3 entra cena PRONTA\", () => {\n    expect(collectMasterClips([assembler, scene], [edge(\"m1\", \"asm\")], \"asm\")).toHaveLength(0);\n    const ready = node(\"m2\", {\n      kind: \"motionScene\", label: \"Pronta\", status: \"success\",\n      output: { videoUrl: \"u/motion/x.mp4\" },\n    }, 10);\n    expect(collectMasterClips([assembler, ready], [edge(\"m2\", \"asm\")], \"asm\")).toEqual([\n      { key: \"u/motion/x.mp4\", label: \"Pronta\" },\n    ]);\n  });\n  it(\"CLIP_KINDS cobre os produtores de v\u00eddeo do canvas\", () => {\n    for (const k of [\"motionScene\", \"imageToVideo\", \"cinematicVideo\", \"splitScreen\", \"videoRepurpose\"]) {\n      expect(CLIP_KINDS.has(k)).toBe(true);\n    }\n  });\n});\n\ndescribe(\"findConnectedVoice \u2014 narra\u00e7\u00e3o conectada \u00e0 cena\", () => {\n  const scene = node(\"m1\", { kind: \"motionScene\", label: \"Gancho\" });\n  const voiceReady = node(\"v1\", {\n    kind: \"voiceClone\", label: \"Narr\",\n    output: { audioUrl: \"uid/ep06/narration/01.mp3\", creativeAssetId: \"asset-1\" },\n  });\n  const voiceEmpty = node(\"v2\", { kind: \"voiceClone\", label: \"Vazia\" });\n\n  it(\"resolve o \u00e1udio + creativeAssetId do voiceClone conectado\", () => {\n    expect(findConnectedVoice(\"m1\", [scene, voiceReady], [edge(\"v1\", \"m1\")])).toEqual({\n      audioUrl: \"uid/ep06/narration/01.mp3\", creativeAssetId: \"asset-1\",\n    });\n  });\n  it(\"voiceClone sem \u00e1udio pronto n\u00e3o conta; sem voz \u2192 null\", () => {\n    expect(findConnectedVoice(\"m1\", [scene, voiceEmpty], [edge(\"v2\", \"m1\")])).toBeNull();\n    expect(findConnectedVoice(\"m1\", [scene], [])).toBeNull();\n  });\n  it(\"aresta na dire\u00e7\u00e3o errada (cena \u2192 voz) n\u00e3o resolve\", () => {\n    expect(findConnectedVoice(\"m1\", [scene, voiceReady], [edge(\"m1\", \"v1\")])).toBeNull();\n  });\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/test/run-all-dispatch.test.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:17:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run scripts/qa/smoke-assemble-graph.ts 2>&1 | tail -10",
+  "description": "Roda o smoke FFmpeg do rail motion/assemble"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ G1 probeClip — A=2.00s/audio:true B=1.52s/audio:false
+> ✅ G2 assemble misto roda
+> ✅ G2b master 1v+1a e duração=soma — v=1 a=1 dur=5.60s (esperado ~5.52s)
+> ✅ G3 decodifica até o fim (loudnorm aplicado sem erro)
+> ✅ G4 mix de voz (apad+shortest) — a=1 dur=1.00s (vídeo 1s manda; voz 0.8s + pad)
+> 
+> 5 pass · 0 fail
+> ```
+
+## 🤖 Claude *(03:17:52)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Smoke test passed with the mixed assembly working correctly—clips with and without audio now produce a master file with exact duration and loudness normalization applied. Next I'm running the TypeScript app and Vitest tests in parallel, then moving on to backfilling and resetting episode 6, followed by the build, deployment, worker restart, adversarial workflow testing, and browser witness validation.
+
+</details>
+
+
+## 🤖 Claude *(03:17:53)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've completed the FFmpeg test with mixed footage (spoken and silent clips) into a master file with exact duration and loudness normalization, with proper voice mixing. Now I'll work on the type gates and suite.
+
+</details>
+
+
+## 🤖 Claude *(03:17:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx tsc -p tsconfig.app.json --noEmit 2>&1 | grep -cE \"error TS\"; echo \"---\"; npx tsc -p tsconfig.app.json --noEmit 2>&1 | head -10",
+  "description": "Gate de tipos real (baseline 0)",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: b76ef9jbw. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/tasks/b76ef9jbw.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(03:17:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run test 2>&1 | tail -15",
+  "description": "Suite vitest completa",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: b9dodn7qd. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/tasks/b9dodn7qd.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(03:18:20)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Enquanto os gates rodam, estou preparando o backfill e reset do EP06. O script server-side vai verificar se a aba está fechada lendo o updated_at do grafo duas vezes com 8 segundos de intervalo — se houver mudança, aborta porque significa que o autosave está ativo. Depois faz o backfill de cada um dos 8 voiceClones que têm audioUrl nos arquivos MP3 do EP06.
+
+Para cada áudio, confirmo que o arquivo existe no bucket video-studio-assets, depois registro o asset criativo com os metadados do projeto e nó, checando se já existe uma linha com essa storage_key para evitar duplicação. Atualizo os nós voiceClone com o creativeAssetId e seto os motionScene nodes para idle com renderId e error undefined. Por fim, escrevo tudo no grafo e relei após 10 segundos para validar contra sobrescrita. Preciso verificar se todos os 15 arquivos de narração do seal estão presentes, mas apenas os 8 conectados aos nós importam para este caso. Vou criar um script de backfill no scratchpad para fazer esse reparo pontual de dados — é uma ação única que não precisa ser promovida para produção, apenas documentada no Record.
+
+</details>
+
+
+## 🤖 Claude *(03:18:20)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Enquanto os gates rodam, estou preparando o backfill e reset do EP06 no servidor com verificação anti-clobber para garantir que a aba esteja fechada antes de escrever.
+
+</details>
+
+
+## 🤖 Claude *(03:18:45)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/scratchpad/backfill-reset-ep06.ts",
+  "content": "// backfill-reset-ep06 \u2014 reparo one-shot do EP06 (2026-08-05):\n// (1) PROVA que a aba est\u00e1 fechada (updated_at est\u00e1vel por 8s) antes de escrever no grafo;\n// (2) registra as 8 narra\u00e7\u00f5es \u00f3rf\u00e3s na spine creative_assets (idempotente por storage_key);\n// (3) grava output.creativeAssetId nos 8 n\u00f3s de voz + reseta as 8 motionScene queued\u2192idle;\n// (4) rel\u00ea 10s depois e compara (anticorpo reference_canvas_autosave_clobbers_server_writes).\nimport { createClient } from \"@supabase/supabase-js\";\n\nconst sb = createClient(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL!, process.env.SB_SECRET_KEY!, { auth: { persistSession: false } });\nconst PROJECT = \"d0d82aeb-8c98-4e36-b526-b6bba64a4db5\";\nconst USER = \"ada39fae-67e1-4e53-af1c-5a18e1c108e8\";\nconst BUCKET = \"video-studio-assets\";\nconst sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));\n\n// \u2500\u2500 (1) aba fechada? updated_at est\u00e1vel \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst read = async () => {\n  const { data, error } = await sb.from(\"vm_canvas_projects\").select(\"graph,updated_at\").eq(\"id\", PROJECT).single();\n  if (error) throw new Error(`read: ${error.message}`);\n  return data as { graph: { nodes: any[]; edges: any[]; [k: string]: unknown }; updated_at: string };\n};\nconst s1 = await read();\nawait sleep(8000);\nconst s2 = await read();\nif (s1.updated_at !== s2.updated_at) {\n  console.error(`ABORT: grafo mudou durante a observa\u00e7\u00e3o (${s1.updated_at} \u2192 ${s2.updated_at}) \u2014 aba aberta com autosave vivo. Feche a aba e rode de novo.`);\n  process.exit(2);\n}\nconsole.log(`\u2713 grafo est\u00e1vel (updated_at ${s2.updated_at}) \u2014 prosseguindo`);\n\nconst graph = s2.graph;\nconst nodes: any[] = graph.nodes;\n\n// \u2500\u2500 (2) backfill spine (idempotente) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst voices = nodes.filter((n) => n.data?.kind === \"voiceClone\" && n.data?.output?.audioUrl);\nconsole.log(`n\u00f3s de voz com \u00e1udio: ${voices.length}`);\nconst assetByKey = new Map<string, string>();\nfor (const v of voices) {\n  const key: string = v.data.output.audioUrl;\n  // arquivo existe? (Lei 1 \u2014 n\u00e3o registrar fantasma)\n  const dir = key.split(\"/\").slice(0, -1).join(\"/\");\n  const name = key.split(\"/\").pop()!;\n  const { data: files } = await sb.storage.from(BUCKET).list(dir, { limit: 100 });\n  if (!files?.some((f) => f.name === name)) { console.error(`\u2717 AUSENTE no bucket: ${key}`); continue; }\n\n  const { data: existing } = await sb.from(\"creative_assets\").select(\"id\").eq(\"user_id\", USER).eq(\"storage_key\", key).maybeSingle();\n  if (existing?.id) { assetByKey.set(key, existing.id); console.log(`= j\u00e1 na spine: ${name} \u2192 ${existing.id.slice(0, 8)}`); continue; }\n\n  const { data: reg, error: regErr } = await sb.rpc(\"register_creative_asset\", {\n    p_user_id: USER, p_kind: \"audio\",\n    p_storage_bucket: BUCKET, p_storage_key: key,\n    p_source_module: \"spaces\",\n    p_title: `Narra\u00e7\u00e3o EP06 \u00b7 ${String(v.data.label ?? name).replace(\"Narra\u00e7\u00e3o \u00b7 \", \"\")}`,\n    p_metadata: { project_id: PROJECT, node_id: v.id, narration: { ep: \"EP06\", ivc: true } },\n  });\n  if (regErr) { console.error(`\u2717 register falhou p/ ${name}: ${regErr.message}`); continue; }\n  const { data: row } = await sb.from(\"creative_assets\").select(\"id\").eq(\"user_id\", USER).eq(\"storage_key\", key).maybeSingle();\n  if (!row?.id) { console.error(`\u2717 registrado mas n\u00e3o encontrado: ${name} (rpc ret=${JSON.stringify(reg).slice(0, 80)})`); continue; }\n  assetByKey.set(key, row.id);\n  console.log(`+ spine: ${name} \u2192 ${row.id.slice(0, 8)}`);\n}\n\n// \u2500\u2500 (3) grafo novo: creativeAssetId nas vozes + motionScene queued\u2192idle \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nlet voicesPatched = 0, scenesReset = 0;\nconst newNodes = nodes.map((n) => {\n  if (n.data?.kind === \"voiceClone\" && n.data?.output?.audioUrl) {\n    const id = assetByKey.get(n.data.output.audioUrl);\n    if (id && n.data.output.creativeAssetId !== id) {\n      voicesPatched++;\n      return { ...n, data: { ...n.data, output: { ...n.data.output, creativeAssetId: id } } };\n    }\n    return n;\n  }\n  if (n.data?.kind === \"motionScene\" && (n.data.status === \"queued\" || n.data.status === \"running\")) {\n    scenesReset++;\n    const { renderId: _r, error: _e, ...rest } = n.data;\n    return { ...n, data: { ...rest, status: \"idle\" } };\n  }\n  return n;\n});\nconsole.log(`patch: ${voicesPatched} vozes + ${scenesReset} cenas resetadas`);\n\nconst { error: upErr } = await sb.from(\"vm_canvas_projects\")\n  .update({ graph: { ...graph, nodes: newNodes } }).eq(\"id\", PROJECT).eq(\"user_id\", USER);\nif (upErr) { console.error(`\u2717 UPDATE: ${upErr.message}`); process.exit(1); }\n\n// \u2500\u2500 (4) releitura 10s depois (anti-clobber) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nawait sleep(10000);\nconst s3 = await read();\nconst check = s3.graph.nodes;\nconst okScenes = check.filter((n: any) => n.data?.kind === \"motionScene\" && n.data.status === \"idle\").length;\nconst okVoices = check.filter((n: any) => n.data?.kind === \"voiceClone\" && n.data?.output?.creativeAssetId).length;\nconsole.log(`\\n== releitura (10s): motionScene idle=${okScenes}/8 \u00b7 vozes com creativeAssetId=${okVoices}/8`);\nif (okScenes >= 8 && okVoices >= 8) { console.log(\"\u2705 BACKFILL+RESET VERIFICADO\"); process.exit(0); }\nconsole.error(\"\u274c estado n\u00e3o persistiu \u2014 investigar (autosave? outra escrita?)\");\nprocess.exit(1);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/scratchpad/backfill-reset-ep06.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(03:18:51)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/tasks/b9dodn7qd.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	[llm-fallback] Dispatching fallback request to Gemini Free using model "gemini-2.5-pro"
+> 2	
+> 3	stdout | supabase/functions/_shared/llm-fallback.test.ts > fetchLLMWithFallback (OTD-LLM-FALLBACK cascade) > emits NO telemetry fetch outside Deno (guard holds; cascade fetch count unchanged)
+> 4	[llm-fallback] Gemini Free fallback succeeded with model "gemini-2.5-pro"
+> 5	
+> 6	 ✓ supabase/functions/_shared/llm-fallback.test.ts (6 tests) 32ms
+> 7	 ✓ supabase/functions/_shared/higgsfield-oauth.test.ts (17 tests) 27ms
+> 8	 ✓ supabase/functions/_shared/autopilot-video-cadence.test.ts (10 tests) 11ms
+> 9	 ✓ supabase/functions/_shared/smart-delete-classify.test.ts (15 tests) 15ms
+> 10	
+> 11	 Test Files  65 passed | 2 skipped (67)
+> 12	      Tests  778 passed | 2 skipped (780)
+> 13	   Start at  00:17:54
+> 14	   Duration  29.56s (transform 2.47s, setup 8.03s, collect 7.69s, tests 4.62s, environment 39.57s, prepare 10.11s)
+> 15	
+> 16	
+> ```
+
+## 🤖 Claude *(03:18:59)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Vitest passou com 778 testes, incluindo 13 novos que adicionei, então agora estou aguardando o resultado do TypeScript compiler para verificar se há algum problema de tipagem.
+
+</details>
+
+
+## 🤖 Claude *(03:18:59)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Vitest shows 778 passing tests, up from 765 with the 13 new tests added. Now I'm checking the TypeScript compiler.
+
+</details>
+
+
+## 🤖 Claude *(03:19:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "timeout 240 bash -c 'until grep -qE \"^[0-9]+$\" /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/tasks/b76ef9jbw.output 2>/dev/null; do sleep 5; done' ; cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/tasks/b76ef9jbw.output",
+  "description": "Aguarda e l\u00ea o gate de tipos"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 0
+> ---
+> ```
+
+## 🤖 Claude *(03:19:09)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+TypeScript compilation is clean with no errors. Now I'm running through the deployment checklist: backfilling and resetting EP06, building and deploying the frontend to nginx, restarting the motion-bridge worker since the script changed, running an adversarial verification workflow, and then checking everything in the browser. The backfill process should take around twenty seconds.
+
+</details>
+
+
+## 🤖 Claude *(03:19:10)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+TypeScript compilation passed with no errors. Now running the EP06 backfill and reset alongside the production build in parallel.
+
+</details>
+
+
+## 🤖 Claude *(03:19:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/scratchpad && bun run backfill-reset-ep06.ts 2>&1",
+  "description": "Backfill spine + reset das cenas EP06 com verifica\u00e7\u00e3o anti-clobber",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bsvcbnmhf. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/tasks/bsvcbnmhf.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> Session cwd remains /home/gcrUX/htdocs/constellation-orchestra; directory changes made by the backgrounded command do not apply to subsequent commands.
+> ```
+
+## 🤖 Claude *(03:19:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun run build 2>&1 | tail -5",
+  "description": "Build de produ\u00e7\u00e3o (repo principal \u2014 nginx serve dist/ direto)",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bp002itjj. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/tasks/bp002itjj.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(03:19:17)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "1",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #1 status
+> ```
+
+## 🤖 Claude *(03:19:18)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "3",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #3 status
+> ```
+
+## 🤖 Claude *(03:19:18)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "4",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #4 status
+> ```
+
+## 🤖 Claude *(03:19:18)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "5",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #5 status
+> ```
+
+## 🤖 Claude *(03:19:46)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+TypeScript compilation is confirmed. While the backfill and build processes run, I'm launching an adversarial verification workflow across the diff using five distinct verification lenses to catch potential issues. The diff hasn't been committed yet, so the agents are reading directly from the working tree. I'm starting with the born-dead lens, which traces the execution path from Run All through dispatch and the queue, examining the canvas pipeline state after edits and the related types.
+
+The other four lenses examine the reconciler for race conditions and cross-project interference, the worker layer for ffmpeg graph assembly and edge cases, the voice resolution system for asset path validation and backfill correctness, and the UI layer for JSX validity and orphaned references. Each agent will return structured findings that I'll then cross-reference for conflicts.
+
+I'm setting up the Workflow tool with a schema, making sure the prompts are self-contained with absolute paths and full context, working from the constellation-orchestra directory.
+
+</details>
+
+
+## 🤖 Claude *(03:19:48)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Com os gates verdes e o build/backfill rodando, disparo o workflow adversarial de verificação com 5 lentes independentes para tentar quebrar o diff que acabei de consertar.
+
+</details>
+
+
+## 🤖 Claude *(03:20:26)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'verify-runall-fix',\n  description: 'Verifica\u00e7\u00e3o adversarial do fix do Run All EP06 (5 lentes) + veredito',\n  phases: [\n    { title: 'Verify', detail: '5 lentes adversariais em paralelo sobre o working tree' },\n    { title: 'Confirm', detail: 'refuta\u00e7\u00e3o dos findings HIGH/MEDIUM' },\n  ],\n}\n\nconst REPO = '/home/gcrUX/htdocs/constellation-orchestra'\nconst FINDINGS = {\n  type: 'object', additionalProperties: false,\n  properties: {\n    findings: { type: 'array', items: {\n      type: 'object', additionalProperties: false,\n      properties: {\n        severity: { type: 'string', enum: ['HIGH','MEDIUM','LOW','NIT'] },\n        file: { type: 'string' }, line: { type: 'number' },\n        claim: { type: 'string' }, evidence: { type: 'string' },\n        failure_scenario: { type: 'string' },\n      }, required: ['severity','file','claim','evidence','failure_scenario'] } },\n  }, required: ['findings'],\n}\n\nconst CONTEXT = `CONTEXTO: hoje (2026-08-05) o \"Executar tudo\" do projeto Spaces EP06 (id d0d82aeb, 22 n\u00f3s: 8 motionScene + 9 voiceClone + 1 episodeAssembler + 1 scriptGenerator + 1 characterReference + 2 sceneNote) falhou born-dead: resolveExecutePayload n\u00e3o tinha case para motionScene/soundDesign/episodeAssembler \u2192 undefined \u2192 \"if (!payload) return\" matava o dispatch em sil\u00eancio; n\u00f3s ficaram queued eternos, fila video_renders vazia. Acabo de aplicar um fix NO WORKING TREE (n\u00e3o commitado) em ${REPO}. Use \"git -C ${REPO} diff\" para ver o diff completo e leia os arquivos p\u00f3s-fix. Mudan\u00e7as: (1) src/hooks/useCanvasPipeline.ts \u2014 branches motionScene/episodeAssembler/soundDesign movidos para ANTES de resolveExecutePayload, com try/catch marcando failed, e motionScene agora resolve a narra\u00e7\u00e3o conectada (resolveVoiceAssetId) e envia voice_asset_id; runnable do episodeAssembler mudou de collectMasterClips().length>0 para hasClipProducers(); (2) src/types/canvas.ts \u2014 cases expl\u00edcitos return null p/ 6 kinds + return null final; (3) src/lib/canvas-voice.ts NOVO (findConnectedVoice/resolveVoiceAssetId); (4) src/lib/master-clips.ts \u2014 hasClipProducers + CLIP_KINDS exportado; (5) src/hooks/useMotionRenderSync.ts \u2014 anticorpo fantasma (3 polls sem linha \u2192 reset idle) + fix do continue que pulava reconcilia\u00e7\u00e3o de linha done>5min; (6) src/components/canvas/nodes/MotionSceneNode.tsx e EpisodeAssemblerNode.tsx \u2014 preview no hover REMOVIDO (pedido do Sovereign), handles preservados; (7) src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx \u2014 tamb\u00e9m envia voice_asset_id; (8) scripts/motion-bridge.ts \u2014 mix da voz no encode do motion (apad+shortest) e processAssemble reescrito usando scripts/motion/assemble-graph.ts (NOVO \u2014 concat v=1:a=1 + loudnorm; o anterior tinha streams \u00f3rf\u00e3os = erro fatal ffmpeg). Edge fns motion-render/assemble-master N\u00c3O mudaram. Retorne APENAS findings materiais (com file:line e cen\u00e1rio de falha concreto); n\u00e3o relate estilo.`\n\nphase('Verify')\nconst LENSES = [\n  { key: 'born-dead', prompt: `${CONTEXT}\\n\\nSUA LENTE: born-dead do Run All. Simule mentalmente o clique \"Executar tudo\" no EP06 contra o c\u00f3digo P\u00d3S-FIX: leia src/hooks/useCanvasPipeline.ts inteiro (runnable \u2192 getTopologicalLayers \u2192 camadas \u2192 runSingleNode por kind) e src/types/canvas.ts (resolveExecutePayload). Verifique: os 8 motionScene qualificam e despacham? o episodeAssembler entra na \u00faltima camada e monta com clips frescos? o scriptGenerator/voiceClone/characterReference/sceneNote ficam CORRETAMENTE de fora? waitForNodesToComplete resolve quando o reconciler externo (useMotionRenderSync) seta success? Alguma REGRESS\u00c3O nos kinds canvas-execute (generateImage/imageToVideo/etc)?` },\n  { key: 'ghost-reconciler', prompt: `${CONTEXT}\\n\\nSUA LENTE: reconciler e anticorpo fantasma. Leia src/hooks/useMotionRenderSync.ts P\u00d3S-FIX linha a linha. Procure: corrida entre dispatch (que marca running sem renderId ainda) e o anticorpo de 3 polls; risco de resetar n\u00f3 cujo render acabou de ser enfileirado mas a linha ainda n\u00e3o \u00e9 vis\u00edvel; a query limit(40) ordenada desc pode empurrar a linha de um n\u00f3 velho para fora e o anticorpo reset\u00e1-lo INDEVIDAMENTE?; o filtro por project_id client-side; o fix do continue de linha done>5min (reconcilia\u00e7\u00e3o agora acontece?); interfer\u00eancia com jobs de OUTRO projeto; vazamento do Map ghostMisses.` },\n  { key: 'worker-ffmpeg', prompt: `${CONTEXT}\\n\\nSUA LENTE: worker e FFmpeg. Leia scripts/motion-bridge.ts P\u00d3S-FIX (processMotion/processAssemble/voiceDuration) e scripts/motion/assemble-graph.ts. Procure: ordem/validade dos args ffmpeg no mix (apad + -shortest + -af posi\u00e7\u00e3o); caso voz baixa mas ffprobe falha; assemble com 1 clipe s\u00f3; clipe com dura\u00e7\u00e3o 0; buildAssembleGraph com metas vazias; probeClip em arquivo corrompido; o -vf GRADE junto com segundo input de \u00e1udio (algum conflito de mapping impl\u00edcito? ffmpeg auto-map: 1 video + 1 audio \u2014 o -vf aplica s\u00f3 ao v\u00eddeo?); loudnorm one-pass com lufs vindo do composition (valida\u00e7\u00e3o?); timeout adequado.` },\n  { key: 'voice-chain', prompt: `${CONTEXT}\\n\\nSUA LENTE: a cadeia da voz ponta a ponta. Leia src/lib/canvas-voice.ts, src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx p\u00f3s-fix, supabase/functions/motion-render/index.ts (INALTERADA \u2014 valida voice_asset_id contra creative_assets owner-scoped e exige key.startsWith(userId/)) e o trecho de voz do scripts/motion-bridge.ts. Verifique: o storage_key das narra\u00e7\u00f5es EP06 (\"ada39fae-.../ep06/narration/01-gancho.mp3\", bucket video-studio-assets) passa nas valida\u00e7\u00f5es da edge fn? findConnectedVoice escolhe a voz CERTA quando a cena tem 2 entradas (voz + characterReference)? a query resolveVoiceAssetId por storage_key pode retornar linha de OUTRO usu\u00e1rio via RLS? multiple maybeSingle com >1 linha igual? o fail-soft (voz n\u00e3o resolvida \u2192 cena muda) est\u00e1 sinalizado o suficiente?` },\n  { key: 'ui-console', prompt: `${CONTEXT}\\n\\nSUA LENTE: UI dos cards e console. Leia src/components/canvas/nodes/MotionSceneNode.tsx e EpisodeAssemblerNode.tsx P\u00d3S-FIX (JSX v\u00e1lido? handles input_voice/input_asset/output_video e input_clip/output_master preservados? alguma ref \u00f3rf\u00e3/import morto? o v\u00eddeo est\u00e1tico com preload=metadata renderiza um frame ou fica preto \u2014 precisa de poster?), src/components/canvas/RenderConsole.tsx e a montagem em src/pages/CanvasEditorPage.tsx:491 ({chatOpen ? AgentCommandBar : RenderConsole}). Confirme que com o fix o console aparecer\u00e1 durante o Run All (jobs vir\u00e3o da fila real) e que nenhum estado chatOpen persistido pode escond\u00ea-lo ap\u00f3s reload (verifique o partialize do useCanvasStore).` },\n]\n\nconst results = await parallel(LENSES.map((l) => () =>\n  agent(l.prompt, { label: `lens:${l.key}`, phase: 'Verify', schema: FINDINGS })))\n\nconst all = results.filter(Boolean).flatMap((r, i) => r.findings.map((f) => ({ ...f, lens: LENSES[i].key })))\nconst serious = all.filter((f) => f.severity === 'HIGH' || f.severity === 'MEDIUM')\nlog(`findings: ${all.length} total \u00b7 ${serious.length} HIGH/MEDIUM`)\n\nphase('Confirm')\nconst confirmed = await parallel(serious.map((f) => () =>\n  agent(`Voc\u00ea \u00e9 um REFUTADOR c\u00e9tico. Finding sobre o working tree de ${REPO} (leia os arquivos voc\u00ea mesmo):\\n${JSON.stringify(f, null, 2)}\\n\\nTente REFUTAR com evid\u00eancia material (file:line). Se o cen\u00e1rio de falha n\u00e3o se sustenta no c\u00f3digo real, refuted=true. Em d\u00favida, refuted=true (s\u00f3 passa o que \u00e9 ineg\u00e1vel).`,\n    { label: `confirm:${f.lens}`, phase: 'Confirm', schema: { type: 'object', additionalProperties: false, properties: { refuted: { type: 'boolean' }, reason: { type: 'string' } }, required: ['refuted','reason'] } })\n    .then((v) => ({ finding: f, verdict: v }))))\n\nreturn {\n  confirmed: confirmed.filter(Boolean).filter((c) => c.verdict && !c.verdict.refuted).map((c) => ({ ...c.finding, confirm_reason: c.verdict.reason })),\n  refuted: confirmed.filter(Boolean).filter((c) => c.verdict?.refuted).map((c) => ({ claim: c.finding.claim, reason: c.verdict.reason })),\n  lows: all.filter((f) => f.severity === 'LOW' || f.severity === 'NIT'),\n}"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wuhf564zn
+> Summary: Verificação adversarial do fix do Run All EP06 (5 lentes) + veredito
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/subagents/workflows/wf_6496b489-bfc
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/workflows/scripts/verify-runall-fix-wf_6496b489-bfc.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/workflows/scripts/verify-runall-fix-wf_6496b489-bfc.js"} to iterate without resending the script.)
+> Run ID: wf_6496b489-bfc
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/workflows/scripts/verify-runall-fix-wf_6496b489-bfc.js", resumeFromRunId: "wf_6496b489-bfc"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(03:20:31)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/tasks/bsvcbnmhf.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	✓ grafo estável (updated_at 2026-08-05T02:55:42.254848+00:00) — prosseguindo
+> 2	nós de voz com áudio: 8
+> 3	= já na spine: 01-gancho.mp3 → 6b9cf64a
+> 4	= já na spine: 03-kimi.mp3 → fc78ab1c
+> 5	= já na spine: 05-qwen.mp3 → 0c9f2768
+> 6	= já na spine: 06-hawk.mp3 → 196d5184
+> 7	= já na spine: 08-ciencia.mp3 → 7eebe36d
+> 8	= já na spine: 09-amazon.mp3 → a30df248
+> 9	= já na spine: 11-incidentes.mp3 → b0d11089
+> 10	= já na spine: 13-mcp.mp3 → 5150d08b
+> 11	patch: 8 vozes + 8 cenas resetadas
+> 12	
+> 13	== releitura (10s): motionScene idle=8/8 · vozes com creativeAssetId=8/8
+> 14	✅ BACKFILL+RESET VERIFICADO
+> 15	
+> ```
+
+## 🤖 Claude *(03:20:32)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/tasks/bp002itjj.output"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	(!) Some chunks are larger than 500 kB after minification. Consider:
+> 2	- Using dynamic import() to code-split the application
+> 3	- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+> 4	- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+> 5	✓ built in 25.89s
+> 6	
+> ```
+
+## 🤖 Claude *(03:21:11)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The backfill and reset worked perfectly—all 8 narratives were already in the spine, so the voice asset lookup succeeded without needing the extra backfill step, and now the nodes load the creative asset ID directly without any additional queries. All 8 voices got patched with the creative asset ID, the scenes transitioned from queued to idle, and the 10-second reread confirmed 8 out of 8 narratives and voices loaded correctly.
+
+There's something odd though—during the initial recon, my `.like` query searching for "%ep06/narration%" returned zero results, but the backfill's `.eq` lookup found the IDs just fine. Both used service role permissions, so it's strange that the pattern match didn't work when it should have matched the storage key format. But the material proof is what matters: the IDs exist and are now on the nodes, so the inconsistency is more of a curiosity than a blocker.
+
+The critical path doesn't rely on `.like` anyway—the edge function and motion-render both use `.eq` by ID, so this doesn't affect anything downstream. The build completed in 25.89 seconds and nginx is already serving the new bundle, so the deploy is live. I should verify the environment variables are baked in correctly.
+
+Next I need to restart the worker since the script changed, then set up the witness test in the browser. I can either use the local e2e setup with vite preview and a generated session, or test directly against prod where the new bundle is already live. For a quick infrastructure QA check, I'll create a throwaway test project server-side with a simple motion scene to verify everything's wired correctly. Esperando o worker renderizar a cena de 4 segundos (~40-90s de processamento), depois verificar se o reconciliador marca sucesso, o assembler dispara, e o master completa — validando que o vídeo renderizou 2 linhas, o asset master está na spine, e os nós mostram sucesso na UI, com timeout total de 6-8 minutos. Enquanto isso, vou preparar o witness: reiniciar o worker e confirmar que está ativo, criar o projeto QA server-side via script, e rodar vite preview com sessão injetada para o agent-browser.
+
+Deixa eu verificar o que gen-user-session.ts espera e como o e2e loggedin funciona — preciso confirmar se o script existe em scripts/qa.
+
+</details>
+
+
+## 🤖 Claude *(03:21:12)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Backfill and reset are verified with all scenes and voices properly configured, and the build completed successfully in under 26 seconds with nginx serving the new bundle. Now I'll restart the worker and prepare the E2E witness.
+
+</details>
+
+
+## 🤖 Claude *(03:21:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "systemctl --user restart motion-bridge.service && sleep 3 && systemctl --user is-active motion-bridge.service && systemctl --user show motion-bridge.service -p ActiveEnterTimestamp | cut -d= -f2",
+  "description": "Reinicia o worker motion-bridge (c\u00f3digo novo) e prova que subiu"
+}
+```
+
+## 🤖 Claude *(03:21:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls scripts/qa/ | grep -iE \"session|user-jwt|magiclink\"; ls dist/assets/*.js 2>/dev/null | head -3; stat -c \"%y %n\" dist/index.html 2>/dev/null",
+  "description": "Ferramentas de sess\u00e3o QA dispon\u00edveis + prova do dist novo"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> active
+> Wed 2026-08-05 00:21:13 -03
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> gen-magiclink.ts
+> gen-user-jwt.ts
+> gen-user-session.ts
+> dist/assets/activity-BHE4cAb3.js
+> dist/assets/addDays-BSmu3CqD.js
+> dist/assets/AdminPage-BE0OqpdL.js
+> 2026-08-05 00:19:37.698270764 -0300 dist/index.html
+> ```
+
+## 🤖 Claude *(03:21:27)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The worker's back up and the build is fresh. Now I'm setting up an E2E test scenario—I'll create a throwaway QA project server-side with a minimal graph structure, spin up a preview server, inject a test user session, and run the browser agent against it.
+
+Then I need to navigate to the dashboard, trigger "Executar tudo", and verify the key assertions: video renders complete, assembly finishes, the master appears in the spine, and the UI shows success. I should also check how the session injection script works and understand the memory pattern between the preview server and the Playwright/agent-browser setup.
+
+</details>
+
+
+## 🤖 Claude *(03:21:28)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've got the new code and distributed the new server, now I'm setting up the E2E witness starting with the session mechanism and disposable QA project.
+
+</details>
+
+
+## 🤖 Claude *(03:21:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "head -40 scripts/qa/gen-user-session.ts",
+  "description": "Contrato do gerador de sess\u00e3o QA"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> #!/usr/bin/env bun
+> /**
+>  * Mint a REAL Supabase browser session (the full localStorage value) for logged-in UI E2E
+>  * without OAuth redirect — bypasses the single-use magic-link + Cloudflare-challenge trap that
+>  * kills gen-magiclink.ts when driving from a datacenter IP. Admin generateLink (magiclink) →
+>  * verifyOtp(token_hash) → session, printed as the JSON string supabase-js stores under
+>  * `sb-<ref>-auth-token`. Inject it into localStorage and the app boots already authenticated.
+>  *
+>  * Usage: bun run scripts/qa/gen-user-session.ts <email>
+>  *   → prints ONLY the localStorage value (JSON) on stdout, or an error on stderr + exit 1.
+>  *   e.g. SESSION=$(bun run scripts/qa/gen-user-session.ts gabrielcall@gmail.com)
+>  *
+>  * Pair with agent-browser:
+>  *   localStorage.setItem('sb-<ref>-auth-token', SESSION) then reload → logged in.
+>  * Pattern extends gen-user-jwt.ts (v6.20.4 lineage). Session is ~1h-lived; mint right before use.
+>  */
+> import { createClient } from '@supabase/supabase-js';
+> 
+> const URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;
+> const SVC = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> const ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY)!;
+> const email = process.argv[2];
+> if (!URL || !SVC || !ANON || !email) {
+>   console.error('Usage: gen-user-session.ts <email>  (needs SUPABASE_URL + SB_SECRET_KEY + SB_PUBLISHABLE_KEY)');
+>   process.exit(1);
+> }
+> 
+> const admin = createClient(URL, SVC, { auth: { persistSession: false } });
+> const anon = createClient(URL, ANON, { auth: { persistSession: false } });
+> 
+> const { data, error } = await admin.auth.admin.generateLink({ type: 'magiclink', email });
+> if (error || !data.properties?.hashed_token) {
+>   console.error('generateLink error:', error?.message ?? 'no hashed_token');
+>   process.exit(1);
+> }
+> const tokenHash = data.properties.hashed_token;
+> 
+> let session: unknown = null;
+> for (const type of ['magiclink', 'email'] as const) {
+>   const { data: sess, error: vErr } = await anon.auth.verifyOtp({ token_hash: tokenHash, type });
+> ```
+
+## 🤖 Claude *(03:21:56)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+So the witness flow starts by creating a disposable QA project on the server side, then using Vite's preview mode to serve the built dist folder on port 4173—the app already has the Supabase URL baked in. From there, the browser agent injects localStorage, navigates to the project, and triggers the execution.
+
+The localStorage key follows the pattern `sb-<ref>-auth-token` where ref is the project's subdomain from the Supabase URL, which I can pull from the .env. While the adversarial workflow runs, I need to construct the minimal QA project graph first, starting with getting the exact node shape format—I'll check the factories and the EP06 dump to see how nodes are structured with their type, position, and data, then replicate that for the motion scene node and edge shapes.
+
+For the MotionScene QA, I'm setting up the metadata with a cyan pulsing node and progress ring completing over 4 seconds against a galaxy background. I'll create the project via a direct INSERT into vm_canvas_projects, cloning the graph structure from EP06 and querying an existing project to confirm all required table columns.
+
+</details>
+
+
+## 🤖 Claude *(03:21:57)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O workflow adversarial está rodando enquanto crio o projeto QA descartável, clonando a estrutura exata dos nós do EP06.
+
+</details>
+
+
+## 🤖 Claude *(03:22:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/scratchpad && cat > make-qa-project.ts <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nconst sb = createClient(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL!, process.env.SB_SECRET_KEY!, { auth: { persistSession: false } });\nconst USER = \"ada39fae-67e1-4e53-af1c-5a18e1c108e8\";\nconst EP06 = \"d0d82aeb-8c98-4e36-b526-b6bba64a4db5\";\n\n// shape real: clona um motionScene + o assembler do EP06 (n\u00f3 completo com type/position/etc)\nconst { data: p } = await sb.from(\"vm_canvas_projects\").select(\"*\").eq(\"id\", EP06).single();\nconst nodes: any[] = p!.graph.nodes;\nconst motionTpl = JSON.parse(JSON.stringify(nodes.find((n) => n.data?.kind === \"motionScene\")));\nconst asmTpl = JSON.parse(JSON.stringify(nodes.find((n) => n.data?.kind === \"episodeAssembler\")));\nconsole.log(\"template motion keys:\", Object.keys(motionTpl).join(\",\"), \"| type:\", motionTpl.type);\n\nmotionTpl.id = \"n_qa_m1\"; motionTpl.position = { x: 100, y: 100 };\nmotionTpl.data = { ...motionTpl.data,\n  label: \"QA Cena\", title: \"\", durationSec: 4, status: \"idle\",\n  description: \"Um n\u00f3 ciano pulsa tr\u00eas vezes e um anel de progresso completa a volta\",\n  beats: [], elements: [\"nodes\", \"runningRing\"],\n};\ndelete motionTpl.data.renderId; delete motionTpl.data.error; delete motionTpl.data.output;\nasmTpl.id = \"n_qa_asm\"; asmTpl.position = { x: 520, y: 100 };\nasmTpl.data = { ...asmTpl.data, label: \"QA Master\", status: \"idle\" };\ndelete asmTpl.data.renderId; delete asmTpl.data.error; delete asmTpl.data.output;\n\nconst edgeTpl = (p!.graph.edges as any[]).find((e) => e.target === asmTpl0(nodes)?.id) ?? null;\nfunction asmTpl0(ns: any[]) { return ns.find((n) => n.data?.kind === \"episodeAssembler\"); }\nconst edge = edgeTpl\n  ? { ...JSON.parse(JSON.stringify(edgeTpl)), id: \"e_qa_1\", source: \"n_qa_m1\", target: \"n_qa_asm\" }\n  : { id: \"e_qa_1\", source: \"n_qa_m1\", target: \"n_qa_asm\" };\nconsole.log(\"edge shape:\", JSON.stringify(edge));\n\nconst graph = { ...p!.graph, nodes: [motionTpl, asmTpl], edges: [edge], lanes: [] };\nconst row: any = { user_id: USER, name: \"QA Run All \u2014 descart\u00e1vel 2026-08-05\", graph };\nconst { data: created, error } = await sb.from(\"vm_canvas_projects\").insert(row).select(\"id\").single();\nif (error) { console.error(\"INSERT:\", error.message); process.exit(1); }\nconsole.log(\"QA_PROJECT_ID=\" + created!.id);\nEOF\nbun run make-qa-project.ts 2>&1",
+  "description": "Cria projeto QA descart\u00e1vel clonando shape real do EP06"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> template motion keys: id,data,type,measured,position,selected | type: motionScene
+> edge shape: {"id":"e_qa_1","source":"n_qa_m1","target":"n_qa_asm","animated":false,"sourceHandle":"output_video","targetHandle":"input_clip"}
+> QA_PROJECT_ID=1876fcb2-c84f-4b4d-9997-7afcd44cb1e5
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(03:22:19)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Criei o projeto QA com dois nós e uma conexão correta entre eles. Agora vou configurar o witness browser usando vite preview, criar uma sessão e invocar a skill agent-browser, que é a abordagem recomendada para automação de navegador.
+
+Antes de executar o witness, preciso deixar o workflow adversarial terminar — se encontrar uma vulnerabilidade confirmada, corrijo antes de prosseguir. Enquanto isso, posso subir o preview e preparar a sessão agora, depois verifico o status do workflow antes de iniciar os cliques.
+
+</details>
+
+
+## 🤖 Claude *(03:22:20)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Criei o projeto QA com handles reais para a conexão `output_video→input_clip`. Agora vou subir o preview local e iniciar a sessão do User 0.
+
+</details>
+
+
+## 🤖 Claude *(03:22:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx vite preview --port 4173 --strictPort >/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/scratchpad/preview.log 2>&1 &\necho \"preview pid $!\"; sleep 3; curl -s -o /dev/null -w \"%{http_code}\" http://localhost:4173/",
+  "description": "Sobe vite preview do dist buildado na 4173"
+}
+```
+
+## 🤖 Claude *(03:22:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "SESSION=$(bun run scripts/qa/gen-user-session.ts gabrielcall@gmail.com 2>/dev/null) && echo \"$SESSION\" > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/scratchpad/session.json && echo \"session bytes: $(wc -c < /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/scratchpad/session.json)\"; grep -oE \"^VITE_SUPABASE_PROJECT_ID=.{8}\" .env",
+  "description": "Minta sess\u00e3o browser do User 0 e captura o project ref"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> preview pid 3635164
+> 200
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> session bytes: 3333
+> VITE_SUPABASE_PROJECT_ID="bcyvdds
+> ```
+
+## 🤖 Claude *(03:22:37)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Preview returned 200, session is minted, and I have the ref but need the full value to retrieve the complete localStorage key for the auth token. Let me check if the workflow finished before proceeding — if not, I'll start the browser setup to navigate and inject while waiting, making sure to grab the full ref first without exposing the project ID.
+
+</details>
+
+
+## 🤖 Claude *(03:22:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -oE '^VITE_SUPABASE_PROJECT_ID=\"[a-z0-9]+\"' .env | cut -d'\"' -f2",
+  "description": "Ref completo do projeto Supabase (chave do localStorage)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> bcyvddsykvehvpwstlfa
+> ```
+
+## 🤖 Claude *(03:22:45)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "2",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #2 status
+> ```
+
+## 🤖 Claude *(03:22:45)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "6",
+  "status": "completed"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #6 status
+> ```
+
+## 🤖 Claude *(03:22:45)*
+
+
+🛠️ **Tool Call**: `TaskUpdate`
+```json
+{
+  "taskId": "7",
+  "status": "in_progress"
+}
+```
+
+> **Tool Result (TaskUpdate)** - ✅ Success
+>
+> ```
+> Updated task #7 status
+> ```
+
+## 🤖 Claude *(03:22:51)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Agora vou invocar a skill `agent-browser` para clicar em "Executar tudo" no projeto QA.
+
+</details>
+
+
+## 🤖 Claude *(03:22:53)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "agent-browser",
+  "args": "E2E logado local: injetar sess\u00e3o Supabase no localStorage de http://localhost:4173, abrir /dashboard/spaces/1876fcb2-c84f-4b4d-9997-7afcd44cb1e5 e clicar em \"Executar tudo\""
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: agent-browser
+> ```
+
+## 👤 User *(03:22:53)*
+
+Base directory for this skill: /home/gcrUX/htdocs/constellation-orchestra/.claude/skills/agent-browser
+
+# agent-browser
+
+Fast browser automation CLI for AI agents. Chrome/Chromium via CDP with
+accessibility-tree snapshots and compact `@eN` element refs.
+
+Install: `npm i -g agent-browser && agent-browser install`
+
+## Start here
+
+This file is a discovery stub, not the usage guide. Before running any
+`agent-browser` command, load the actual workflow content from the CLI:
+
+```bash
+agent-browser skills get core             # start here — workflows, common patterns, troubleshooting
+agent-browser skills get core --full      # include full command reference and templates
+```
+
+The CLI serves skill content that always matches the installed version,
+so instructions never go stale. The content in this stub cannot change
+between releases, which is why it just points at `skills get core`.
+
+## Specialized skills
+
+Load a specialized skill when the task falls outside browser web pages:
+
+```bash
+agent-browser skills get electron          # Electron desktop apps (VS Code, Slack, Discord, Figma, ...)
+agent-browser skills get slack             # Slack workspace automation
+agent-browser skills get dogfood           # Exploratory testing / QA / bug hunts
+agent-browser skills get vercel-sandbox    # agent-browser inside Vercel Sandbox microVMs
+agent-browser skills get agentcore         # AWS Bedrock AgentCore cloud browsers
+```
+
+Run `agent-browser skills list` to see everything available on the
+installed version.
+
+## Why agent-browser
+
+- Fast native Rust CLI, not a Node.js wrapper
+- Works with any AI agent (Cursor, Claude Code, Codex, Continue, Windsurf, etc.)
+- Chrome/Chromium via CDP with no Playwright or Puppeteer dependency
+- Accessibility-tree snapshots with element refs for reliable interaction
+- Sessions, authentication vault, state persistence, video recording
+- Specialized skills for Electron apps, Slack, exploratory testing, cloud providers
+
+## Observability Dashboard
+
+The dashboard runs independently of browser sessions on port 4848 and can also be opened through a proxied or forwarded URL such as `https://dashboard.agent-browser.localhost`. Agents should stay on the dashboard origin: session tabs, status, and stream traffic are proxied internally, so session ports do not need to be exposed.
+
+
+ARGUMENTS: E2E logado local: injetar sessão Supabase no localStorage de http://localhost:4173, abrir /dashboard/spaces/1876fcb2-c84f-4b4d-9997-7afcd44cb1e5 e clicar em "Executar tudo"
+
+## 🤖 Claude *(03:22:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser skills get core 2>/dev/null | head -100 || echo \"NOT_INSTALLED\"",
+  "description": "Carrega o guia core do agent-browser"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ---
+> name: core
+> description: Core agent-browser usage guide. Read this before running any agent-browser commands. Covers the snapshot-and-ref workflow, navigating pages, interacting with elements (click, fill, type, select), extracting text and data, taking screenshots, managing tabs, handling forms and auth, waiting for content, running multiple browser sessions in parallel, and troubleshooting common failures. Use when the user asks to interact with a website, fill a form, click something, extract data, take a screenshot, log into a site, test a web app, or automate any browser task.
+> allowed-tools: Bash(agent-browser:*), Bash(npx agent-browser:*)
+> ---
+> 
+> # agent-browser core
+> 
+> Fast browser automation CLI for AI agents. Chrome/Chromium via CDP, no
+> Playwright or Puppeteer dependency. Accessibility-tree snapshots with compact
+> `@eN` refs let agents interact with pages in ~200-400 tokens instead of
+> parsing raw HTML.
+> 
+> Most normal web tasks (navigate, read, click, fill, extract, screenshot) are
+> covered here. Load a specialized skill when the task falls outside browser
+> web pages — see [When to load another skill](#when-to-load-another-skill).
+> 
+> ## The core loop
+> 
+> ```bash
+> agent-browser open <url>        # 1. Open a page
+> agent-browser snapshot -i       # 2. See what's on it (interactive elements only)
+> agent-browser click @e3         # 3. Act on refs from the snapshot
+> agent-browser snapshot -i       # 4. Re-snapshot after any page change
+> ```
+> 
+> Refs (`@e1`, `@e2`, ...) are assigned fresh on every snapshot. They become
+> **stale the moment the page changes** — after clicks that navigate, form
+> submits, dynamic re-renders, dialog opens. Always re-snapshot before your
+> next ref interaction.
+> 
+> ## Quickstart
+> 
+> ```bash
+> # Install once
+> npm i -g agent-browser && agent-browser install
+> 
+> # Take a screenshot of a page
+> agent-browser open https://example.com
+> agent-browser screenshot home.png
+> agent-browser close
+> 
+> # Search, click a result, and capture it
+> agent-browser open https://duckduckgo.com
+> agent-browser snapshot -i                      # find the search box ref
+> agent-browser fill @e1 "agent-browser cli"
+> agent-browser press Enter
+> agent-browser wait --load networkidle
+> agent-browser snapshot -i                      # refs now reflect results
+> agent-browser click @e5                        # click a result
+> agent-browser screenshot result.png
+> ```
+> 
+> The browser stays running across commands so these feel like a single
+> session. Use `agent-browser close` (or `close --all`) when you're done.
+> 
+> ## Reading a page
+> 
+> ```bash
+> agent-browser snapshot                    # full tree (verbose)
+> agent-browser snapshot -i                 # interactive elements only (preferred)
+> agent-browser snapshot -i -u              # include href urls on links
+> agent-browser snapshot -i -c              # compact (no empty structural nodes)
+> agent-browser snapshot -i -d 3            # cap depth at 3 levels
+> agent-browser snapshot -s "#main"         # scope to a CSS selector
+> agent-browser snapshot -i --json          # machine-readable output
+> ```
+> 
+> Snapshot output looks like:
+> 
+> ```
+> Page: Example - Log in
+> URL: https://example.com/login
+> 
+> @e1 [heading] "Log in"
+> @e2 [form]
+>   @e3 [input type="email"] placeholder="Email"
+>   @e4 [input type="password"] placeholder="Password"
+>   @e5 [button type="submit"] "Continue"
+>   @e6 [link] "Forgot password?"
+> ```
+> 
+> For unstructured reading (no refs needed):
+> 
+> ```bash
+> agent-browser get text @e1                # visible text of an element
+> agent-browser get html @e1                # innerHTML
+> agent-browser get attr @e1 href           # any attribute
+> agent-browser get value @e1               # input value
+> agent-browser get title                   # page title
+> agent-browser get url                     # current URL
+> agent-browser get count ".item"           # count matching elements
+> ```
+> 
+> ## Interacting
+> 
+> ```bash
+> agent-browser click @e1                   # click
+> agent-browser click @e1 --new-tab         # open link in new tab instead of navigating
+> agent-browser dblclick @e1                # double-click
+> ```
+
+## 🤖 Claude *(03:23:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser skills get core 2>/dev/null | sed -n '100,200p'",
+  "description": "Continua o guia core (eval/localStorage/wait)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> agent-browser dblclick @e1                # double-click
+> agent-browser hover @e1                   # hover
+> agent-browser focus @e1                   # focus (useful before keyboard input)
+> agent-browser fill @e2 "hello"            # clear then type
+> agent-browser type @e2 " world"           # type without clearing
+> agent-browser press Enter                 # press a key at current focus
+> agent-browser press Control+a             # key combination
+> agent-browser check @e3                   # check checkbox
+> agent-browser uncheck @e3                 # uncheck
+> agent-browser select @e4 "option-value"   # select dropdown option
+> agent-browser select @e4 "a" "b"          # select multiple
+> agent-browser upload @e5 file1.pdf        # upload file(s)
+> agent-browser scroll down 500             # scroll page (up/down/left/right)
+> agent-browser scrollintoview @e1          # scroll element into view
+> agent-browser drag @e1 @e2                # drag and drop
+> ```
+> 
+> ### When refs don't work or you don't want to snapshot
+> 
+> Use semantic locators:
+> 
+> ```bash
+> agent-browser find role button click --name "Submit"
+> agent-browser find text "Sign In" click
+> agent-browser find text "Sign In" click --exact     # exact match only
+> agent-browser find label "Email" fill "user@test.com"
+> agent-browser find placeholder "Search" type "query"
+> agent-browser find testid "submit-btn" click
+> agent-browser find first ".card" click
+> agent-browser find nth 2 ".card" hover
+> ```
+> 
+> Or a raw CSS selector:
+> 
+> ```bash
+> agent-browser click "#submit"
+> agent-browser fill "input[name=email]" "user@test.com"
+> agent-browser click "button.primary"
+> ```
+> 
+> Rule of thumb: snapshot + `@eN` refs are fastest and most reliable for
+> AI agents. `find role/text/label` is next best and doesn't require a prior
+> snapshot. Raw CSS is a fallback when the others fail.
+> 
+> ## Waiting (read this)
+> 
+> Agents fail more often from bad waits than from bad selectors. Pick the
+> right wait for the situation:
+> 
+> ```bash
+> agent-browser wait @e1                     # until an element appears
+> agent-browser wait 2000                    # dumb wait, milliseconds (last resort)
+> agent-browser wait --text "Success"        # until the text appears on the page
+> agent-browser wait --url "**/dashboard"    # until URL matches pattern (glob)
+> agent-browser wait --load networkidle      # until network idle (post-navigation)
+> agent-browser wait --load domcontentloaded # until DOMContentLoaded
+> agent-browser wait --fn "window.myApp.ready === true"  # until JS condition
+> ```
+> 
+> After any page-changing action, pick one:
+> 
+> - Wait for a specific element you expect to appear: `wait @ref` or `wait --text "..."`.
+> - Wait for URL change: `wait --url "**/new-page"`.
+> - Wait for network idle (catch-all for SPA navigation): `wait --load networkidle`.
+> 
+> Avoid bare `wait 2000` except when debugging — it makes scripts slow and
+> flaky. Timeouts default to 25 seconds.
+> 
+> ## Common workflows
+> 
+> ### Log in
+> 
+> ```bash
+> agent-browser open https://app.example.com/login
+> agent-browser snapshot -i
+> 
+> # Pick the email/password refs out of the snapshot, then:
+> agent-browser fill @e3 "user@example.com"
+> agent-browser fill @e4 "hunter2"
+> agent-browser click @e5
+> agent-browser wait --url "**/dashboard"
+> agent-browser snapshot -i
+> ```
+> 
+> Credentials in shell history are a leak. For anything sensitive, use the
+> auth vault (see [references/authentication.md](references/authentication.md)):
+> 
+> ```bash
+> agent-browser auth save my-app --url https://app.example.com/login \
+>   --username user@example.com --password-stdin
+> # (type password, Ctrl+D)
+> 
+> agent-browser auth login my-app    # fills + clicks, waits for form
+> ```
+> 
+> ### Persist session across runs
+> 
+> ```bash
+> # Log in once, save cookies + localStorage
+> agent-browser state save ./auth.json
+> ```
+
+## 🤖 Claude *(03:23:20)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Preciso usar o comando `agent-browser eval` para injetar um token no localStorage — vou abrir o navegador primeiro e depois executar o comando de avaliação JavaScript, passando a sessão de 3333 bytes possivelmente através de um arquivo.
+
+Vou gerar um arquivo inject.js que embutirá o JSON da sessão usando bun, escapando corretamente as aspas, e então executar esse arquivo via `agent-browser eval`. Depois navego para o dashboard, aguardo a página carregar, tiro um screenshot, clico em "Executar tudo" e monitoro o servidor para validar a execução.
+
+</details>
+
+
+## 🤖 Claude *(03:23:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/scratchpad && bun -e 'const fs=require(\"fs\");const s=fs.readFileSync(\"session.json\",\"utf8\").trim();fs.writeFileSync(\"inject.js\",\"localStorage.setItem(\\\"sb-bcyvddsykvehvpwstlfa-auth-token\\\", \"+JSON.stringify(s)+\"); \\\"injected\\\"\")' && agent-browser open http://localhost:4173/ && agent-browser eval \"$(cat inject.js)\"",
+  "description": "Abre o preview e injeta a sess\u00e3o do User 0 no localStorage"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ MCORCH — A agência autônoma
+>   http://localhost:4173/
+> "injected"
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(03:23:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser open \"http://localhost:4173/dashboard/spaces/1876fcb2-c84f-4b4d-9997-7afcd44cb1e5\" && agent-browser wait --load networkidle && agent-browser wait --text \"Executar tudo\" && agent-browser snapshot -i -c 2>&1 | head -40",
+  "description": "Abre o projeto QA logado e snapshota a UI"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ MCORCH — A agência autônoma
+>   http://localhost:4173/dashboard/spaces/1876fcb2-c84f-4b4d-9997-7afcd44cb1e5
+> ✓ Done
+> Executar tudo
+> - generic "MCORCHPrincipalVisão GeralConstelaçãoSpacesStudioDesignVídeoAssetsCRMMarketingMonetizaçãoInteligênci" [ref=e1] clickable [onclick]
+>   - region "Notifications (F8)" [ref=e2]
+>   - region "Notifications alt+T" [ref=e3]
+>   - link "Visão Geral" [ref=e41]
+>   - button [expanded=false, ref=e42]
+>   - link "Constelação" [ref=e43]
+>   - button [expanded=false, ref=e44]
+>   - link "Spaces" [ref=e45]
+>   - button [expanded=true, ref=e46]
+>   - link "Studio" [ref=e57]
+>   - link "Design" [ref=e58]
+>   - link "Vídeo" [ref=e59]
+>   - link "Assets" [ref=e60]
+>   - button "CRM" [expanded=false, ref=e47]
+>   - button "Marketing" [expanded=false, ref=e48]
+>   - button "Monetização" [expanded=false, ref=e49]
+>   - button "Inteligência IA" [expanded=false, ref=e50]
+>   - link "Redes Sociais" [ref=e51]
+>   - link "Assinatura" [ref=e52]
+>   - link "Configurações" [ref=e53]
+>   - link "Administração" [ref=e54]
+>   - button "Sair" [ref=e4]
+>   - button "Toggle Sidebar" [ref=e5]
+>   - link "Painel" [ref=e7]
+>   - link "Spaces" [ref=e8]
+>   - button "Notificações" [expanded=false, ref=e6]
+>   - link "Canvas" [ref=e9]
+>   - button "QA Run All — descartável 2026-08-05" [ref=e10]
+>   - button "Salvar" [ref=e11]
+>   - button "Pipeline" [ref=e12]
+>   - button "Executar tudo (2)" [ref=e13]
+>   - button "Desfazer (Cmd/Ctrl+Z)" [ref=e14]
+>   - button "Refazer (Cmd/Ctrl+Shift+Z)" [disabled, ref=e15]
+>   - button "Exportar" [disabled, ref=e16]
+>   - button "Receitas" [ref=e17]
+>   - button "Assets" [ref=e18]
+>   - button "Tendências" [ref=e19]
+>   - button "Histórico" [ref=e20]
+>   - textbox "Buscar receita…" [ref=e33]
+>   - button "PIPELINE CINEMATIC 3" [ref=e25]
+> ```
+
+## 🤖 Claude *(03:23:46)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+A UI carregou com o usuário logado, e o botão agora exibe "Executar tudo (2)" — ambos os nós se qualificam para execução (a cena motion e o montador). Isso confirma que o fix funcionou: o assembler agora é contado como runnable, e o "(2)" prova que o hasClipProducers está funcionando corretamente. Vou clicar para observar o comportamento e espero ver um toast indicando que a execução em camadas de 2 nós está iniciando.
+
+Depois do clique, a cena entra em fila e começa a renderizar enquanto o console de execução aparece — o worker processa a renderização (cerca de 4 segundos para a cena, possivelmente 30-90 segundos para o render completo), o reconciliador marca como sucesso, o assembler despacha, e tudo flui até o master. Vou monitorar em tempo real, capturando snapshots da UI e consultando a fila para acompanhar o progresso.
+
+</details>
+
+
+## 🤖 Claude *(03:23:47)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+A UI mostra "Executar tudo (2)" indicando que dois nós qualificam, e vou clicar para executá-los.
+
+</details>
+
+
+## 🤖 Claude *(03:23:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser click @e13 && sleep 2 && agent-browser snapshot -i -c 2>&1 | grep -iE \"console de execu\u00e7\u00e3o|rodando|na fila|renderizando|agente|erro\" | head -10",
+  "description": "Clica em Executar tudo e verifica o console de execu\u00e7\u00e3o"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ Done
+>   - generic "QA Cena16:9renderizando a animação…sem beats·4sgrátisQA Master16:9Conecte as cenas — elas entram na" [ref=e37] clickable [onclick]
+>     - group "QA Cena16:9renderizando a animação…sem beats·4sgrátis" [ref=e59] clickable [onclick, tabindex]
+>   - button "Console de execução 1 na fila" [ref=e31]
+>   - button "Agente" [ref=e32]
+>   - button "QA Cena na fila 1s" [ref=e42]
+>   - button "Agente do Spaces" [ref=e25]
+> ```
+
+## 🤖 Claude *(03:24:00)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O console de execução está funcionando novamente — a fila tem um job de execução e um item de QA aguardando. O dispatch realmente enfileirou a tarefa. Agora preciso acompanhar o fluxo até o master: o worker vai pegar o job (fazendo polling a cada poucos segundos), renderizar os frames, o reconciler marca como sucesso, e então o Run All dispara o assembler.
+
+Vou monitorar tanto o servidor quanto a interface, usando um loop de espera que verifica a tabela de video_renders até que as duas linhas (motion e assemble) estejam concluídas, com um timeout de aproximadamente 6 minutos, implementando isso através de um script com um until-loop.
+
+</details>
+
+
+## 🤖 Claude *(03:24:00)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O console de execução voltou e há uma fila real com a cena QA aguardando. Agora vou esperar o ciclo completo de execução da cena para o master no servidor.
+
+</details>
+
+
+## 🤖 Claude *(03:24:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/scratchpad && cat > watch-qa.ts <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nconst sb = createClient(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL!, process.env.SB_SECRET_KEY!, { auth: { persistSession: false } });\nconst QA = \"1876fcb2-c84f-4b4d-9997-7afcd44cb1e5\";\nconst t0 = Date.now();\nwhile (Date.now() - t0 < 6 * 60_000) {\n  const { data } = await sb.from(\"video_renders\")\n    .select(\"id,engine,state,storage_key,qa,composition,created_at\")\n    .in(\"engine\", [\"motion\", \"assemble\"])\n    .gte(\"created_at\", new Date(t0 - 120_000).toISOString())\n    .order(\"created_at\");\n  const rows = (data ?? []).filter((r: any) => r.composition?.project_id === QA);\n  const line = rows.map((r: any) => `${r.engine}:${r.state}${r.qa?.frames_done ? `(${r.qa.frames_done}/${r.qa.frames_total})` : \"\"}`).join(\" \u00b7 \") || \"(fila vazia)\";\n  console.log(`[${Math.round((Date.now() - t0) / 1000)}s] ${line}`);\n  const asm = rows.find((r: any) => r.engine === \"assemble\");\n  if (asm?.state === \"done\") {\n    console.log(`\\n\u2705 MASTER DONE: ${asm.storage_key} \u00b7 qa=${JSON.stringify(asm.qa)}`);\n    process.exit(0);\n  }\n  const failed = rows.find((r: any) => r.state === \"failed\" || r.state === \"error\");\n  if (failed) { console.log(`\\n\u274c FALHOU: ${failed.engine} ${JSON.stringify(failed.qa)}`); process.exit(1); }\n  await new Promise((r) => setTimeout(r, 10_000));\n}\nconsole.log(\"\u23f0 timeout 6min\"); process.exit(1);\nEOF\nbun run watch-qa.ts 2>&1",
+  "description": "Monitora a fila at\u00e9 o master QA sair (ou falhar)",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: b9eu1e6bp. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/tasks/b9eu1e6bp.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> Session cwd remains /home/gcrUX/htdocs/constellation-orchestra; directory changes made by the backgrounded command do not apply to subsequent commands.
+> ```
+
+## 🤖 Claude *(03:24:20)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Enquanto o watch está rodando, preciso verificar se o workflow adversarial chegou à fase Confirm — vou checar o journal de status para ver se já terminou.
+
+</details>
+
+
+## 🤖 Claude *(03:24:20)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Enquanto o witness roda com a aba do agent-browser aberta, vou verificar o workflow adversarial.
+
+</details>
+
+
+## 🤖 Claude *(03:24:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "tail -c 3000 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/subagents/workflows/wf_6496b489-bfc/journal.jsonl 2>/dev/null | grep -oE '\"label\":\"[^\"]+\"|\"phase\":\"[^\"]+\"' | sort | uniq -c | sort -rn | head",
+  "description": "Progresso do workflow adversarial"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude *(03:24:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/subagents/workflows/wf_6496b489-bfc/ 2>/dev/null | head; sleep 20; cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/tasks/b9eu1e6bp.output 2>/dev/null | tail -3",
+  "description": "Estado do workflow + progresso do witness"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> agent-aa6640e9aa243c5f7.jsonl
+> agent-aa6640e9aa243c5f7.meta.json
+> agent-acf3cd641f35e4006.jsonl
+> agent-acf3cd641f35e4006.meta.json
+> journal.jsonl
+> [10s] motion:running(45/120)
+> [20s] motion:running(60/120)
+> [30s] motion:running(90/120)
+> ```
+
+## 🤖 Claude *(03:25:02)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+A renderização do motion está progredindo bem no streaming — já passamos de 45 para 90 frames dos 120 totais. O workflow adversarial continua rodando com dois agentes e seus transcripts, provavelmente na fase de verificação agora. Estou aguardando a conclusão de ambos, e depois o witness sinalizará que o motion terminou, o que vai disparar o reconciler da UI para marcar sucesso, acionando o assembler no pipeline do agent-browser até que a montagem se complete.
+
+</details>
+
+
+## 🤖 Claude *(03:25:02)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O render está em progresso com 90 de 120 frames completos, e estou aguardando o ciclo completo do workflow adversarial para confirmar o resultado no console.
+
+</details>
+
+
+## 🤖 Claude *(03:25:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser snapshot -i -c 2>&1 | grep -iE \"console|rodando|renderizando|%|montando|master\" | head -8",
+  "description": "Console de execu\u00e7\u00e3o durante o render (UI viva)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   - generic "QA Cena16:9renderizando a animação…sem beats·4sgrátisQA Master16:9Conecte as cenas — elas entram na" [ref=e36] clickable [onclick]
+>     - group "QA Cena16:9renderizando a animação…sem beats·4sgrátis" [ref=e58] clickable [onclick, tabindex]
+>     - group "QA Master16:9Conecte as cenas — elas entram na ordem em que estão no canvasaguardando cenasgrátis" [ref=e59] clickable [onclick, tabindex]
+>   - button "Console de execução 1 rodando" [ref=e30]
+>   - button "QA Cena renderizando 1m13s88% frame 105/120" [ref=e41]
+> ```
+
+## 🤖 Claude *(03:25:13)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've got the console output showing exactly what was requested — the queue status, elapsed time, and progress percentage for the rendering task. Now I'm waiting for the watch notifications to complete rather than polling, so I can respond to the actual events as they finish.
+
+</details>
+
+
+## 🤖 Claude *(03:25:13)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+A cena está renderizando conforme esperado, com 88% de progresso no frame 105 de 120, e estou aguardando a conclusão para passar para a etapa de montagem.
+
+</details>
+
+
+## 🤖 Claude *(03:25:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "timeout 300 bash -c 'until grep -qE \"MASTER DONE|FALHOU|timeout\" /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/tasks/b9eu1e6bp.output 2>/dev/null; do sleep 10; done'; tail -8 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/tasks/b9eu1e6bp.output",
+  "description": "Aguarda o master QA sair da fila"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [20s] motion:running(60/120)
+> [30s] motion:running(90/120)
+> [40s] motion:running(105/120)
+> [50s] motion:running(105/120)
+> [60s] motion:done · assemble:running
+> [70s] motion:done · assemble:done
+> 
+> ✅ MASTER DONE: ada39fae-67e1-4e53-af1c-5a18e1c108e8/masters/7544e315-f6d1-4f30-9e3a-3c6e0be84d51.mp4 · qa={"bytes":1589385,"aspect":"16:9","scenes":1,"duration_sec":4}
+> ```
+
+## 🤖 Claude *(03:25:54)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Ran a complete end-to-end test with real clicks on "Run all" and watched the pipeline automatically trigger the assembler after rendering finished, ultimately producing the master video file in the bucket at 1.59MB.
+
+Now I need to verify the final UI shows the success cards and master clip properly, then clean up the QA project, renders, and registered assets to avoid polluting the library and leaking memory. There's also an adversarial workflow still running in the Verify phase that I should wait for before the final go-ahead, and then handle commits and sprint updates.
+
+On commits: the production changes are already live, so committing is essential to preserve the work — it's part of actually delivering, not just running. I'll commit at the end following the house standard (granular, no Co-Authored-By), since the user's explicit preference in memory overrides the system instruction about adding that tag.
+
+Closing checklist: final UI snapshot showing the success cards and master card with timing, then handle any confirmed findings from the adversarial workflow, clean up the QA environment (close browser, stop vite preview, delete QA project and assets), make granular commits, and finally report to Sovereign with the EP06 go-ahead — instructing them to reload the page so it loads fresh state from the database, then click execute all and keep the tab open until the master completes.
+
+</details>
+
+
+## 🤖 Claude *(03:25:55)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Consegui fechar o ciclo completo ponta-a-ponta: clique real gerou motion renderizado, o pipeline despachou o montador automaticamente e produziu o master final (1,59MB, 4s). Agora vou fazer a confirmação visual final da UI e limpeza do QA.
+
+</details>
+
+
+## 🤖 Claude *(03:25:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser snapshot -i -c 2>&1 | grep -iE \"QA Cena|QA Master|cenas|console\" | head -6; agent-browser screenshot /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/scratchpad/qa-runall-final.png 2>&1 | tail -1",
+  "description": "Estado final da UI do witness + screenshot de prova"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   - generic "QA Cena16:9sem beats·4sgrátisQA Master16:91 cenas · 4sgrátis" [ref=e36] clickable [onclick]
+>     - group "QA Cena16:9sem beats·4sgrátis" [ref=e59] clickable [onclick, tabindex]
+>     - group "QA Master16:91 cenas · 4sgrátis" [ref=e60] clickable [onclick, tabindex]
+>   - button "Console de execução" [ref=e30]
+>   - button "QA Master pronto 46s100%" [ref=e41]
+>   - button "QA Cena pronto 2m05s100%" [ref=e42]
+> ✓ Screenshot saved to /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/scratchpad/qa-runall-final.png
+> ```
+
+## 🤖 Claude *(03:26:05)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The UI is looking good—QA Master completed in 46 seconds at 100%, and QA Cena finished in 2 minutes 5 seconds, also at 100%. Now I need to check if Vision QA is showing up in the screenshot since it usually appears there, so I'll take a quick look at the image. After that, I'll clean things up, finalize the workflow, and commit the changes.
+
+</details>
+
+
+## 🤖 Claude *(03:26:05)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/scratchpad/qa-runall-final.png"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> [{'type': 'image', 'source': {'type': 'base64', 'data': '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', 'media_type': 'image/png'}}]
+> ```
+
+## 🤖 Claude *(03:26:18)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Verificando a execução da QA — o botão do topo agora mostra "Concluído" em destaque ciano, o console de execução está visível no rodapé com o status de ambos os agentes (QA Master e QA Cena) completados, os dois cards estão conectados pelo elo ciano no canvas, o saldo permanece intacto em 44.395 já que tudo rodou gratuitamente, e o sistema registra automaticamente "Salvo há 33s".
+
+Agora preciso limpar: fechar a aba do navegador para encerrar o autosave da QA, parar o preview do vite, e deletar o projeto QA junto com seus renders e assets (motion clip, master e linhas spine). Depois vou organizar o workflow e fazer os commits.
+
+</details>
+
+
+## 🤖 Claude *(03:26:19)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've confirmed the QA passed with both jobs at 100% completion, the balance of 44,395 remaining untouched, and all visual elements intact. Now I'll clean up the QA environment by clearing the browser, preview, and temporary artifacts.
+
+</details>
+
+
+## 🤖 Claude *(03:26:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "agent-browser close 2>&1 | tail -1; kill 3635164 2>/dev/null; cd /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/scratchpad && cat > cleanup-qa.ts <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nconst sb = createClient(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL!, process.env.SB_SECRET_KEY!, { auth: { persistSession: false } });\nconst QA = \"1876fcb2-c84f-4b4d-9997-7afcd44cb1e5\";\nconst USER = \"ada39fae-67e1-4e53-af1c-5a18e1c108e8\";\nconst { data: renders } = await sb.from(\"video_renders\").select(\"id,storage_key,engine,composition\").in(\"engine\", [\"motion\",\"assemble\"]);\nconst mine = (renders ?? []).filter((r: any) => r.composition?.project_id === QA);\nconst keys = mine.map((r: any) => r.storage_key).filter(Boolean);\nif (keys.length) {\n  const { data: assets } = await sb.from(\"creative_assets\").select(\"id,storage_key\").eq(\"user_id\", USER).in(\"storage_key\", keys);\n  for (const a of assets ?? []) await sb.from(\"creative_assets\").delete().eq(\"id\", a.id);\n  const { error: rmErr } = await sb.storage.from(\"video-studio-assets\").remove(keys);\n  console.log(`storage removed ${keys.length} (${rmErr?.message ?? \"ok\"}) \u00b7 spine removed ${(assets ?? []).length}`);\n}\nfor (const r of mine) await sb.from(\"video_renders\").delete().eq(\"id\", r.id);\nconst { error: pErr } = await sb.from(\"vm_canvas_projects\").delete().eq(\"id\", QA).eq(\"user_id\", USER);\nconsole.log(`renders removed ${mine.length} \u00b7 project ${pErr ? pErr.message : \"removed\"}`);\n// prova de limpeza\nconst { data: check } = await sb.from(\"vm_canvas_projects\").select(\"id\").eq(\"id\", QA);\nconsole.log(`releitura: projeto existe? ${check?.length ? \"SIM (erro)\" : \"n\u00e3o \u2713\"}`);\nEOF\nbun run cleanup-qa.ts 2>&1",
+  "description": "Encerra browser/preview e apaga projeto/renders/assets do QA"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ Browser closed
+> storage removed 2 (ok) · spine removed 2
+> renders removed 2 · project removed
+> releitura: projeto existe? não ✓
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(03:26:38)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Verificação de limpeza concluída no projeto — 2 renders, 2 assets e 2 arquivos de storage confirmados. Ainda faltam o workflow adversarial que está rodando (com 5 lentes mais confirmação, levou uns 10 minutos) e os commits granulares. Vou revisar o journal novamente para acompanhar o progresso.
+
+</details>
+
+
+## 🤖 Claude *(03:26:38)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Verifiquei a limpeza do projeto, renders, spine e storage — sem resíduos de QA. Agora preciso do veredito do workflow adversarial.
+
+</details>
+
+
+## 🤖 Claude *(03:26:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/subagents/workflows/wf_6496b489-bfc/*.meta.json 2>/dev/null | wc -l; grep -c '\"type\":\"agent_result\"' /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/subagents/workflows/wf_6496b489-bfc/journal.jsonl 2>/dev/null || echo 0",
+  "description": "Quantos agentes do workflow j\u00e1 conclu\u00edram"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 2
+> 0
+> 0
+> ```
+
+## 🤖 Claude *(03:26:59)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Apenas dois agentes foram iniciados até agora e nenhum resultado apareceu no journal ainda — o workflow está se movendo lentamente com esses agentes de leitura profunda. Enquanto espero pelos resultados, vou fazer commits granulares já que a árvore de trabalho está estável e o workflow só está lendo. Se o workflow encontrar algo confirmado, faço um commit de acompanhamento para corrigir. Estou seguindo o padrão de commits granulares com feat/fix, corpo orientado por milestone, sem...
+
+Agora estou definindo os commits específicos: o primeiro vai consolidar a correção da ordem de dispatch do Run All junto com a integração da narração no render da cena, tocando em vários arquivos (pipeline, tipos, canvas-voice, inspector, testes). Estou considerando se devo separar isso em dois commits ou manter junto — a casa prefere granularidade mas com coesão, então vou juntar tudo num único commit bem documentado.
+
+Depois vem um commit para reconciliação (anticorpo fantasma e sincronização de linha antiga), outro para misturar a narração no clipe com montagem de áudio real, e por fim remover o preview no hover dos cards. Aí é só fazer o push.
+
+</details>
+
+
+## 🤖 Claude *(03:26:59)*
+
+O workflow ainda está na fase de leitura profunda (2 agentes em voo). Enquanto ele lê — o working tree está estável — faço os commits granulares:
+
+## 🤖 Claude *(03:27:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add src/types/canvas.ts src/hooks/useCanvasPipeline.ts src/lib/master-clips.ts src/lib/canvas-voice.ts src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx src/test/run-all-dispatch.test.ts && git commit -m \"fix(spaces): 'Executar tudo' born-dead \u2014 dispatch do rail do host vinha DEPOIS do gate de payload\n\nO 1\u00ba Run All do EP06 n\u00e3o enfileirou NADA: resolveExecutePayload n\u00e3o tinha case para\nmotionScene/soundDesign/episodeAssembler, retornava undefined impl\u00edcito, e o\n'if (!payload) return' matava o dispatch em sil\u00eancio \u2014 n\u00f3s queued eternos, fila vazia,\nconsole vazio. O inspector funcionava (chama a edge fn direto); o caminho do Run All\nnunca tinha sido exercido.\n\n- branches do Amendment 34 movidos para ANTES do resolveExecutePayload, com try/catch\n  marcando failed por n\u00f3 (um throw solto rejeitava o Promise.all da camada e o pipeline\n  morria sem marcar nada)\n- todo kind agora tem case EXPL\u00cdCITO no resolveExecutePayload + return null final de\n  seguran\u00e7a \u2014 kind futuro nunca mais vira undefined\n- montador qualifica por hasClipProducers (produtores CONECTADOS): exigir clipe PRONTO\n  no clique fazia o master nunca montar no 1\u00ba run; 'pronto' \u00e9 checado na hora de montar\n- narra\u00e7\u00e3o conectada agora ENTRA no render: lib canvas-voice resolve o creative_asset da\n  voz upstream (creativeAssetId do n\u00f3, sen\u00e3o lookup RLS-own por storage_key) e o dispatch\n  (Run All E inspector \u2014 paridade) envia voice_asset_id ao motion-render\n- 13 testes novos (run-all-dispatch.test.ts)\n\nWitness E2E: clique real via agent-browser (User 0, bundle de produ\u00e7\u00e3o) \u2192 motion 120\nframes com progresso streaming \u2192 done \u2192 assembler despachado automaticamente \u2192 MASTER\nmasters/7544e315\u2026.mp4 (1,59MB \u00b7 4s). Saldo intocado \u2014 ciclo inteiro gr\u00e1tis.\" && git log -1 --format=%h",
+  "description": "Commit 1: dispatch do Run All + voz + testes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m12:27AM[0m [32mINF[0m 1 commits scanned.
+> [90m12:27AM[0m [32mINF[0m scan completed in 9.56ms
+> [90m12:27AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.06 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> [main 899e776] fix(spaces): 'Executar tudo' born-dead — dispatch do rail do host vinha DEPOIS do gate de payload
+>  6 files changed, 262 insertions(+), 74 deletions(-)
+>  create mode 100644 src/lib/canvas-voice.ts
+>  create mode 100644 src/test/run-all-dispatch.test.ts
+> 899e776
+> ```
+
+## 🤖 Claude *(03:27:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add src/hooks/useMotionRenderSync.ts && git commit -q -m \"fix(spaces): reconciler cura n\u00f3s FANTASMA e linhas antigas\n\n- anticorpo anti-fantasma: n\u00f3 busy sem NENHUMA linha na fila por 3 polls (~12s) volta a\n  idle \u2014 mata o spinner eterno de dispatch morto/limpeza/reload (o sintoma vis\u00edvel do\n  born-dead: 8 cenas 'renderizando\u2026' com fila vazia e console mudo)\n- o filtro 'done h\u00e1 >5min' sa\u00eda por continue ANTES da reconcilia\u00e7\u00e3o: aba reaberta depois\n  do render terminar deixava o n\u00f3 running eterno; agora o filtro s\u00f3 afeta o console\" && git add scripts/motion-bridge.ts scripts/motion/assemble-graph.ts scripts/qa/smoke-assemble-graph.ts && git commit -q -m \"fix(motion-bridge): a narra\u00e7\u00e3o entra no CLIPE e o master ganha \u00c1UDIO de verdade\n\n- processMotion agora MIXA a voz baixada no MP4 (aac 192k + apad + -shortest; a dura\u00e7\u00e3o\n  j\u00e1 era dirigida pela fala, mas o mix n\u00e3o existia em lugar nenhum \u2014 clipe sa\u00eda mudo)\n- processAssemble reescrito sobre scripts/motion/assemble-graph.ts: o graph anterior\n  criava streams de sil\u00eancio nunca consumidos (concat a=0 + map s\u00f3 do v\u00eddeo) \u2014\n  filter_complex com output \u00f3rf\u00e3o \u00e9 ERRO FATAL no ffmpeg, e o loudnorm configurado nunca\n  era aplicado. Agora: \u00e1udio do clipe (ou sil\u00eancio da MESMA dura\u00e7\u00e3o), concat v=1:a=1,\n  loudnorm I=<lufs> no fim\n- sentinel scripts/qa/smoke-assemble-graph.ts (5 gates ffmpeg REAL, zero custo): probe \u00b7\n  assemble misto falado+mudo \u00b7 decodifica\u00e7\u00e3o at\u00e9 o fim \u00b7 padr\u00e3o do mix apad+shortest\" && git add src/components/canvas/nodes/MotionSceneNode.tsx src/components/canvas/nodes/EpisodeAssemblerNode.tsx && git commit -q -m \"refactor(spaces): remove o preview no hover dos cards Cena Motion e Montar Master\n\nPedido Sovereign 2026-08-05. O card mostra o primeiro frame parado (preload=metadata);\nassistir \u00e9 papel do inspector. Handles (voz/foto/clipe) e arestas intactos.\" && git log --oneline -4 && git push origin main 2>&1 | tail -2",
+  "description": "Commits 2-4 granulares + push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m12:27AM[0m [32mINF[0m 1 commits scanned.
+> [90m12:27AM[0m [32mINF[0m scan completed in 7.99ms
+> [90m12:27AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.08 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.04 seconds)
+> ✔️ gitleaks-staged (0.06 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.01 seconds)
+> ✔️ mesh-reingest (0.01 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m12:27AM[0m [32mINF[0m 1 commits scanned.
+> [90m12:27AM[0m [32mINF[0m scan completed in 10.4ms
+> [90m12:27AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.11 seconds)
+> ✔️ e2e-output-tripwire (0.02 seconds)
+> ✔️ secret-scan (0.05 seconds)
+> ✔️ gitleaks-staged (0.08 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m12:27AM[0m [32mINF[0m 1 commits scanned.
+> [90m12:27AM[0m [32mINF[0m scan completed in 9.41ms
+> [90m12:27AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.10 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.04 seconds)
+> ✔️ gitleaks-staged (0.08 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 640143c refactor(spaces): remove o preview no hover dos cards Cena Motion e Montar Master
+> 0fc37c6 fix(motion-bridge): a narração entra no CLIPE e o master ganha ÁUDIO de verdade
+> bc012d9 fix(spaces): reconciler cura nós FANTASMA e linhas antigas
+> 899e776 fix(spaces): 'Executar tudo' born-dead — dispatch do rail do host vinha DEPOIS do gate de payload
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    3a8bf2d..640143c  main -> main
+> ```
+
+## 🤖 Claude *(03:27:51)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Pushed 4 commits and gitleaks is clean across the board — just waiting on the adversarial workflow notification now, which is the final gate before we can go. I'll monitor the journal with a long timeout rather than polling, since that's the guideline.
+
+Actually, I can't end this turn with the verdict still pending. The rule is clear: await the agents' results, never fabricate. I need to block until the journal shows completion — I'll set up a bash loop with a 600-second timeout per call, and chain multiple calls if needed so the harness can re-invoke me when the workflow finishes.
+
+</details>
+
+
+## 🤖 Claude *(03:27:52)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Tenho 4 commits na main prontos, gitleaks passou na verificação e o push foi confirmado. Agora aguardo o resultado do workflow adversarial.
+
+</details>
+
+
+## 🤖 Claude *(03:27:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "timeout 570 bash -c 'until grep -q \"workflow_result\\|\\\"status\\\":\\\"completed\\\"\\|\\\"final\\\"\" /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/subagents/workflows/wf_6496b489-bfc/journal.jsonl 2>/dev/null; do sleep 15; done; echo DONE' ; grep -c '\"type\"' /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/subagents/workflows/wf_6496b489-bfc/journal.jsonl 2>/dev/null",
+  "description": "Aguarda o desfecho do workflow adversarial"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command did not complete within its 120s timeout and was moved to the background (ID: bk9d7ouch). Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/tasks/bk9d7ouch.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(03:30:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -oE '\"label\":\"(lens|confirm)[^\"]*\"' /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/subagents/workflows/wf_6496b489-bfc/journal.jsonl 2>/dev/null | sort | uniq -c; ls /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/7d280ceb-37ff-4487-8976-6254b6863dab/subagents/workflows/wf_6496b489-bfc/*.meta.json | wc -l",
+  "description": "Quantas lentes j\u00e1 devolveram resultado"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 3
+> ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-08-05 - 1fed6e93-b792-43a8-b536-7eb64cf7f490]]
+> * **Próxima Sessão**: [[2026-08-05 - agent-a31b11a6a100ac84c]]
+%% --- TIMELINE END --- %%

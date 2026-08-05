@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3362
-> * **Sessões do Claude**: 3312
+> * **Total de Sessões Registradas**: 3366
+> * **Sessões do Claude**: 3316
 > * **Sessões do Gemini**: 50
 
 ---
@@ -78,16 +78,16 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-08-05 - e2a41883-a422-4743-94c2-5a7f590d0f5b]]` - *2026-08-05*
 *   `[[2026-08-05 - agent-afa425e61232b8b67]]` - *2026-08-05*
 *   `[[2026-08-05 - agent-aef32af52d9097a28]]` - *2026-08-05*
+*   `[[2026-08-05 - agent-ae388da24031ab8f7]]` - *2026-08-05*
 *   `[[2026-08-05 - agent-ad0068d34769c23c5]]` - *2026-08-05*
+*   `[[2026-08-05 - agent-acf3cd641f35e4006]]` - *2026-08-05*
 *   `[[2026-08-05 - agent-abf57d11234206b38]]` - *2026-08-05*
+*   `[[2026-08-05 - agent-aa6640e9aa243c5f7]]` - *2026-08-05*
 *   `[[2026-08-05 - agent-a8d183ebd77232479]]` - *2026-08-05*
 *   `[[2026-08-05 - agent-a61c1b68cecc607fc]]` - *2026-08-05*
 *   `[[2026-08-05 - agent-a600d9aaa77ec0673]]` - *2026-08-05*
 *   `[[2026-08-05 - agent-a4e23ab501f11b092]]` - *2026-08-05*
-*   `[[2026-08-05 - agent-a31b11a6a100ac84c]]` - *2026-08-05*
-*   `[[2026-08-05 - 1fed6e93-b792-43a8-b536-7eb64cf7f490]]` - *2026-08-05*
-*   `[[2026-08-04 - f467257c-2ac9-4d7d-ab2d-151ce7edea64]]` - *2026-08-04*
-*   *... e mais 3304 sessões nessa categoria.*
+*   *... e mais 3308 sessões nessa categoria.*
 
 ---
 
@@ -3317,13 +3317,17 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-08-05 - e2a41883-a422-4743-94c2-5a7f590d0f5b]]` (ClaudeSessions)
 *   `[[2026-08-05 - agent-afa425e61232b8b67]]` (ClaudeSessions)
 *   `[[2026-08-05 - agent-aef32af52d9097a28]]` (ClaudeSessions)
+*   `[[2026-08-05 - agent-ae388da24031ab8f7]]` (ClaudeSessions)
 *   `[[2026-08-05 - agent-ad0068d34769c23c5]]` (ClaudeSessions)
+*   `[[2026-08-05 - agent-acf3cd641f35e4006]]` (ClaudeSessions)
 *   `[[2026-08-05 - agent-abf57d11234206b38]]` (ClaudeSessions)
+*   `[[2026-08-05 - agent-aa6640e9aa243c5f7]]` (ClaudeSessions)
 *   `[[2026-08-05 - agent-a8d183ebd77232479]]` (ClaudeSessions)
 *   `[[2026-08-05 - agent-a61c1b68cecc607fc]]` (ClaudeSessions)
 *   `[[2026-08-05 - agent-a600d9aaa77ec0673]]` (ClaudeSessions)
 *   `[[2026-08-05 - agent-a4e23ab501f11b092]]` (ClaudeSessions)
 *   `[[2026-08-05 - agent-a31b11a6a100ac84c]]` (ClaudeSessions)
+*   `[[2026-08-05 - Debug console log e refatorar hover effect]]` (ClaudeSessions)
 *   `[[2026-08-05 - 1fed6e93-b792-43a8-b536-7eb64cf7f490]]` (ClaudeSessions)
 *   `[[2026-08-04 - f467257c-2ac9-4d7d-ab2d-151ce7edea64]]` (ClaudeSessions)
 *   `[[2026-08-04 - ee901b6a-6519-4a1f-921f-f783f38a2e69]]` (ClaudeSessions)
