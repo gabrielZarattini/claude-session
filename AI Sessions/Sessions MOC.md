@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3351
-> * **Sessões do Claude**: 3301
+> * **Total de Sessões Registradas**: 3357
+> * **Sessões do Claude**: 3307
 > * **Sessões do Gemini**: 50
 
 ---
@@ -75,19 +75,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-08-05 - e2a41883-a422-4743-94c2-5a7f590d0f5b]]` - *2026-08-05*
+*   `[[2026-08-05 - agent-aef32af52d9097a28]]` - *2026-08-05*
+*   `[[2026-08-05 - agent-abf57d11234206b38]]` - *2026-08-05*
+*   `[[2026-08-05 - agent-a8d183ebd77232479]]` - *2026-08-05*
+*   `[[2026-08-05 - agent-a600d9aaa77ec0673]]` - *2026-08-05*
+*   `[[2026-08-05 - agent-a31b11a6a100ac84c]]` - *2026-08-05*
 *   `[[2026-08-04 - f467257c-2ac9-4d7d-ab2d-151ce7edea64]]` - *2026-08-04*
 *   `[[2026-08-04 - ee901b6a-6519-4a1f-921f-f783f38a2e69]]` - *2026-08-04*
 *   `[[2026-08-04 - e2a41883-a422-4743-94c2-5a7f590d0f5b]]` - *2026-08-04*
 *   `[[2026-08-04 - agent-afed6d2846d4f2d75]]` - *2026-08-04*
 *   `[[2026-08-04 - agent-af88a92e8664682e8]]` - *2026-08-04*
 *   `[[2026-08-04 - agent-af80d13d0dfcdcf92]]` - *2026-08-04*
-*   `[[2026-08-04 - agent-af70e1ea8d4f250af]]` - *2026-08-04*
-*   `[[2026-08-04 - agent-aee9299d4dd30b561]]` - *2026-08-04*
-*   `[[2026-08-04 - agent-aed00a3a41c90e8a0]]` - *2026-08-04*
-*   `[[2026-08-04 - agent-ae9dd658d62293630]]` - *2026-08-04*
-*   `[[2026-08-04 - agent-ae8cee0c8d020f87c]]` - *2026-08-04*
-*   `[[2026-08-04 - agent-ae86c948a66f76fb5]]` - *2026-08-04*
-*   *... e mais 3293 sessões nessa categoria.*
+*   *... e mais 3299 sessões nessa categoria.*
 
 ---
 
@@ -3314,6 +3314,12 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-01 - Configurar loop autônomo e definir fila soberana]]` (ClaudeSessions)
 
 ### Agosto 2026
+*   `[[2026-08-05 - e2a41883-a422-4743-94c2-5a7f590d0f5b]]` (ClaudeSessions)
+*   `[[2026-08-05 - agent-aef32af52d9097a28]]` (ClaudeSessions)
+*   `[[2026-08-05 - agent-abf57d11234206b38]]` (ClaudeSessions)
+*   `[[2026-08-05 - agent-a8d183ebd77232479]]` (ClaudeSessions)
+*   `[[2026-08-05 - agent-a600d9aaa77ec0673]]` (ClaudeSessions)
+*   `[[2026-08-05 - agent-a31b11a6a100ac84c]]` (ClaudeSessions)
 *   `[[2026-08-04 - f467257c-2ac9-4d7d-ab2d-151ce7edea64]]` (ClaudeSessions)
 *   `[[2026-08-04 - ee901b6a-6519-4a1f-921f-f783f38a2e69]]` (ClaudeSessions)
 *   `[[2026-08-04 - e2a41883-a422-4743-94c2-5a7f590d0f5b]]` (ClaudeSessions)
