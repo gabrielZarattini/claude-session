@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3419
-> * **Sessões do Claude**: 3369
+> * **Total de Sessões Registradas**: 3427
+> * **Sessões do Claude**: 3377
 > * **Sessões do Gemini**: 50
 
 ---
@@ -75,19 +75,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-08-06 - agent-ad29a7a4e90863fcc]]` - *2026-08-06*
+*   `[[2026-08-06 - agent-abba722f699fc85fb]]` - *2026-08-06*
+*   `[[2026-08-06 - agent-aa4b179a90d57bef9]]` - *2026-08-06*
+*   `[[2026-08-06 - agent-a8417448bfe5d105a]]` - *2026-08-06*
+*   `[[2026-08-06 - agent-a83ef527a39bbe7d6]]` - *2026-08-06*
+*   `[[2026-08-06 - agent-a5e5a8fec86337835]]` - *2026-08-06*
+*   `[[2026-08-06 - agent-a44593fa68af2512b]]` - *2026-08-06*
+*   `[[2026-08-06 - Refinar EP06 com motion design profissional para SaaS]]` - *2026-08-06*
 *   `[[2026-08-05 - e2a41883-a422-4743-94c2-5a7f590d0f5b]]` - *2026-08-05*
 *   `[[2026-08-05 - agent-afa425e61232b8b67]]` - *2026-08-05*
 *   `[[2026-08-05 - agent-af0e14d369ba7378a]]` - *2026-08-05*
 *   `[[2026-08-05 - agent-aef67148f45f1a76f]]` - *2026-08-05*
-*   `[[2026-08-05 - agent-aef5fc77f7d91ba1d]]` - *2026-08-05*
-*   `[[2026-08-05 - agent-aef32af52d9097a28]]` - *2026-08-05*
-*   `[[2026-08-05 - agent-ae5caa4d66061ac9d]]` - *2026-08-05*
-*   `[[2026-08-05 - agent-ae388da24031ab8f7]]` - *2026-08-05*
-*   `[[2026-08-05 - agent-ae2cf62a526ded391]]` - *2026-08-05*
-*   `[[2026-08-05 - agent-ad94ad8e7a600adea]]` - *2026-08-05*
-*   `[[2026-08-05 - agent-ad6dffe1de73afca6]]` - *2026-08-05*
-*   `[[2026-08-05 - agent-ad0068d34769c23c5]]` - *2026-08-05*
-*   *... e mais 3361 sessões nessa categoria.*
+*   *... e mais 3369 sessões nessa categoria.*
 
 ---
 
@@ -3314,6 +3314,14 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-01 - Configurar loop autônomo e definir fila soberana]]` (ClaudeSessions)
 
 ### Agosto 2026
+*   `[[2026-08-06 - agent-ad29a7a4e90863fcc]]` (ClaudeSessions)
+*   `[[2026-08-06 - agent-abba722f699fc85fb]]` (ClaudeSessions)
+*   `[[2026-08-06 - agent-aa4b179a90d57bef9]]` (ClaudeSessions)
+*   `[[2026-08-06 - agent-a8417448bfe5d105a]]` (ClaudeSessions)
+*   `[[2026-08-06 - agent-a83ef527a39bbe7d6]]` (ClaudeSessions)
+*   `[[2026-08-06 - agent-a5e5a8fec86337835]]` (ClaudeSessions)
+*   `[[2026-08-06 - agent-a44593fa68af2512b]]` (ClaudeSessions)
+*   `[[2026-08-06 - Refinar EP06 com motion design profissional para SaaS]]` (ClaudeSessions)
 *   `[[2026-08-05 - e2a41883-a422-4743-94c2-5a7f590d0f5b]]` (ClaudeSessions)
 *   `[[2026-08-05 - agent-afa425e61232b8b67]]` (ClaudeSessions)
 *   `[[2026-08-05 - agent-af0e14d369ba7378a]]` (ClaudeSessions)

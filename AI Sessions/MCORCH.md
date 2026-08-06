@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 113
-> * **Total de Sessões**: 3414
+> * **Total de Processos**: 114
+> * **Total de Sessões**: 3422
 
 ---
 
@@ -109,6 +109,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[tiktok-publish-credential-resolution]]` - *Processo*
 *   `[[trend-informed-angle-sanitization]]` - *Processo*
 *   `[[trends-credential-resolution]]` - *Processo*
+*   `[[trupe-criativa-spaces]]` - *Processo*
 *   `[[ux-ui-senior-loop]]` - *Processo*
 *   `[[veo-avatar-video]]` - *Processo*
 *   `[[veo-refs-8s-guard]]` - *Processo*
@@ -136,6 +137,14 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-08-06 - agent-ad29a7a4e90863fcc]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-abba722f699fc85fb]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-aa4b179a90d57bef9]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a8417448bfe5d105a]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a83ef527a39bbe7d6]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a5e5a8fec86337835]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a44593fa68af2512b]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - Refinar EP06 com motion design profissional para SaaS]]` (ClaudeSessions) - *2026-08-06*
 *   `[[2026-08-05 - e2a41883-a422-4743-94c2-5a7f590d0f5b]]` (ClaudeSessions) - *2026-08-05*
 *   `[[2026-08-05 - agent-afa425e61232b8b67]]` (ClaudeSessions) - *2026-08-05*
 *   `[[2026-08-05 - agent-af0e14d369ba7378a]]` (ClaudeSessions) - *2026-08-05*
