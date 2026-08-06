@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3446
-> * **Sessões do Claude**: 3396
+> * **Total de Sessões Registradas**: 3449
+> * **Sessões do Claude**: 3399
 > * **Sessões do Gemini**: 50
 
 ---
@@ -87,7 +87,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-08-06 - agent-a93265bb0d51578de]]` - *2026-08-06*
 *   `[[2026-08-06 - agent-a918e45a3ff783052]]` - *2026-08-06*
 *   `[[2026-08-06 - agent-a8f0b2ae6dea82bd6]]` - *2026-08-06*
-*   *... e mais 3388 sessões nessa categoria.*
+*   *... e mais 3391 sessões nessa categoria.*
 
 ---
 
@@ -3337,7 +3337,10 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-08-06 - agent-a36bf723d5eae7756]]` (ClaudeSessions)
 *   `[[2026-08-06 - agent-a31c5087e580324ad]]` (ClaudeSessions)
 *   `[[2026-08-06 - agent-a299771fce4bbba12]]` (ClaudeSessions)
+*   `[[2026-08-06 - agent-a1f291c38e0d6c9d3]]` (ClaudeSessions)
+*   `[[2026-08-06 - agent-a0efa4235b611b317]]` (ClaudeSessions)
 *   `[[2026-08-06 - agent-a0d3a7a756998952d]]` (ClaudeSessions)
+*   `[[2026-08-06 - agent-a02c4b227f0436a9b]]` (ClaudeSessions)
 *   `[[2026-08-06 - Refinar EP06 com motion design profissional para SaaS]]` (ClaudeSessions)
 *   `[[2026-08-06 - Corrigir erro out is not defined e melhorar motion design]]` (ClaudeSessions)
 *   `[[2026-08-06 - 2de725c0-2186-4fa8-9a12-16d4bd8f3128]]` (ClaudeSessions)
