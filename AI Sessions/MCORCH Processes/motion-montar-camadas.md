@@ -118,6 +118,124 @@ porque somam superfície, e não porque têm blur (todos os blurs somados dão �
 
 ---
 
+## 8. A camada de VÍDEO (Amendment 43-bis · FR-SPACES-176..179)
+
+Desde 2026-08-06 a laje aceita **clipe** além de imagem — corte, saída do Veo, tela gravada,
+qualquer `creative_assets.kind='video'` do dono. Diretiva Sovereign: *"poderia ser qualquer outro
+asset, ou criativo de decisão do usuário"*.
+
+### 8.1 A armadilha que governa o desenho inteiro (MEDIDA, não deduzida)
+
+O Chromium que rasteriza a cena (`chromium-1226` do Playwright) é build **sem codecs
+proprietários**. Um `<video>` H.264 ali dentro responde:
+
+| sonda | H.264 | VP9 |
+|---|---|---|
+| `canPlayType` | `""` | `probably` |
+| `readyState` | 0 | 4 |
+| `MediaError.code` | **4** | — |
+| `error.message` | **vazia** | — |
+
+E a página carrega normalmente. **Todo MP4 da casa é H.264.** Apontar a laje direto para o MP4
+produziria centenas de frames furados com o job em `done` — a família "o nó nasce morto", agora com
+um vídeo de verdade como prova falsa. Por isso:
+
+> **Regra dura: nenhum clipe entra na cena sem passar pelo transcode VP9 do worker.**
+> Guardião re-executável: `bun run scripts/qa/smoke-motion-layer-codec.ts` (6 gates, custo zero).
+> Rodar ANTES de mexer em `downloadLayers`, no rasterizador ou no elemento de camada do template.
+
+### 8.2 A receita do transcode (e por que cada flag está lá)
+
+```
+ffmpeg -ss <corte> -t <necessário> -i <clipe> \
+       -vf scale=<largura de EXIBIÇÃO>:-2 -r <fps da cena> \
+       -c:v libvpx-vp9 -b:v 2500k -g 1 -deadline realtime -cpu-used 8 -row-mt 1 -an lN.webm
+```
+
+- **`-g 1` (all-intra):** 206 ms/f contra 246 com GOP-30 — a busca frame a frame paga o GOP em
+  TODA busca. Custa ~4× em disco, num arquivo temporário.
+- **`scale=<largura de exibição>`:** é onde mora o dinheiro. Transcodar em 1920 para uma laje de
+  768 px custa **8×** por frame (32 ms contra 4). A largura sai de `layerTargetWidth()`, que deriva
+  do tratamento, da escala e do `RENDER_SCALE`.
+- **`-r <fps da cena>`:** iguala as grades e torna a busca pelo meio do intervalo exata.
+- **`-ss/-t`:** só o trecho que a política precisa. Transcodar 4 min para uma cena de 8 s é pagar
+  relógio por frames que ninguém vê.
+
+Custo medido com clipe real: **+4 ms/frame (+2%)** sobre a cena sem clipe · ~+18 ms/frame por
+camada adicional · RSS do Chromium com 3 clipes ~708 MB.
+
+### 8.3 A busca cai no MEIO do intervalo do frame
+
+O frame N do arquivo cobre `[N/fps,(N+1)/fps)`. Pedir `currentTime = t` cai em N-1 ou N conforme o
+arredondamento — **3 de 7 frames corretos** na medição. Pelo meio (`floor(t·fps)/fps + 0,5/fps`):
+**50 de 50**. O erro não aparece como falha; aparece como **judder**, frames repetidos e pulados em
+padrão irregular. E o `__seek` **espera o evento `seeked`** — é a única barreira testada que garante
+a textura presente no compositor quando o screenshot sai.
+
+> Nota contra-intuitiva que fecha a porta para "otimizações": trocar o `src` de uma `<img>` a cada
+> frame — a alternativa óbvia ao `<video>` — foi medida e é **NÃO-DETERMINÍSTICA** (129/150 frames
+> idênticos entre duas execuções, em 4 variantes de barreira). O `<video>` com `seeked` deu 150/150.
+
+### 8.4 Política de duração — vocabulário FECHADO, declarado na UI
+
+| política | fórmula | o que a UI diz |
+|---|---|---|
+| **cortar** (default) | `clamp(t, 0, dur)` | "corta em 8s (sobram 4.0s)" / "congela no último frame aos 4.0s (faltam 6.0s)" |
+| **repetir** | `t % dur` | "repete 3.0× até fechar a cena" |
+| **esticar** | `t/D × dur` | "estica 2.00× (câmera lenta)" |
+
+Não existe "congelar" separado: `cortar` já congela — dois nomes para o mesmo comportamento seria
+mentira de vocabulário. **`cortar` é o default porque é o único que nunca mente sobre o material.**
+A frase vem de `describeClipFit()` (`src/types/canvas.ts`), com teste próprio
+(`src/test/motion-clip-fit.test.ts`): sem a duração do clipe ela declara a POLÍTICA e **não inventa
+o número**.
+
+### 8.5 Áudio — o clipe entra MUDO, e a UI escreve isso
+
+O raster é só frames; o mux soma apenas a narração (`-c:a aac -af apad -shortest`). A faixa do
+clipe é descartada **por construção**. O inspector declara em texto. O opt-in "usar o áudio do
+clipe" (mix + `adelay` + ducking −12 dB de `MIX_TARGETS`) **não existe** — está declarado como
+ausente, não prometido.
+
+### 8.6 Falha honesta (todas com o NÚMERO da camada)
+
+| situação | onde falha | mensagem |
+|---|---|---|
+| asset não é imagem nem vídeo (ex.: áudio) | edge fn, 422 | "A camada 1 não aponta para uma imagem ou vídeo do seu acervo." |
+| asset de outro tenant / fora do prefixo do dono | edge fn, 422 | idem (owner-scoped, não vaza existência) |
+| bytes não batem com nenhuma assinatura conhecida | worker, job `failed` | "camada 1 (…) não é imagem nem vídeo reconhecido" |
+| arquivo sem faixa de vídeo | worker, job `failed` | "camada 1 (…) não tem faixa de vídeo legível" |
+| corte além do fim do clipe | worker, job `failed` | "camada 1: o corte começa em 999.0s mas o clipe tem só 10.0s" |
+| clipe não decodifica no palco | template, `__fatal` | "camada 1 (codec/arquivo — MediaError 4) nao carregou" |
+
+Nenhuma delas passa em silêncio: o `__ready` do template é fail-closed e o `render-frames.mjs`
+aborta ao ver `__fatal`.
+
+### 8.7 Gates desta fatia (executados 2026-08-06/07)
+
+| gate | resultado |
+|---|---|
+| `npx tsc -p tsconfig.app.json --noEmit` | exit 0 (baseline limpa) |
+| `bun run test` | 905 passed (era 888) |
+| `bun run scripts/qa/smoke-motion-layer-codec.ts` | 6/6 verde |
+| determinismo do template (2 renders, clipe real) | **90/90** e **180/180** frames byte-idênticos |
+| determinismo com DOIS transcodes independentes | **180/180** |
+| determinismo do arquivo ENTREGUE (fila real, 4 renders da mesma cena) | A≡C≡D **0/180 divergentes**; um render (B) divergiu em 9/180 no final, PSNR 52,9 dB — **não reproduzido** em 6 execuções controladas; ver §8.8 |
+| E2E pela UI (1920×1080, logado) | picker com aba Vídeos · camada de clipe com política e corte · declaração de áudio · erro do corte inválido no Console de execução |
+
+### 8.8 Limite honesto ainda aberto
+
+Em **1 de 4** renders idênticos pela fila, os **últimos 9 de 180 frames** divergiram (PSNR 52,9 dB
+— sub-perceptual). Não foi reproduzido em 6 execuções controladas (browser 180/180 duas vezes; dois
+transcodes independentes 180/180; encode do mesmo diretório de frames byte-idêntico; par de controle
+**sem clipe algum** 0/90). A evidência aponta para o rasterizador (os frames divergentes são os de
+maior curso de câmera, logo maior raio de blur), **não** para a camada de vídeo — mas a causa-raiz
+**NÃO foi isolada**. Nota separada: o md5 do arquivo entregue difere entre renders idênticos **mesmo
+sem clipe** (~356 bytes de metadados do carimbo de proveniência) — determinismo aqui se mede por
+`framemd5`, não por `md5` do container.
+
+---
+
 %% --- PROJECT METADATA START --- %%
 > [!meta] Informações do Projeto
 > * **Projeto**: [[MCORCH]]
