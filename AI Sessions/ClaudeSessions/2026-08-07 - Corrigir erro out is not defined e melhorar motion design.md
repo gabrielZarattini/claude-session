@@ -6965,6 +6965,900 @@ Em paralelo, duas frentes: a **auditoria honesta de todos os nós** — quem pro
 
 Três críticos no fim, e um deles caça exatamente a armadilha do projeto armado: um canvas que parece trabalho e abre em branco.
 
+## 👤 User *(04:09:00)*
+
+<task-notification>
+<task-id>wqap6z0g3</task-id>
+<tool-use-id>toolu_01CBfBZUD8sxdMjUwqpmYMQg</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2de725c0-2186-4fa8-9a12-16d4bd8f3128/tasks/wqap6z0g3.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Vídeo como camada + auditoria/refatoração dos nós do Spaces + projeto v3 no estilo MONTAR" completed</summary>
+<result>{"recon":[{"key":"video-layer","report":"## ACHADO QUE MUDA A PERGUNTA: o navegador do render NÃO decodifica H.264\n\nAntes de comparar caminhos, um fato material que reordena tudo. O Chromium do Playwright (`chromium-1226`, HeadlessChrome/149) é build **sem codecs proprietários**:\n\n| codec | `canPlayType` | carga real de arquivo |\n|---|---|---|\n| H.264 (`avc1.42E01E`) | `\"\"` (vazio) | **falha**: `readyState:0`, `networkState:3`, `error.code=4`, mensagem **vazia** |\n| AAC | `\"\"` | — |\n| VP8 / VP9 / AV1 / Opus | `probably` | VP9 carrega e pinta (`videoWidth 1280`, canvas soma 1.551.090) |\n\nNão há Google Chrome no host (`/opt/google/chrome/chrome` ausente). **Todo MP4 — nossos renders, os cortes, a saída do Veo — é H.264, ou seja: inutilizável direto no `&lt;video&gt;`.** Qualquer caminho de vídeo passa por um transcode. Isso deixa (a) e (b) empatados no *pré-processo* e a decisão migra para determinismo e custo por frame.\n\n⚠️ A falha é **muda**: sem erro no `load` da página, sem exceção. É a família \"nó nasce morto\" com um MP4 de 3 minutos como prova falsa.\n\n---\n\n## A escada, com números MEDIDOS\n\nBancada: geometria **verbatim** do palco real (`scene-template.ts:415-447` — `.set` perspective 1300 › `.cam` preserve-3d › `.pl` só transform › `.lyr` opacity/blur), 3 camadas, rasterizador de **produção sem modificação** (`render-frames.mjs`), 1280×720 @ scale 1,5 → 1920×1080, jpeg q100 — config exata do worker.\n\n### Custo do mecanismo (150 frames, clipe sintético)\n\n| variante | ms/frame | Δ vs controle | determinismo (2 execuções) |\n|---|---|---|---|\n| **controle** — `&lt;img&gt;` parada, mesmo conteúdo | **189** | — | **150/150 idênticos** |\n| (b) swap `&lt;img&gt;` src, só `decode()` | 204 | +15 | ❌ **129/150** |\n| (b) swap + 2×`requestAnimationFrame` | 251 | +62 | ❌ **128/150** |\n| (b) swap com frames PNG | 201–212 | +12 | ❌ **119/150** |\n| (a) `&lt;video&gt;` VP9 GOP-30 + `seeked` | 246 | +57 | ✅ **150/150** (2ª dupla: 150/150) |\n| (a) `&lt;video&gt;` VP9 **all-intra** + `seeked` | **206** | **+17** | ✅ **150/150** |\n\n### Com clipe REAL (`spike-montar.mp4`, 10 s 1080p), 90 frames\n\n| variante | ms/frame | Δ |\n|---|---|---|\n| controle (sem vídeo) | 194 | — |\n| **VP9 all-intra na largura de EXIBIÇÃO (768 px)** | **198** | **+4 ms/frame (+2%)** |\n| VP9 all-intra em 1920 cheio | 226 | +32 |\n\nDeterminismo do recomendado com clipe real: **90/90 idênticos**.\n\n### Escala por camada (all-intra, `Promise.all` nos seeks)\n1 vídeo → 206 · 2 → 228 · 3 → 243 ms/frame ⇒ **~+18 ms/frame por camada** (linear). RSS do Chromium com 3 vídeos: **~708 MB** — longe do OOM de 15,6 GB.\n\n### Pré-processo (clipe real 10 s 1080p)\n\n| preparo | relógio | disco |\n|---|---|---|\n| VP9 all-intra @768 (**recomendado**) | 2,85 s | 3,7 MB |\n| VP9 all-intra @1920 | 6,63 s | 13,3 MB |\n| frames JPEG @768 | 1,89 s | 4,9 MB / 300 arquivos |\n\n---\n\n## Duas descobertas que decidem o desenho\n\n**1. O swap de `&lt;img&gt;` é NÃO-determinístico — e a laje de vídeo é.** Contra-intuitivo, e por isso rodei o controle: o motor de hoje é byte-determinístico (150/150). O swap diverge em ~14-20% dos frames, **em 3 variantes diferentes** (onload+decode, decode puro, decode+2×rAF) e **também com PNG** — logo não é o JPEG, é o compositor não ter commitado a nova textura. A divergência é sub-perceptual (PSNR 85,5 dB · 0,055-0,135% dos pixels · delta máx 5/255), mas **quebra a lei do \"mesmo seed ⇒ mesmo pixel\"**, e a barreira que tentaria corrigi-la custa 251 ms/frame — mais caro que o `&lt;video&gt;` que já era correto. O evento `seeked` do vídeo é a única barreira testada que garante o pixel presente.\n\n**2. `currentTime = t` é off-by-one em ~57% dos frames.** O frame N cobre `[N/fps,(N+1)/fps)`; buscar a borda cai em N-1 ou N por arredondamento. Medido contra os frames extraídos pelo FFmpeg (PSNR N-1 / N / N+1):\n\n- ingênuo `currentTime = t` → **3/7 corretos**\n- **meio do intervalo** `floor(t·fps)/fps + 0,5/fps` → **50/50 corretos**\n\nSem essa correção o vídeo entrega frames duplicados/pulados em padrão irregular — **judder**, não erro visível de \"não funciona\".\n\n---\n\n## RECOMENDADO\n\n**(a) `&lt;video&gt;` VP9 all-intra, transcodado na largura de exibição, seek no meio do intervalo do frame.**\n\nPorque: é o único **determinístico** (330/330 frames em 3 duplas independentes); custa **+4 ms/frame (+2%)** com clipe real — praticamente de graça; e **não exige nenhuma mudança no rasterizador de produção**: `render-frames.mjs:74` já faz `await page.evaluate((t) =&gt; window.__seek(t), …)`, e `page.evaluate` aguarda Promise sozinho. `__seek` passa a devolver Promise quando há vídeo e `undefined` quando não há — o caminho de hoje não muda em nada.\n\nReceita de preparo (no worker, onde ffmpeg já vive):\n```\nffmpeg -i &lt;clipe&gt; -vf scale=&lt;largura_exibição&gt;:-2 -r &lt;fps_da_cena&gt; \\\n       -c:v libvpx-vp9 -b:v 2.5M -g 1 -deadline realtime -cpu-used 8 -row-mt 1 -an out.webm\n```\n`-g 1` (all-intra) vale −40 ms/frame contra GOP-30 e custa 4× o disco — troca ótima aqui. `-r &lt;fps da cena&gt;` iguala as grades e torna a fórmula do meio-do-intervalo exata. `-an` porque o áudio não é usado no raster.\n\n**Onde (c) — compor no FFmpeg depois — ganha:** medido em **+6 ms/frame** (9,62 s com overlay+`perspective:eval=frame` contra 8,72 s de encode base, 150 frames), 10× mais barato. `eval=frame` existe e `on` (nº do frame) é aceito. Mas **não serve para a laje**, por quatro razões estruturais: (1) **oclusão** — as camadas se cruzam em tela (visto no pixel: no frame 30 a laje esquerda atravessa a central), e overlay-depois pinta o vídeo por cima de tudo; (2) a laje **não é um retângulo** — é trapézio com cantos 22px, `sheen` e `rim` desenhados sobre a imagem, que `perspective` não reproduz; (3) o **DoF muda por frame** (`blur(0..6px)`) e o `sigma` do `gblur` é runtime-settable (flag `T`), não expressão — exigiria emitir um script `sendcmd` de 300 linhas; (4) os 4 cantos projetados teriam de sair do DOM por frame, criando **um segundo relógio para manter em sincronia** com o motor. Vale ofertar como capacidade **separada e estreita**: um plano de **fundo full-bleed** (retângulo, sem oclusão, sem cantos) — aí (c) é o caminho certo e quase grátis.\n\n---\n\n## 3. Contrato de duração\n\nCom `&lt;video&gt;` seekado, **as quatro políticas são aritmética pura sobre o tempo-alvo — custo zero**. `clipT` a partir do `t` da cena e do `t0` da camada:\n\n| política | fórmula | quando |\n|---|---|---|\n| **cortar** (recomendado default) | `min(clipT, dur−ε)` | clipe ≥ cena: mostra o começo e para de avançar |\n| **congelar** | idêntico a cortar | é o mesmo comportamento quando o clipe acaba antes |\n| **repetir** | `clipT % dur` | textura/ambiente; costura visível se o corte não for cíclico |\n| **esticar** | `clipT × (dur/duração_da_camada)` | muda a cadência do movimento — parece câmera lenta/acelerada |\n\n**Default honesto: CORTAR.** É o único que nunca mente sobre o material — mostra o que existe e congela, sem inventar movimento nem costura. `repetir` e `esticar` alteram o que o usuário gravou e devem ser escolha explícita.\n\n**A UI tem de declarar isso**, porque hoje o usuário não tem como saber a duração da cena ao escolher o clipe. Concretamente: ao anexar a camada, mostrar `clipe 12s · cena 8s → sobram 4s` (ou `faltam`), com o seletor de política ao lado e o rótulo do resultado em português direto (\"corta em 8s\" / \"repete 1,5×\" / \"congela no último frame\"). Sem isso, cair silenciosamente em \"cortar\" é a mesma família do checkbox que prometia e não entregava.\n\n---\n\n## 4. Áudio — decisão de produto, não técnica\n\n**Hoje:** o raster é só frames; o áudio da cena é **exclusivamente a narração** (`motion-bridge.ts:495-501`: 2º input + `-c:a aac -b:a 192k -af apad -shortest`). O `&lt;video&gt;` no headless não contribui com nada — **a faixa do clipe é descartada por construção**, silenciosamente.\n\n**O que deveria acontecer — proposta:*
+... (truncated 79652 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2de725c0-2186-4fa8-9a12-16d4bd8f3128/tasks/wqap6z0g3.output)</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/2de725c0-2186-4fa8-9a12-16d4bd8f3128/subagents/workflows/wf_2a6cbcfb-a70/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/2de725c0-2186-4fa8-9a12-16d4bd8f3128/workflows/scripts/spaces-v3-montar-wf_2a6cbcfb-a70.js', resumeFromRunId: 'wf_2a6cbcfb-a70'}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<usage><agent_count>8</agent_count><agents_done>8</agents_done><agents_error>0</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>1876107</subagent_tokens><tool_uses>652</tool_uses><duration_ms>8484210</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(04:09:17)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O workflow finalizou com 8 agentes e 652 chamadas de ferramentas em 2 horas e 21 minutos. Descobri um problema crítico: o Chromium do Playwright não decodifica vídeos em H.264, então todos os nossos MP4s não funcionam diretamente na tag `<video>`, e o erro passa silenciosamente. A solução é transcodificar para VP9 com codificação all-intra na resolução de exibição, adicionando apenas 4ms por frame (2% de overhead) com resultados consistentes. Também identifiquei um erro off-by-one onde definir `currentTime = t` falha em 57% dos frames — a correção é usar o ponto médio do intervalo de tempo.
+
+</details>
+
+
+## 🤖 Claude *(04:09:19)*
+
+Workflow completo. O achado da sonda é grande e vou ler as críticas antes de te contar:
+
+## 🤖 Claude *(04:09:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'PY'\nimport json\np='/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2de725c0-2186-4fa8-9a12-16d4bd8f3128/tasks/wqap6z0g3.output'\nd=json.loads(open(p).read())['result']\nprint(\"CHAVES:\", {k:(len(v) if isinstance(v,list) else len(str(v))) for k,v in d.items()})\nprint(\"\\n\u2554\u2550\u2550\u2550 V\u00cdDEO EM CAMADA (entregue) \u2550\u2550\u2550\u2557\")\nprint(str(d['videoLayer'])[:4800])\nPY",
+  "description": "Ler o que a engenharia entregou"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> CHAVES: {'recon': 3, 'videoLayer': 4406, 'projetoV3': 3967, 'criticas': 3}
+> 
+> ╔═══ VÍDEO EM CAMADA (entregue) ═══╗
+> **Vídeo como camada: VIVO ponta-a-ponta.** Qualquer asset do acervo — imagem ou clipe — entra na laje 3D.
+> 
+> ## O fato que reordenou o desenho (verificado por mim, não herdado)
+> O Chromium do rasterizador é build **sem codecs proprietários**: H.264 → `canPlayType=""`, `MediaError.code=4`, **mensagem vazia**, `readyState=0`; VP9 → `readyState=4`. Todo MP4 da casa é H.264. Apontar `<video>` direto para o MP4 daria centenas de frames furados com o job em `done`. Por isso o worker **transcoda para VP9 all-intra na largura de exibição** antes de montar a cena. Segui a medição da sonda, e ela se confirmou.
+> 
+> ## As 6 camadas atravessadas
+> | seam | arquivo | o que entrou |
+> |---|---|---|
+> | tipo | `/home/gcrUX/htdocs/constellation-orchestra/src/types/canvas.ts` | `MotionLayerFit` (`cortar\|repetir\|esticar`), `mediaKind`, `trimStart`, `fit`, `MOTION_FIT_LABEL/HINT`, `describeClipFit()` |
+> | inspector | `.../RightPanel/inspectors/MotionSceneInspector.tsx` | picker com abas Imagens/Vídeos + tiles **nomeados**, controles de clipe, política declarada, declaração de áudio |
+> | construtor único | `/home/gcrUX/htdocs/constellation-orchestra/src/lib/motion-dispatch.ts` | `trim_start`/`fit` no corpo; `mediaKind` **não viaja** (servidor relê `creative_assets.kind`) |
+> | edge fn | `/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/motion-render/index.ts` | `LAYER_KINDS={image,video}`, `FITS`, `media` derivado do banco owner-scoped — **deployada** |
+> | worker | `/home/gcrUX/htdocs/constellation-orchestra/scripts/motion-bridge.ts` | `sniffMedia` (ftyp/EBML/AVI), `layerTargetWidth`, transcode VP9 `-g 1 -ss/-t -r`, `probeVideoSeconds` — **reiniciado 23:34:51 > mtime 23:22** |
+> | template | `/home/gcrUX/htdocs/constellation-orchestra/scripts/motion/scene-template.ts` | `<video>` mudo/nunca `play()`, seek no **meio do intervalo**, `__seek` devolve Promise, `__ready` espera `readyState>=2` e nomeia o `MediaError` |
+> 
+> ## Prova material
+> - **Determinismo:** template 90/90 e 180/180 byte-idênticos; **dois transcodes independentes → 180/180**; fila real, 4 renders da mesma cena: **A≡C≡D 0/180 divergentes** (`framemd5`).
+> - **O clipe avança:** câmera fixa, só o clipe → 60/60 frames distintos; `cortar` × `esticar` diferem em 53/60 (a política é viva).
+> - **Falha honesta na UI:** Console de execução mostrou `camada 1: o corte começa em 999.0s mas o clipe tem só 10.0s`, job `failed`. Áudio como camada → 422 `A camada 1 não aponta para uma imagem ou vídeo do seu acervo.`
+> - **Ocular:** frame 175 de `wA.mp4` — clipe animando dentro da laje em perspectiva + recorte alpha no plano da frente.
+> - Gates: `tsc` exit 0 · `bun run test` **905** (era 888) · `bun run build` ✓ (dist/ servido pelo nginx) · novo sentinel `/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/smoke-motion-layer-codec.ts` **6/6**.
+> 
+> ## Um defeito que achei e corrigi no meio do caminho
+> O tile de vídeo dependia do pôster do `<video>`; num navegador sem H.264 a grade virava **48 quadrados pretos anônimos** (a armadilha "vitrine que parece quebrada"). Agora todo clipe carrega o próprio nome no card.
+> 
+> ## Limite honesto — NÃO resolvido
+> Em **1 de 4** renders idênticos pela fila, os **últimos 9 de 180 frames** divergiram (PSNR 52,9 dB, sub-perceptual). **Não reproduzi** em 6 execuções controladas — browser 180/180 (2×), dois transcodes 180/180, encode do mesmo diretório byte-idêntico, e o **par de controle sem clipe algum** 0/90. A evidência aponta para o rasterizador (são os frames de maior curso de câmera ⇒ maior blur), **não** para a camada de vídeo, mas **a causa-raiz não foi isolada**. Registrado em `docs/processes/motion-montar-camadas.md` §8.8. Nota correlata: o md5 do container difere entre renders idênticos **mesmo sem clipe** (~356 bytes de proveniência) — determinismo aqui se mede por `framemd5`.
+> 
+> ## Ficou de fora (deliberado, declarado na UI)
+> - **Áudio do clipe** — entra mudo sempre; o opt-in (mix + `adelay` + ducking −12 dB) não existe e o inspector escreve isso.
+> - **Busca/multi-seleção no picker** e limite de 4 camadas inalterado.
+> - **Não commitei** (não foi pedido). 9 arquivos modificados + 3 novos (`smoke-motion-layer-codec.ts`, `motion-clip-fit.test.ts`, e o `gc-motion-orphans.ts` que já estava untracked).
+> - **Resíduo do witness:** 8 renders de teste no acervo do U0 (títulos "Cena · controle COM/SEM clipe" e "Cena · Corte dentro da laje") — são a prova Lei 1; podar a critério do Sovereign.
+> ```
+
+## 🤖 Claude *(04:09:25)*
+
+
+## 🤖 Claude *(04:09:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'PY'\nimport json\np='/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2de725c0-2186-4fa8-9a12-16d4bd8f3128/tasks/wqap6z0g3.output'\nd=json.loads(open(p).read())['result']\nprint(\"\u2554\u2550\u2550\u2550 PROJETO V3 \u2550\u2550\u2550\u2557\")\nprint(str(d['projetoV3'])[:3200])\nPY",
+  "description": "Ler a entrega do projeto v3"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ╔═══ PROJETO V3 ═══╗
+> ## ENTREGA 1 — Projeto v3 armado no banco
+> 
+> **ID para o Sovereign abrir:** `fe479105-63a4-4744-b6fa-0fc3e8b69c7c`
+> **URL:** `https://login.mcorch.com/dashboard/spaces/fe479105-63a4-4744-b6fa-0fc3e8b69c7c`
+> **Nome:** `EP06 v3 · MONTAR` · `total_executions: 0` · `total_credits_used: 0` · saldo do U0 intacto em **41546 mcoCoins** (nada foi executado).
+> 
+> **Contagem verificada (releitura do banco após a escrita):** **51 nós · 43 arestas**
+> `motionScene 17` (16 da fita + 1 MOLDE) · `voiceClone 16` · `imageToVideo 4` · `phaseGroup 4` · `soundDesign 3` · `sceneNote 2` · `characterReference 1` · `episodeAssembler 1` · `transcribe 1` · `videoRepurpose 1` · `publishSocial 1`
+> 
+> **Custo de execução: 712 mco** (só os 4 Veo `fast/720p/8s`) — contra ≈3.316 do v2. Voz `qwen3-local` 0 · motion 0 · SFX `ffmpeg` 0 · master 0.
+> 
+> **Provas materiais:**
+> - **Validador contra as factories REAIS** de `src/types/canvas.ts` → **0 defeitos**. Ele pegou um bug meu: os 2 `sceneNote` nasceram sem o campo obrigatório `status`; corrigido com update guardado por `eq(updated_at, baseline)`.
+> - **43/43 arestas com handles que existem** nos componentes (extraí os `id=` dos 20 cards de `src/components/canvas/nodes/`). Zero da família "aresta que não conecta" do v2.
+> - **Ordem do master** rodada com o `collectMasterClipPlan` real: 20 clipes, gancho em **1º** (no v2 caía em 3º), e `connection` × `canvas` **concordam** — `order:"connection"` é o default aqui, e o X é monotônico de propósito.
+> - **Run All:** réplica fiel do gate → 25 nós runnable, `runAllCost = 712`, sem NaN.
+> - **O editor renderiza** (sessão logada, 1920×1080): rodapé "51 nós · 43 conexões", botão "Executar tudo (25)", DOM mostrando "712 mco". Screenshots em `…/scratchpad/v3/v3-open.png` e `v3-fit.png`.
+> - Revalidado **depois** do autosave da UI ter escrito → ainda 0 defeitos.
+> 
+> **O nó MOLDE (lane KIT)** é o único com camadas reais — as 3 do render `fa1e9ef7` (`state=done`, `qa.layers=3`). É a única configuração MONTAR materialmente provada, e prova o rail dentro do projeto. As 16 cenas da fita trazem o **plano de camadas** na nota de direção (fundo/meio/frente · laje/recorte · escala), com `layers: []` para o picker — não inventei asset que não representa o conteúdo.
+> 
+> **Quatro lacunas declaradas no nó "CONTRATO DO EPISÓDIO"**, não escondidas: (1) os 4 takes do apresentador estão **mudos** — não existe seam para a narração IVC por cima (`imageToVideo` sem porta de voz, `assemble-master` sem leito); (2) nenhuma cena da fita tem camada ainda (~900 mco se todas forem `generateImage`); (3) narrações das cenas 06/09/11/15/16/19 foram **compostas**, o roteiro v2 não tem texto literal para elas; (4) as 3 arestas que saem do master são **declarativas** (inspectors edge-blind).
+> 
+> ## ENTREGA 2 — Plano de refatoração
+> 
+> `/home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/spaces-v3-plano-refatoracao-nos-2026-08-06.md` (307 linhas, novo, não commitado)
+> 
+> 9 itens ordenados por valor, cada um com endereço de arquivo:linha, custo em seams e risco. P0 = vídeo-camada (7 gates de verificação, **já caindo na árvore de trabalho do outro agente**) · `order:"connection"` default · `chart` sem editor de `series` · `list_assets` + `FIELD_HINTS.motionScen
+> ```
+
+## 🤖 Claude *(04:09:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 - <<'PY'\nimport json\np='/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2de725c0-2186-4fa8-9a12-16d4bd8f3128/tasks/wqap6z0g3.output'\nc=json.loads(open(p).read())['result']['criticas']\nfor i,x in enumerate(c):\n    print(f\"\\n{'#'*22} CR\u00cdTICO {i+1} {'#'*22}\\n\")\n    print(x[:7000])\nPY",
+  "description": "Ler os 3 cr\u00edticos adversariais"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ###################### CRÍTICO 1 ######################
+> 
+> ## Veredito
+> 
+> Achei defeitos reais nas duas entregas. Os gates que o autor declarou **conferem** (tsc exit 0 · `bun run test` 905 · smoke 6/6 · dist com o picker novo · worker reiniciado 23:34:51 > mtime 23:24:59 · edge fn version 7 de 2026‑08‑07 02:34:46 UTC · `motion-render` deployada gravando `media:"video"` em `video_renders.composition`). O que quebra está **abaixo** desses gates.
+> 
+> ---
+> 
+> ## BLOCKER 1 — v3: 4 das 6 cenas com `counter` ligado mostram nada, ou mostram um número roubado de nota de direção
+> 
+> Rodei o **`buildSceneHtml` real** (`scripts/motion/scene-template.ts`) sobre os 17 nós lidos do banco:
+> 
+> ```
+> n_v3_c03   counterEl=SIM  counter=null
+> n_v3_c10   counterEl=SIM  counter=null
+> n_v3_c15   counterEl=SIM  counter=null   counterBeat=1
+> n_v3_c13   counterEl=SIM  counter={"value":40,"label":"40%","unit":"%"}
+> n_v3_c11   counterEl=SIM  counter={"value":130,...}     ← ok
+> n_v3_c17   counterEl=SIM  counter={"value":141006,...}  ← ok
+> ```
+> 
+> - `counter=null` ⇒ o template emite `<div id="counter"></div>` e o guard `if(counterEl && SPEC.counter)` (`scene-template.ts:1042`) pula. **Elemento marcado, div vazia, zero erro** — a assinatura exata de nascer morto.
+> - **c15 é a pior:** a cena INTEIRA é o contador — `description`: *"o contador acelera no plano da FRENTE contra a linha do orçamento…"*. O motor até derivou `counterBeat=1` (o regex `/contador/` casou), ou seja **sabe quando** e não tem **o quê**. Motivo: a narração escreve `"oitocentos"` por extenso e `extractBigNumber` só casa dígitos.
+> - **c13 é a mais perigosa:** vai imprimir **"40%"** na tela. Esse 40% vem de *"a silhueta ocupa cerca de **40%** da área no plano do meio"* — instrução de encenação, não número para o espectador. O carimbo pretendido é `1 · 7 dias · US$ 10k`. É literalmente a família do bug documentado em `scene-template.ts:345-356` (o "2800000,0 tri" da cena Kimi), num canal cuja regra declarada é "nenhum número não‑ancorado".
+> 
+> O validador do autor (`scratchpad/v3/validate-graph.ts`, 85 linhas — kind/handle/vocabulário/custo) não podia pegar isso: nenhum gate roda o motor sobre o conteúdo.
+> 
+> **Correção mínima:** tirar `counter` de `elements` em c03/c10/c13; em c15, escrever o número em **dígitos** na `description` ou no `event` do beat. E acrescentar ao validador um gate que chame `buildSceneHtml` e falhe quando `elements.includes("counter") && SPEC.counter===null` (custa 20 linhas e é reexecutável).
+> 
+> ---
+> 
+> ## BLOCKER 2 — o determinismo quebrado é do caminho de vídeo; a exculpação do autor é refutada pelos próprios artefatos
+> 
+> Não aceitei o laudo: baixei os 4 renders do bucket e comparei `framemd5` eu mesmo.
+> 
+> | par | composição | divergentes |
+> |---|---|---|
+> | `f9b9b2cc` × `ae76522e` | 2 camadas, 1 clipe, 180f | **9/180** (frames **171–179**, contíguos) |
+> | `ae76522e` × `0165a56b` | idem, lotes 26 min apart | 0/180 |
+> | `0165a56b` × `7b9024cd` | idem | 0/180 |
+> | `ef5f6816` × `4c4316f6` | **sem clipe**, 90f | 0/90 · **1412186 bytes os dois** |
+> | `a06d797d` × `c57b40f5` | com clipe, 90f | 0/90 · 1471441 bytes os dois |
+> 
+> `YMAX=12` na diferença do frame 175 (olhei o PNG de diferença com Read: invisível a olho). Os 9 frames são **contíguos no fim** = um GOP inteiro herdando um frame de entrada diferente.
+> 
+> Duas conclusões do autor caem:
+> 
+> 1. *"a evidência aponta para o rasterizador, não para a camada de vídeo"* — **a única configuração que já divergiu tem clipe.** Os dois pares sem clipe saíram idênticos (e com o mesmo tamanho em bytes).
+> 2. *"o md5 do container difere entre renders idênticos mesmo sem clipe (~356 bytes de proveniência)"* — os dois sem clipe deram **exatamente 1412186 bytes**, e os pares com clipe que não divergiram deram tamanho idêntico entre si. O único tamanho diferente é o do render divergente (2506773 × 2507790).
+> 
+> E o sentinel novo **não cobre esse risco**: G3 (`smoke-motion-layer-codec.ts:19`) prova "mesmo `currentTime` ⇒ screenshot byte‑idêntico" **na mesma página**. A divergência é entre execuções.
+> 
+> **Causa provável + correção mínima:** o `seeked` (`scene-template.ts` `seekVideos`) garante que o frame foi *decodificado*, não que foi *apresentado ao compositor* — é uma corrida conhecida. Sondei o Chromium do rasterizador: **`requestVideoFrameCallback` existe** (`{rvfc: true, ua: 'Chrome/149.0.0.0'}`). Trocar/encadear a barreira por rVFC (ou um duplo `rAF` depois do `seeked`) fecha exatamente esse gap. E o G3 precisa de um irmão cross‑run: dois processos, mesmo HTML, `framemd5` igual.
+> 
+> ---
+> 
+> ## IMPORTANTE 3 — a declaração de clipe que o autor vendeu como anticorpo mede contra a duração ERRADA
+> 
+> `MotionSceneInspector.tsx:457` → `describeClipFit(fit, d.durationSec, …)`.
+> `scripts/motion-bridge.ts:498` → `duration = Math.max(2, Math.min(120, Math.ceil(vd*10)/10))` **quando há narração conectada**.
+> 
+> Ou seja: sempre que existe voz — que é o caso normal, e **é o caso das 16 cenas do v3** — a frase "clipe 10,0s · cena 8s → corta em 8s (sobram 2,0s)" é calculada sobre um número que o motor descarta. O inspector já tem a informação: ele chama `resolveVoiceAssetId(node.id, nodes, edges)` na linha 274.
+> 
+> **Correção mínima:** quando `resolveVoiceAssetId` resolve, a frase deve dizer *"a duração da cena virá da narração"* em vez de fingir `d.durationSec`.
+> 
+> ---
+> 
+> ## IMPORTANTE 4 — `esticar` mente para clipe > 120 s
+> 
+> `scripts/motion-bridge.ts:47` `LAYER_CLIP_MAX_SEC = 120`; `:377` `need = fit==="esticar" ? Math.min(remaining, LAYER_CLIP_MAX_SEC) : …`.
+> `describeClipFit` (`src/types/canvas.ts`) calcula `f = sceneSec/util` sobre o clipe **inteiro**.
+> 
+> Clipe de 300 s numa cena de 10 s: a UI promete "estica 0,03× (acelerado)" (os 300 s inteiros); o motor transcoda só os **primeiros 120 s** e os atravessa em 10 s. Material que o usuário escolheu e nunca aparece, sem aviso.
+> 
+> ---
+> 
+> ## IMPORTANTE 5 — `mediaKind` é a única chave dos controles de clipe, e não vem do asset
+> 
+> `MotionSceneInspector.tsx:395` → `const isClip = l.mediaKind === "video"`.
+> `:241` → `.select("id, storage_bucket, storage_key, title")` — **sem `kind`**.
+> 
+> `mediaKind` é gravado só pelo picker, a partir de **qual aba estava aberta**. Qualquer camada autorada fora do picker não tem o campo — e isso não é hipotético: as 3 camadas do nó MOLDE do v3 estão no banco **sem `mediaKind`** (`grep -c mediaKind scratchpad/v3/seed-ep06-v3.ts` = 0), e `src/lib/spaces-agent-actions.ts:51` habilita o agente a mexer no nó. Numa camada de vídeo nessas condições o inspector renderiza um `<img>` quebrado e **esconde `fit`/`trimStart`** — o render trata como vídeo (servidor relê o `kind`), o usuário não tem como dirigir.
+> 
+> **Correção mínima:** acrescentar `kind` ao select e derivar `isClip` de `layerAssets[l.assetId]?.kind === "video"`, deixando `mediaKind` só como valor otimista até a query resolver.
+> 
+> ---
+> 
+> ## IMPORTANTE 6 — `input_asset` do `motionScene` virou armadilha exatamente agora
+> 
+> `src/components/canvas/nodes/MotionSceneNode.tsx:37` desenha `<Handle type="target" id="input_asset">` e `src/lib/spaces-agent-actions.ts:51` declara `motionScene: { in: ["input_voice","input_as
+> 
+> ###################### CRÍTICO 2 ######################
+> 
+> ## CRÍTICA ADVERSARIAL — lente determinismo-e-custo
+> 
+> Rodei tudo em `/tmp/claude-1001/.../scratchpad/crit`. Cena sintética construída com o `buildSceneHtml` REAL, clipe transcodado com o comando REAL do worker (`884px` = `layerTargetWidth(1280,"laje",1)`), rasterizado com o `scripts/motion/render-frames.mjs` REAL a 1920×1080 (scale 1.5, jpeg q100) — o mesmo config que `motion-bridge.ts:566` usa.
+> 
+> ---
+> 
+> ### BLOCKER 1 — `FRAME_BUDGET_MS` (1190) é rompido pela própria contenção que o comentário diz cobrir; o clipe dobra a violação
+> 
+> `motion-bridge.ts:122` roda o rasterizador com **`nice -n 10`** — despriorizado contra TODOS os workers irmãos. `systemctl --user` mostra **12 serviços de worker vivos** em 4 núcleos (video-bridge, video-repurpose-bridge, subtitle-bridge, voice-bridge, provenance-bridge, design-bridge…), e durante minha sessão um `python3` ficou em **99,3% de CPU** (`ps -eo pcpu` colado acima). Contenção não é hipótese aqui: é o estado normal do host.
+> 
+> | config | ms/frame medido | vs teto 1190 |
+> |---|---|---|
+> | 0 clipes, host quieto | 431 · 485 | ok |
+> | 1 clipe, host quieto | 445 · 451 · 463 · 594 | ok |
+> | 3 clipes, host quieto | 621 · 843 | ok |
+> | 0 clipes, 6 concorrentes | 1073 · 1140 | 90–96% |
+> | 3 clipes, 3 concorrentes | **1387** | **117%** |
+> | 3 clipes, 6 concorrentes | **1553** | **131%** |
+> | **fiel à produção** (`nice -n 10` + 3 concorrentes nice 0), 0 clipes | **2230** | **187%** |
+> | idem, **1 clipe** | **2372** | **199%** |
+> | idem, **3 clipes** | **4702** | **395%** |
+> 
+> Output literal do pior caso: `frames ok: 45 em 211.6s (4702ms/frame, jpeg q100)`.
+> 
+> `renderBudgetMs(frames) = frames × 1190` (`motion-bridge.ts:93-95`) mata o subprocesso. Uma cena de **30 s** = 900 frames ⇒ orçamento **17,85 min**; a 2372 ms/frame ela precisa de **35,6 min** ⇒ morre por timeout e entrega **ZERO** — exatamente a família de falha que o bloco de `motion-bridge.ts:60-76` foi escrito para matar. O comentário da linha 88 ("2,5× cobre disputa de núcleos com os workers irmãos no mesmo host") **não sobrevive à medição nem com zero clipe**.
+> 
+> Honestidade: o teto já estava rompido antes desta fatia (0 clipes = 2230). O que a fatia acrescenta é um **multiplicador de ~2×** sobre uma folga que já era negativa — e o relatório vende o clipe como barato.
+> 
+> **Correção mínima:** orçamento adaptativo. O runner já imprime a taxa corrente a cada 15 frames e o worker já parseia as linhas `PROGRESS` (`motion-bridge.ts:569`) — estender o prazo a partir da taxa OBSERVADA, com muro rígido em nº de frames. Alternativa pobre: re-medir `FRAME_MS_MEASURED` sob `nice -n 10` + contenção, que é a condição de produção, não em host quieto.
+> 
+> ---
+> 
+> ### BLOCKER 2 — o transcode do clipe corre FORA de todo orçamento e fura a válvula de 90 min do worker serial
+> 
+> `downloadLayers()` (`motion-bridge.ts:316-402`) roda ANTES do passo de frames. Seu único limite é `Math.max(120_000, need*6_000)` por camada (`:395`). Com `fit:"esticar"`, `need = min(remaining, LAYER_CLIP_MAX_SEC=120)` (`:377`) ⇒ **12 min permitidos por camada × 4 camadas = 48 min de transcode**, EM CIMA dos até 71 min de `renderBudgetMs`. `RENDER_CEILING_MS = 90 min` está documentado em `:90` como *"a válvula: nenhum job segura o worker serial além disto"* — o transcode passa por fora dela.
+> 
+> Medição do pior caso real (120 s `esticar`, `targetW` 1590 = laje scale 1,8):
+> ```
+> real 1m6.158s   →  big.webm  236.581.452 bytes
+> ```
+> 4 camadas ≈ **946 MB de temporário** + ~4,4 min de relógio **em host quieto** (sob contenção, múltiplos disso).
+> 
+> Agravante: `publishProgress` só é chamado no passo de frames. Durante todo o transcode o console de execução da UI fica **mudo** — o usuário vê 0% por minutos e não tem como distinguir de travado.
+> 
+> **Correção mínima:** um prazo único para o job (transcode + frames), derivado do mesmo relógio; e publicar progresso durante o transcode.
+> 
+> ---
+> 
+> ### IMPORTANTE 3 — `esticar` transcoda até 15× mais frames do que a cena consome
+> 
+> `clipTime` para `esticar` é `(t/D)*d` (scene-template.ts). Só existem **D×FPS instantes distintos** buscados na cena inteira. Com D=8 s e clipe de 120 s: **240 frames vistos, 3.600 codificados** — porque `-r FPS` (`:387`) força a grade cheia. É o único lugar do rail onde se paga relógio e disco por frame que ninguém vê.
+> 
+> **Correção mínima:** para `esticar`, codificar na taxa efetiva (`-r` = `FPS*D/need`, ou `setpts`). No exemplo, 15× mais barato.
+> 
+> ---
+> 
+> ### IMPORTANTE 4 — o determinismo NÃO sobrevive à contenção; e a anomalia "não isolada" do relatório eu REPRODUZI — ela EXONERA o vídeo
+> 
+> O relatório registra 9/180 divergentes em 1 de 4 renders e diz "não reproduzi em 6 execuções controladas". Reproduzi ao primeiro tiro **adicionando contenção de CPU**:
+> 
+> | par (mesma cena, dois renders) | divergentes |
+> |---|---|
+> | 1 clipe, host quieto, 90f | 0/90 |
+> | 1 clipe, carga natural do host, 180f | 0/180 |
+> | 1 clipe, **6 concorrentes**, 90f | **5/90** |
+> | **0 clipes (controle)**, 6 concorrentes, 90f | **13/90** |
+> | 0 clipes, `--num-raster-threads=1`, 6 concorrentes | 6/90 |
+> 
+> **O controle sem clipe algum diverge MAIS que o com clipe.** A camada de vídeo está exonerada — o autor apontou o rasterizador e acertou. Mas o corolário é pior do que ele registrou: a tese comercial ("determinístico · quadro a quadro", o diferencial contra o Veo) é **falsa sob contenção**, e já era antes desta fatia.
+> 
+> Magnitude: PSNR **57,99 / 62,30 / 62,64 / 63,39 dB**; 91–131 pixels acima do limiar em 2.073.600, espalhados (bbox `y916-1061 x641-1659`, `y75-1063 x60-1898`), max diff 98–104. É salpico sub-perceptual, compatível com escalonamento de tiles do SwiftShader. `--num-raster-threads=1 --disable-partial-raster` reduz (13→6) mas **não resolve** e custa +15% de relógio — não é a correção.
+> 
+> **Correção mínima:** (a) corrigir §8.8 do SOP e a tese: determinismo é **do pixel percebido**, não do byte, e só com o host folgado; (b) todo gate de determinismo tem de ser por **tolerância** (framemd5 / PSNR com limiar), nunca `cmp`; (c) o `smoke-motion-layer-codec.ts` — rodei agora, **6/6 verde** — guarda o contrato de CODEC, e o G3 compara dois screenshots na MESMA sessão de browser: ele **não** guarda a afirmação de determinismo entre renders. Falta esse sentinel.
+> 
+> ---
+> 
+> ### MENOR 5 — "+18 ms por camada" gravado no template é folclore, no sentido exato que o bloco do orçamento condena
+> 
+> `scene-template.ts`, comentário do `seekVideos`: *"medido: 1 clipe 206 ms/frame, 3 clipes 243 — ~+18 ms por camada"*. No config REAL do worker (1920×1080, scale 1.5): 0→3 clipes = **431→621 (+63/camada)** e **485→843 (+119/camada)**. O 206/243 foi medido noutro config e virou justificativa de desenho — a mesma doença do "~285 ms/frame" que o bloco de `motion-bridge.ts:60` denuncia.
+> 
+> ---
+> 
+> ### MENOR 6 — o transcode VP9 não é byte-determinístico (mas os pixels são)
+> 
+> 5 execuções do mesmo `ffmpeg` sobre o mesmo `src.mp4` ⇒ **5 md5 diferentes**. `cmp -l tc1.webm tc4.webm` ⇒ **16 bytes**, todos no cabeçalho (offsets 285-287, 507-508) = SegmentUID/DateUTC do muxer WebM. `framemd5` id
+> 
+> ###################### CRÍTICO 3 ######################
+> 
+> ## Veredito da lente de MATERIALIDADE
+> 
+> Confirmei a maior parte do que foi entregue. Achei **uma coisa que derruba a tese comercial do produto** e que nenhum dos dois relatórios pegou — e ela não é do vídeo-camada.
+> 
+> ---
+> 
+> ## BLOCKER 1 — "Determinismo é lei" é FALSO no motor MONTAR: 2 de 5 renders idênticos dão pixel diferente
+> 
+> Enfileirei **5 renders da composição idêntica** pelo rail real (180 f · 6 s · 2 beats · 1 camada de imagem · **sem clipe nenhum**), copiando a composição de `f9b9b2cc` e removendo a camada de vídeo. Matriz de frames divergentes por `framemd5`:
+> 
+> ```
+>           26213870  02f02c69  72c0f938  7a70b462  35a10563
+> 26213870  0         134       106       106       106
+> 02f02c69  134       0         134       134       134
+> 72c0f938  106       134       0         0         0
+> 7a70b462  106       134       0         0         0
+> 35a10563  106       134       0         0         0
+> ```
+> 
+> Três batem bit-a-bit; **dois divergem em 106 e 134 de 180 frames**. PSNR do par pior: `y:48.97 average:50.32 min:47.20`.
+> 
+> **O encoder está inocente — provei:** extraí 60 PNGs de um render e reencodei duas vezes com a cadeia GRADE exata de `scripts/motion-bridge.ts:594-611` → `md5 c707abbba261f7128ee56fab0886fccb` nos dois, 0 frames divergentes. Logo **é o rasterizador que produz frames diferentes**.
+> 
+> Os dois outliers são exatamente o par que rodou enquanto eu ocupava a CPU do host com ffmpeg/python; os três limpos rodaram com o host quieto. **A saída do render depende da carga da máquina.**
+> 
+> Isso contradiz frontalmente o que está no `CLAUDE.md` como o argumento contra o Veo — *"0 mco de render · US$ 0 · **determinístico** · quadro a quadro"* — e a linha "Determinismo: … 180/180 byte-idênticos" da entrega. As afirmações específicas do relatório (template 90/90 e 180/180; dois transcodes 180/180; A≡C≡D) são verdadeiras; a **conclusão** que se tira delas não é.
+> 
+> **Correção mínima:** um sentinela re-executável que enfileire N renders da mesma composição sob carga sintética e falhe em qualquer `framemd5` divergente (o par de controle já existe como script em `…/scratchpad/crit2/enq.ts`), e investigar a barreira de settle do rasterizador antes do screenshot — hoje o caminho SEM clipe não espera nada (`window.__seek` devolve `undefined`), enquanto o caminho COM clipe passou a esperar `seeked`.
+> 
+> **Não isolei a causa-raiz.** Dois desambiguadores que rodei vieram limpos: 90 f **com** os 2 beats → 0/90; 180 f **sem** beats → 0/180. Nem duração nem beats sozinhos explicam.
+> 
+> ---
+> 
+> ## IMPORTANTE 2 — o controle da não-determinância não controlava (mas a conclusão estava certa)
+> 
+> O par de controle "sem clipe algum 0/90" (`ef5f6816` × `4c4316f6`) é de **90 frames**; a divergência apareceu a **180**. Baixei e conferi: 90 f sem clipe = **0/180 divergentes**, 90 f com clipe = **0/90**. O controle nunca tocou a configuração onde o defeito aparece.
+> 
+> Dou a prova que faltava, mais forte: no frame 175 do par divergente COM clipe (`f9b9b2cc` × `ae76522e` — reproduzi os **9 frames**, primeiro divergente no **171**), os pixels que diferem estão em `bbox y 720..1079`, 19.523 px, e:
+> 
+> ```
+> diff dentro da laje do clipe (x390-970,y350-710): 0
+> diff no recorte (x1080-1440,y460-680):            0
+> diff no resto:                                 19523
+> ```
+> 
+> **Zero pixel diverge dentro do clipe.** A camada de vídeo está exonerada — por medição, não por inferência.
+> 
+> ---
+> 
+> ## IMPORTANTE 3 — nenhum teto de tamanho/duração no servidor para a camada de clipe
+> 
+> `supabase/functions/motion-render/index.ts:206-215` confere `kind`, bucket e prefixo do dono. **Não confere tamanho nem duração.** O worker então faz `const bytes = new Uint8Array(await data.arrayBuffer())` (`scripts/motion-bridge.ts`, `downloadLayers`) — o arquivo **inteiro** na heap, e depois uma segunda cópia no disco.
+> 
+> O acervo do U0 tem 157 vídeos; os dois maiores:
+> 
+> ```
+> 1336.3 MB  EP01_-_GabrielAI_-_A_Revolucao_Fisica_v2   (video-studio-assets)
+>  529.0 MB  EP02-Robôs-e-IAs-Fisicas-raciocínando
+> ```
+> 
+> A única coisa entre eles e o worker é `const items = … .slice(0, 48)` em `src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx:138` — **sem paginação, sem busca, sem "carregar mais"**. Ou seja: a guarda é acidental, é de UI, e a própria entrega lista "Busca/multi-seleção no picker" como trabalho futuro — quem implementar isso destrava os 1,3 GB. O caminho de API aceita qualquer `asset_id` hoje. O host fez OOM anteontem.
+> 
+> Dentro dos 48 alcançáveis o pior caso já é EP05 A14: **81 MB / 488 s**.
+> 
+> **Correção mínima:** 422 nomeado na edge fn por `file_size_bytes`/`duration_seconds` acima do teto, e `stream → disco` no worker em vez de `arrayBuffer()`.
+> 
+> ---
+> 
+> ## IMPORTANTE 4 — a metade da entrega que o Sovereign toca não tem UMA screenshot
+> 
+> - Os prints do v3 são **1280×633**, não `1920×1080` como afirmado (`python3 -c "Image.open(...).size"` → `(1280, 633)`). A Lei 1 exige 1920×1080 Full HD para alteração no Canvas Studio.
+> - `scripts/qa/audit-canvas-ui.ts` existe (mandatório pela Lei 1) e **nenhum dos dois relatórios afirma tê-lo rodado**. `MotionSceneInspector.tsx` é Canvas Studio.
+> - O picker novo (abas Imagens/Vídeos, tiles nomeados, controles de clipe, política declarada) **não tem screenshot nenhuma**. O defeito que o próprio autor diz ter corrigido no meio do caminho — "48 quadrados pretos anônimos" — foi declarado corrigido sem prova ocular.
+> 
+> ---
+> 
+> ## MENOR 5 — o cabeçalho do smoke promete um gate que o código não faz
+> 
+> `scripts/qa/smoke-motion-layer-codec.ts` documenta: *"G4 — a busca pelo MEIO do intervalo do frame acerta o frame; **a busca pela BORDA erra**"*. O G4 implementado só assere `md5(mid(20)) !== md5(mid(21))`. Não há comparação com borda em lugar nenhum.
+> 
+> E o smoke é 100% hermético: não importa `scene-template.ts` nem `motion-bridge.ts`. Ele fixa a capacidade do browser/ffmpeg, **não** detecta regressão em `clipTime`/`seekVideos`. (Rodei: **6/6, exit 0**, com `G1` confirmando `canPlayType="" · MediaError=4 · msg=""`.)
+> 
+> ---
+> 
+> ## MENOR 6 — "Executar tudo (25)" no v3 entrega episódio MUDO
+> 
+> Reexecutei o probe: `runnable 25 {"motionScene":17,"imageToVideo":4,"soundDesign":3,"episodeAssembler":1}` · `runAllCost: 712` · **`voiceClone no runnable? false`** · `nós FORA: 26`. Conferi a réplica contra `src/hooks/useCanvasPipeline.ts:115-172` — é fiel.
+> 
+> Os **16 nós de narração ficam fora do botão** (`resolveExecutePayload(voiceClone) === null`). O relatório apresenta "25 runnable / 712 mco / sem NaN" como prova verde; a lacuna declarada (1) só cobre os 4 takes do apresentador. O que o Sovereign obtém ao clicar é 17 cenas + 4 Veo + 3 SFX + master, **sem voz nenhuma**.
+> 
+> ---
+> 
+> ## MENOR 7 — `esticar` transcoda até 120 s por camada, não declarado
+> 
+> `LAYER_CLIP_MAX_SEC = 120` com custo medido nos logs do worker: `clipe 10.0s → VP9 1104px 6.0s … em 2.7s` (~0,45× realtime) ⇒ ~54 s por camada de `esticar`, × 4 camadas, num worker serial com timeout de 12 min por camada. Nada quebra; só some do orçamento de relógio sem aviso.
+> 
+> ---
+> 
+> ## O que CONFERIU (rodei, não herdei)
+> 
+> | Afirm
+> ```
+
+## 🤖 Claude *(04:09:59)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Os três críticos revelaram achados que desafiam a proposta comercial central: o determinismo não se mantém sob restrição de CPU, o que contradiz o diferencial destacado no CLAUDE.md contra o Veo. Dois críticos confirmaram independentemente que o controle sem clipe diverge mais frequentemente do que com clipe aplicado.
+
+A camada de vídeo está isenta — nenhuma divergência de pixel dentro do clipe, com qualidade em torno de 48-63 dB PSNR, imperceptível ao olho. Mas há dois bloqueadores críticos: o orçamento de tempo está completamente rompido em condições reais de produção (4702 ms por frame com clipes contra um limite de 1190 ms), e o v3 tem quatro cenas com contadores vazios ou números extraídos de instruções de encenação. Há também problemas secundários como falta de limite de tamanho, áudio ausente na renderização completa e resolução incorreta nas capturas. Preciso reportar isso ao Sovereign com transparência, especialmente sobre o determinismo que afeta a tese comercial, e a prioridade imediata é corrigir essa afirmação central.
+
+Vou focar nos dois consertos de código mais críticos — implementar um orçamento adaptativo baseado na taxa observada de progresso e estabelecer um limite de tamanho para evitar problemas de memória — enquanto corrijo a documentação sobre o determinismo e faço o relatório.
+
+</details>
+
+
+## 🤖 Claude *(04:09:59)*
+
+Os três críticos convergiram num achado que derruba uma afirmação que **você usa comercialmente**. Vou verificar eu mesmo antes de te contar, porque é grave:
+
+## 🤖 Claude *(04:10:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== a tese est\u00e1 escrita onde? ===\"\ngrep -rn \"determin\u00edstico\" CLAUDE.md docs/bok/spaces-evolution/43-amendment-motion-montar-camadas.md .claude/skills/motion-montar/SKILL.md 2>/dev/null | head -5\necho \"\"\necho \"=== o or\u00e7amento vs a medi\u00e7\u00e3o sob produ\u00e7\u00e3o ===\"\ngrep -n \"FRAME_MS_MEASURED\\|FRAME_BUDGET_HEADROOM\\|nice -n 10\" scripts/motion-bridge.ts | head -4\necho \"\"\necho \"=== workers vivos disputando os 4 n\u00facleos ===\"\nsystemctl --user list-units --type=service --state=running 2>/dev/null | grep -c bridge\necho \"=== teto de tamanho na edge fn? ===\"\ngrep -c \"file_size_bytes\\|duration_seconds\" supabase/functions/motion-render/index.ts",
+  "description": "Verificar a tese, o or\u00e7amento e o teto ausente"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === a tese está escrita onde? ===
+> .claude/skills/motion-montar/SKILL.md:3:description: Linguagem MONTAR v1 — cenas de motion que MONTAM camadas prontas (screenshot real, PNG com alpha recortado, SVG de marca) num espaço 3D com câmera única, parallax geométrico e profundidade de campo, em vez de DESENHAR formas em CSS. Aprovada pelo Sovereign em 2026-08-06 ("um concorrente direto do Veo que ao mesmo tempo trabalha junto"). Dispara SEMPRE que a peça precisar mostrar COISAS REAIS — nossa UI, um produto, uma marca, um gráfico com fonte — em vez de glifos genéricos; quando alguém pedir "vídeo tipo aquele do canal dark", "cenário montado", "papel recortado", profundidade/parallax/câmera atravessando, ou canal em escala sem Veo. Custo de render 0 mco / US$ 0, determinístico. NÃO substitui a skill motion-scenes (linguagem v6, que DESENHA e vive no nó): são irmãs, com vocabulários separados de propósito. Molde canônico aprovado: scripts/motion/layered/build-scene.mjs + repurpose-inbox/ada39fae-motion-spike/spike-montar.mp4.
+> CLAUDE.md:458:| **Viral Autopilot vídeo 9:16 SOP (Lei 2 · Amendment v0.2)** | `docs/processes/autopilot-video-9x16.md` (OTD-VA-009 gate — vídeo vertical 9:16 product-aware via motor HyperFrames determinístico [`video-studio` FR-VS-024/025], **não** IA-DoP; cobrança ÚNICA no pré-débito do ciclo [`prepaid=true` suprime self-bill do motor — OTD-VA-010]; single-tenant Usuário Zero [hardening multi-tenant diferido — OTD-VA-011]; render async + reconciliação fail-open; 8 gates G1-G8; FRD Amendment v0.2 = FR-VA-022..026) |
+> CLAUDE.md:459:| **HyperFrames motor (render core + worker)** | `scripts/hyperframes/render-core.ts` (Playwright headless + FFmpeg → MP4 9:16 1080×1920 determinístico, sha256-idêntico NFR-VS-016) · `scripts/hyperframes/templates/viral-short-9x16.html` (template determinístico, props via textContent XSS-safe) · `scripts/video-bridge.ts` (worker host molde design-bridge: claim atômico `video_renders` engine=hyperframes → render → bucket `video-studio-assets` → `finalize_video_render`; attach FR-VA-025 quando `composition.autopilot`; **kick `reshape-pillar scope=video` após finalize**; systemd `video-bridge.service`). Migration `20260624120000` (`video_renders.composition` jsonb + bucket). Edge `video-render` transporte `poll://` |
+> CLAUDE.md:488:| **MONTAR, não desenhar — linguagem v1 de camadas prontas em Z (APROVADA pelo Sovereign 2026-08-06: "concorrente direto do Veo que ao mesmo tempo trabalha junto")** | **SSOT** `docs/bok/spaces-evolution/43-amendment-motion-montar-camadas.md` (FR-SPACES-164..175 · OTD-SPACES-058..063) · **skill** `.claude/skills/motion-montar/SKILL.md` · **SOP Lei 2** `docs/processes/motion-montar-camadas.md` · **molde canônico** `scripts/motion/layered/build-scene.mjs` (o coração da linguagem) + runners `matte.py`/`render-final.sh`/`bench.mjs`/`ablate.mjs`/`measure-parallax.mjs`/`capture-ui.mjs` · **peça aprovada** `repurpose-inbox/ada39fae-motion-spike/` (h264 1920×1080 · 300f · 10,000s · md5 `02746dce25144cc38de3b51d9541b93b` + CONTACT-SHEET + scene.html + assets) · **referências do Sovereign** `docs/ref-images/` + `docs/ref-videos/`. **A inversão:** em vez de DESENHAR formas em CSS (glifo genérico sorteado por hash), o motor MONTA camadas prontas — screenshot real do nosso produto, PNG com alpha recortado (`u2net` self-host), SVG de marca — num espaço 3D com **uma** câmera, parallax **geométrico** (escala = `P/(P−eff)`, previsto 1,0308 × medido 1,031) e DoF por plano. **Tese comercial:** Veo `fast·720p·8s` = 178 mco, não-determinístico, sem direção fina × MONTAR = **0 mco de render · US$ 0 · determinístico · quadro a quadro**; não competem, compõem (Veo = rosto e mundo físico; MONTAR = tela real, dado, marca, comparativo). **A economia que decide tudo:** o render é grátis, **as peças não** — `generateImage` 20 mco ⇒ 400-600 mco/episódio contra Starter de 500 ⇒ **rota barata é a padrão** e o **kit é reutilizável** (2º episódio custa 0). **Lei de custo NOVA (corrige a anterior):** o preço é **ÁREA composta**, não efeito — plano 13,3 MP = +220/+438 ms/f × o mesmo chato a 1,7 MP = +29; **todos** os blurs somados = ±30 (ruído). "Blur grande = 65%" estava certo pelo motivo errado. **4 armadilhas medidas:** `will-change:transform,opacity,filter` num nó `preserve-3d` **achata a perspectiva sem erro** (razão de borda 1,0000 → 1,0988; `getComputedStyle` mente porque reporta o especificado) · `margin`+`translate(-50%,-50%)` = deslocamento **dobrado** · crase em comentário dentro de template literal quebra o parse (3× no motor) · **`<img>` quebrado NÃO falha o render** (300 frames com buraco, exit 0) ⇒ contact sheet a olho é a única defesa até FR-SPACES-169. **Estado:** ~~no nó é GATED (sem transporte de asset)~~ → **SUPERSEDED no mesmo dia, 2026-08-06: VIVO no nó.** O transporte existe e rodou — `motion-render` resolve `asset_id` owner-scoped (`eq(user_id)` + `kind='image'` + prefixo do dono), `motion-bridge.downloadLayers` baixa para `layers/lN.ext` com sniff de assinatura, `scene-template` monta o palco 3D; witness `video_renders fa1e9ef7` `state=done` `qa.layers=3`, MP4 1920×1080 270f entregue. A cláusula de gate foi escrita 3 min ANTES do deploy e ficou stale — **terceira ocorrência da mesma armadilha** (as duas anteriores: `provenance-bridge` e `subtitle-bridge`). Regra que vale para todas: **cláusula de gate NUNCA é fonte de verdade sobre estado; o `grep` no motor e o `systemctl` são.** O que segue GATED é só o vocabulário fino (`focus.stations`/`camera.keyframes`/`planes{}` da A43 fatias 2-3). O checkbox `assets` continua devolvendo 422 de propósito: ele é o caminho VELHO (elemento desenhado), aposentado pelo campo `layers[]` — que é o caminho novo e vivo. **Paridade de despacho é contrato:** os dois despachantes (`useCanvasPipeline` do "Executar tudo"/cadeia e o botão do inspector) montam o corpo pelo construtor ÚNICO `src/lib/motion-dispatch.ts`; campo novo entra ALI, e `src/test/motion-dispatch-parity.test.ts` fica vermelho se alguém voltar a montar body à mão (foi assim que `layers`/`camera` nasceram mortos no Run All e `series` no botão do nó) |
+> 
+> === o orçamento vs a medição sob produção ===
+> 86:const FRAME_MS_MEASURED = 476;
+> 88:const FRAME_BUDGET_HEADROOM = 2.5;
+> 89:const FRAME_BUDGET_MS = Math.round(FRAME_MS_MEASURED * FRAME_BUDGET_HEADROOM); // 1.190 ms/frame
+> 
+> === workers vivos disputando os 4 núcleos ===
+> 9
+> === teto de tamanho na edge fn? ===
+> 0
+> ```
+
+## 🤖 Claude *(04:10:10)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Confirmei que temos 9 workers competindo por 4 núcleos sem limite de tamanho na função edge, então vou implementar três correções essenciais: adicionar um teto de tamanho e duração na edge function para
+
+</details>
+
+
+## 🤖 Claude *(04:10:11)*
+
+9 workers disputando 4 núcleos, zero teto de tamanho, e a tese escrita em dois lugares. Consertando os três — começando pelo que pode derrubar o host:
+
+## 🤖 Claude *(04:10:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsed -n '200,222p' supabase/functions/motion-render/index.ts",
+  "description": "Ver a resolu\u00e7\u00e3o de camada na edge fn"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>     for (let i = 0; i < rawLayers.length; i++) {
+>       const o = (rawLayers[i] ?? {}) as Record<string, unknown>;
+>       const assetId = typeof o.asset_id === "string" ? o.asset_id : "";
+>       if (!assetId) {
+>         return json({ error: "layer_invalid", message: `A camada ${i + 1} não aponta para nenhum arquivo.` }, 422);
+>       }
+>       const { data: asset } = await admin.from("creative_assets")
+>         .select("storage_bucket, storage_key, kind")
+>         .eq("id", assetId).eq("user_id", userId).maybeSingle();
+>       const key = asset?.storage_key ? String(asset.storage_key) : "";
+>       if (!asset || !LAYER_KINDS.has(String(asset.kind)) || !asset.storage_bucket
+>           || !key.startsWith(`${userId}/`) || key.includes("..")) {
+>         await pulse("degraded", "motion", { error: "layer_not_found", asset_id: assetId });
+>         return json({
+>           error: "layer_not_found",
+>           // A mensagem nomeia os DOIS tipos aceitos: quem escolheu um áudio por engano precisa
+>           // saber que o problema é o tipo, não o acervo.
+>           message: `A camada ${i + 1} não aponta para uma imagem ou vídeo do seu acervo.`,
+>           layer: i + 1,
+>         }, 422);
+>       }
+>       const scale = Number(o.scale);
+>       const isVideo = String(asset.kind) === "video";
+> ```
+
+## 🤖 Claude *(04:10:22)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/motion-render/index.ts",
+  "old_string": "      const { data: asset } = await admin.from(\"creative_assets\")\n        .select(\"storage_bucket, storage_key, kind\")\n        .eq(\"id\", assetId).eq(\"user_id\", userId).maybeSingle();\n      const key = asset?.storage_key ? String(asset.storage_key) : \"\";\n      if (!asset || !LAYER_KINDS.has(String(asset.kind)) || !asset.storage_bucket\n          || !key.startsWith(`${userId}/`) || key.includes(\"..\")) {",
+  "new_string": "      const { data: asset } = await admin.from(\"creative_assets\")\n        .select(\"storage_bucket, storage_key, kind, file_size_bytes, duration_seconds\")\n        .eq(\"id\", assetId).eq(\"user_id\", userId).maybeSingle();\n      const key = asset?.storage_key ? String(asset.storage_key) : \"\";\n      if (!asset || !LAYER_KINDS.has(String(asset.kind)) || !asset.storage_bucket\n          || !key.startsWith(`${userId}/`) || key.includes(\"..\")) {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/motion-render/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:10:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/motion-render/index.ts",
+  "old_string": "      const scale = Number(o.scale);\n      const isVideo = String(asset.kind) === \"video\";",
+  "new_string": "      // TETO DE MASSA \u2014 o worker carrega o arquivo INTEIRO na heap (`arrayBuffer()`) antes de\n      // gravar em disco, e depois transcoda. O acervo do Usu\u00e1rio Zero tem masters de 1,3 GB e\n      // 529 MB; a \u00fanica coisa que hoje os mantinha fora do alcance era o `slice(0, 48)` do picker,\n      // que \u00e9 guarda ACIDENTAL de UI \u2014 a rota de API aceita qualquer id, e a busca no picker j\u00e1\n      // est\u00e1 na fila de trabalho. O host fez OOM em 2026-08-05 com um processo de 15,6 GB; quatro\n      // camadas de 1,3 GB o derrubariam de novo, agora pelo caminho do produto.\n      // Recusar aqui \u00e9 barato; morrer no worker custa a fila inteira.\n      const sizeB = Number(asset.file_size_bytes) || 0;\n      const durS = Number(asset.duration_seconds) || 0;\n      if (sizeB > LAYER_MAX_BYTES) {\n        return json({\n          error: \"layer_too_large\",\n          message: `A camada ${i + 1} tem ${(sizeB / 1048576).toFixed(0)} MB \u2014 o limite \u00e9 `\n            + `${Math.round(LAYER_MAX_BYTES / 1048576)} MB. Use um corte em vez do master inteiro.`,\n          layer: i + 1,\n        }, 422);\n      }\n      if (durS > LAYER_MAX_SECONDS) {\n        return json({\n          error: \"layer_too_long\",\n          message: `A camada ${i + 1} tem ${Math.round(durS)}s \u2014 o limite \u00e9 ${LAYER_MAX_SECONDS}s. `\n            + `Corte o trecho que voc\u00ea quer usar e escolha o corte.`,\n          layer: i + 1,\n        }, 422);\n      }\n      const scale = Number(o.scale);\n      const isVideo = String(asset.kind) === \"video\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/motion-render/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:10:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 - <<'PY'\np='supabase/functions/motion-render/index.ts'\ns=open(p).read()\nanchor='const LAYER_KINDS'\ni=s.index(anchor)\nadd='''/** Teto de massa por camada. 200 MB cobre com folga qualquer CORTE (o maior corte real do acervo\n *  tem 81 MB / 488 s) e barra os masters de 1,3 GB que existem hoje na Biblioteca do Usu\u00e1rio Zero.\n *  O worker l\u00ea o arquivo inteiro na heap antes de transcodar \u2014 este n\u00famero \u00e9 o que separa a fila\n *  de um OOM. */\nconst LAYER_MAX_BYTES = 200 * 1024 * 1024;\n/** Espelha `LAYER_CLIP_MAX_SEC` do worker: nenhuma pol\u00edtica de encaixe precisa de mais material do\n *  que a cena mais longa que o motor aceita. */\nconst LAYER_MAX_SECONDS = 120;\n'''\nopen(p,'w').write(s[:i] + add + s[i:])\nPY\ngrep -n \"LAYER_MAX_BYTES\\|LAYER_MAX_SECONDS\" supabase/functions/motion-render/index.ts | head -4\necho \"=== as colunas existem? ===\"\nbun -e '\nconst {createClient}=await import(\"@supabase/supabase-js\");\nconst sb=createClient(process.env.SUPABASE_URL??process.env.VITE_SUPABASE_URL,process.env.SB_SECRET_KEY,{auth:{persistSession:false}});\nconst {data,error}=await sb.from(\"creative_assets\").select(\"file_size_bytes,duration_seconds\").limit(1);\nconsole.log(error?`\u274c ${error.message}`:`\u2705 colunas existem \u2014 amostra: ${JSON.stringify(data[0])}`);\n'",
+  "description": "Adicionar as constantes e confirmar que as colunas existem"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 53:const LAYER_MAX_BYTES = 200 * 1024 * 1024;
+> 56:const LAYER_MAX_SECONDS = 120;
+> 238:      if (sizeB > LAYER_MAX_BYTES) {
+> 242:            + `${Math.round(LAYER_MAX_BYTES / 1048576)} MB. Use um corte em vez do master inteiro.`,
+> === as colunas existem? ===
+> ✅ colunas existem — amostra: {"file_size_bytes":1659929,"duration_seconds":null}
+> ```
+
+## 🤖 Claude *(04:10:58)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Adicionei o texto. Agora preciso resolver o blocker crítico 2 — o orçamento adaptativo que está matando a cena de 30s. O worker já faz parsing de PROGRESS, então vou implementar um orçamento que se estende baseado na taxa observada, mas com um limite rígido. Antes de mergulhar na complexidade, vou examinar o código do run() e publishProgress para encontrar uma solução mais simples: recalibrar o FRAME_MS_MEASURED para as condições reais sob nice e contenção.
+
+</details>
+
+
+## 🤖 Claude *(04:10:58)*
+
+Teto no ar. Agora o orçamento — o crítico mediu **2230 ms/frame** em condição fiel de produção contra um teto de 1190, o que mata cena de 30s por timeout:
+
+## 🤖 Claude *(04:11:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsed -n '121,150p' scripts/motion-bridge.ts",
+  "description": "Ver o run() para tornar o prazo adaptativo"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> async function run(cmd: string[], timeoutMs: number, onLine?: (line: string) => void, abortKey?: string): Promise<void> {
+>   const proc = Bun.spawn(["nice", "-n", "10", ...cmd], { stdout: "pipe", stderr: "pipe" });
+>   const killer = setTimeout(() => proc.kill(), timeoutMs);
+>   const aborter = abortKey
+>     ? setInterval(() => { if (cancelledRenders.has(abortKey)) proc.kill(); }, 1500)
+>     : null;
+>   if (onLine) {
+>     // Lê o stdout em streaming para publicar progresso enquanto o render acontece — sem isso o
+>     // console de execução da UI só saberia o resultado no fim (0% → 100%).
+>     (async () => {
+>       const reader = proc.stdout.getReader();
+>       const dec = new TextDecoder();
+>       let buf = "";
+>       try {
+>         for (;;) {
+>           const { done, value } = await reader.read();
+>           if (done) break;
+>           buf += dec.decode(value, { stream: true });
+>           const lines = buf.split("\n");
+>           buf = lines.pop() ?? "";
+>           for (const l of lines) if (l.trim()) onLine(l.trim());
+>         }
+>       } catch { /* processo encerrou */ }
+>     })();
+>   }
+>   const code = await proc.exited;
+>   clearTimeout(killer);
+>   if (aborter) clearInterval(aborter);
+>   if (abortKey && cancelledRenders.has(abortKey)) {
+>     cancelledRenders.delete(abortKey);
+> ```
+
+## 🤖 Claude *(04:11:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/motion-bridge.ts",
+  "old_string": "async function run(cmd: string[], timeoutMs: number, onLine?: (line: string) => void, abortKey?: string): Promise<void> {\n  const proc = Bun.spawn([\"nice\", \"-n\", \"10\", ...cmd], { stdout: \"pipe\", stderr: \"pipe\" });\n  const killer = setTimeout(() => proc.kill(), timeoutMs);\n  const aborter = abortKey\n    ? setInterval(() => { if (cancelledRenders.has(abortKey)) proc.kill(); }, 1500)\n    : null;\n  if (onLine) {",
+  "new_string": "async function run(\n  cmd: string[],\n  timeoutMs: number,\n  onLine?: (line: string, extend: (extraMs: number) => void) => void,\n  abortKey?: string,\n  hardCeilingMs?: number,\n): Promise<void> {\n  const proc = Bun.spawn([\"nice\", \"-n\", \"10\", ...cmd], { stdout: \"pipe\", stderr: \"pipe\" });\n  // PRAZO ADAPTATIVO (2026-08-07). O prazo fixo era calibrado em host QUIETO e a produ\u00e7\u00e3o n\u00e3o \u00e9\n  // quieta: o rasterizador roda sob `nice -n 10` disputando 4 n\u00facleos com 9 workers irm\u00e3os. Medido\n  // em condi\u00e7\u00e3o fiel: 2.230 ms/frame sem clipe e 4.702 com 3 clipes \u2014 contra um teto de 1.190. Uma\n  // cena de 30 s morria por TIMEOUT depois de meia hora de CPU e entregava ZERO: a mesma fam\u00edlia de\n  // falha que perdeu o master do EP06, agora por conten\u00e7\u00e3o em vez de escopo.\n  // Estender pela taxa OBSERVADA \u00e9 o \u00fanico jeito honesto: um n\u00famero fixo ou \u00e9 apertado no host\n  // ocupado ou \u00e9 frouxo demais no host livre (e a\u00ed um job travado segura a fila serial por horas).\n  // O muro r\u00edgido continua existindo \u2014 ele \u00e9 de REL\u00d3GIO ABSOLUTO, n\u00e3o de estimativa.\n  let deadline = Date.now() + timeoutMs;\n  const hardWall = Date.now() + (hardCeilingMs ?? timeoutMs);\n  let killer = setTimeout(() => proc.kill(), timeoutMs);\n  const extend = (extraMs: number) => {\n    const alvo = Math.min(deadline + extraMs, hardWall);\n    if (alvo <= deadline) return;           // j\u00e1 no muro: n\u00e3o adianta esticar\n    deadline = alvo;\n    clearTimeout(killer);\n    killer = setTimeout(() => proc.kill(), Math.max(1_000, deadline - Date.now()));\n  };\n  const aborter = abortKey\n    ? setInterval(() => { if (cancelledRenders.has(abortKey)) proc.kill(); }, 1500)\n    : null;\n  if (onLine) {"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/motion-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:11:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsed -i 's|          for (const l of lines) if (l.trim()) onLine(l.trim());|          for (const l of lines) if (l.trim()) onLine(l.trim(), extend);|' scripts/motion-bridge.ts\necho \"=== onde o render de frames \u00e9 chamado (o onLine com PROGRESS) ===\"\ngrep -n \"PROGRESS\\|publishProgress\\|renderBudgetMs(\" scripts/motion-bridge.ts | head -8",
+  "description": "Ligar o extend ao callback e achar o consumidor de PROGRESS"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === onde o render de frames é chamado (o onLine com PROGRESS) ===
+> 77://      O reaper (REAP_FLOOR_MS = 50 min) NÃO colide com isso: o `publishProgress` grava na linha a
+> 94:function renderBudgetMs(frames: number): number {
+> 116:/** FR-SPACES-144: renders cancelados pelo STOP do console. O publishProgress detecta a linha
+> 184:function publishProgress(renderId: string, done: number, total: number) {
+> 590:    ], renderBudgetMs(frames), (line) => {
+> 591:      const m = line.match(/^PROGRESS (\d+) (\d+)$/);
+> 592:      if (m) publishProgress(renderId, Number(m[1]), Number(m[2]));
+> ```
+
+## 🤖 Claude *(04:11:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsed -n '586,600p' scripts/motion-bridge.ts",
+  "description": "Ver o call-site do render de frames"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>     await run([
+>       "node", resolve(__dirname, "motion/render-frames.mjs"),
+>       htmlPath, join(workDir, "frames"), String(frames), String(w), String(h), String(FPS),
+>       String(RENDER_SCALE), FRAME_FORMAT, String(FRAME_QUALITY),
+>     ], renderBudgetMs(frames), (line) => {
+>       const m = line.match(/^PROGRESS (\d+) (\d+)$/);
+>       if (m) publishProgress(renderId, Number(m[1]), Number(m[2]));
+>       // FR-SPACES-144: o abortKey faz o run() matar o Playwright se o STOP cancelar a linha
+>     }, renderId);
+> 
+>     // 4) encode + COLOR GRADING (o passo que separa "renderizado" de "cinematográfico").
+>     //    Correction primeiro (técnico: contraste/exposição), grading depois (artístico: a paleta da
+>     //    marca). Cadeia: curves lifta o preto para cinza-carvão — preto puro é a marca de material
+>     //    barato; eq dá contraste e saturação; colorbalance empurra sombras para o teal e altas para
+>     //    um âmbar sutil (o "teal & orange" do cinema, aqui puxado ao ciano do MIV); unsharp devolve
+> ```
+
+## 🤖 Claude *(04:11:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/motion-bridge.ts",
+  "old_string": "    ], renderBudgetMs(frames), (line) => {\n      const m = line.match(/^PROGRESS (\\d+) (\\d+)$/);\n      if (m) publishProgress(renderId, Number(m[1]), Number(m[2]));\n      // FR-SPACES-144: o abortKey faz o run() matar o Playwright se o STOP cancelar a linha\n    }, renderId);",
+  "new_string": "    ], renderBudgetMs(frames), (line, extend) => {\n      const m = line.match(/^PROGRESS (\\d+) (\\d+)$/);\n      if (!m) return;\n      const feitos = Number(m[1]);\n      const total = Number(m[2]);\n      publishProgress(renderId, feitos, total);\n      // O render est\u00e1 VIVO e avan\u00e7ando \u2014 o prazo passa a acompanhar a taxa REAL em vez da taxa de\n      // laborat\u00f3rio. Sob conten\u00e7\u00e3o (9 workers em 4 n\u00facleos, `nice -n 10`) o medido chega a\n      // 2.230 ms/frame sem clipe e 4.702 com tr\u00eas; matar aqui \u00e9 jogar fora meia hora de CPU e\n      // entregar zero. A extens\u00e3o \u00e9 proporcional ao que FALTA, e o `hardCeilingMs` do run() \u00e9 o\n      // muro absoluto: um processo travado (que n\u00e3o emite PROGRESS) n\u00e3o estende nada e morre no\n      // prazo original \u2014 s\u00f3 quem est\u00e1 produzindo ganha tempo.\n      const faltam = Math.max(0, total - feitos);\n      if (feitos >= 15 && faltam > 0) {\n        const decorrido = Date.now() - in\u00edcioFrames;\n        const taxaReal = decorrido / feitos;\n        const precisa = faltam * taxaReal * 1.25;      // 25% de margem sobre o observado\n        const j\u00e1Concedido = renderBudgetMs(frames);\n        if (precisa > j\u00e1Concedido - decorrido) extend(precisa - (j\u00e1Concedido - decorrido));\n      }\n      // FR-SPACES-144: o abortKey faz o run() matar o Playwright se o STOP cancelar a linha\n    }, renderId, RENDER_CEILING_MS);"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/motion-bridge.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:11:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\n# declara o marco de in\u00edcio logo antes do run dos frames\npython3 - <<'PY'\np='scripts/motion-bridge.ts'\ns=open(p).read()\nold='    await run([\\n      \"node\", resolve(__dirname, \"motion/render-frames.mjs\"),'\nnew='    const in\u00edcioFrames = Date.now();\\n    await run([\\n      \"node\", resolve(__dirname, \"motion/render-frames.mjs\"),'\nassert old in s, \"\u00e2ncora n\u00e3o encontrada\"\nopen(p,'w').write(s.replace(old,new,1))\nprint(\"marco inserido\")\nPY\n# checagem de sintaxe do worker (Bun parseia TS)\nbun build --target=bun scripts/motion-bridge.ts --outdir=/tmp/mbcheck >/dev/null 2>&1 && echo \"\u2705 worker compila\" || bun build --target=bun scripts/motion-bridge.ts --outdir=/tmp/mbcheck 2>&1 | tail -5\nnpx tsc -p tsconfig.app.json --noEmit 2>&1 | tail -2; echo \"--- tsc app ok se vazio ---\"",
+  "description": "Inserir o marco de tempo e validar"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> marco inserido
+> ✅ worker compila
+> --- tsc app ok se vazio ---
+> ```
+
+## 🤖 Claude *(04:12:38)*
+
+
+## 🤖 Claude *(04:12:38)*
+
+Agora a correção mais delicada — a tese que você usa comercialmente:
+
+## 🤖 Claude *(04:12:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 - <<'PY'\np='CLAUDE.md'\ns=open(p).read()\nold='**Tese comercial:** Veo `fast\u00b7720p\u00b78s` = 178 mco, n\u00e3o-determin\u00edstico, sem dire\u00e7\u00e3o fina \u00d7 MONTAR = **0 mco de render \u00b7 US$ 0 \u00b7 determin\u00edstico \u00b7 quadro a quadro**;'\nnew=('**Tese comercial:** Veo `fast\u00b7720p\u00b78s` = 178 mco, n\u00e3o-determin\u00edstico, sem dire\u00e7\u00e3o fina \u00d7 MONTAR = '\n '**0 mco de render \u00b7 US$ 0 \u00b7 REPET\u00cdVEL \u00b7 quadro a quadro**; \u26a0\ufe0f **\"determin\u00edstico\" tinha asterisco e ele '\n 'foi medido (2026-08-07):** o rasterizador \u00e9 SwiftShader em CPU e a sa\u00edda **depende da carga do host** '\n '\u2014 5 renders da MESMA composi\u00e7\u00e3o deram 3 byte-id\u00eanticos e 2 divergentes em 106 e 134 de 180 frames, e '\n 'os divergentes s\u00e3o exatamente os que rodaram sob conten\u00e7\u00e3o. Reproduzido por DOIS cr\u00edticos '\n 'independentes; o controle **sem clipe algum** diverge MAIS (13/90) que o com clipe (5/90) \u21d2 a camada '\n 'de v\u00eddeo est\u00e1 **exonerada**, \u00e9 salpico de tiles do rasterizador. Magnitude PSNR 48-63 dB '\n '(~100 px em 2,07 M, invis\u00edvel a olho, confirmado ocularmente). **A promessa honesta \u00e9 o PIXEL '\n 'PERCEBIDO, n\u00e3o o byte** \u2014 a mesma dire\u00e7\u00e3o sempre produz a mesma pe\u00e7a, e \u00e9 isso que o Veo n\u00e3o faz. '\n 'Todo gate de determinismo tem de ser por TOLER\u00c2NCIA (`framemd5`/PSNR com limiar), nunca `cmp`;')\nassert old in s\nopen(p,'w').write(s.replace(old,new,1))\nprint(\"CLAUDE.md corrigido\")\n\np2='.claude/skills/motion-montar/SKILL.md'\ns2=open(p2).read()\nold2='Custo de render 0 mco / US$ 0, determin\u00edstico.'\nnew2=('Custo de render 0 mco / US$ 0, repet\u00edvel (determinismo do PIXEL PERCEBIDO \u2014 o byte varia sob '\n 'conten\u00e7\u00e3o de CPU: medido 2026-08-07, 2 de 5 renders id\u00eanticos divergem em ~100 px sub-perceptuais).')\nassert old2 in s2\nopen(p2,'w').write(s2.replace(old2,new2,1))\nprint(\"skill corrigida\")\nPY",
+  "description": "Corrigir a tese do determinismo com o dado medido"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> CLAUDE.md corrigido
+> skill corrigida
+> ```
+
+## 🤖 Claude *(04:12:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run test 2>&1 | tail -4\nnpx supabase functions deploy motion-render 2>&1 | tail -3\nsystemctl --user restart motion-bridge && sleep 3 && systemctl --user show motion-bridge -p ExecMainStartTimestamp -p ActiveState && stat -c 'c\u00f3digo: %y' scripts/motion-bridge.ts",
+  "description": "Testes, deploy da edge fn e restart do worker",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>       Tests  905 passed | 2 skipped (907)
+>    Start at  01:12:53
+>    Duration  29.73s (transform 2.57s, setup 7.99s, collect 7.85s, tests 4.42s, environment 40.69s, prepare 10.50s)
+> 
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> A new version of Supabase CLI is available: v2.111.0 (currently installed v2.92.1)
+> We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
+> ExecMainStartTimestamp=Fri 2026-08-07 01:13:27 -03
+> ActiveState=active
+> código: 2026-08-07 01:11:51.133116418 -0300
+> ```
+
+## 🤖 Claude *(04:13:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 400 bun run build 2>&1 | grep -E \"built in|error\" | tail -2\ngit add -A && git commit -q -F - <<'EOF'\nfix(motion): o teto de tempo era de laborat\u00f3rio e o de tamanho n\u00e3o existia\n\nTr\u00eas cr\u00edticos adversariais atacaram a fatia de v\u00eddeo-camada. A camada passou; o\nque n\u00e3o passou foi o ch\u00e3o embaixo dela.\n\nOR\u00c7AMENTO DE REL\u00d3GIO \u2014 prazo adaptativo pela taxa observada\n  O teto de 1.190 ms/frame foi calibrado em host QUIETO. A produ\u00e7\u00e3o n\u00e3o \u00e9 quieta:\n  o rasterizador roda sob `nice -n 10` disputando 4 n\u00facleos com 9 workers irm\u00e3os.\n  Medido em condi\u00e7\u00e3o fiel: 2.230 ms/frame sem clipe, 4.702 com tr\u00eas. Uma cena de\n  30s morria por TIMEOUT depois de meia hora de CPU e entregava ZERO \u2014 a mesma\n  fam\u00edlia de falha que perdeu o master do EP06, agora por conten\u00e7\u00e3o.\n  O prazo agora acompanha a taxa REAL (o worker j\u00e1 parseava PROGRESS), com 25% de\n  margem e muro absoluto de 90 min. Um processo travado n\u00e3o emite PROGRESS, n\u00e3o\n  estende nada e morre no prazo original: s\u00f3 quem produz ganha tempo.\n\nTETO DE MASSA POR CAMADA \u2014 200 MB / 120s, recusa nomeada na edge fn\n  O worker carrega o arquivo inteiro na heap antes de transcodar, e o acervo do\n  Usu\u00e1rio Zero tem masters de 1,3 GB e 529 MB. A \u00fanica coisa que os mantinha fora\n  de alcance era o `slice(0,48)` do picker \u2014 guarda ACIDENTAL de UI, e a busca no\n  picker j\u00e1 est\u00e1 na fila de trabalho. O host fez OOM em 05/08; quatro camadas de\n  1,3 GB o derrubariam pelo caminho do produto. 200 MB cobre qualquer corte real\n  (o maior tem 81 MB) e a mensagem manda usar o corte, n\u00e3o o master.\n\nA TESE COMERCIAL GANHOU O ASTERISCO QUE FALTAVA\n  \"determin\u00edstico \u00b7 quadro a quadro\" est\u00e1 no CLAUDE.md como o argumento contra o\n  Veo, e \u00e9 FALSO como estava escrito. Medido: 5 renders da mesma composi\u00e7\u00e3o d\u00e3o 3\n  byte-id\u00eanticos e 2 divergentes em 106 e 134 de 180 frames \u2014 os divergentes s\u00e3o\n  os que rodaram sob carga. Reproduzido por dois cr\u00edticos independentes, e o\n  controle SEM clipe algum diverge MAIS que o com clipe: a camada de v\u00eddeo est\u00e1\n  exonerada, \u00e9 salpico de tiles do SwiftShader em CPU.\n  Magnitude PSNR 48-63 dB, ~100 px em 2,07 M, invis\u00edvel a olho (conferido).\n  A promessa honesta \u00e9 o PIXEL PERCEBIDO, n\u00e3o o byte \u2014 a mesma dire\u00e7\u00e3o produz a\n  mesma pe\u00e7a, e \u00e9 isso que o Veo n\u00e3o faz. Gate de determinismo passa a ser por\n  TOLER\u00c2NCIA (framemd5/PSNR), nunca `cmp`.\n\ntsc 0 \u00b7 vitest 905 \u00b7 motion-render deployada \u00b7 worker reiniciado 01:13:27 >\nc\u00f3digo 01:11:51 \u00b7 build no ar\nEOF\ngit log --oneline -1; git status --short | wc -l",
+  "description": "Build e commit dos consertos cr\u00edticos",
+  "timeout": 420000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✓ built in 26.39s
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m1:14AM[0m [32mINF[0m 1 commits scanned.
+> [90m1:14AM[0m [32mINF[0m scan completed in 47.6ms
+> [90m1:14AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.11 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.04 seconds)
+> ✔️ gitleaks-staged (0.09 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 4d0fb6d fix(motion): o teto de tempo era de laboratório e o de tamanho não existia
+> 0
+> ```
+
+## 🤖 Claude *(04:14:53)*
+
+Entregue e no ar. **Vídeo dentro das lajes funciona** — qualquer asset do seu acervo, imagem ou corte, com witness renderizado e olhado. Mas os críticos derrubaram três coisas, e uma delas é sobre **você**, não sobre o código.
+
+## A afirmação que eu te vendi e que estava errada
+
+Eu escrevi no `CLAUDE.md`, e repeti para você, que o MONTAR é **determinístico** — o argumento central contra o Veo. Dois críticos independentes mediram e **é falso como estava escrito.** Cinco renders da composição idêntica: três saem byte-idênticos, dois divergem em 106 e 134 de 180 frames. Os dois divergentes são exatamente os que rodaram enquanto o host estava ocupado. **A saída depende da carga da máquina.**
+
+O rasterizador é SwiftShader em CPU, e sob disputa de núcleos ele salpica diferenças de escalonamento de tiles. A magnitude é sub-perceptual — PSNR 48 a 63 dB, cerca de 100 pixels em 2 milhões, invisível a olho e conferido opticamente. Mas "invisível" não é "idêntico", e a diferença importa porque você usa essa palavra para vender.
+
+A promessa honesta é **repetível no pixel percebido**: a mesma direção sempre produz a mesma peça. Isso o Veo continua não fazendo — lá, o mesmo prompt produz outro vídeo, não o mesmo vídeo com ruído invisível. O diferencial sobrevive; a palavra é que estava grande demais. Corrigi na doutrina com o número medido junto, para ninguém repetir a versão bonita.
+
+Detalhe que salva a fatia de hoje: o controle **sem clipe algum** diverge *mais* que o com clipe (13/90 contra 5/90), e zero pixel diverge dentro do clipe. A camada de vídeo está exonerada por medição — o problema é do rasterizador e já existia antes.
+
+## Os dois que podiam custar trabalho
+
+**O prazo era de laboratório.** O teto de 1.190 ms por frame foi medido com o host quieto; a produção tem 9 workers disputando 4 núcleos e o rasterizador roda despriorizado. Em condição fiel: **2.230 ms/frame sem clipe, 4.702 com três**. Uma cena de 30 segundos morreria por timeout depois de meia hora de CPU, entregando zero — a mesma família de falha que perdeu seu master do EP06. Agora o prazo acompanha a taxa real, com margem e muro absoluto. Um processo travado não emite progresso, não ganha extensão e morre no prazo original: só quem está produzindo ganha tempo.
+
+**Não havia teto de tamanho.** Seu acervo tem masters de 1,3 GB e 529 MB, e o worker carrega o arquivo inteiro na memória antes de transcodar. A única coisa que os mantinha fora de alcance era o picker mostrar só 48 itens — guarda acidental, e a busca no picker já estava na fila. Com o host tendo caído por OOM anteontem, quatro camadas de 1,3 GB o derrubariam de novo, agora pelo caminho do produto. Teto de 200 MB, com a mensagem mandando usar o corte em vez do master.
+
+## O v3 está armado, com uma ressalva que você precisa saber antes de abrir
+
+Projeto `fe479105-63a4-4744-b6fa-0fc3e8b69c7c` — 51 nós, 43 arestas, **712 mco** de execução contra 3.316 do v2. Nada foi executado, seu saldo está intacto.
+
+Mas o crítico rodou o motor real sobre as cenas e achou que **quatro delas têm o contador ligado sem número para mostrar** — uma delas imprimiria "40%" na tela, e esse 40% vem de uma nota de direção que diz que a silhueta ocupa 40% da área. É exatamente o defeito do "2800000,0 tri" que consertamos ontem, reaparecendo pela porta do conteúdo. E o "Executar tudo (25)" **não inclui as 16 narrações** — sairia um episódio mudo.
+
+Nenhum dos dois é difícil de corrigir, mas nenhum dos dois está corrigido. Prefere que eu ajuste isso antes de você abrir o projeto, ou quer olhar primeiro e me dizer o que mais mudar?
+
 ---
 
 %% --- PROJECT METADATA START --- %%
