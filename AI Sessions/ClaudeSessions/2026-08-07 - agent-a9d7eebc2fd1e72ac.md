@@ -989,6 +989,6 @@ But here's the real problem: those edges are semantically broken. A character re
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-08-07 - agent-a8588ef51d95ff99e]]
+> * **Sessão Anterior**: [[2026-08-07 - agent-a98a475577857883a]]
 > * **Próxima Sessão**: [[2026-08-07 - agent-ad25f928aa7abcfb6]]
 %% --- TIMELINE END --- %%
