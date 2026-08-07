@@ -692,6 +692,48 @@ uma partitura bonita, aprovada em texto, cujo frame do beat 3 **não mostra nada
 
 ---
 
+## ADENDO 2026-08-06 — a trupe ganha uma SEGUNDA linguagem: MONTAR
+
+O Sovereign aprovou o spike "montar, não desenhar" e mandou produtizar. A partir de agora a trupe
+escreve partitura em **duas** linguagens, e a primeira decisão de toda cena é **qual delas**:
+
+| | **v6 — DESENHAR** | **MONTAR** |
+|---|---|---|
+| Motor | `scripts/motion/scene-template.ts` (no **nó**) | `scripts/motion/layered/build-scene.mjs` (pelo **runner**) |
+| Matéria-prima | forma em CSS + 21 glifos | screenshot real · PNG com alpha · SVG de marca |
+| Profundidade | decoração | **geometria** (uma câmera, tabela Z, DoF por plano) |
+| Escolha quando | conceito abstrato, esteira, número puro | **coisa real**: nossa UI, produto, marca, comparativo |
+
+**Doutrina:** `docs/bok/spaces-evolution/43-amendment-motion-montar-camadas.md` ·
+**Skill:** `.claude/skills/motion-montar/SKILL.md` · **SOP:** `docs/processes/motion-montar-camadas.md` ·
+**Molde aprovado:** `repurpose-inbox/ada39fae-motion-spike/` (MP4 + contact sheet + `scene.html` + assets).
+
+### O que muda no contrato de passagem
+
+| Lente | Campo novo | Regra que nasce com ele |
+|---|---|---|
+| **Dramaturgo** | `beats[].layerRef` + `kitRequired[]` | beat aponta para **peça real**; peça que não existe = beat recusado. `onScreen` vazio em **≥ 1/2** dos beats (a camada já fala) |
+| **Encenador** | `planes{id:z}` · `corridor` · `hud[]` · `scrim` | plano sem `z` numérico é recusado; `z-index` e `margin` negativo proibidos; o **grid governa o HUD**, o **Z governa o palco**, e a safe area se verifica na caixa **projetada** |
+| **DoP** | `camera.keyframes` · `camera.drift` · `focus.stations` | parallax é **derivado** (camada que translada sozinha é recusada); custo se mede por **ÁREA composta**, não por efeito; vinheta **única** |
+| **Diretor de Arte** | `art.layers[]` com `family`/`edge`/`matte`/procedência | nenhuma camada entra sem carimbo; `w` **ou** `h`, nunca os dois; contorno branco é **encobrimento declarado**, não enfeite |
+
+### As quatro armadilhas que a trupe inteira precisa reconhecer
+
+1. **`will-change:transform,opacity,filter`** num nó `preserve-3d` **achata a perspectiva sem erro
+   nenhum** — e `getComputedStyle` continua dizendo `preserve-3d`. Medido: razão de borda 1,0000 →
+   1,0988 ao corrigir. Custo da correção: ruído.
+2. **`margin` negativo + `translate(-50%,-50%)`** = deslocamento **dobrado**.
+3. **Crase em comentário dentro de template literal** quebra o parse (mordeu 3× no motor).
+4. **`<img>` quebrado NÃO falha o render** — saem 300 frames com buraco e `exit 0`. **O contact
+   sheet olhado a olho é a única defesa** até FR-SPACES-169.
+
+### Gate que não muda
+
+Nada é "pronto" sem **olho** (contact sheet no tamanho real) **e** ouvido (transcrição contra
+roteiro). Nenhum número prova que o quadro lê como documentário.
+
+---
+
 %% --- PROJECT METADATA START --- %%
 > [!meta] Informações do Projeto
 > * **Projeto**: [[MCORCH]]
