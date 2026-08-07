@@ -6807,6 +6807,164 @@ O que fiz:
 
 Isso expõe uma dívida real, que anotei no commit em vez de consertar por conta própria: **apagar um asset não apaga o arquivo do storage**. Hoje isso é lixo acumulando silenciosamente — 15 vídeos, dezenas de MB, invisíveis e pagos. Se quiser, faço a limpeza numa próxima passada, com dry-run antes.
 
+## 👤 User *(01:44:15)*
+
+sim pode fazer a limpeza, e agora finalmente precisamos melhorar nosso projeto no spaces auditar e refatorar os nós conforme tudo que aprendemos com o resultado impressionante do MONTAR · peça aprovada (Amendment 43) · 10s · 5 camadas em Z - id> fcf91d44. Podemos colocar videos dentro dos cardstabem para ficar ainda melhr, cortes etc, veja que você colocou imagens do site e ficou legal, mas poderia ser qualquer outro assets, ou criativo de decisão do usuário. Agora vamos para os nós e o projeto v3 no spaces
+
+## 🤖 Claude *(01:44:35)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O Sovereign tem três prioridades: limpar os 15 objetos órfãos no storage, adicionar suporte para vídeos dentro dos cards das camadas 3D (não apenas imagens), e depois auditar e refatorar os nós junto com o projeto v3 no Spaces.
+
+Ele também ressaltou que o conteúdo das camadas deveria ser flexível — qualquer asset que o usuário escolher, não apenas imagens do site. Vou começar com a limpeza (rápido e autorizado, com dry-run primeiro), depois disparar um workflow para as outras duas tarefas. Para a limpeza, preciso listar os objetos órfãos em `video_renders` cujo `storage_key` não tem asset correspondente e deletar apenas esses.
+
+</details>
+
+
+## 🤖 Claude *(01:44:35)*
+
+Autorizada a limpeza. Dry-run primeiro — nunca apago sem olhar a lista:
+
+## 🤖 Claude *(01:44:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncat > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2de725c0-2186-4fa8-9a12-16d4bd8f3128/scratchpad/gc-orphans.ts <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nconst sb = createClient(process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!,\n  process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });\nconst APPLY = process.argv.includes(\"--apply\");\nconst BUCKET = \"video-studio-assets\";\n\nconst { data: renders } = await sb.from(\"video_renders\")\n  .select(\"id,engine,state,storage_key,created_at\").eq(\"state\",\"done\")\n  .in(\"engine\",[\"motion\",\"assemble\",\"sfx\"]).not(\"storage_key\",\"is\",null);\nconst { data: assets } = await sb.from(\"creative_assets\").select(\"storage_key\");\nconst vivos = new Set((assets ?? []).map(a => a.storage_key));\n\nconst \u00f3rf\u00e3os = (renders ?? []).filter(r => !vivos.has(r.storage_key!));\nconsole.log(`${APPLY ? \"APLICANDO\" : \"DRY-RUN\"} \u2014 \u00f3rf\u00e3os: ${\u00f3rf\u00e3os.length}\\n`);\n\nlet bytes = 0;\nconst paraApagar: string[] = [];\nfor (const o of \u00f3rf\u00e3os) {\n  const { data: blob, error } = await sb.storage.from(BUCKET).download(o.storage_key!);\n  if (error) { console.log(`  \u2014 ${o.storage_key!.slice(-40)} J\u00c1 AUSENTE do storage`); continue; }\n  const mb = (blob as Blob).size / 1048576;\n  bytes += (blob as Blob).size;\n  paraApagar.push(o.storage_key!);\n  console.log(`  ${o.created_at?.slice(5,16)} ${o.engine.padEnd(8)} ${mb.toFixed(2).padStart(6)} MB  ${o.storage_key!.slice(-40)}`);\n}\nconsole.log(`\\nTOTAL: ${paraApagar.length} objetos \u00b7 ${(bytes/1048576).toFixed(1)} MB`);\n\nif (!APPLY) { console.log(\"\\n(dry-run \u2014 nada foi apagado; rode com --apply)\"); process.exit(0); }\n// remove em lote; a LINHA de video_renders fica (\u00e9 o hist\u00f3rico da fila, n\u00e3o m\u00eddia)\nconst { data: del, error: delErr } = await sb.storage.from(BUCKET).remove(paraApagar);\nif (delErr) { console.error(\"ERRO:\", delErr.message); process.exit(1); }\nconsole.log(`\\n\u2705 ${del?.length ?? 0} objetos removidos`);\n// verifica\u00e7\u00e3o material: sumiram mesmo?\nlet restam = 0;\nfor (const k of paraApagar) { const { error } = await sb.storage.from(BUCKET).download(k); if (!error) restam++; }\nconsole.log(restam === 0 ? \"\u2705 verificado: nenhum sobreviveu\" : `\u26a0\ufe0f  ${restam} ainda baix\u00e1veis`);\nEOF\nbun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2de725c0-2186-4fa8-9a12-16d4bd8f3128/scratchpad/gc-orphans.ts 2>&1 | tail -22",
+  "description": "Dry-run da limpeza de objetos \u00f3rf\u00e3os"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> DRY-RUN — órfãos: 15
+> 
+>   08-06T04:55 motion     4.63 MB  67c2e9a1-61f3-442b-9cc1-75d43063c2f1.mp4
+>   08-05T23:03 motion     2.37 MB  5e3a2ea7-a3b7-48f6-95ea-14e438ee19d9.mp4
+>   08-06T04:55 motion     5.10 MB  a71ea951-c245-4cce-866c-c411992a8e53.mp4
+>   08-06T00:28 motion     2.74 MB  9ec8caa7-f048-46c3-bad6-620136110c27.mp4
+>   08-06T04:55 motion     2.91 MB  9b0db404-00ab-4f79-9534-daf9d3844cdb.mp4
+>   08-06T04:55 motion     4.36 MB  49768404-ce7d-4597-93fa-38ba366e326d.mp4
+>   08-06T04:55 motion     5.57 MB  33a5d1c6-6e8e-41b3-9b6b-fb41022d984e.mp4
+>   08-06T04:55 motion     6.05 MB  1e4ecc96-13db-4de4-931c-4e6d03fe6dea.mp4
+>   08-06T04:55 motion     5.74 MB  9e713260-45eb-4a98-9c7a-0bd26214ca53.mp4
+>   08-06T04:55 motion     7.50 MB  caa6e31c-62cd-427a-83be-795e41302912.mp4
+>   08-06T04:55 motion     4.24 MB  8872590e-d71c-4687-8a57-9fc27b7cbdca.mp4
+>   08-06T04:55 motion     4.17 MB  5101af03-bcc5-4b27-8333-9d2dd016bf6d.mp4
+>   08-06T04:55 motion     4.44 MB  9cdd7a2a-123e-470c-a2e8-d1910e274f34.mp4
+>   08-06T04:55 motion     2.65 MB  cb1a7ace-ddd8-41a7-97ff-510f02a82025.mp4
+>   08-06T04:55 motion     5.92 MB  92e50cda-5978-4276-8013-131344ff2fcd.mp4
+> 
+> TOTAL: 15 objetos · 68.4 MB
+> 
+> (dry-run — nada foi apagado; rode com --apply)
+> ```
+
+## 🤖 Claude *(01:45:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2de725c0-2186-4fa8-9a12-16d4bd8f3128/scratchpad/gc-orphans.ts --apply 2>&1 | tail -5\necho \"=== a pe\u00e7a aprovada continua intacta? ===\"\nbun -e '\nconst {createClient}=await import(\"@supabase/supabase-js\");\nconst sb=createClient(process.env.SUPABASE_URL??process.env.VITE_SUPABASE_URL,process.env.SB_SECRET_KEY,{auth:{persistSession:false}});\nconst {data,error}=await sb.storage.from(\"video-studio-assets\").download(\"ada39fae-67e1-4e53-af1c-5a18e1c108e8/motion/spike-montar-a43.mp4\");\nconsole.log(error?`\u274c ${error.message}`:`\u2705 pe\u00e7a aprovada intacta: ${(data.size/1048576).toFixed(2)} MB`);\n'",
+  "description": "Aplicar a limpeza e confirmar que a pe\u00e7a aprovada sobreviveu"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> TOTAL: 15 objetos · 68.4 MB
+> 
+> ✅ 15 objetos removidos
+> ✅ verificado: nenhum sobreviveu
+> === a peça aprovada continua intacta? ===
+> ✅ peça aprovada intacta: 2.93 MB
+> ```
+
+## 🤖 Claude *(01:45:27)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Limpeza concluída com sucesso — 15 objetos removidos, 68,4 MB liberados, nada sobreviveu e a peça permanece intacta. Agora vou focar nos próximos passos: adicionar suporte a vídeo dentro dos cards, auditar e refatorar os nós com base no que aprendi, e preparar o projeto v3 nos Spaces. Vou ativar o Ultracode e começar o workflow, promovendo o gc-orphans.
+
+Meu plano é estruturar isso em três fases paralelas na auditoria: verificar quais nós do Spaces precisam ser ajustados conforme o MONTAR, testar se o Chromium consegue fazer seek determinístico em vídeos ou se preciso extrair frames com ffmpeg, e desenhar a arquitetura do projeto v3 que gera episódios no estilo MONTAR. Depois vem a implementação — adicionar vídeo como camada e refatorar os nós — mas preciso ter cuidado porque ambas tocam nos mesmos arquivos, então vou usar um agente forte para coordenar isso.
+
+</details>
+
+
+## 🤖 Claude *(01:45:28)*
+
+Limpeza aplicada: **15 objetos, 68,4 MB**, verificado que nenhum sobreviveu — e a peça aprovada intacta. Promovendo o coletor para não viver no `/tmp`:
+
+## 🤖 Claude *(01:45:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncp /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/2de725c0-2186-4fa8-9a12-16d4bd8f3128/scratchpad/gc-orphans.ts scripts/qa/gc-motion-orphans.ts\npython3 - <<'PY'\np='scripts/qa/gc-motion-orphans.ts'\ns=open(p).read()\nhdr='''/**\n * Coletor de lixo do rail de motion \u2014 objetos de v\u00eddeo que ficaram no storage sem asset.\n *\n * Apagar um asset da Biblioteca N\u00c3O apaga o objeto do Storage nem a linha de `video_renders`.\n * Quando o Sovereign limpa cenas reprovadas (como as 15 do EP06 em 2026-08-06), os MP4 continuam\n * ocupando espa\u00e7o, invis\u00edveis e pagos. Este runner acha e remove s\u00f3 o que est\u00e1 \u00d3RF\u00c3O: render\n * `done` com `storage_key` que nenhum `creative_assets` referencia.\n *\n * A linha de `video_renders` N\u00c3O \u00e9 apagada \u2014 ela \u00e9 o hist\u00f3rico da fila (custo, estado, qa), n\u00e3o\n * m\u00eddia. O que se paga por guardar \u00e9 o MP4.\n *\n * Uso:  bun run scripts/qa/gc-motion-orphans.ts           # dry-run (default, SEMPRE olhe antes)\n *       bun run scripts/qa/gc-motion-orphans.ts --apply   # remove + verifica que sumiram\n *\n * Primeira execu\u00e7\u00e3o (2026-08-06): 15 objetos \u00b7 68,4 MB.\n */\n'''\nopen(p,'w').write(hdr + s)\nPY\nhead -3 scripts/qa/gc-motion-orphans.ts && bun run scripts/qa/gc-motion-orphans.ts 2>&1 | tail -3",
+  "description": "Promover o coletor de \u00f3rf\u00e3os para scripts/qa"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /**
+>  * Coletor de lixo do rail de motion — objetos de vídeo que ficaram no storage sem asset.
+>  *
+> TOTAL: 0 objetos · 0.0 MB
+> 
+> (dry-run — nada foi apagado; rode com --apply)
+> ```
+
+## 🤖 Claude *(01:45:43)*
+
+Zero órfãos restantes. Agora o trabalho que você pediu — vídeo nas camadas, auditoria dos nós e o projeto v3:
+
+## 🤖 Claude *(01:47:35)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'spaces-v3-montar',\n  description: 'V\u00eddeo como camada + auditoria/refatora\u00e7\u00e3o dos n\u00f3s do Spaces + projeto v3 no estilo MONTAR',\n  phases: [\n    { title: 'Recon', detail: 'viabilidade de v\u00eddeo em camada \u00b7 auditoria dos n\u00f3s \u00b7 desenho do v3' },\n    { title: 'Construir', detail: 'engenharia da camada de v\u00eddeo + projeto v3 armado' },\n    { title: 'Adversarial', detail: 'cr\u00edticos atacam o entregue' },\n  ],\n}\n\nconst REPO = '/home/gcrUX/htdocs/constellation-orchestra'\n\nconst CONTEXT = `\n# MCORCH \u2014 Spaces v3 sob a linguagem MONTAR\n\nRepo: ${REPO}. Survival Laws: ${REPO}/.claude/rules/survival.md\n**Lei 1 \u2014 Materialidade:** proibido reportar sucesso sem prova f\u00edsica. Rode, cole o output, OLHE o\npixel com Read. N\u00e3o verificou? Escreva \"N\u00c3O VERIFICADO\" \u2014 isso \u00e9 aceito; inventar n\u00e3o \u00e9.\n\n## O contexto: a linguagem MONTAR foi aprovada e virou produto\nEm vez de DESENHAR formas em CSS (glifo gen\u00e9rico sorteado por hash), o motor MONTA camadas prontas\nnum espa\u00e7o 3D \u2014 screenshot real, PNG com alpha, SVG de marca \u2014 com **uma** c\u00e2mera, parallax\ngeom\u00e9trico e DoF por plano. Custo de render **0 mco / US$ 0**, determin\u00edstico.\n\n**Pe\u00e7a aprovada** (o molde): asset \\`fcf91d44\\` na Biblioteca \u00b7 MP4 em\n\\`repurpose-inbox/ada39fae-motion-spike/spike-montar.mp4\\` (1920\u00d71080 \u00b7 300f \u00b7 10s) \u00b7\nconstrutor \\`scripts/motion/layered/build-scene.mjs\\` \u00b7 SSOT\n\\`docs/bok/spaces-evolution/43-amendment-motion-montar-camadas.md\\` \u00b7 skill\n\\`.claude/skills/motion-montar/SKILL.md\\`.\n\n**J\u00e1 est\u00e1 VIVO no n\u00f3** (n\u00e3o repita este trabalho \u2014 CONTE no motor antes de dizer que falta):\ncampo \\`layers[]\\` no n\u00f3 \\`motionScene\\` com vocabul\u00e1rio fechado (\\`plane\\` fundo/meio/frente \u00b7\n\\`align\\` esq/centro/dir \u00b7 \\`treatment\\` laje/recorte \u00b7 \\`scale\\` \u00b7 \\`camera\\` aproxima/afasta/fixa);\n\\`supabase/functions/motion-render/index.ts\\` resolve \\`asset_id\\` **owner-scoped**; o worker\n\\`scripts/motion-bridge.ts\\` (\\`downloadLayers\\`) baixa para \\`layers/lN.ext\\` com sniff de assinatura e\n**FALHA o render** se um asset n\u00e3o resolver; \\`scripts/motion/scene-template.ts\\` monta o palco 3D;\no inspector tem seletor com miniaturas assinadas. Despacho pelo construtor \u00daNICO\n\\`src/lib/motion-dispatch.ts\\` (os dois caminhos \u2014 bot\u00e3o do n\u00f3 e \"Executar tudo\").\n\n## A DIRETIVA DO SOVEREIGN (esta sess\u00e3o, literal)\n> \"agora finalmente precisamos melhorar nosso projeto no spaces, auditar e refatorar os n\u00f3s\n> conforme tudo que aprendemos com o resultado impressionante do MONTAR. **Podemos colocar v\u00eddeos\n> dentro dos cards tamb\u00e9m para ficar ainda melhor, cortes etc.** Veja que voc\u00ea colocou imagens do\n> site e ficou legal, mas **poderia ser qualquer outro asset, ou criativo de decis\u00e3o do usu\u00e1rio**.\n> Agora vamos para os n\u00f3s e o projeto v3 no spaces.\"\n\nTr\u00eas frentes, nesta ordem de valor:\n1. **V\u00eddeo como camada** \u2014 hoje o picker e o servidor aceitam s\u00f3 \\`kind='image'\\`. O Sovereign quer\n   p\u00f4r CORTES e qualquer criativo dentro das lajes 3D.\n2. **Auditar e refatorar os n\u00f3s** do Spaces \u00e0 luz do que MONTAR ensinou.\n3. **Projeto v3** no Spaces \u2014 o canvas que produz epis\u00f3dio no estilo novo.\n\n## Doutrina que voc\u00ea DEVE respeitar\n- **Determinismo \u00e9 lei.** Mesmo seed \u21d2 mesmo pixel. NUNCA \\`Math.random\\`. O rasterizador faz\n  frame-seek (\\`window.__seek(t)\\`), n\u00e3o roda em tempo real \u2014 qualquer m\u00eddia precisa ser posicionada\n  DETERMINISTICAMENTE no tempo, n\u00e3o \"tocada\".\n- **Custo USD externo = 0.** Render 0 mco. As PE\u00c7AS custam (\\`generateImage\\` 20 mco) \u21d2 400-600 por\n  epis\u00f3dio; isso \u00e9 upsell declarado, n\u00e3o custo a esconder. O consumo deve ser VIS\u00cdVEL na UI.\n- **Nada nasce morto.** Campo oferecido na UI que o motor ignora \u00e9 o defeito-assinatura desta base\n  (o checkbox \"Imagens do projeto\" viveu meses devolvendo 202 e v\u00eddeo vazio). Caminho completo:\n  tipo \u2192 inspector \u2192 construtor \u00fanico \u2192 allowlist da edge fn \u2192 worker \u2192 template.\n- **Bucket \u00e9 privado** \u21d2 URL sempre assinada owner-scoped (\\`docs/processes/private-bucket-asset-signing.md\\`).\n- Worker systemd roda c\u00f3digo stale at\u00e9 o restart: se mexer nele, reinicie e PROVE\n  (\\`ExecMainStartTimestamp\\` > mtime).\n- Host: 4 n\u00facleos, sem GPU (SwiftShader). OOM em 2026-08-05 por um agente de 15,6 GB \u2014 **n\u00e3o\n  carregue gigabytes**, um render por vez.\n- Gates: \\`npx tsc -p tsconfig.app.json --noEmit\\` (baseline 0) \u00b7 \\`bun run test\\` (888 hoje) \u00b7\n  \\`/security-review\\` se tocar RLS/migration.\n`\n\nphase('Recon')\n\nconst SONDAS = [\n  {\n    key: 'video-layer',\n    label: 'sonda:video-como-camada',\n    prompt: `${CONTEXT}\n\n## Sua frente: P\u00d4R V\u00cdDEO DENTRO DA LAJE 3D \u2014 descobrir COMO, medindo\n\nO rasterizador faz **frame-seek determin\u00edstico**: para cada frame ele chama \\`window.__seek(t)\\` e\ntira o screenshot. Um \\`<video>\\` que \"toca\" \u00e9 o oposto disso \u2014 sob seek, ou ele fica congelado no\nframe 0, ou dessincroniza, ou trava o render. Sua miss\u00e3o \u00e9 achar o caminho que preserva o\ndeterminismo e MEDIR o custo.\n\nInvestigue e TESTE de verdade (escreva as sondas em \\`${REPO}/../scratchpad\\` ou no /tmp da sess\u00e3o):\n1. Leia \\`scripts/motion/render-frames.mjs\\` e o \\`seekLayers\\`/\\`__seek\\` em\n   \\`scripts/motion/scene-template.ts\\`. Entenda EXATAMENTE como o tempo \u00e9 dirigido hoje.\n2. Teste os caminhos poss\u00edveis, cada um com n\u00famero na m\u00e3o:\n   - **(a) \\`<video>\\` + \\`currentTime = t\\` + esperar \\`seeked\\`** dentro da p\u00e1gina. Funciona sob\n     Playwright headless? Qual o custo por frame do seek (ele decodifica o GOP inteiro)? \u00c9\n     determin\u00edstico frame a frame? Prove seekando o MESMO t duas vezes e comparando os PNG por md5.\n   - **(b) pr\u00e9-extrair frames com FFmpeg** (\\`fps=30\\`) para PNG/JPEG e trocar o \\`src\\` da \\`<img>\\` a\n     cada seek. Custo de disco, custo de extra\u00e7\u00e3o, e determinismo trivial.\n   - **(c) compor o v\u00eddeo NO FFMPEG depois** (overlay do MP4 sobre a cena renderizada, com a\n     geometria da laje aplicada por filtro). Muito mais barato, mas a laje \u00e9 um trap\u00e9zio 3D \u2014\n     descubra se \\`perspective\\`/\\`v360\\`/\\`lenscorrection\\` d\u00e3o conta ou se s\u00f3 serve para ret\u00e2ngulo.\n   Me\u00e7a ms/frame de cada um numa cena real de 5s e diga qual recomenda e POR QU\u00ca.\n3. Contrato de dura\u00e7\u00e3o: o clipe da camada quase nunca tem a dura\u00e7\u00e3o da cena. Enumere as pol\u00edticas\n   poss\u00edveis (cortar \u00b7 repetir em loop \u00b7 esticar \u00b7 congelar no \u00faltimo frame) e recomende o default\n   HONESTO \u2014 e como a UI deve declarar isso ao usu\u00e1rio.\n4. \u00c1udio: o clipe pode ter faixa. A cena j\u00e1 mixa narra\u00e7\u00e3o (\\`voice_asset_id\\`). Diga o que acontece\n   hoje e o que DEVERIA acontecer (silenciar por padr\u00e3o? somar? \u00e9 decis\u00e3o de produto \u2014 apresente).\n5. O que muda no caminho de dados: \\`kind='image'\\` est\u00e1 travado no picker\n   (\\`MotionSceneInspector\\`), na edge fn (\\`motion-render\\`) e no worker. Liste cada ponto com\n   \\`arquivo:linha\\`.\n\nEntregue a escada de op\u00e7\u00f5es com n\u00fameros MEDIDOS, o recomendado, e os limites honestos.`,\n  },\n  {\n    key: 'auditoria-nos',\n    label: 'sonda:auditoria-dos-nos',\n    prompt: `${CONTEXT}\n\n## Sua frente: AUDITORIA HONESTA DOS N\u00d3S DO SPACES\n\nO Sovereign quer \"auditar e refatorar os n\u00f3s conforme tudo que aprendemos\". Antes de refatorar,\nalgu\u00e9m precisa dizer a VERDADE sobre o que existe. Voc\u00ea \u00e9 esse algu\u00e9m.\n\nLeia \\`src/lib/canvas-node-registry.ts\\` e \\`src/types/canvas.ts\\` e produza a tabela de TODOS os\ntipos de n\u00f3, cada linha com prova:\n1. **Nome \u00b7 o que promete \u00b7 custo declarado na UI \u00b7 motor real** (que edge fn/worker atende).\n2. **Vivo, morto ou meio-morto?** \u2014 para CADA n\u00f3, prove com grep que o motor consome o que a UI\n   oferece. Procure especificamente a fam\u00edlia \"nasce morto\": campo no inspector que nenhum motor\n   l\u00ea, elemento na allowlist que o template ignora, custo na UI que o servidor n\u00e3o debita, n\u00f3 sem\n   caminho at\u00e9 o pixel. J\u00e1 sabemos de dois casos (\\`typewriter\\`/\\`assets\\`, agora recusados; e o\n   \\`chart\\` que exige \\`series\\` que NENHUMA UI escreve \u2014 confirme este).\n3. **O que MONTAR ensinou e este n\u00f3 deveria herdar** \u2014 camadas em Z, c\u00e2mera, DoF, asset real em vez\n   de forma desenhada, dado declarado em vez de curva hardcoded. Seja concreto: que campo, que\n   vocabul\u00e1rio.\n4. **Redund\u00e2ncia**: quais n\u00f3s fazem a mesma coisa por caminhos diferentes e deveriam ser fundidos\n   ou aposentados? (o hist\u00f3rico da casa tem mirror n\u00e3o-roteado e n\u00f3s legados)\n5. **Ordem de refatora\u00e7\u00e3o por VALOR** \u2014 o que, se consertado, muda mais a qualidade do epis\u00f3dio.\n\nN\u00e3o proponha nada sem ancorar em \\`arquivo:linha\\`. E confira o estado ATUAL antes de repetir\nqualquer \"isto est\u00e1 gated\" que voc\u00ea leia na documenta\u00e7\u00e3o \u2014 esta base j\u00e1 declarou morto tr\u00eas vezes\nalgo que estava vivo (a cl\u00e1usula de gate vira folclore e sobrevive ao fato).`,\n  },\n  {\n    key: 'projeto-v3',\n    label: 'sonda:desenho-do-projeto-v3',\n    prompt: `${CONTEXT}\n\n## Sua frente: COMO \u00c9 UM PROJETO v3 NO SPACES\n\nO Sovereign quer \"o projeto v3 no spaces\" \u2014 o canvas que produz um epis\u00f3dio inteiro no estilo\nMONTAR. Desenhe-o a partir do que EXISTE, n\u00e3o do que seria bonito.\n\n1. **Leia o projeto v2 real no banco.** Ache o EP06 v2 (\\`a65eeb05\\`) e/ou o witness da Amendment 43\n   (\\`9d02ff42-ec4a-4956-8695-19fcb7c9d669\\`) em \\`vm_canvas_projects.graph\\` (jsonb). Conte os n\u00f3s\n   por tipo, as arestas, e diga o que a topologia REVELA: onde est\u00e3o os gargalos, o que \u00e9 manual\n   demais, o que se repete cena a cena.\n   \u26a0\ufe0f **O autosave da UI sobrescreve escrita server-side** \u2014 se for escrever no grafo, use guard de\n   \\`updated_at\\` e avise para a aba estar fechada. N\u00c3O escreva nada nesta fase (\u00e9 recon).\n2. **O epis\u00f3dio-alvo**: leia \\`docs/roadmap/ep06-roteiro-compilado-semana-2026-08-04.md\\` (ou o mais\n   recente) e a doutrina editorial (2 v\u00eddeos/semana, motion-first para gastar menos com Veo).\n3. **Desenhe o v3**: quantos n\u00f3s, de que tipos, como se ligam, quanto custa em mco, e \u2014 o mais\n   importante \u2014 **o que o usu\u00e1rio faz \u00e0 m\u00e3o** em cada etapa. Onde o Sovereign ainda precisa clicar\n   demais \u00e9 onde est\u00e1 o trabalho de produto.\n4. **A economia do kit**: a A43 diz que a rota barata precisa ser a padr\u00e3o e o kit de cena\n   reutiliz\u00e1vel (2\u00ba epis\u00f3dio custa 0). Como isso se materializa num projeto? Um projeto-molde\n   clon\u00e1vel? Camadas compartilhadas entre cenas? Proponha com os n\u00fameros.\n5. **O que o \\`spaces-agent-chat\\` precisa** para armar isso por conversa. Descubra o que ele j\u00e1\n   sabe fazer (procure o system prompt / as a\u00e7\u00f5es dispon\u00edveis) e o que falta \u2014 sabemos que ele\n   **n\u00e3o tem ferramenta para LISTAR assets**, ent\u00e3o n\u00e3o sabe ids para preencher \\`layers[]\\`.\n\nEntregue o desenho concreto + a lista priorizada do que falta no produto para ele existir.`,\n  },\n]\n\nconst recon = await parallel(SONDAS.map((s) => () =>\n  agent(s.prompt, { label: s.label, phase: 'Recon' }).then((r) => ({ key: s.key, report: r }))\n))\nconst ok = recon.filter(Boolean)\nlog(`Recon: ${ok.length}/${SONDAS.length}`)\nconst dossie = ok.map((r) => `\\n\\n\u2550\u2550\u2550 ${r.key} \u2550\u2550\u2550\\n${r.report}`).join('')\n\nphase('Construir')\n\nconst obras = await parallel([\n  () => agent(`${CONTEXT}\n\n## DOSSI\u00ca DO RECON\n${dossie}\n\n## Sua tarefa: V\u00cdDEO COMO CAMADA, ponta a ponta\n\nVoc\u00ea \u00e9 o \\`engineer-spaces\\`. Implemente o caminho que a sonda \\`video-layer\\` recomendou \u2014 e se a\nmedi\u00e7\u00e3o dela contradisser a recomenda\u00e7\u00e3o, siga a MEDI\u00c7\u00c3O e diga por qu\u00ea.\n\nRequisitos:\n1. O usu\u00e1rio escolhe **qualquer asset** do acervo para uma camada \u2014 imagem OU v\u00eddeo (cortes,\n   criativos, o que ele quiser). O Sovereign foi expl\u00edcito: \"poderia ser qualquer outro asset, ou\n   criativo de decis\u00e3o do usu\u00e1rio\".\n2. **Determinismo preservado**: o mesmo projeto renderizado duas vezes sai byte-id\u00eantico. Prove\n   com md5 de dois renders da mesma cena.\n3. **Nada nasce morto**: o campo tem que atravessar as 6 camadas (tipo \u2192 inspector \u2192 construtor\n   \u00fanico \\`src/lib/motion-dispatch.ts\\` \u2192 allowlist da edge fn \u2192 worker \u2192 template). O teste de\n   paridade \\`src/test/motion-dispatch-parity.test.ts\\` j\u00e1 existe \u2014 estenda-o.\n4. **Falha honesta**: asset que n\u00e3o resolve, codec que n\u00e3o decodifica, dura\u00e7\u00e3o incompat\u00edvel \u2014 tudo\n   com mensagem clara em pt-BR, nunca frames com buraco em sil\u00eancio.\n5. Pol\u00edtica de dura\u00e7\u00e3o e de \u00e1udio conforme a sonda recomendou, DECLARADA na UI.\n\nGates: tsc contra baseline \u00b7 \\`bun run test\\` \u00b7 **witness E2E material** (enfileirar de verdade com\num v\u00eddeo real de camada, o worker renderizar, e voc\u00ea OLHAR o frame com Read) \u00b7 worker reiniciado e\nprovado \u00b7 build (o nginx serve o \\`dist/\\` do repo principal).\nSe n\u00e3o couber tudo, entregue MENOS por\u00e9m COMPLETO ponta-a-ponta e diga o que ficou de fora.`,\n    { label: 'eng:video-em-camada', phase: 'Construir', agentType: 'engineer-spaces' }),\n\n  () => agent(`${CONTEXT}\n\n## DOSSI\u00ca DO RECON\n${dossie}\n\n## Sua tarefa: O PROJETO v3 ARMADO NO SPACES + o plano de refatora\u00e7\u00e3o dos n\u00f3s\n\nDuas entregas, nesta ordem:\n\n**(1) O projeto v3, armado de verdade no banco.** Crie um projeto novo em \\`vm_canvas_projects\\`\n(User 0 = \\`ada39fae-67e1-4e53-af1c-5a18e1c108e8\\`) com o grafo do epis\u00f3dio no estilo MONTAR,\nconforme a sonda \\`projeto-v3\\` desenhou. Regras duras:\n   - \u26a0\ufe0f **O autosave da UI sobrescreve escrita server-side.** Use guard de \\`updated_at\\` e diga ao\n     Sovereign para abrir o projeto s\u00f3 depois de voc\u00ea terminar.\n   - N\u00f3s com \\`kind\\`/campos V\u00c1LIDOS \u2014 valide contra \\`src/types/canvas.ts\\` e o registry. Um n\u00f3 com\n     categoria fora do union nasce morto no editor.\n   - **N\u00c3O execute nada pago.** Armar \u2260 executar. Zero mco gastos nesta tarefa.\n   - Handles reais nas arestas (a fam\u00edlia de bug \"aresta que n\u00e3o conecta\").\n   - Verifique materialmente: releia o grafo do banco depois de escrever e confira contagem de n\u00f3s,\n     tipos e arestas.\n\n**(2) O plano de refatora\u00e7\u00e3o dos n\u00f3s** \u2014 a partir da auditoria, escreva o documento que diz o que\nmuda em cada n\u00f3, na ordem de valor, com o custo de cada mudan\u00e7a. Salve em \\`docs/roadmap/\\`.\nN\u00c3O refatore c\u00f3digo nesta tarefa (outro agente est\u00e1 no motor agora) \u2014 este \u00e9 o plano que o\nSovereign vai aprovar.\n\nEntregue: o id do projeto para o Sovereign abrir, a contagem verificada de n\u00f3s/arestas, e o path do\nplano.`,\n    { label: 'v3:projeto-armado', phase: 'Construir' }),\n])\n\nconst [eng, v3] = obras\nlog(`Construir: eng=${eng ? 'ok' : 'FALHOU'} \u00b7 v3=${v3 ? 'ok' : 'FALHOU'}`)\n\nphase('Adversarial')\n\nconst ATAQUES = [\n  { id: 'nasce-morto', foco: 'O que foi entregue nasce morto? Percorra as 6 camadas com grep para CADA campo novo. Verifique tamb\u00e9m o projeto v3: os n\u00f3s t\u00eam kind v\u00e1lido? as arestas t\u00eam handles que existem? abrir o projeto renderiza algo ou d\u00e1 tela em branco? Um projeto armado que o editor n\u00e3o abre \u00e9 o pior tipo de entrega \u2014 parece trabalho e n\u00e3o \u00e9.' },\n  { id: 'determinismo-e-custo', foco: 'O determinismo sobreviveu? Renderize a MESMA cena duas vezes e compare md5 \u2014 v\u00eddeo \u00e9 a maior amea\u00e7a ao frame-seek determin\u00edstico que este motor tem. E o custo: me\u00e7a ms/frame com camada de v\u00eddeo contra sem, e confronte com o or\u00e7amento do worker (FRAME_BUDGET_MS). Um clipe que estoure o teto mata a cena depois de meia hora de CPU.' },\n  { id: 'materialidade', foco: 'Que afirma\u00e7\u00e3o n\u00e3o foi verificada? Rode os comandos: arquivos existem, linhas batem, o witness E2E aconteceu (baixe o MP4 e OLHE o frame com Read \u2014 n\u00e3o confie na descri\u00e7\u00e3o), tsc e testes passaram, o worker roda o c\u00f3digo novo (ExecMainStartTimestamp vs mtime), o build foi feito. E confira se o projeto v3 existe MESMO no banco com a contagem afirmada.' },\n]\n\nconst vereditos = await parallel(ATAQUES.map((a) => () =>\n  agent(`${CONTEXT}\n\n## Voc\u00ea \u00e9 um CR\u00cdTICO ADVERSARIAL. Sua fun\u00e7\u00e3o \u00e9 DERRUBAR, n\u00e3o elogiar.\n\nLente: **${a.id}**\n${a.foco}\n\nPrecedente desta base: os cr\u00edticos da rodada anterior descobriram que a \"perspectiva\" do prot\u00f3tipo\nera falsa (ret\u00e2ngulo com raz\u00e3o 1,0000 posando de trap\u00e9zio), que 92% do quadro era preto, e que o\n\"Executar tudo\" descartava as camadas silenciosamente. Nenhum desses aparecia no relat\u00f3rio do autor.\nEm d\u00favida se algo \u00e9 problema: \u00e9 problema.\n\n**Obje\u00e7\u00e3o sem prova vale zero.** Cole \\`arquivo:linha\\`, output de comando, ou descreva um frame que\nvoc\u00ea OLHOU com Read.\n\n## ENTREGUE \u2014 v\u00eddeo como camada\n${String(eng).slice(0, 11000)}\n\n## ENTREGUE \u2014 projeto v3 + plano\n${String(v3).slice(0, 9000)}\n\nDevolva achados com severidade (BLOCKER/IMPORTANTE/MENOR), prova material e corre\u00e7\u00e3o m\u00ednima. Se\nn\u00e3o achar nada nesta lente depois de procurar de verdade, diga isso e liste o que verificou.`,\n    { label: `critico:${a.id}`, phase: 'Adversarial', effort: 'high' })\n))\n\nreturn { recon: ok, videoLayer: eng, projetoV3: v3, criticas: vereditos.filter(Boolean) }\n",
+  "description": "V\u00eddeo em camada, auditoria dos n\u00f3s e projeto v3"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wqap6z0g3
+> Summary: Vídeo como camada + auditoria/refatoração dos nós do Spaces + projeto v3 no estilo MONTAR
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/2de725c0-2186-4fa8-9a12-16d4bd8f3128/subagents/workflows/wf_2a6cbcfb-a70
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/2de725c0-2186-4fa8-9a12-16d4bd8f3128/workflows/scripts/spaces-v3-montar-wf_2a6cbcfb-a70.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/2de725c0-2186-4fa8-9a12-16d4bd8f3128/workflows/scripts/spaces-v3-montar-wf_2a6cbcfb-a70.js"} to iterate without resending the script.)
+> Run ID: wf_2a6cbcfb-a70
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/2de725c0-2186-4fa8-9a12-16d4bd8f3128/workflows/scripts/spaces-v3-montar-wf_2a6cbcfb-a70.js", resumeFromRunId: "wf_2a6cbcfb-a70"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(01:47:55)*
+
+Limpeza feita e o coletor promovido para [scripts/qa/gc-motion-orphans.ts](scripts/qa/gc-motion-orphans.ts) — dry-run por padrão, porque apagar mídia sem olhar a lista é como se perde trabalho.
+
+Sobre o que você notou no frame: você identificou a coisa certa. **O conteúdo daquelas lajes não é "a landing"** — é um asset qualquer que o motor colou num plano Z. Que ali estivesse a nossa página foi acaso do spike; poderia ser um corte, um criativo, um print de concorrente, um gráfico. Essa é a diferença entre um motor que desenha e um que monta: o segundo não tem opinião sobre o conteúdo, só sobre a **geometria**. É por isso que ele escala.
+
+Vídeo nas lajes tem um obstáculo específico que mandei medir antes de prometer: o rasterizador **não toca** o vídeo, ele faz *frame-seek* — chama `__seek(t)` e fotografa. Um `<video>` que reproduz é o oposto disso, e a ingenuidade aqui produz cena congelada no primeiro frame ou dessincronizada. Há três caminhos possíveis — seek dentro da página, pré-extrair frames com FFmpeg, ou compor o clipe depois no encode — e cada um tem um preço por frame diferente. A sonda vai medir os três e recomendar pelo número, não pelo gosto; o determinismo é lei, então qualquer caminho que não produza md5 idêntico em dois renders está eliminado por definição.
+
+Em paralelo, duas frentes: a **auditoria honesta de todos os nós** — quem promete o que não entrega, quem duplica quem, e o que cada um deveria herdar do MONTAR — e o **desenho do v3**, lendo a topologia real do EP06 v2 no banco para achar onde você ainda clica demais. O projeto v3 sai armado no banco, com nós válidos e sem gastar um mco, para você abrir e julgar.
+
+Três críticos no fim, e um deles caça exatamente a armadilha do projeto armado: um canvas que parece trabalho e abre em branco.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
