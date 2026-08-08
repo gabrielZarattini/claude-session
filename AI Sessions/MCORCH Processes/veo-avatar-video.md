@@ -29,7 +29,8 @@ guardar o arquivo em algum lugar. O MCORCH faz isso com cobrança, estorno e pro
 | 5 | Baixar as referências (≤3) | `fetchVeoImage` → `fetchPublicUrl` | cada URL revalidada a CADA salto 3xx; `image/*`; ≤15 MB; falha de uma referência **degrada**, não derruba |
 | 6 | Submeter a operação | `POST models/<tier>:predictLongRunning` | 200 com `name` da operação → gravado em `generations.operation_id` |
 | 6b | **Failover por exaustão** | mesmo laço | 429 → tenta a PRÓXIMA chave (429 não cobra no provedor); todas exaustas → passo 8 |
-| 7 | Pollar até `done` | `veo-poll` (JWT do dono) | `done:true` → MP4 ≥100 KB → bucket **privado** `canvas-assets/<uid>/veo/<gen>.mp4` → `register_creative_asset` → `finalize_space_generation('done')` |
+| 7 | Pollar até `done` | `veo-poll` (JWT do dono), chamado pelo **poller de PÁGINA** `useVeoRenderSync` (montado 1× em `CanvasEditorPage`) | `done:true` → MP4 ≥100 KB → bucket **privado** `canvas-assets/<uid>/veo/<gen>.mp4` → `register_creative_asset` → `finalize_space_generation('done')` |
+| 7b | **Guardar a alça da geração** | `runSingleNode` / `handleExecute` gravam `veoGenerationId` = `execution_id` pelo store do cliente (o autosave persiste) | o nó sobrevive a reload com a alça; sem ela ninguém consegue pollar/estornar depois |
 | 8 | Estornar em qualquer falha | `finalize_space_generation(status='error', refund=mco_charged)` | saldo volta EXATO; a linha vira `error`; o estorno é único (guard `status IN (pending,running)`) |
 
 ## Verification gates
@@ -51,7 +52,9 @@ guardar o arquivo em algum lugar. O MCORCH faz isso com cobrança, estorno e pro
 |-------|-------------|
 | Submit falhou (rede/502) | estorno imediato na própria resposta (`video_submit_failed`) |
 | Todas as chaves com 429 | estorno integral + erro nomeando cada rótulo → o Sovereign recarrega em `ai.studio/projects` ou adiciona chave em `/dashboard/settings` |
+| **Ninguém polla (inspector fechado / Run All)** | **RESOLVIDO 2026-08-05** pelo poller de PÁGINA `src/hooks/useVeoRenderSync.ts` (molde `useMotionRenderSync`): varre os `imageToVideo` ocupados, chama `veo-poll` a cada 12s e reconcilia o nó. Nó ocupado **sem** `veoGenerationId` (grafo antigo) é re-atado pela geração viva do ledger (`adoptVeoGenerations`). Paliativo manual: `bun run scripts/qa/recover-stuck-veo.ts <project_id>` |
 | Poll com `done:false` para sempre | a varredura de runs travados (`self-heal-spaces`) estorna a linha `running` antiga — o resgate já existe |
+| `done` **sem** `video_url` (assinatura falhou) | o sweep NÃO marca sucesso nem falha (não mente sobre um vídeo pago) — segue pollando; se persistir, re-assinar/investigar o `storage_key` da linha |
 | Operação sumiu no provedor (404/403 no poll) | estorno (não há job em voo) |
 | Download do URI falhou | o poll seguinte re-tenta (o URI do Veo vive ~2 dias; o resgate age em <24h) |
 | Poll com a chave ERRADA | **impossível por construção**: a linha guarda `(provider_key_id, key_source)` e o poll re-resolve por esse par (`resolveStoredKey`) |

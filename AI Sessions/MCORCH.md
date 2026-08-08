@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 109
-> * **Total de Sessões**: 3345
+> * **Total de Processos**: 116
+> * **Total de Sessões**: 3470
 
 ---
 
@@ -32,6 +32,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[avatar-biometric-retention-erasure]]` - *Processo*
 *   `[[avatar-lora-training]]` - *Processo*
 *   `[[avatar-voice-credential-resolution]]` - *Processo*
+*   `[[biblioteca-sfx-como-farmar]]` - *Processo*
 *   `[[branded-affiliate-redirect]]` - *Processo*
 *   `[[build-deploy-materiality]]` - *Processo*
 *   `[[cadence-recurrence-engine]]` - *Processo*
@@ -59,6 +60,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[edge-jwt-identity-verification]]` - *Processo*
 *   `[[engineer-spaces-node-authoring]]` - *Processo*
 *   `[[external-video-ingest]]` - *Processo*
+*   `[[gerar-pelo-no-nao-pelo-cli]]` - *Processo*
 *   `[[great-reset-sovereign]]` - *Processo*
 *   `[[handoff-material-proof-audit]]` - *Processo*
 *   `[[handoff-pruning-gate]]` - *Processo*
@@ -75,6 +77,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[ml-postback-signature-validation]]` - *Processo*
 *   `[[motion-graphics-face-aware-placement]]` - *Processo*
 *   `[[motion-graphics-zone-saliency]]` - *Processo*
+*   `[[motion-montar-camadas]]` - *Processo*
 *   `[[nightly-circadian-cycle]]` - *Processo*
 *   `[[openclaw-bridge-recovery]]` - *Processo*
 *   `[[openclaw-gateway-supervisor]]` - *Processo*
@@ -86,6 +89,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[private-bucket-asset-signing]]` - *Processo*
 *   `[[public-auth-visibility-flags]]` - *Processo*
 *   `[[publication-metrics-collection]]` - *Processo*
+*   `[[repertorio-producao-profissional]]` - *Processo*
 *   `[[repurpose-host-infra-provisioning]]` - *Processo*
 *   `[[revenue-opportunity-pauta]]` - *Processo*
 *   `[[schema-drift-audit]]` - *Processo*
@@ -97,6 +101,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[space-publish-variants]]` - *Processo*
 *   `[[spaces-canvas-persistence]]` - *Processo*
 *   `[[spaces-graph-execution]]` - *Processo*
+*   `[[spaces-project-cleanup]]` - *Processo*
 *   `[[split-screen-pov-node]]` - *Processo*
 *   `[[sql-bridge-admin-bootstrap]]` - *Processo*
 *   `[[sql-bridge-emergency-readonly]]` - *Processo*
@@ -105,6 +110,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[tiktok-publish-credential-resolution]]` - *Processo*
 *   `[[trend-informed-angle-sanitization]]` - *Processo*
 *   `[[trends-credential-resolution]]` - *Processo*
+*   `[[trupe-criativa-spaces]]` - *Processo*
 *   `[[ux-ui-senior-loop]]` - *Processo*
 *   `[[veo-avatar-video]]` - *Processo*
 *   `[[veo-refs-8s-guard]]` - *Processo*
@@ -124,6 +130,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[webgl-canvas-stabilization]]` - *Processo*
 *   `[[wordpress-cf-per-user-publish]]` - *Processo*
 *   `[[wordpress-cf-publish-unblock]]` - *Processo*
+*   `[[youtube-master-export]]` - *Processo*
 *   `[[youtube-publish-credential-resolution]]` - *Processo*
 *   `[[youtube-studio-panel]]` - *Processo*
 *   `[[youtube-upload-service-activation]]` - *Processo*
@@ -132,8 +139,133 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-08-08 - Preparar e gerar assets de áudio e ícones]]` (ClaudeSessions) - *2026-08-08*
+*   `[[2026-08-07 - agent-afffc9e4171a4da1f]]` (ClaudeSessions) - *2026-08-07*
+*   `[[2026-08-07 - agent-af4f37a460b3a48ce]]` (ClaudeSessions) - *2026-08-07*
+*   `[[2026-08-07 - agent-aec60046c36a977f5]]` (ClaudeSessions) - *2026-08-07*
+*   `[[2026-08-07 - agent-ad25f928aa7abcfb6]]` (ClaudeSessions) - *2026-08-07*
+*   `[[2026-08-07 - agent-a9d7eebc2fd1e72ac]]` (ClaudeSessions) - *2026-08-07*
+*   `[[2026-08-07 - agent-a98a475577857883a]]` (ClaudeSessions) - *2026-08-07*
+*   `[[2026-08-07 - agent-a8588ef51d95ff99e]]` (ClaudeSessions) - *2026-08-07*
+*   `[[2026-08-07 - agent-a44f776328bfd6bf3]]` (ClaudeSessions) - *2026-08-07*
+*   `[[2026-08-07 - agent-a0dab36919ddc1500]]` (ClaudeSessions) - *2026-08-07*
+*   `[[2026-08-07 - agent-a07aad9aca01f8c6a]]` (ClaudeSessions) - *2026-08-07*
+*   `[[2026-08-07 - agent-a0057826e56633206]]` (ClaudeSessions) - *2026-08-07*
+*   `[[2026-08-07 - Corrigir erro out is not defined e melhorar motion design]]` (ClaudeSessions) - *2026-08-07*
+*   `[[2026-08-06 - agent-afc5e1201baf84fd6]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-aef0d2025695d719d]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-aed9828c5024e10c7]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-ae7e574a541b13dcb]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-ae171bd2149992a6e]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-ad98fa09d61e6887a]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-ad29a7a4e90863fcc]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-acb0f8758a5069157]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-abfbbd4537013fe4d]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-abbda227df01d8a8a]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-abba722f699fc85fb]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-ab58697f8315f4b76]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-aa4b179a90d57bef9]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a9a127b19ca2bf4b2]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a9497d6aeaf89dcf6]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a93265bb0d51578de]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a918e45a3ff783052]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a8f0b2ae6dea82bd6]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a8819519bc7bf9107]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a8417448bfe5d105a]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a83ef527a39bbe7d6]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a736ef16245e3e3c7]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a6632fd23b9bd9deb]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a6284ef2b42bd225e]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a5e5a8fec86337835]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a5b8b169a366034a2]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a530a5b740284b2c5]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a524b33c2adc1cfb4]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a4bf834a1443f1b66]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a44593fa68af2512b]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a41bb35945b534910]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a4161471b23d5e8f1]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a36bf723d5eae7756]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a31c5087e580324ad]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a299771fce4bbba12]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a2900b6ba51e8e678]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a1f291c38e0d6c9d3]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a0efa4235b611b317]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a0d3a7a756998952d]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - agent-a02c4b227f0436a9b]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - Refinar EP06 com motion design profissional para SaaS]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - Corrigir erro out is not defined e melhorar motion design]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-06 - 2de725c0-2186-4fa8-9a12-16d4bd8f3128]]` (ClaudeSessions) - *2026-08-06*
+*   `[[2026-08-05 - e2a41883-a422-4743-94c2-5a7f590d0f5b]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-afa425e61232b8b67]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-af0e14d369ba7378a]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-aef67148f45f1a76f]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-aef5fc77f7d91ba1d]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-aef32af52d9097a28]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-ae5caa4d66061ac9d]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-ae388da24031ab8f7]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-ae2cf62a526ded391]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-ad94ad8e7a600adea]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-ad6dffe1de73afca6]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-ad0068d34769c23c5]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-acfda465008d186b2]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-acf3cd641f35e4006]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-ace37d4dd85b4d76a]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-aca70b779a4117ae1]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-aca062f47c984bfa6]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-ac4ffa27b3b28dc10]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-ac3b265d59ea4bf22]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-abf57d11234206b38]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-abe4f11b951a480ce]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-abde83b579d6a1893]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-abd944b9572c84c6f]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-abd8983d5af4bd16b]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-abae847bc0fef6375]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-aba1060ad757efc9d]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-ab1aa4a6d139dcd1a]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-aa6640e9aa243c5f7]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-aa4b179a90d57bef9]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a9a5d89dd6be06937]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a92c10cb363652886]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a8d183ebd77232479]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a888ac1575ff3c03f]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a73b4480b4fd5fe95]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a691ffc7eb6ec0f1c]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a66d3d982c36da779]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a647673d2b5c9cf90]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a61c1b68cecc607fc]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a600d9aaa77ec0673]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a59e6980c4b044a8f]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a59348d589bf41708]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a5763ac1d02327199]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a56bebbfcbaac5590]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a5375a283bb2297ca]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a52d49ee319c460d2]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a4e23ab501f11b092]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a4d69115752ee83ea]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a3dca3c20fd68426e]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a375349ad07f6d3de]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a33d1775893d9d321]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a31b11a6a100ac84c]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a2d24d454a122aed5]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a2b21fe10f128f30d]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a29f76adeee001ce2]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a2893ddbc1db2355c]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a22aad1758681ef6d]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a22227dc80a8c9587]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a1c8febb5d3a1d49e]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a19cffd8f0c26f41f]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a1424b1bc933de174]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a135e364c7ba8c24f]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a0d9ea506faf1cf3a]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a0aa935245225bdf0]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a08927a31849704ae]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - agent-a077453d28da1a8ae]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - Refinar EP06 com motion design profissional para SaaS]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - Debug console log e refatorar hover effect]]` (ClaudeSessions) - *2026-08-05*
+*   `[[2026-08-05 - 1fed6e93-b792-43a8-b536-7eb64cf7f490]]` (ClaudeSessions) - *2026-08-05*
 *   `[[2026-08-04 - f467257c-2ac9-4d7d-ab2d-151ce7edea64]]` (ClaudeSessions) - *2026-08-04*
 *   `[[2026-08-04 - ee901b6a-6519-4a1f-921f-f783f38a2e69]]` (ClaudeSessions) - *2026-08-04*
+*   `[[2026-08-04 - e2a41883-a422-4743-94c2-5a7f590d0f5b]]` (ClaudeSessions) - *2026-08-04*
 *   `[[2026-08-04 - agent-afed6d2846d4f2d75]]` (ClaudeSessions) - *2026-08-04*
 *   `[[2026-08-04 - agent-af88a92e8664682e8]]` (ClaudeSessions) - *2026-08-04*
 *   `[[2026-08-04 - agent-af80d13d0dfcdcf92]]` (ClaudeSessions) - *2026-08-04*
