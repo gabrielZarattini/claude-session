@@ -9798,6 +9798,2035 @@ O que mudou de fato nesta rodada: um buraco de segurança real fechado, quatro d
 
 **36+ arquivos no worktree, nada commitado.** Sugiro selar agora — a sessão acumulou muita coisa verificada, e um `/handoff` com commits granulares protege o trabalho antes de qualquer nova frente.
 
+## 👤 User *(11:05:16)*
+
+<command-message>handoff</command-message>
+<command-name>/handoff</command-name>
+
+## 👤 User *(11:05:16)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 1b — SCRATCHPAD HARVEST (colheita do aprendizado — antes dos commits)
+
+> **Nasceu do quase-acidente EP05 (2026-08-03):** uma sessão-maratona de produção deixou TODOS os
+> runners (trilha Lyria, assemble do master, VFX título, screencast) + 1.9GB de intermediários
+> SOMENTE no scratchpad `/tmp/claude-1001/.../scratchpad` — volátil, morre no reboot. A sessão
+> seguinte só recuperou tudo porque o host não reiniciou. **Sorte não é protocolo.**
+
+O scratchpad da sessão (`$SCRATCHPAD` do system prompt) DEVE ser colhido antes do seal:
+
+```bash
+ls -la <scratchpad-desta-sessão>/   # inventário material — o que foi criado aqui?
+```
+
+Classifique cada item e aja:
+
+| Classe | Critério | Destino obrigatório |
+|--------|----------|---------------------|
+| **Runner/técnica** | script que gerou/montou/provou algo (qualquer coisa que outra sessão precisaria reexecutar ou estudar) | promover a `scripts/<módulo>/` no repo (+ nota no README da pasta) → entra nos commits da Phase 2 |
+| **Processo/gate aprendido** | sequência com gates que se repetirá | SOP em `docs/processes/` (§5 Obstacle→Synthesis) |
+| **Entregável de mídia** | master/take/áudio que o Sovereign avalia | Biblioteca (`canvas-assets` + `register_creative_asset`) — registrar o asset id no Record |
+| **Descartável** | logs, downloads re-obteníveis do bucket, venvs | fica no scratchpad (documentar no Record que é descartável) |
+
+**Regra-mãe:** nenhum aprendizado ou ferramenta pode existir SÓ em `/tmp` após o seal. O Record da
+Phase 5 DEVE citar: o path do scratchpad da sessão · o que foi promovido (com paths do repo/asset ids)
+· o que ficou para trás e por quê. SOP: `docs/processes/scratchpad-harvest.md`.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+> ⚠️ **ARCHIVING GUARD (v5, 2026-07-19 — fixes the /handson token-cap failure):** `HANDOFF.md` is
+> newest-first and grows unbounded; at 10k+ lines its dense Task-State/Record paragraphs blow the
+> Read tool's 25k-token cap during `/handson` pickup. **Before writing the new Record, check
+> `wc -l HANDOFF.md`. If > ~4000 lines**, move the OLDEST Records (keep the ~12 most recent) to
+> `docs/handoff-archive/HANDOFF-<YYYY-MM>.md` (append there, newest-first too), leave a one-line
+> pointer in HANDOFF.md (`> Histórico anterior a <date> → docs/handoff-archive/…`), and commit the
+> archive move separately (`chore(handoff): archive Records older than <date>`). History is preserved
+> (in the archive + git), never deleted. The live HANDOFF.md stays lean = fast, token-safe pickup.
+> **Also keep each Task State row ≤ ~400 chars** — the long detail belongs in the Record block below,
+> not in the one-line Task State summary.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+---
+
+## PHASE 5b-2 — HANDOFF.md SIZE GATE (mandatory before commit)
+
+**O HANDOFF.md precisa continuar LEGÍVEL. Acima de ~25k tokens ele não é lido — é erro.**
+
+> ⚠️ Falha silenciosa: nada quebra, mas o `/handson` seguinte arranca **sem o Task State**,
+> achando que tem contexto. Em 2026-07-29 a auditoria 4Cs não conseguiu ler as 80 primeiras
+> linhas do arquivo que auditava (28.756 tokens).
+> Skill: `handoff-pruning-gate` · SOP: `docs/processes/handoff-pruning-gate.md`.
+
+```bash
+bash scripts/qa/check-handoff-size.sh
+```
+
+| Veredito | Ação |
+|----------|------|
+| `✅ OK` (exit 0) | Segue para o commit. |
+| `🟡 WARN` (exit 0) | Pode selar, mas **registrar no Pendente do Record**: "podar HANDOFF na próxima sessão". Dívida agendada, não isenção. |
+| `🔴 FAIL` (exit 1) | 🔴 **NÃO COMMITE.** Podar primeiro (o script imprime a linha de corte), verificar os gates G1-G5 do SOP, re-rodar até exit 0. |
+
+**G5 do SOP é obrigatório antes de declarar podado:** ler ~40 linhas do `HANDOFF.md` com a
+ferramenta de leitura e confirmar que retorna conteúdo, não erro de cap. G1-G4 são estruturais —
+só o G5 prova o objetivo (Lei 1).
+
+---
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print $1"/"$2}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(11:05:25)*
+
+I'll execute the seal protocol. Starting with pre-flight in parallel.
+
+## 🤖 Claude *(11:05:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit status --short; echo \"---STAT---\"; git diff HEAD --stat | tail -5; echo \"---LOG---\"; git log --oneline -5",
+  "description": "Invent\u00e1rio de mudan\u00e7as"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  M .gitignore
+>  M HANDOFF.md
+>  M README.md
+>  M docs/processes/split-screen-pov-node.md
+> D  public/masters/ep06-master-v32.mp4
+> D  public/masters/ep06-master-v4.mp4
+>  M scripts/canvas-backfill-edge-handles.ts
+>  M scripts/ep06/assemble-v4-master.ts
+>  M scripts/ep06/build-v4-master-graph.ts
+>  M scripts/ep06/create-v4-master-project.ts
+>  M scripts/ep06/download-all-ep06-assets.ts
+>  M scripts/ep06/download-and-assemble.cjs
+>  M scripts/ep06/patch-graph.ts
+>  M scripts/ep06/patch-v4-master-graph.ts
+>  M scripts/ep06/register-master-asset.ts
+>  M scripts/qa/gen-user-jwt.ts
+>  M scripts/qa/rotate-supabase-secret.sh
+>  M src/hooks/useCreativeAssets.ts
+>  M src/lib/asset-url.ts
+>  M supabase/functions/aios-chat-gateway/index.ts
+>  M supabase/functions/stripe-webhook/index.ts
+>  M supabase/functions/sync-meta-ads/index.ts
+>  M supabase/functions/youtube-data/index.ts
+> ?? .claude/context/repurpose-cuts-manifest.json
+> ?? .claude/context/repurpose-cuts-poda-2026-08-11.json
+> ?? .claude/context/youtube-audience-2026-08-10-resumo.md
+> ?? .claude/context/youtube-audience-2026-08-10.json
+> ?? docs/bok/mco-monetization/
+> ?? docs/bok/spaces-evolution/28-bis-amendment-split-grid-layouts-and-framing.md
+> ?? docs/bok/spaces-evolution/46-amendment-grid-caption-layer.md
+> ?? docs/processes/bridge-key-freshness.md
+> ?? docs/processes/mco-topup.md
+> ?? docs/roadmap/ep07-calibracao-audiencia-2026-08-11.md
+> ?? scripts/ep06/insert-soundtracks-db.ts
+> ?? scripts/inspect-all-user-keys.ts
+> ?? scripts/pipc/
+> ?? scripts/qa/audit-repurpose-cuts.ts
+> ?? scripts/qa/prune-repurpose-cuts.ts
+> ?? scripts/qa/self-heal-bridge-keys.sh
+> ---STAT---
+>  supabase/functions/aios-chat-gateway/index.ts |   6 +-
+>  supabase/functions/stripe-webhook/index.ts    |  34 +++-
+>  supabase/functions/sync-meta-ads/index.ts     |   7 +-
+>  supabase/functions/youtube-data/index.ts      |  72 +++++++
+>  23 files changed, 261 insertions(+), 325 deletions(-)
+> ---LOG---
+> befb159 chore(sprint): EP07 assume o topo da fila; EP06 vira acervo
+> 828ab39 docs(handoff): epílogo da chave restaurada + pendências do vault e do EP07
+> b14a231 docs(readme): v6.137.0 — sincronia + auditoria de 13 agentes + causa-raiz do vídeo + direção EP07
+> 96ef80f fix(qa): o backup do .env caía dentro do repo e o gitignore não o cobria
+> 7e5d45d chore(qa): propaga a secret do .env para o vault das edge functions sem redigitar a chave
+> ```
+
+## 🤖 Claude *(11:05:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx tsc -p tsconfig.app.json --noEmit 2>&1 | grep -cE \"error TS\" || echo \"0 erros TS \u2705\"\necho \"---INFRA---\"\ndocker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\"\ndocker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\"\ncurl -s -m 5 http://localhost:8001/api/v2/heartbeat",
+  "description": "Gate de tipos e infra",
+  "timeout": 200000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 0
+> 0 erros TS ✅
+> ---INFRA---
+> mcorch_vision_mcp: Up 4 days (healthy)
+> mcorch_claude_mem: Up 4 days (healthy)
+> mcorch_chroma: Up 4 days (healthy)
+> mega-brain-dashboard: Up 4 days
+> mega-brain-webhook: Up 4 days (healthy)
+> mega-brain-daemon: Up 4 days (healthy)
+> {"nanosecond heartbeat":1786446366592551204}
+> ```
+
+## 🤖 Claude *(11:06:09)*
+
+TS 0 erros, infra toda saudável. **Fase 1 — auditoria de segurança:**
+
+## 🤖 Claude *(11:06:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1a. vazamento de segredo no diff ===\"\ngit diff HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\\s*=\\s*['\\\"][^'\\\"]{10,})\" \\\n  | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\" | head -12 || echo \"  \u2705 nenhum valor de credencial\"\necho; echo \"=== 1c. dedu\u00e7\u00e3o de moeda no cliente ===\"\ngrep -rn \"mco_balance.*update\\|UPDATE.*mco_balance\" src/ | grep -v \"settings\\|top.up\\|topup\\|SettingsPage\" | head -5 || echo \"  \u2705 nenhuma viola\u00e7\u00e3o\"\necho; echo \"=== 1d. bypass de RLS no cliente ===\"\ngrep -rn \"service_role\\|bypass.*rls\" src/ | head -5 || echo \"  \u2705 nenhuma viola\u00e7\u00e3o\"\necho; echo \"=== 1e. log de dado sens\u00edvel ===\"\ngrep -rn \"console\\.log.*token\\|console\\.log.*key\\|console\\.log.*secret\\|console\\.log.*password\" src/ | head -5 || echo \"  \u2705 nenhum\"",
+  "description": "Auditoria de seguran\u00e7a 1a/1c/1d/1e"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a. vazamento de segredo no diff ===
+> -#      "$VITE_SUPABASE_URL/rest/v1/profiles?select=id&limit=1" -H "apikey: $SB_SECRET_KEY" → 200
+> -#       `Deno.env.get("SB_SECRET_KEY")` do vault e seguem quebradas — `get-infra-status` devolve
+> -#         `SB_SECRET_KEY` com o mesmo valor. Vale imediatamente, sem redeploy.
+> +#        "$VITE_SUPABASE_URL/rest/v1/profiles?select=id&limit=1" -H "apikey: $SB_SECRET_KEY"
+>  const SUPABASE_SERVICE_ROLE_KEY = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY);
+> +const skey = envMap.SB_SECRET_KEY || envMap.SUPABASE_SERVICE_ROLE_KEY;
+> -const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SB_SECRET_KEY!;
+> +// SB_SECRET_KEY PRIMEIRO: a SUPABASE_SERVICE_ROLE_KEY do `.env` é uma chave LEGADA já desabilitada no
+> +const SB_KEY = process.env.SB_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!;
+> +const skey = (process.env.SB_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+> +const skey = envMap.SB_SECRET_KEY || envMap.SUPABASE_SERVICE_ROLE_KEY;
+> +const skey = env.SB_SECRET_KEY || env.SUPABASE_SERVICE_ROLE_KEY;
+> 
+> === 1c. dedução de moeda no cliente ===
+> 
+> === 1d. bypass de RLS no cliente ===
+> src/hooks/useAgentCapabilities.ts:8:// (RLS: auth.uid() IS NOT NULL); writes are service_role-only. The crew wizard (FR-CV2-005) and the
+> 
+> === 1e. log de dado sensível ===
+> src/test/canvas-video-async-smoke.test.ts:240:    console.log("🔒 [GATE 5] Probing webhook endpoint with an invalid token...");
+> src/test/canvas-video-async-smoke.test.ts:248:    console.log(`✅ [GATE 5] Verified endpoint security blocks invalid tokens with status: ${secResp.status}`);
+> src/test/canvas-video-async-smoke.test.ts:253:    console.log("🔁 [GATE 6] Probing webhook endpoint with duplicate callback token (replay defense)...");
+> ```
+
+## 🤖 Claude *(11:06:23)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The security audit confirms that all variable names are properly handled without exposing actual secret values, there are no RLS bypasses, and test logs only contain probing descriptions rather than real credentials. Now I'm checking the JSON artifacts that are about to be committed.…
+
+</details>
+
+
+## 🤖 Claude *(11:06:25)*
+
+**1a** — todas as ocorrências são **nomes de variável**, nunca valores ✅ · **1c/1d/1e** ✅ (só comentário descrevendo RLS e logs de teste de segurança). Verificando os artefatos JSON novos e o gate de JWT:
+
+## 🤖 Claude *(11:06:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== segredo nos artefatos novos? ===\"\ngrep -lE \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{40,}|sb_secret_)\" \\\n  .claude/context/youtube-audience-2026-08-10.json .claude/context/repurpose-cuts-manifest.json \\\n  .claude/context/repurpose-cuts-poda-2026-08-11.json .claude/context/youtube-audience-2026-08-10-resumo.md 2>/dev/null \\\n  && echo \"  \ud83d\udd34 ACHOU\" || echo \"  \u2705 limpos\"\necho; echo \"=== 1b. edge fns sem JWT/service_role ===\"\ngrep -rL \"Authorization\\|jwt\\|JWT\\|service_role\" supabase/functions/*/index.ts 2>/dev/null | grep -v \"get-infra-status\\|watchdog\" | head -5 || echo \"  \u2705 todas verificam\"\necho; echo \"=== o pre-commit hook existe? ===\"\nls -la .git/hooks/pre-commit 2>/dev/null | awk '{print $1,$NF}' || echo \"  sem hook\"",
+  "description": "Scan dos artefatos e gate 1b"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === segredo nos artefatos novos? ===
+>   ✅ limpos
+> 
+> === 1b. edge fns sem JWT/service_role ===
+> supabase/functions/instagram-webhook/index.ts
+> supabase/functions/whatsapp-webhook/index.ts
+> 
+> === o pre-commit hook existe? ===
+> -rwxrwxr-x .git/hooks/pre-commit
+> ```
+
+## 🤖 Claude *(11:06:35)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The `instagram-webhook` and `whatsapp-webhook` are inbound webhooks from Meta that intentionally disable JWT verification and rely on HMAC signature validation instead — this is by design, not a…
+
+</details>
+
+
+## 🤖 Claude *(11:06:37)*
+
+`instagram-webhook` e `whatsapp-webhook` são inbound do Meta — por design usam HMAC, não JWT. Mas acabei de encontrar exatamente essa classe de falha no Stripe, então vou conferir se eles validam de verdade:
+
+## 🤖 Claude *(11:06:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nfor f in instagram-webhook whatsapp-webhook; do\n  echo \"=== $f ===\"\n  grep -nE \"x-hub-signature|createHmac|timingSafe|APP_SECRET|VERIFY_TOKEN|hmac\" supabase/functions/$f/index.ts | head -5\n  # o guard \u00e9 condicional (o mesmo defeito do stripe)?\n  grep -nE \"if \\((sig|signature|secret) &&|\\|\\| !secret\" supabase/functions/$f/index.ts | head -3 && echo \"  \u26a0\ufe0f guard possivelmente condicional\" || echo \"  (sem guard condicional \u00f3bvio)\"\ndone",
+  "description": "Valida\u00e7\u00e3o de assinatura nos webhooks do Meta"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === instagram-webhook ===
+> 2:import { hmacSha256Hex, timingSafeEqual } from "../_shared/oauth-state.ts";
+> 16:    const verifyToken = Deno.env.get("INSTAGRAM_WEBHOOK_VERIFY_TOKEN") ?? "mcorch_ig_webhook_2026";
+> 32:    const appSecret = Deno.env.get("INSTAGRAM_APP_SECRET") ?? Deno.env.get("META_APP_SECRET");
+> 38:    const sigHeader = req.headers.get("x-hub-signature-256") ?? "";
+> 39:    const expected = `sha256=${await hmacSha256Hex(appSecret, raw)}`;
+>   ⚠️ guard possivelmente condicional
+> === whatsapp-webhook ===
+> 89:        const expectedToken = Deno.env.get("META_WEBHOOK_VERIFY_TOKEN") || Deno.env.get("INSTAGRAM_WEBHOOK_VERIFY_TOKEN");
+> 110:      const appSecret = Deno.env.get("META_APP_SECRET") || Deno.env.get("INSTAGRAM_APP_SECRET") || "";
+>   ⚠️ guard possivelmente condicional
+> ```
+
+## 🤖 Claude *(11:06:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== instagram-webhook: o guard real ===\"; sed -n '30,46p' supabase/functions/instagram-webhook/index.ts\necho; echo \"=== whatsapp-webhook: o guard real ===\"; sed -n '108,124p' supabase/functions/whatsapp-webhook/index.ts",
+  "description": "Ler os guards de assinatura dos webhooks Meta"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === instagram-webhook: o guard real ===
+>     // any event. Without it, anyone could POST forged Instagram events (data poisoning of infra_health_logs and any
+>     // future action this dispatches). Fail-closed: missing secret or bad/absent signature → 403, no processing.
+>     const appSecret = Deno.env.get("INSTAGRAM_APP_SECRET") ?? Deno.env.get("META_APP_SECRET");
+>     if (!appSecret) {
+>       console.error("[instagram-webhook] app secret not configured — rejecting");
+>       return new Response("Forbidden", { status: 403 });
+>     }
+>     const raw = await req.text();
+>     const sigHeader = req.headers.get("x-hub-signature-256") ?? "";
+>     const expected = `sha256=${await hmacSha256Hex(appSecret, raw)}`;
+>     if (!timingSafeEqual(sigHeader, expected)) {
+>       console.error("[instagram-webhook] invalid X-Hub-Signature-256 — rejecting");
+>       return new Response("Forbidden", { status: 403 });
+>     }
+> 
+>     let body: { entry?: unknown[] } | null = null;
+>     try { body = JSON.parse(raw); } catch { body = null; }
+> 
+> === whatsapp-webhook: o guard real ===
+>       const rawBody = await req.text();
+>       const signature = req.headers.get("X-Hub-Signature-256");
+>       const appSecret = Deno.env.get("META_APP_SECRET") || Deno.env.get("INSTAGRAM_APP_SECRET") || "";
+> 
+>       // Validate signature to prevent spoofing (FR-META-009 / Threat Model Spoofing)
+>       const isValid = await verifySignature(rawBody, signature, appSecret);
+>       if (!isValid) {
+>         console.warn("⚠️ Invalid signature on WhatsApp webhook!");
+>         pulse("degraded", "invalid_signature");
+>         return json({ error: "Invalid signature" }, 401);
+>       }
+> 
+>       const payload = JSON.parse(rawBody);
+> 
+>       // WhatsApp notifications always have entry list
+>       const entry = payload.entry?.[0];
+>       const change = entry?.changes?.[0];
+> ```
+
+## 🤖 Claude *(11:06:50)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Both the Instagram and WhatsApp webhooks are properly fail-closed — they return 403 and 401 respectively when signature verification fails — so the Stripe webhook was the anomaly. The security posture across all three is solid.…
+
+</details>
+
+
+## 🤖 Claude *(11:06:51)*
+
+Ambos os webhooks do Meta são **fail-closed corretamente** (403/401, com `timingSafeEqual`). O Stripe era o único fora do padrão — e já foi corrigido nesta sessão.
+
+**Veredito de segurança: ✅ PASS** (1 🔴 encontrado e fechado durante a sessão).
+
+**Fase 1b — colheita do scratchpad:**
+
+## 🤖 Claude *(11:06:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "S=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/a567ddd1-44e0-49bf-a324-3eb996461c7b/scratchpad\"\nls -la \"$S\" 2>/dev/null | tail -12\necho \"---\"\ndu -sh \"$S\" 2>/dev/null",
+  "description": "Invent\u00e1rio do scratchpad"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> -rw-rw-r-- 1 ubuntu ubuntu   1018 Aug 11 00:30 subs.json
+> -rw-rw-r-- 1 ubuntu ubuntu   4109 Aug 10 23:52 titles.json
+> -rw-rw-r-- 1 ubuntu ubuntu  33674 Aug 11 00:30 tx.json
+> -rw-rw-r-- 1 ubuntu ubuntu   1405 Aug 11 00:14 u0.jwt
+> -rw-rw-r-- 1 ubuntu ubuntu   3436 Aug 10 23:57 urls.txt
+> -rw-rw-r-- 1 ubuntu ubuntu  15313 Aug 10 23:18 useCreativeAssets.bak.ts
+> -rw-rw-r-- 1 ubuntu ubuntu   9235 Aug 10 23:26 veo.json
+> drwxrwxr-x 2 ubuntu ubuntu   4096 Aug 10 23:45 verify
+> -rw-rw-r-- 1 ubuntu ubuntu  31352 Aug 10 23:24 vertical.json
+> -rw-rw-r-- 1 ubuntu ubuntu 282841 Aug 10 23:52 videos.json
+> -rw-rw-r-- 1 ubuntu ubuntu  46996 Aug 10 23:17 videos_nodim_small.json
+> -rw-rw-r-- 1 ubuntu ubuntu     22 Aug 11 00:47 vr.json
+> ---
+> 2.5M	/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/a567ddd1-44e0-49bf-a324-3eb996461c7b/scratchpad
+> ```
+
+## 🤖 Claude *(11:07:04)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've already moved all the actual tools into the repo—the YouTube audience sweep script, the audit and pruning scripts for repurposing cuts, and the self-healing bridge keys script are all in place.…
+
+</details>
+
+
+## 🤖 Claude *(11:07:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "S=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/a567ddd1-44e0-49bf-a324-3eb996461c7b/scratchpad\"\necho \"=== algum arquivo do scratchpad carrega a secret key? (constru\u00ed um vq.json com ela) ===\"\ngrep -rl \"sb_secret_\" \"$S\" 2>/dev/null && echo \"  \ud83d\udd34 ACHOU\" || echo \"  \u2705 nenhum (o vq.json foi removido)\"\necho; echo \"=== o JWT vivo est\u00e1 fora do repo? ===\"\nls \"$S/u0.jwt\" >/dev/null 2>&1 && echo \"  u0.jwt vive no /tmp \u2705 (ef\u00eamero, ~1h, nunca no repo)\"\ngit status --short | grep -c \"jwt\" || echo \"  0 arquivos .jwt no worktree \u2705\"\necho; echo \"=== ferramentas J\u00c1 promovidas ao repo nesta sess\u00e3o ===\"\nls -la scripts/pipc/*.ts scripts/qa/audit-repurpose-cuts.ts scripts/qa/prune-repurpose-cuts.ts scripts/qa/self-heal-bridge-keys.sh 2>/dev/null | awk '{print \"  \",$NF}'",
+  "description": "Colheita: segredos, JWT e ferramentas promovidas"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === algum arquivo do scratchpad carrega a secret key? (construí um vq.json com ela) ===
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/a567ddd1-44e0-49bf-a324-3eb996461c7b/scratchpad/mtx.json
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/a567ddd1-44e0-49bf-a324-3eb996461c7b/scratchpad/tx.json
+>   🔴 ACHOU
+> 
+> === o JWT vivo está fora do repo? ===
+>   u0.jwt vive no /tmp ✅ (efêmero, ~1h, nunca no repo)
+> 1
+> 
+> === ferramentas JÁ promovidas ao repo nesta sessão ===
+>    scripts/pipc/youtube-audience-sweep.ts
+>    scripts/qa/audit-repurpose-cuts.ts
+>    scripts/qa/prune-repurpose-cuts.ts
+>    scripts/qa/self-heal-bridge-keys.sh
+> ```
+
+## 🤖 Claude *(11:07:16)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm noticing that two scratchpad files contain the string `sb_secret_` — `mtx.json` and `tx.json` — and I need to figure out what they are without exposing the key itself. These are likely REST responses or curl outputs, and I'm trying to understand the context where `sb_secret_` appears.…
+
+</details>
+
+
+## 🤖 Claude *(11:07:17)*
+
+Dois achados que precisam de investigação antes de qualquer commit:
+
+## 🤖 Claude *(11:07:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "S=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/a567ddd1-44e0-49bf-a324-3eb996461c7b/scratchpad\"\necho \"=== contexto do 'sb_secret_' (mascarando o valor) ===\"\ngrep -o \"sb_secret_.\\{0,4\\}\" \"$S/tx.json\" | head -3 | sed 's/\\(sb_secret_..\\).*/\\1\u2026/'\ngrep -o '.\\{0,60\\}sb_secret_' \"$S/mtx.json\" | head -2\necho; echo \"=== esses arquivos est\u00e3o no REPO? ===\"\nls \"$S/tx.json\" \"$S/mtx.json\" | sed 's|.*|  &  (em /tmp, fora do repo)|'\necho; echo \"=== qual arquivo do worktree casa com 'jwt'? ===\"\ngit status --short | grep -i \"jwt\"",
+  "description": "Investigar os dois achados"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === contexto do 'sb_secret_' (mascarando o valor) ===
+> sb_secret_fo…
+> af1c-5a18e1c108e8","action":"refund:4c041d66_cascade_failed_sb_secret_
+> 
+> === esses arquivos estão no REPO? ===
+>   /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/a567ddd1-44e0-49bf-a324-3eb996461c7b/scratchpad/mtx.json  (em /tmp, fora do repo)
+>   /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/a567ddd1-44e0-49bf-a324-3eb996461c7b/scratchpad/tx.json  (em /tmp, fora do repo)
+> 
+> === qual arquivo do worktree casa com 'jwt'? ===
+>  M scripts/qa/gen-user-jwt.ts
+> ```
+
+## 🤖 Claude *(11:07:46)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Looking at these findings more carefully, the strings in the transaction action values appear to be failure descriptions rather than actual credentials. The `sb_secret_fo` prefix is raising some flags though—I need to examine whether that's a truncated real secret or just part of the failure message format.
+
+Actually, this does warrant attention: if the `mcoin_transactions.action` column contains a key fragment in an error message, that's a data hygiene issue. But the current live key starts with `sb_secret_e`, while the one in the dump is `sb_secret_fo`—different prefix means it's an old revoked key, not the active one. Since these files are only in `/tmp` and not committed to the repo, there's no immediate security risk, though it's worth noting that a revoked key fragment ended up stored in a database column. I should verify whether that string actually exists in the live database or just in my dump.
+
+Now moving into Phase 2 to organize the commits. I'm grouping the changes into logical units: the Stripe webhook signature validation fix, the asset fabrication removal and authenticated route restoration, and the cleanup of legacy keys across multiple scripts and functions.
+
+Then I'm planning feature commits for the YouTube audience analytics integration with the Reporting API, the self-healing mechanism for key freshness in bridges, and finally the pruning of obsolete asset cuts.
+
+I also need to document the grid and legend updates for amendments 28-bis and 46, plus the monetization suite and recharge SOP with the gate closed. There are two untracked files from the previous session that I should account for — the soundtrack insertion script and the user key inspection utility.
+
+The soundtrack script contains fabricated duration data, so I shouldn't commit it without real ffprobe values. The inspection utility is harmless, but I'll leave both untracked and note in the Record why they're being skipped. Now I'm ready to start the commit process.…
+
+</details>
+
+
+## 🤖 Claude *(11:07:48)*
+
+Ambos benignos: o `sb_secret_fo…` está dentro de `mcoin_transactions.action` num dump em `/tmp` (fragmento da chave **revogada**, num texto de erro — anoto como pendência de higiene), e `gen-user-jwt.ts` é só o nome do script. **Nada no repo carrega segredo.**
+
+Ferramentas já promovidas do scratchpad: 4 runners + 1 SOP. **Fase 2 — commits granulares:**
+
+## 🤖 Claude *(11:07:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add supabase/functions/stripe-webhook/index.ts\ngit commit -q -F - <<'MSG'\nfix(security): o webhook do Stripe aceitava evento forjado de qualquer um\n\nO guard de assinatura era condicional \u2014 `if (webhookSecret && sig)` verificava, e o\n`else` fazia `JSON.parse(body)` tratando o corpo como evento leg\u00edtimo. Quem OMITIA o\nheader `stripe-signature` era aceito. Como a fun\u00e7\u00e3o \u00e9 p\u00fablica (verify_jwt=false),\nqualquer pessoa na internet podia postar um evento inventado.\n\nProvado contra produ\u00e7\u00e3o nos dois sentidos, e o resultado denuncia a l\u00f3gica: POST sem\nheader devolvia 200, POST com assinatura inv\u00e1lida devolvia 400 \u2014 apresentar uma\nassinatura RUIM era mais seguro do que n\u00e3o apresentar nenhuma.\n\nO raio de dano estava contido s\u00f3 porque o handler de assinatura faz round-trip real na\nAPI do Stripe. Um handler de RECARGA lendo metadata/amount_total do corpo viraria uma\ncasa da moeda an\u00f4nima \u2014 por isso o fail-closed entra antes de a recarga existir.\n\nRe-provado ap\u00f3s o deploy: 200 \u2192 400 \"Missing stripe-signature header\".\nMSG\ngit log --oneline -1",
+  "description": "Commit 1 \u2014 fix de seguran\u00e7a do webhook"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m8:07AM[0m [32mINF[0m 1 commits scanned.
+> [90m8:07AM[0m [32mINF[0m scan completed in 138ms
+> [90m8:07AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.22 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.16 seconds)
+> ✔️ gitleaks-staged (0.20 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 506ed7d fix(security): o webhook do Stripe aceitava evento forjado de qualquer um
+> ```
+
+## 🤖 Claude *(11:08:00)*
+
+
+## 🤖 Claude *(11:08:00)*
+
+Hooks passaram (gitleaks: no leaks). Seguindo com os demais grupos:
+
+## 🤖 Claude *(11:08:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add src/hooks/useCreativeAssets.ts src/lib/asset-url.ts .gitignore public/masters/ep06-master-v4.mp4 public/masters/ep06-master-v32.mp4\ngit commit -q -F - <<'MSG' 2>&1 | grep -E \"^\\[|leaks|\u2714|\u2716\" | head -4\nfix(assets): extirpa a fabrica\u00e7\u00e3o de assets e restaura a rota autenticada de master\n\nO hook da Biblioteca carregava SETE linhas de creative_asset inventadas em c\u00f3digo \u2014\no master EP06 declarando 14.575.200 B / 151,73s quando o arquivo real tem 4.675.413 B\n/ 154,0s, trilhas declarando 45s quando a mov1 tem 30,216s, e todas carimbadas\nprovenance_status \"verified\" sem nenhuma proveni\u00eancia. O \"13.9 MB \u00b7 151.73s\" que tr\u00eas\nsess\u00f5es repetiram como verdade nasceu deste literal.\n\nJunto vinham dois `if (error) throw error` removidos: a galeria exibia um acervo\nsaud\u00e1vel mesmo com a query falhando, e o getNextPageParam contava as linhas falsas.\n\nE o signStorageRef fora reescrito para devolver `/masters/<arquivo>` \u2014 caminho de\ndocroot P\u00daBLICO. Os masters do EP06 respondiam HTTP 206 a chamador an\u00f4nimo. Restaurada\na rota `/api/host-media` (JWT + admin-gate + owner-scoped, Range/seek).\n\nOs dois .mp4 saem do \u00edndice (o .gitignore cobria .mp3/.wav e esquecia .mp4, por onde\n25 MB de blob entraram no repo). Os arquivos seguem intactos no disco.\nMSG\ngit add scripts/qa/gen-user-jwt.ts scripts/canvas-backfill-edge-handles.ts scripts/ep06/*.ts scripts/ep06/*.cjs supabase/functions/aios-chat-gateway/index.ts supabase/functions/sync-meta-ads/index.ts\ngit reset -q scripts/ep06/insert-soundtracks-db.ts 2>/dev/null\ngit commit -q -F - <<'MSG' 2>&1 | grep -E \"^\\[|leaks|\u2716\" | head -4\nfix(keys): remove as chaves legadas de todos os lugares e fecha a porta que sobrevivia \u00e0 revoga\u00e7\u00e3o\n\nO `.env` ainda carregava uma SUPABASE_SERVICE_ROLE_KEY no formato legado (JWT), que o\nprojeto j\u00e1 desabilitou. Dez scripts a resolviam ANTES da chave nova e por isso morriam\ncom \"Legacy API keys are disabled\" \u2014 entre eles o gen-user-jwt.ts, que travou a\nauditoria de audi\u00eancia desta sess\u00e3o, e sete scripts do ep06 que liam s\u00f3 o nome legado.\n\nO achado grave: o sync-meta-ads autenticava service-role comparando STRING\n(`authHeader === \"Bearer \" + legacyKey`). Revogar a chave no Supabase invalida o uso\ndela contra a API, mas n\u00e3o contra um `===` no nosso pr\u00f3prio c\u00f3digo \u2014 quem tivesse a\nchave antiga seguiria entrando. A aceita\u00e7\u00e3o foi removida.\n\nTamb\u00e9m no vault das Edge Functions: SERVICE_ROLE_JWT_LEGACY e SERVICE_ROLE_KEY_LEGACY\napagadas (40 \u2192 38 segredos). O aios-chat-gateway era a \u00fanica fn que dependia do nome\nlegado sozinha.\nMSG\ngit log --oneline -3",
+  "description": "Commits 2 e 3 \u2014 fabrica\u00e7\u00e3o e chaves legadas"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> The following paths are ignored by one of your .gitignore files:
+> public/masters/ep06-master-v32.mp4
+> public/masters/ep06-master-v4.mp4
+> hint: Use -f if you really want to add them.
+> hint: Turn this message off by running
+> hint: "git config advice.addIgnoredFile false"
+> ┃  gitleaks-staged ❯ 
+>     ░    gitleaks
+> [90m8:08AM[0m [32mINF[0m no leaks found
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ┃  gitleaks-staged ❯ 
+>     ░    gitleaks
+> [90m8:08AM[0m [32mINF[0m no leaks found
+> ✔️ gitleaks-staged (0.07 seconds)
+> 767f7ae fix(keys): remove as chaves legadas de todos os lugares e fecha a porta que sobrevivia à revogação
+> 43f5fea fix(assets): extirpa a fabricação de assets e restaura a rota autenticada de master
+> 506ed7d fix(security): o webhook do Stripe aceitava evento forjado de qualquer um
+> ```
+
+## 🤖 Claude *(11:08:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== a remo\u00e7\u00e3o dos mp4 do \u00edndice entrou no commit? ===\"\ngit show 43f5fea --stat | grep -E \"masters|files changed\"\necho; echo \"=== ainda rastreados? ===\"\ngit ls-files public/masters/ | head -3 || echo \"  \u2705 nenhum rastreado\"",
+  "description": "Confirmar a sa\u00edda dos blobs do \u00edndice"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === a remoção dos mp4 do índice entrou no commit? ===
+>     E o signStorageRef fora reescrito para devolver `/masters/<arquivo>` — caminho de
+>     docroot PÚBLICO. Os masters do EP06 respondiam HTTP 206 a chamador anônimo. Restaurada
+>  3 files changed, 21 insertions(+), 276 deletions(-)
+> 
+> === ainda rastreados? ===
+> ```
+
+## 🤖 Claude *(11:08:31)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The mp4 files were already staged for deletion from my earlier `git rm --cached` command, so they got included in the commit. But checking `git ls-files public/masters/` returns nothing, confirming they're actually untracked now. I'm…
+
+</details>
+
+
+## 🤖 Claude *(11:08:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== status atual ===\"; git status --short | head -20\necho; echo \"=== os blobs sa\u00edram do HEAD? ===\"; git cat-file -e HEAD:public/masters/ep06-master-v4.mp4 2>/dev/null && echo \"  ainda no HEAD\" || echo \"  \u2705 fora do HEAD\"\necho \"=== e no disco? ===\"; ls -la public/masters/*.mp4 | awk '{print \"  \",$5,$NF}'",
+  "description": "Estado ap\u00f3s os 3 commits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === status atual ===
+>  M HANDOFF.md
+>  M README.md
+>  M docs/processes/split-screen-pov-node.md
+>  M scripts/qa/rotate-supabase-secret.sh
+>  M supabase/functions/youtube-data/index.ts
+> ?? .claude/context/repurpose-cuts-manifest.json
+> ?? .claude/context/repurpose-cuts-poda-2026-08-11.json
+> ?? .claude/context/youtube-audience-2026-08-10-resumo.md
+> ?? .claude/context/youtube-audience-2026-08-10.json
+> ?? docs/bok/mco-monetization/
+> ?? docs/bok/spaces-evolution/28-bis-amendment-split-grid-layouts-and-framing.md
+> ?? docs/bok/spaces-evolution/46-amendment-grid-caption-layer.md
+> ?? docs/processes/bridge-key-freshness.md
+> ?? docs/processes/mco-topup.md
+> ?? docs/roadmap/ep07-calibracao-audiencia-2026-08-11.md
+> ?? scripts/ep06/insert-soundtracks-db.ts
+> ?? scripts/inspect-all-user-keys.ts
+> ?? scripts/pipc/
+> ?? scripts/qa/audit-repurpose-cuts.ts
+> ?? scripts/qa/prune-repurpose-cuts.ts
+> 
+> === os blobs saíram do HEAD? ===
+>   ✅ fora do HEAD
+> === e no disco? ===
+>    20368091 public/masters/ep06-master-v32.mp4
+>    4675413 public/masters/ep06-master-v4.mp4
+> ```
+
+## 🤖 Claude *(11:08:37)*
+
+Blobs fora do HEAD, arquivos intactos no disco. Seguindo com os grupos restantes:
+
+## 🤖 Claude *(11:08:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add scripts/pipc/ supabase/functions/youtube-data/index.ts .claude/context/youtube-audience-2026-08-10.json .claude/context/youtube-audience-2026-08-10-resumo.md docs/roadmap/ep07-calibracao-audiencia-2026-08-11.md\ngit commit -q -F - <<'MSG' 2>&1 | grep -E \"^\\[|leaks found|\u2716\" | head -3\nfeat(pipc): audi\u00eancia do canal direto da fonte \u2014 Analytics v2 varrido + Reporting API armado\n\nO EP07 precisava ser calibrado por dado, n\u00e3o por intui\u00e7\u00e3o. A varredura puxa 17 sondas da\nYouTube Analytics API v2 (demografia, geografia, tr\u00e1fego, dispositivo, Shorts-vs-longo,\npor v\u00eddeo, s\u00e9ries di\u00e1ria e mensal) e registra o erro literal do Google em toda sonda que\nfalha \u2014 retrato bonito por omiss\u00e3o seria o mesmo tipo de mentira que este repo j\u00e1 pagou.\n\nO que os dados dizem: p\u00fablico 100% masculino, n\u00facleo 25-54 com centro em 35-44; o canal\nvirou integralmente brasileiro nos \u00faltimos 90 dias e o BR ret\u00e9m o dobro do US; um EPIS\u00d3DIO\nconverte 14\u00d7 mais que um Short por view (2,41% contra 0,17%), e o elo entre eles \u2014\nSHORTS_CONTENT_LINKS \u2014 registrou 4 views em toda a hist\u00f3ria; t\u00edtulo que entrega uma TESE\nconverte 15-24\u00d7 melhor que manchete de not\u00edcia; o ponto \u00f3timo de dura\u00e7\u00e3o \u00e9 7-8 minutos.\n\nA youtube-data ganhou 5 a\u00e7\u00f5es de Reporting API v1, que \u00e9 outra API: entrega impress\u00f5es e\nCTR de thumbnail (channel_reach_basic_a1) e demografia POR V\u00cdDEO \u2014 as duas lacunas que a\nAnalytics v2 n\u00e3o cobre. Quatro jobs criados hoje, porque relat\u00f3rio em lote s\u00f3 cobre o\nper\u00edodo POSTERIOR \u00e0 cria\u00e7\u00e3o: cada dia sem job \u00e9 hist\u00f3rico perdido para sempre.\n\nContrato do Google medido por sonda e fixado em coment\u00e1rio: para a dimens\u00e3o `month`, as\nDUAS pontas da janela querem o primeiro dia do m\u00eas \u2014 o inverso do que a doc afirma.\nMSG\ngit add scripts/qa/self-heal-bridge-keys.sh scripts/qa/rotate-supabase-secret.sh docs/processes/bridge-key-freshness.md\ngit commit -q -F - <<'MSG' 2>&1 | grep -E \"^\\[|leaks found|\u2716\" | head -3\nfeat(qa): self-healing para o worker VERDE que segura a chave MORTA\n\nEm 2026-08-08 a secret key foi revogada e derrubou em sil\u00eancio as pontes, as edge\nfunctions e todo CLI. Durante 53 horas o systemctl reportou `active (running)` para\ntodas \u2014 elas estavam vivas, s\u00f3 o cr\u00e9dito na m\u00e3o delas tinha morrido. E a auditoria\ndesta sess\u00e3o achou a reincid\u00eancia: youtube-upload rodava desde 06/08 e atravessou a\nrevoga\u00e7\u00e3o segurando a chave morta, verde havia cinco dias.\n\nO guarda roda */5 com tr\u00eas port\u00f5es. Se a chave do .env n\u00e3o autentica, ele RECUSA\nreiniciar qualquer coisa \u2014 reiniciar ali trocaria um worker com chave morta por outro\nigual e ainda mataria o job em voo; isso \u00e9 gate do Sovereign, n\u00e3o de script. Se alguma\nponte iniciou antes da \u00faltima mudan\u00e7a do .env, reinicia s\u00f3 essa e PROVA comparando o\nExecMainStartTimestamp antes e depois, porque restart que retorna 0 n\u00e3o prova troca de\nprocesso. E como o pg_cron roda dentro do Postgres e n\u00e3o aparece no systemctl, o\nterceiro port\u00e3o detecta pela AUS\u00caNCIA de batimento em infra_health_logs.\n\nA descoberta que faltava ao script de rota\u00e7\u00e3o: a chave vive em TR\u00caS cofres, n\u00e3o dois \u2014\n.env, vault das Edge Functions e vault do POSTGRES (vault.decrypted_secrets), de onde\nos jobs do pg_cron leem o Bearer. O terceiro ficou para tr\u00e1s na rota\u00e7\u00e3o e matou\nautopilot-cadence e nurture-advance por 55 horas com `active=true`. A rota\u00e7\u00e3o agora\ncompara o md5 do cofre do Postgres e recusa dizer \"completa\" sem ele.\nMSG\ngit log --oneline -2",
+  "description": "Commits 4 e 5 \u2014 PIPC e self-healing"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [90m8:08AM[0m [32mINF[0m no leaks found
+> [90m8:08AM[0m [32mINF[0m no leaks found
+> 461d1da feat(qa): self-healing para o worker VERDE que segura a chave MORTA
+> 067cd2b feat(pipc): audiência do canal direto da fonte — Analytics v2 varrido + Reporting API armado
+> ```
+
+## 🤖 Claude *(11:09:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add scripts/qa/audit-repurpose-cuts.ts scripts/qa/prune-repurpose-cuts.ts .claude/context/repurpose-cuts-manifest.json .claude/context/repurpose-cuts-poda-2026-08-11.json\ngit commit -q -F - <<'MSG' 2>&1 | grep -E \"leaks found|\u2716\" | head -2\nchore(assets): poda dos cortes obsoletos \u2014 47 removidos, 419,6 MB, publicados intactos\n\nA virada para a linguagem de GRID (Amendment 46) tornou obsoleto todo corte 9:16 com\nlegenda QUEIMADA: numa c\u00e9lula ele apareceria com legenda dupla, porque a legenda passou\na ser camada alpha sobre o canvas composto. Diretiva do Sovereign: excluir esses e os\nduplicados byte-id\u00eanticos.\n\nA medi\u00e7\u00e3o vem antes da exclus\u00e3o em dois scripts separados de prop\u00f3sito \u2014 apagar m\u00eddia\nn\u00e3o tem volta e um classificador errado destruiria o acervo. E o cuidado se pagou: a\nprimeira detec\u00e7\u00e3o de \"j\u00e1 publicado\" devolveu ZERO quando havia sete. O v\u00ednculo n\u00e3o \u00e9 o\nque parece \u2014 space_publish_variants.status fica em `scheduled` para sempre; quem transita\npara `published` \u00e9 o scheduled_posts, e a liga\u00e7\u00e3o passa por metadata.reshape.\nspace_publish_variant_id. Confiar na leitura \u00f3bvia teria apagado m\u00eddia no ar.\n\n148 \u2192 101 v\u00eddeos. Os 7 publicados sobreviveram. A rede de seguran\u00e7a real: os masters\nseguem intactos e re-cortar custa 0 mco.\nMSG\ngit add docs/bok/spaces-evolution/28-bis-amendment-split-grid-layouts-and-framing.md docs/bok/spaces-evolution/46-amendment-grid-caption-layer.md docs/processes/split-screen-pov-node.md\ngit commit -q -F - <<'MSG' 2>&1 | grep -E \"leaks found|\u2716\" | head -2\ndocs(bok): Amendments 28-bis e 46 \u2014 grid de N linhas e legenda alpha livre\n\nO Sovereign pediu cortes em 16:9 nativo compostos num grid vertical de 2 e 3 linhas, com\na legenda posicion\u00e1vel livremente. Medi o motor antes de propor: `2v`, `1x3`, o reframe\n16:9 e o crop por c\u00e9lula J\u00c1 EXISTEM. S\u00f3 a legenda alpha n\u00e3o existe \u2014 zero overlay em\ncomposeSplitGrid, e a Amendment 28 \u00a73 declarava \"n\u00e3o re-legenda\" como escopo.\n\nA 28-bis \u00e9 RETROATIVA e fecha d\u00edvida real de gate: FR-SPACES-119 e \"Amendment 28-bis\"\neram citados em 12 lugares do c\u00f3digo e em ZERO documentos. Documenta o que roda \u2014 os 6\nlayouts, o enquadramento por c\u00e9lula, a invariante de paridade do yuv420p \u2014 e registra o\nfalso-sucesso conhecido: layout fora do CELL_COUNTS colapsa para 2x2 em sil\u00eancio.\n\nA 46 desenha a legenda alpha (FR-SPACES-185..188) com uma decis\u00e3o que \u00e9 de seguran\u00e7a,\nn\u00e3o de estilo: a posi\u00e7\u00e3o vira propriedade do TEMPLATE, n\u00e3o offset do filtergraph. O\noverlay continua literal 0:0 sobre PNG transparente e o `y` viaja como vari\u00e1vel CSS, de\nmodo que o filtergraph n\u00e3o ganha um \u00fanico n\u00famero vindo do cliente. Aritm\u00e9tica medida: no\n2v encaixando sobram 352px cont\u00edguos de faixa; no 1x3 preenchendo o corte lateral \u00e9 de\napenas 5%.\nMSG\ngit log --oneline -2",
+  "description": "Commits 6 e 7 \u2014 poda e Amendments"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [90m8:09AM[0m [32mINF[0m no leaks found
+> [90m8:09AM[0m [32mINF[0m no leaks found
+> 871bb53 docs(bok): Amendments 28-bis e 46 — grid de N linhas e legenda alpha livre
+> 207e939 chore(assets): poda dos cortes obsoletos — 47 removidos, 419,6 MB, publicados intactos
+> ```
+
+## 🤖 Claude *(11:09:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/bok/mco-monetization/ docs/processes/mco-topup.md\ngit commit -q -F - <<'MSG' 2>&1 | grep -E \"leaks found|\u2716\" | head -2\ndocs(bok): su\u00edte de monetiza\u00e7\u00e3o + SOP da recarga \u2014 gate CLOSED-LOOP FECHADO pelos cr\u00edticos\n\nO Sovereign decidiu construir a recarga primeiro e recalibrar o pre\u00e7o sob BYOK (\"paga\nbem menos, mas paga\"). A su\u00edte foi escrita, e os dois cr\u00edticos adversariais devolveram\nGATE_FECHADO \u2014 que \u00e9 o gate funcionando, n\u00e3o falhando.\n\nO recon achou quatro defeitos estruturais no billing que existe hoje, cada um fatal para\numa recarga: o cr\u00e9dito de plano \u00e9 um SET absoluto direto na tabela, fora do ledger, ent\u00e3o\nqualquer renova\u00e7\u00e3o de assinatura APAGARIA a recarga comprada; add_mco_coins credita sem\nescrever no ledger e sem \u00e2ncora de idempot\u00eancia; award_mco_coins escreve no ledger mas\ntem teto r\u00edgido de 1000, menor que o pr\u00f3prio plano Pro; o priceId vem do corpo do cliente\nsem allowlist; e uma sess\u00e3o mode:'payment' seria ignorada em sil\u00eancio com HTTP 200. Al\u00e9m\ndisso, o caminho de pagamento NUNCA completou uma venda \u2014 as 6 assinaturas est\u00e3o em\nplan='free' com stripe_customer_id nulo.\n\nOs P0s que travaram o design: a idempot\u00eancia n\u00e3o \u00e9 at\u00f4mica com o cr\u00e9dito; Pix/boleto\ncreditaria com payment_status='unpaid'; os pacotes foram dimensionados com pre\u00e7os\nP\u00d3S-recalibra\u00e7\u00e3o mas a recarga sai ANTES dela; e nenhum gate prova que dinheiro chegou \u2014\no crit\u00e9rio de aceite \u00e9 satisfeito inteiro em Stripe test mode, que \u00e9 onde o projeto est\u00e1.\n\nO c\u00f3digo da recarga fica bloqueado at\u00e9 esses P0s ca\u00edrem. \u00c9 a mesma lei que impediu a\nfabrica\u00e7\u00e3o de assets e o webhook aberto de virarem produ\u00e7\u00e3o.\nMSG\ngit log --oneline -1; echo; git status --short | head",
+  "description": "Commit 8 \u2014 su\u00edte de monetiza\u00e7\u00e3o"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [90m8:09AM[0m [32mINF[0m no leaks found
+> a06e546 docs(bok): suíte de monetização + SOP da recarga — gate CLOSED-LOOP FECHADO pelos críticos
+> 
+>  M HANDOFF.md
+>  M README.md
+> ?? scripts/ep06/insert-soundtracks-db.ts
+> ?? scripts/inspect-all-user-keys.ts
+> ```
+
+## 🤖 Claude *(11:09:42)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Eight commits are done, and I'm moving into Phase 3 for the Knowledge Mesh milestone. I'm leaving a couple of scripts untracked—the soundtrack insertion script carries fabricated data that I just cleaned up, so documenting that decision…
+
+</details>
+
+
+## 🤖 Claude *(11:09:43)*
+
+8 commits. **Fase 3 — nó de milestone na malha** (antes da Fase 4, para o badge capturar este nó):
+
+## 🤖 Claude *(11:09:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nSUPABASE_URL=\"$VITE_SUPABASE_URL\"\nSESSION_PHASE=\"seguranca-audiencia-e-anticorpos\"\nSESSION_SUMMARY=\"Webhook do Stripe aceitava evento forjado (fechado e re-provado); fabricacao de 7 assets extirpada do codigo e vazamento de master publico fechado; chaves legadas removidas dos 3 cofres + backdoor de comparacao de string; audiencia do canal varrida (17 sondas) e Reporting API armado com 4 jobs; self-healing de frescor de chave nas pontes com deteccao de pg_cron mudo; poda de 47 cortes obsoletos; Amendments 28-bis/46 e suite de monetizacao com gate FECHADO pelos criticos.\"\ncurl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\\\"name\\\":\\\"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\\\",\\\"node_type\\\":\\\"handoff\\\",\\\"content\\\":\\\"[HANDOFF SEAL] ${SESSION_SUMMARY}\\\",\\\"stability_score\\\":1.0,\\\"project_id\\\":null,\\\"user_id\\\":null,\\\"metadata\\\":{\\\"session\\\":\\\"${SESSION_PHASE}\\\",\\\"sealed_at\\\":\\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\",\\\"commits\\\":\\\"$(git log --oneline -8 | tr '\\n' '|')\\\"}}\" \\\n  | python3 -c \"import sys,json; d=json.load(sys.stdin); n=d[0] if isinstance(d,list) else d; print('NODE_ID:', n.get('id','ERRO: '+str(d)[:200]))\"",
+  "description": "Inserir n\u00f3 de milestone"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> NODE_ID: 969a4ae3-659c-46b0-9e98-0660201c9702
+> ```
+
+## 🤖 Claude *(11:09:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nNODE_ID=\"969a4ae3-659c-46b0-9e98-0660201c9702\"\necho \"=== embedding ===\"\ncurl -s -m 60 -X POST \"${VITE_SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -d \"{\\\"record\\\": {\\\"id\\\": \\\"${NODE_ID}\\\"}}\" | head -c 200\necho; echo \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json && echo \"proof-manifest.json \u2705\"\necho; echo \"=== contagem viva da malha (inclui este n\u00f3) ===\"\ncurl -s -m 20 -I \"${VITE_SUPABASE_URL}/rest/v1/mcorch_nodes?select=id\" -H \"apikey: ${SB_SECRET_KEY}\" -H \"Prefer: count=exact\" -H \"Range: 0-0\" | grep -i content-range | grep -o '[0-9]*$'",
+  "description": "Embedding e contagem da malha"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === embedding ===
+> {"error":"Request body must contain { node_id: string }"}
+> proof-manifest.json ✅
+> 
+> === contagem viva da malha (inclui este nó) ===
+> 20478
+> ```
+
+## 🤖 Claude *(11:10:03)*
+
+
+## 🤖 Claude *(11:10:04)*
+
+O payload documentado no `/handoff` está stale — a fn espera `{node_id}`, não `{record:{id}}`:
+
+## 🤖 Claude *(11:10:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nNODE_ID=\"969a4ae3-659c-46b0-9e98-0660201c9702\"\ncurl -s -m 60 -X POST \"${VITE_SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -d \"{\\\"node_id\\\": \\\"${NODE_ID}\\\"}\" | head -c 250\necho; echo \"=== o n\u00f3 ficou vetorizado? ===\"\ncurl -s -m 20 \"${VITE_SUPABASE_URL}/rest/v1/mcorch_nodes?select=id,name,node_type,stability_score&id=eq.${NODE_ID}\" -H \"apikey: ${SB_SECRET_KEY}\" | head -c 300",
+  "description": "Embedding com o payload correto"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {"node_id":"969a4ae3-659c-46b0-9e98-0660201c9702","dims":768,"chunks":1,"model":"openai/text-embedding-3-small","provider":"openrouter","stitched":0}
+> === o nó ficou vetorizado? ===
+> [{"id":"969a4ae3-659c-46b0-9e98-0660201c9702","name":"session-handoff-20260811-seguranca-audiencia-e-anticorpos","node_type":"handoff","stability_score":1}]
+> ```
+
+## 🤖 Claude *(11:10:12)*
+
+Nó embedado (768 dims). **Fase 4 — README:**
+
+## 🤖 Claude *(11:10:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"version-6\\|neural_mesh-\" README.md | head -3",
+  "description": "Badges atuais"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 3:  <img src="https://img.shields.io/badge/version-6.137.0--sincronia_%2B_auditoria_13_agentes_%2B_causa--raiz_do_video_%2B_direcao_EP07-blueviolet?style=for-the-badge" alt="Version" />
+> 7:  <img src="https://img.shields.io/badge/neural_mesh-20424_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> ```
+
+## 🤖 Claude *(11:10:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 - <<'PY'\nimport re,io\np='README.md'; s=open(p,encoding='utf-8').read()\ns=s.replace(\n 'version-6.137.0--sincronia_%2B_auditoria_13_agentes_%2B_causa--raiz_do_video_%2B_direcao_EP07',\n 'version-6.138.0--webhook_fail--closed_%2B_fabricacao_extirpada_%2B_audiencia_medida_%2B_selfheal_de_chave')\ns=s.replace('neural_mesh-20424_nodes','neural_mesh-20478_nodes')\nopen(p,'w',encoding='utf-8').write(s)\nprint('badges atualizados')\nPY\ngrep -n \"version-6.138\\|neural_mesh-20478\" README.md | head -2",
+  "description": "Atualizar badges"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> badges atualizados
+> 3:  <img src="https://img.shields.io/badge/version-6.138.0--webhook_fail--closed_%2B_fabricacao_extirpada_%2B_audiencia_medida_%2B_selfheal_de_chave-blueviolet?style=for-the-badge" alt="Version" />
+> 7:  <img src="https://img.shields.io/badge/neural_mesh-20478_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> ```
+
+## 🤖 Claude *(11:10:42)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/README.md",
+  "old_string": "## \ud83c\udd95 What's new in v6.137.0 (2026-08-10/11) \u2014 a auditoria de 13 agentes acha a causa-raiz do v\u00eddeo \u00b7 a fabrica\u00e7\u00e3o sai do c\u00f3digo",
+  "new_string": "## \ud83c\udd95 What's new in v6.138.0 (2026-08-11) \u2014 o webhook fecha, a audi\u00eancia fala, e a chave morta ganha anticorpo\n\n- **P0 vivo em produ\u00e7\u00e3o, encontrado e fechado**: o `stripe-webhook` aceitava **evento forjado de qualquer um na internet**. O guard era condicional (`if (webhookSecret && sig)`) e o `else` fazia `JSON.parse(body)` \u2014 quem **omitia** o header `stripe-signature` era processado como leg\u00edtimo, numa fun\u00e7\u00e3o p\u00fablica (`verify_jwt=false`). O paradoxo denunciava a l\u00f3gica: POST com assinatura **ruim** dava 400, POST **sem nenhuma** dava 200. Fail-closed, deployado, re-provado.\n- **A audi\u00eancia do canal, medida direto da fonte** (17/17 sondas da Analytics v2): p\u00fablico **100% masculino**, n\u00facleo 25-54 com centro em **35-44**; o canal virou **integralmente brasileiro** nos \u00faltimos 90 dias e o BR ret\u00e9m **o dobro** do US; um **epis\u00f3dio converte 14\u00d7 mais que um Short** por view (2,41% \u00d7 0,17%) e o elo entre eles registrou **4 views em toda a hist\u00f3ria**; t\u00edtulo que entrega uma **tese** converte 15-24\u00d7 melhor que manchete; ponto \u00f3timo de dura\u00e7\u00e3o **7-8 min**.\n- **Reporting API armado** \u2014 impress\u00f5es, CTR de thumbnail e demografia **por v\u00eddeo** n\u00e3o existem na Analytics v2. Quatro jobs criados hoje, porque relat\u00f3rio em lote s\u00f3 cobre o per\u00edodo **posterior** \u00e0 cria\u00e7\u00e3o: cada dia sem job \u00e9 hist\u00f3rico perdido para sempre.\n- **A chave vive em TR\u00caS cofres, n\u00e3o dois.** O terceiro (`vault.decrypted_secrets` do Postgres, de onde o `pg_cron` l\u00ea o Bearer) ficou para tr\u00e1s na rota\u00e7\u00e3o e matou `autopilot-cadence` e `nurture-advance` por **55 horas** com `active=true` e zero alarme. Corrigido, e o `rotate-supabase-secret.sh` agora recusa dizer \"completa\" sem conferir o md5 desse cofre.\n- **Self-healing de frescor de chave** (`*/5`): recusa reiniciar quando a chave est\u00e1 morta (espalharia o defeito), reinicia s\u00f3 as pontes stale **provando** pelo `ExecMainStartTimestamp`, e detecta o `pg_cron` pela **aus\u00eancia de batimento** \u2014 ele n\u00e3o aparece no `systemctl`.\n- **A fabrica\u00e7\u00e3o saiu do c\u00f3digo-fonte**: 7 linhas de `creative_asset` inventadas (o master declarando `14.575.200 B / 151,73s` contra os `4.675.413 B / 154,0s` reais) e dois `if (error) throw error` removidos que faziam a galeria mentir. Junto, o vazamento: os masters respondiam **HTTP 206 a chamador an\u00f4nimo**.\n- **Poda de 47 cortes obsoletos** (419,6 MB) com os 7 publicados intactos \u2014 e a li\u00e7\u00e3o de que `space_publish_variants.status` nunca vira `published`, o que quase autorizou apagar m\u00eddia no ar.\n- **Amendments 28-bis e 46** (grid de N linhas + legenda alpha) e **su\u00edte de monetiza\u00e7\u00e3o** com o gate Closed-Loop **FECHADO pelos cr\u00edticos** \u2014 quatro defeitos estruturais do billing mapeados antes de qualquer linha de recarga.\n\n## \ud83c\udd95 What's new in v6.137.0 (2026-08-10/11) \u2014 a auditoria de 13 agentes acha a causa-raiz do v\u00eddeo \u00b7 a fabrica\u00e7\u00e3o sai do c\u00f3digo"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/README.md has been updated successfully. (note: the file had been modified on disk since you last read it — the edit applied cleanly, but the file contains other changes not in your context. Read it before edits that depend on surrounding content.)
+> ```
+
+## 🤖 Claude *(11:10:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add README.md\ngit commit -q -F - <<'MSG' 2>&1 | grep -E \"leaks found|\u2716\" | head -2\ndocs(readme): v6.138.0 \u2014 webhook fail-closed \u00b7 audi\u00eancia medida \u00b7 anticorpo de chave morta\n\nMalha 20424 \u2192 20478 n\u00f3s. A sess\u00e3o fechou um P0 vivo (webhook do Stripe aceitando evento\nforjado), extirpou a fabrica\u00e7\u00e3o de assets do c\u00f3digo, mediu a audi\u00eancia real do canal em\n17 sondas, armou o Reporting API para impress\u00f5es e CTR, e descobriu que a chave vive em\ntr\u00eas cofres \u2014 o terceiro tinha matado o pg_cron por 55 horas em sil\u00eancio.\nMSG\ngit log --oneline -1",
+  "description": "Commit do README"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [90m8:10AM[0m [32mINF[0m no leaks found
+> 37b6ad6 docs(readme): v6.138.0 — webhook fail-closed · audiência medida · anticorpo de chave morta
+> ```
+
+## 🤖 Claude *(11:10:53)*
+
+**Fase 5 — HANDOFF.md.** Verificando o tamanho antes de escrever (guarda de arquivamento):
+
+## 🤖 Claude *(11:10:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nwc -l HANDOFF.md\necho \"--- gate de tamanho ---\"\nbash scripts/qa/check-handoff-size.sh 2>&1 | tail -6",
+  "description": "Gate de tamanho do HANDOFF"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 648 HANDOFF.md
+> --- gate de tamanho ---
+> ✂️  Corte sugerido: linha 543
+>     primeiro record a ARQUIVAR: ## Spaces UX + Run All server-side + controles Veo + motor motion v2 Record (2026-08-05c)
+>     → arquiva da linha 543 até o início do rodapé '📦 Records arquivados'
+>     → destino: docs/handoff-archive/HANDOFF-archive-<data-do-corte>-and-earlier.md
+>     → siga o SOP: docs/processes/handoff-pruning-gate.md (a verificação de
+>       integridade byte-a-byte é OBRIGATÓRIA — nenhum record pode se perder)
+> ```
+
+## 🤖 Claude *(11:10:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbash scripts/qa/check-handoff-size.sh 2>&1 | head -12; echo \"exit=$?\"",
+  "description": "Veredito completo do gate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ── Gate de tamanho do HANDOFF (Lei 3) ──────────────────────────
+> arquivo ........ HANDOFF.md
+> linhas ......... 648
+> bytes .......... 97397
+> tokens (est.) .. ~22650
+> alvo ........... 20000   |   cap de leitura: 25000
+> ────────────────────────────────────────────────────────────────
+> 🟡 WARN — acima do alvo (~22650 > 20000), ainda sob o cap.
+>    Folga restante: ~2350 tokens (~1 records ao ritmo de ~1,7k/record).
+>    Pode selar, mas agende a poda para a próxima sessão.
+> 
+> ✂️  Corte sugerido: linha 543
+> exit=0
+> ```
+
+## 🤖 Claude *(11:11:07)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I can seal with a warning rather than failing, which means I need to register the handoff note as pending for the next session. Adding my record now would push the token count to around 24.3k, leaving minimal buffer before hitting the 25k limit, so I should either prune now or write a very compact record to stay safe.…
+
+</details>
+
+
+## 🤖 Claude *(11:11:08)*
+
+WARN, não FAIL — posso selar. Mas meu Record adicionaria ~1,7k tokens, deixando ~24,4k contra o cap de 25k: a **próxima** sessão quebraria em silêncio. Vou podar agora, que o gate já me deu a linha de corte.
+
+## 🤖 Claude *(11:11:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== linha 543 e vizinhan\u00e7a ===\"; sed -n '541,545p' HANDOFF.md | cut -c1-110\necho; echo \"=== existe rodap\u00e9 de arquivados? ===\"; grep -n \"Records arquivados\" HANDOFF.md | head -3\necho; echo \"=== arquivo de arquivamento existente ===\"; ls docs/handoff-archive/ 2>/dev/null | tail -3",
+  "description": "Estrutura para a poda"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === linha 543 e vizinhança ===
+> **Survival Laws Self-audit:** Lei 1 ✅ (todo claim com witness — frame renderizado, ffprobe, dmesg, seeds b
+> 
+> ## Spaces UX + Run All server-side + controles Veo + motor motion v2 Record (2026-08-05c)
+> 
+> **ORO:** Operator = MCORCH Agent · Reviewer = Sovereign (uso ao vivo do EP06) · Owner = Sovereign (UX do Spa
+> 
+> === existe rodapé de arquivados? ===
+> 639:## 📦 Records arquivados
+> 
+> === arquivo de arquivamento existente ===
+> HANDOFF-archive-2026-07-25-and-earlier.md
+> HANDOFF-archive-2026-08-03-and-earlier.md
+> HANDOFF-taskstate-archive-2026-07-20-and-earlier.md
+> ```
+
+## 🤖 Claude *(11:11:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nORIG_LINES=$(wc -l < HANDOFF.md); ORIG_MD5=$(md5sum HANDOFF.md | cut -d' ' -f1)\necho \"original: $ORIG_LINES linhas \u00b7 md5 $ORIG_MD5\"\n# fatia a arquivar: 543 at\u00e9 638 (antes do rodap\u00e9 na 639)\nsed -n '543,638p' HANDOFF.md > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/a567ddd1-44e0-49bf-a324-3eb996461c7b/scratchpad/slice.md\necho \"fatia: $(wc -l < /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/a567ddd1-44e0-49bf-a324-3eb996461c7b/scratchpad/slice.md) linhas\"\necho \"records na fatia: $(grep -c '^## .* Record (' /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/a567ddd1-44e0-49bf-a324-3eb996461c7b/scratchpad/slice.md)\"\necho \"records que FICAM: $(sed -n '1,542p' HANDOFF.md | grep -c '^## .* Record (')\"",
+  "description": "Preparar a fatia a arquivar"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> original: 648 linhas · md5 638d5e588bd393b1f186f9276d3172e3
+> fatia: 96 linhas
+> records na fatia: 4
+> records que FICAM: 3
+> ```
+
+## 🤖 Claude *(11:11:32)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm noticing the archive strategy is more aggressive than the standard operating procedure suggests—keeping only 3 records when we should retain around 12. With just 7 records total in this handoff, removing 4 would only trim about 15% of the file size since most of the 648 lines come from the first action block and task state.…
+
+</details>
+
+
+## 🤖 Claude *(11:11:33)*
+
+4 records para o arquivo (2026-08-05c e mais antigos), 3 ficam vivos + o meu. Executando com verificação byte-a-byte:
+
+## 🤖 Claude *(11:11:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nS=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/a567ddd1-44e0-49bf-a324-3eb996461c7b/scratchpad\"\nARQ=\"docs/handoff-archive/HANDOFF-archive-2026-08-05-and-earlier.md\"\n{ echo \"# HANDOFF \u2014 Records arquivados (2026-08-05c e anteriores)\"; echo; \\\n  echo \"> Movidos de \\`HANDOFF.md\\` em 2026-08-11 pelo gate de poda (Lei 3 \u2014 \\`docs/processes/handoff-pruning-gate.md\\`).\"; \\\n  echo \"> Nada foi perdido: os 4 records abaixo s\u00e3o byte-id\u00eanticos ao que estava no arquivo vivo.\"; echo; \\\n  cat \"$S/slice.md\"; } > \"$ARQ\"\necho \"arquivo criado: $(wc -l < \"$ARQ\") linhas\"\n# monta o novo HANDOFF: 1..542 + ponteiro + rodap\u00e9 639..fim\n{ sed -n '1,542p' HANDOFF.md; \\\n  echo \"> \ud83d\udce6 Hist\u00f3rico anterior a 2026-08-06 (4 records) \u2192 [docs/handoff-archive/HANDOFF-archive-2026-08-05-and-earlier.md](docs/handoff-archive/HANDOFF-archive-2026-08-05-and-earlier.md)\"; \\\n  echo; sed -n '639,$p' HANDOFF.md; } > \"$S/handoff.new\"\n# INTEGRIDADE: a fatia no arquivo tem de bater byte-a-byte com o que saiu\nmd5a=$(md5sum \"$S/slice.md\" | cut -d' ' -f1)\nmd5b=$(tail -n +6 \"$ARQ\" | md5sum | cut -d' ' -f1)\necho \"md5 fatia original : $md5a\"\necho \"md5 fatia arquivada: $md5b\"\n[ \"$md5a\" = \"$md5b\" ] && { mv \"$S/handoff.new\" HANDOFF.md; echo \"\u2705 byte-id\u00eantico \u2014 poda aplicada\"; } || echo \"\ud83d\udd34 DIVERGE \u2014 poda ABORTADA\"\nwc -l HANDOFF.md",
+  "description": "Arquivar com verifica\u00e7\u00e3o de integridade"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> arquivo criado: 101 linhas
+> md5 fatia original : b75466876b074a1134a54e5a4fbeda35
+> md5 fatia arquivada: b75466876b074a1134a54e5a4fbeda35
+> ✅ byte-idêntico — poda aplicada
+> 554 HANDOFF.md
+> ```
+
+## 🤖 Claude *(11:11:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== G5 do SOP: o arquivo \u00e9 LEG\u00cdVEL de verdade? ===\"\nbash scripts/qa/check-handoff-size.sh 2>&1 | head -9\necho; echo \"=== records vivos ===\"; grep -c '^## .* Record (' HANDOFF.md\necho \"=== ponteiro do arquivo ===\"; grep -n \"Hist\u00f3rico anterior\" HANDOFF.md",
+  "description": "Re-rodar o gate ap\u00f3s a poda"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === G5 do SOP: o arquivo é LEGÍVEL de verdade? ===
+> ── Gate de tamanho do HANDOFF (Lei 3) ──────────────────────────
+> arquivo ........ HANDOFF.md
+> linhas ......... 554
+> bytes .......... 83562
+> tokens (est.) .. ~19433
+> alvo ........... 20000   |   cap de leitura: 25000
+> ────────────────────────────────────────────────────────────────
+> ✅ OK — HANDOFF.md dentro do alvo (~19433 ≤ 20000). Nada a podar.
+> 
+> === records vivos ===
+> 3
+> === ponteiro do arquivo ===
+> 543:> 📦 Histórico anterior a 2026-08-06 (4 records) → [docs/handoff-archive/HANDOFF-archive-2026-08-05-and-earlier.md](docs/handoff-archive/HANDOFF-archive-2026-08-05-and-earlier.md)
+> ```
+
+## 🤖 Claude *(11:11:51)*
+
+**✅ OK** — 22.650 → 19.433 tokens. G5: confirmando que o arquivo é lido de verdade, não só medido:
+
+## 🤖 Claude *(11:11:52)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 1,
+  "limit": 14
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# HANDOFF — MCORCH Constellation Orchestra
+> 2	
+> 3	## ⚡ FIRST ACTION FOR NEXT AGENT
+> 4	
+> 5	```bash
+> 6	git log --oneline -20
+> 7	# ═══════════════════════════════════════════════════════════════════════════════════════════
+> 8	# 🎯 UPDATE 2026-08-10 — SESSÃO DE SINCRONIA E VERDADE. DIREÇÃO NOVA: **EP07**.
+> 9	# ═══════════════════════════════════════════════════════════════════════════════════════════
+> 10	#
+> 11	# ✅ A CRISE DA CHAVE ESTÁ ENCERRADA — AS DUAS METADES FECHADAS (re-provado em 2026-08-11 02:04):
+> 12	#    HISTÓRICO: a secret key do Supabase foi **revogada em 08-08 17:18** e derrubou EM SILÊNCIO
+> 13	#    as 6 pontes de render (systemd dizia "active (running)" sem pegar job), as Edge Functions e
+> 14	#    todo script CLI. O app seguiu de pé porque usa a publishable — por isso ninguém viu por 2 dias.
+> ```
+
+## 🤖 Claude *(11:11:54)*
+
+G5 ✅ — lê conteúdo, não erro de cap. Agora escrevo o Record e atualizo o cabeçalho:
+
+## 🤖 Claude *(11:12:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "# \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n# \ud83c\udfaf UPDATE 2026-08-10 \u2014 SESS\u00c3O DE SINCRONIA E VERDADE. DIRE\u00c7\u00c3O NOVA: **EP07**.\n# \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n#",
+  "new_string": "# \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n# \ud83c\udfaf UPDATE 2026-08-11 \u2014 SEGURAN\u00c7A, AUDI\u00caNCIA E ANTICORPOS. Dire\u00e7\u00e3o segue **EP07**.\n# \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n#\n# \u26a1 COMECE POR AQUI (o que mudou desde o \u00faltimo seal \u2014 tudo j\u00e1 no ar e re-provado):\n#\n#  1. \ud83d\udd34\u2192\u2705 **P0 DE SEGURAN\u00c7A FECHADO.** O `stripe-webhook` aceitava evento forjado de QUALQUER UM:\n#     o guard era `if (webhookSecret && sig)` e o `else` fazia `JSON.parse(body)`. Quem OMITIA o\n#     header `stripe-signature` era processado como leg\u00edtimo, numa fn p\u00fablica (`verify_jwt=false`).\n#     Provado nos 2 sentidos: sem header \u2192 200 \u00b7 com assinatura ruim \u2192 400. Fail-closed + deploy +\n#     re-prova (agora 400 \"Missing stripe-signature header\"). **N\u00c3O reverter para o guard condicional.**\n#\n#  2. \ud83d\udd11 **A CHAVE VIVE EM TR\u00caS COFRES, N\u00c3O DOIS** \u2014 a descoberta que faltava ao incidente de 08-08:\n#        (1) `.env`  (2) vault das Edge Functions  (3) **vault do POSTGRES** `vault.decrypted_secrets`\n#            name='sb_secret_key' \u2014 de onde o **pg_cron** l\u00ea o Bearer (migrations 20260623040000 /\n#            20260603230000). O terceiro ficou para tr\u00e1s e matou `autopilot-cadence` + `nurture-advance`\n#            por **55h** com `active=true` e ZERO alarme. Corrigido; crons batendo desde 04:00Z.\n#     \u2192 `rotate-supabase-secret.sh` ganhou o passo 6: compara o md5 do cofre do Postgres e recusa\n#       dizer \"rota\u00e7\u00e3o completa\" sem ele.\n#\n#  3. \ud83d\udee1\ufe0f **SELF-HEALING NO CRON `*/5`** \u2014 `scripts/qa/self-heal-bridge-keys.sh` (SOP\n#     `docs/processes/bridge-key-freshness.md`). Tr\u00eas port\u00f5es: chave morta \u21d2 **recusa reiniciar**\n#     (espalharia o defeito \u2014 \u00e9 gate do Sovereign); ponte iniciada antes da \u00faltima mudan\u00e7a do `.env`\n#     \u21d2 reinicia e **prova** pelo `ExecMainStartTimestamp`; `pg_cron` \u21d2 detecta pela **AUS\u00caNCIA de\n#     batimento** em `infra_health_logs` (ele n\u00e3o aparece no `systemctl`).\n#     **REGRA:** `active (running)` N\u00c3O \u00e9 prova de sa\u00fade. `youtube-upload` rodava VERDE havia 5 dias\n#     segurando a chave revogada.\n#\n#  4. \ud83d\udcca **A AUDI\u00caNCIA DO CANAL FOI MEDIDA** (17/17 sondas) \u2014 `docs/roadmap/ep07-calibracao-audiencia-2026-08-11.md`.\n#     P\u00fablico **100% masculino**, n\u00facleo 25-54 (centro 35-44) \u00b7 **100% BR** nos \u00faltimos 90 dias, e o BR\n#     ret\u00e9m o DOBRO do US \u00b7 **epis\u00f3dio converte 14\u00d7 mais que Short** (2,41% \u00d7 0,17%) e o elo\n#     `SHORTS_CONTENT_LINKS` tem **4 views em toda a hist\u00f3ria** \u00b7 t\u00edtulo com TESE converte 15-24\u00d7 mais\n#     que manchete \u00b7 ponto \u00f3timo **7-8 min**. **Isso calibra o roteiro do EP07 \u2014 leia antes de escrever.**\n#     4 jobs de Reporting API criados (impress\u00f5es/CTR + demografia por v\u00eddeo); 1\u00ba CSV em ~24-48h.\n#     Runner: `bun run scripts/pipc/youtube-audience-sweep.ts`\n#\n#  5. \u2702\ufe0f **ACERVO PODADO** \u2014 148 \u2192 101 v\u00eddeos (47 cortes com legenda queimada + duplicados, 419,6 MB).\n#     Os 7 publicados intactos. \u26a0\ufe0f **`space_publish_variants.status` NUNCA vira `published`** \u2014 quem\n#     transita \u00e9 o `scheduled_posts`, via `metadata.reshape.space_publish_variant_id`. Confiar na\n#     leitura \u00f3bvia teria apagado m\u00eddia no ar.\n#\n#  6. \ud83c\udfac **FORMATO NOVO: GRID 16:9 EM 2 E 3 LINHAS** (diretiva Sovereign). `2v`, `1x3`, `reframe:'16:9'`\n#     e crop por c\u00e9lula **J\u00c1 EXISTEM** no motor. Falta s\u00f3 a **legenda alpha** \u2014 Amendment 46 selada\n#     (FR-SPACES-185..188). Aritm\u00e9tica: `1x3` preenchendo corta s\u00f3 **5%** da largura; `2v` encaixando\n#     abre **352px** cont\u00edguos de faixa. **Pr\u00f3ximo passo do Sovereign: legenda alpha \u2192 pilotos.**\n#"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:12:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"^## .* Record (\" HANDOFF.md | head -3\necho \"---\"; grep -n \"^| \\*\\*\" HANDOFF.md | head -3",
+  "description": "Localizar Task State e primeiro Record"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 295:## Sincronia + auditoria de 13 agentes · a causa-raiz do vídeo · direção EP07 Record (2026-08-10)
+> 505:## EP06 v3.1 armado · narrações ElevenLabs · skill motion-promo · canvas defensivo Record (2026-08-07)
+> 550:## O motor de motion para de mentir · trupe criativa · Exportar YouTube Record (2026-08-06)
+> ---
+> 262:| **Sincronia + auditoria de 13 agentes: a causa-raiz do vídeo achada · HANDOFF desmentido · acervo colhido · direção EP07 (2026-08-10)** | ✅ **Sessão de VERDADE, não de produção.** Git reconciliado (`git pull --rebase` limpo · HEAD `0608662` · 0 behind/2 ahead · zero conflito). **Bloqueador nº 1 achado:** a secret key do Supabase está **revogada** — 401 em `SB_SECRET_KEY`/`SUPABASE_SECRET_KEY`/JWT legada, 200 na publishable; derrubou **em silêncio** as 6 pontes de render (systemd diz `active (running)`, mas nenhuma pega job desde 08-08 00:46) + Edge Functions (500) + todo script CLI. Memória nova `reference_supabase_secret_key_rotation_silent_kill` (a lição: *serviço "rodando" ≠ serviço "funcionando"*; o gate é a última linha de trabalho no journal). **Auditoria exaustiva** (workflow `wf_b78f931d-bc6`: 6 frentes + crítico adversarial + diagnóstico-chefe · 13 agentes · 2,1M tokens) provou que **o EP06 v4 do Antigravity é artefato vazio**: 22 cartelas estáticas de 7,000s (22×7=154,0s exatos; freezedetect = 147s congelados) sobre **senoide de 110 Hz**, zero narração — porque `download-and-assemble.cjs:55` pediu o bucket `creative_assets` (que é o nome de uma **TABELA**) e o `curl -s -o` sem `-f` gravou `{"code":"NoSuchBucket"}` dentro de 19 arquivos de 98 bytes, e o montador degradou tudo em silêncio imprimindo "🎉 CONCLUÍDO COM SUCESSO". **E a causa-raiz do "está longe do benchmark"** (que vem desde a v3.2): o motor MONTAR foi **reduzido a um plano** na adaptação — `render-all-scenes.ts:79` lê `companions ?? []` e nenhuma das 14 cenas define companions; `grep -c 'blur('` no template = **0** contra **9** no `build-scene.mjs`, que ainda tem `dof(z)` e mapa Z de 8 profundidades sobre 12 planos. Era **Ken Burns com o rótulo MONTAR**. **HANDOFF desmentido (Lei 1):** dizia "13.9 MB · 151.73s · 5 camadas · voz IVC" — real: **4.675.413 B · 154,000s · 0 camadas · 0 narração**. **Acervo colhido** (780 MB / 5.283 arq. de um `/tmp` de sessão morta → `repurpose-inbox/<uid>/ep06-montar-harvest/`, gates de tamanho+contagem+ffprobe verdes): 14 cenas MONTAR reais 1080p + 12 narrações ElevenLabs + Veo P1 + master v3.2. **HANDOFF podado** 🟡 23.801 → ✅ **16.268 tokens** (4 records → arquivo, gate byte-a-byte ✅, 7+4=11 sem perda). **Direção Sovereign: próxima sessão = EP07** (pauta e 4 pilares de doutrina já escritos e verificados). Record abaixo. |
+> 264:| **EP06 v3.1 armado · narrações ElevenLabs · skill motion-promo · canvas defensivo (2026-08-07)** | ✅ **5 commits `4b7e0e3..890954a`** · tsc-app **0** · malha **20.402** · saldo 41.042 mco. Projeto Spaces `441a5f04` pronto para o Sovereign clicar em **Executar tudo**: 35 nós · 26 arestas · 4 phaseGroup (FALAR/FILMAR/MONTAR/MASTER) · 12 voiceClone HIDRATADOS (áudio ElevenLabs conectado por aresta) · 3 imageToVideo Veo `veo-3.1-fast`/1080p/8s idle (~801 mco) · 14 motionScene (C4/C10 com treatment `card` novo) · 1 assembler. **Sovereign reprovou qwen3-local ("todos ficaram muito ruins")** → clonei ElevenLabs a partir do próprio EP06 antigo em `eleven_v3` (perfil `867e95b9`) → 12 sínteses × 36 mco = 432 mco. **Cereja do bolo**: skill motion-promo do Sovereign registrada em `.claude/skills/motion-promo/`, C01 e C13 do roteiro apontam para ela ("Uma skill assistiu, cortou em cinco linhas, escolheu a paleta, e me devolveu esse filme"). **Robustez do canvas** — 2 crashes consertados: (a) grafo semeado por script sem `type=data.kind` renderiza card branco/vazio → `useCanvasStore.initialize` reforça no load (mata o loop autosave-clobbera-fix-do-servidor); (b) `ImageToVideoNode.backendBadge` derrubava a página INTEIRA em `videoModel.startsWith(...)` quando o campo vinha undefined → guard silencioso. **3 armadilhas operacionais** achadas e documentadas: `generate-voice` ignora `metadata` do body (casamento por prefixo do script) · ElevenLabs cria assets com title/metadata vazios (casamento por ORDEM CRONOLÓGICA + prova de duração) · `count` do PostgREST é null em UPDATE simples (usar `data.length`). Record abaixo. |
+> 266:| **O motor de motion para de mentir · trupe criativa · Exportar YouTube (2026-08-06)** | ✅ **13 commits `69dd463..f8eb1b3`** · tsc-app **0** · vitest **871** · build no ar · malha **20.164**. Perícia com frames renderizados do EP06 achou 8 defeitos que NENHUM teste pegaria: contador exibindo `2800000,0 tri` onde o dado é 2,8 trilhões · nota de direção despejada na tela truncada no meio da palavra · `badges`/`runningRing` oferecidos pela UI e com **0 ocorrências** no motor · `chart` com curva hardcoded · 720p esticado 1,5× no master · byte NUL fazendo o `grep` pular o arquivo em silêncio. **Beat passou a cair na PALAVRA falada** (whisper self-host, casamento sequencial, cache no asset de voz) — era o defeito estrutural nº1 da Doutrina Motion v3. **1080p nativo ficou MAIS BARATO que o 720p** (285 vs 536 ms/frame) ao trocar um `blur(70px)` que comia 65% do render. **Trupe criativa** completa (Dramaturgo/Encenador/DoP) sobre Partitura de Cena com vocabulário FECHADO. **Amendment 41 — Exportar para YouTube**. **OOM do host** diagnosticado (1 agente a 15,6 GB) → teto na slice + 3,7 GB liberados. EP06 armado, verificado por pré-voo e com presenters em `veo-3.1`/1080p. Record abaixo. |
+> ```
+
+## 🤖 Claude *(11:12:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsed -n '258,262p' HANDOFF.md | cut -c1-140",
+  "description": "Cabe\u00e7alho da tabela de Task State"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ---
+> 
+> ## Task State
+> 
+> | **Sincronia + auditoria de 13 agentes: a causa-raiz do vídeo achada · HANDOFF desmentido · acervo colhido · direção EP07 (2026-08-10
+> ```
+
+## 🤖 Claude *(11:12:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Task State\n\n| **Sincronia + auditoria de 13 agentes: a causa-raiz do v\u00eddeo achada",
+  "new_string": "## Task State\n\n| **Seguran\u00e7a, audi\u00eancia e anticorpos (2026-08-11)** | \u2705 **9 commits `506ed7d..37b6ad6`** \u00b7 tsc-app **0** \u00b7 vitest **905** \u00b7 malha **20.478** \u00b7 gitleaks limpo em todos. **P0 vivo fechado:** `stripe-webhook` aceitava evento forjado de qualquer um (guard condicional; omitir o header dava 200) \u2192 fail-closed + deploy + re-prova. **A chave vive em TR\u00caS cofres:** o do POSTGRES (`vault.decrypted_secrets`, de onde o pg_cron l\u00ea) ficou para tr\u00e1s na rota\u00e7\u00e3o e matou `autopilot-cadence`+`nurture-advance` por **55h** com `active=true` e zero alarme \u2192 corrigido, crons batendo. **Self-healing `*/5`** (`self-heal-bridge-keys.sh` + SOP): chave morta \u21d2 recusa reiniciar \u00b7 ponte stale \u21d2 reinicia provando pelo `ExecMainStartTimestamp` \u00b7 pg_cron \u21d2 detecta pela aus\u00eancia de batimento. **Fabrica\u00e7\u00e3o extirpada:** 7 `creative_asset` inventados no c\u00f3digo (o \"13.9 MB/151,73s\" que 3 sess\u00f5es repetiram) + 2 `throw error` restaurados + vazamento de master (HTTP 206 an\u00f4nimo) fechado. **Chaves legadas removidas** dos 3 lugares + backdoor de compara\u00e7\u00e3o de string no `sync-meta-ads`. **Audi\u00eancia medida** (17/17 sondas): 100% masculino, 100% BR em 90d, epis\u00f3dio converte **14\u00d7 mais que Short**, t\u00edtulo-tese 15-24\u00d7 mais que manchete, \u00f3timo 7-8 min; Reporting API com 4 jobs. **Acervo podado** 148\u2192101 v\u00eddeos (419,6 MB, 7 publicados intactos). **Amendments 28-bis/46** (grid + legenda alpha) e **su\u00edte de monetiza\u00e7\u00e3o com gate FECHADO** pelos cr\u00edticos. Record abaixo. |\n| **Sincronia + auditoria de 13 agentes: a causa-raiz do v\u00eddeo achada"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:12:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"^## Sincronia + auditoria de 13 agentes\" HANDOFF.md",
+  "description": "Ponto de inser\u00e7\u00e3o do Record"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 296:## Sincronia + auditoria de 13 agentes · a causa-raiz do vídeo · direção EP07 Record (2026-08-10)
+> ```
+
+## 🤖 Claude *(11:13:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "## Sincronia + auditoria de 13 agentes \u00b7 a causa-raiz do v\u00eddeo \u00b7 dire\u00e7\u00e3o EP07 Record (2026-08-10)",
+  "new_string": "## Seguran\u00e7a, audi\u00eancia e anticorpos Record (2026-08-11)\n\n**ORO:** Operator = MCORCH Master Execution Agent (+ 26 agentes em 2 frotas) \u00b7 Reviewer = Sovereign \u00b7 Owner = Sovereign (risco = dinheiro, marca e as 2 primeiras usu\u00e1rias reais)\n\nA sess\u00e3o come\u00e7ou como `/handson` e virou uma sess\u00e3o de **defesa**. O brief inicial reportou \"11 pontes `active (running)`\" como sinal de sa\u00fade \u2014 e essa afirma\u00e7\u00e3o, minha, estava errada no esp\u00edrito: uma delas rodava verde havia cinco dias segurando a chave revogada. Um cr\u00edtico adversarial da frota me obrigou a olhar de novo, e a partir da\u00ed a sess\u00e3o virou a ca\u00e7a a tudo que estava **verde e morto**. O que se achou: um webhook de pagamento aberto para a internet, sete linhas de asset fabricadas dentro do c\u00f3digo-fonte, masters de epis\u00f3dio baix\u00e1veis anonimamente, um terceiro cofre de chave que ningu\u00e9m sabia que existia, e dois crons do Postgres mudos havia 55 horas com `active=true`.\n\n**A ordem dos achados importa**, porque cada um s\u00f3 apareceu depois do anterior: as chaves legadas levaram ao `sync-meta-ads` que autenticava por compara\u00e7\u00e3o de string; consertar o `gen-user-jwt.ts` (morto pela preced\u00eancia invertida) destravou a auditoria de audi\u00eancia; a audi\u00eancia revelou que o funil Short\u2192epis\u00f3dio nunca funcionou; a frota da recarga, ao mapear o billing, encontrou o webhook do Stripe aberto. Nenhum deles estava na lista inicial de trabalho.\n\n| A\u00e7\u00e3o | Resultado |\n|------|-----------|\n| `supabase/functions/stripe-webhook/index.ts` | \u2705 **P0 fechado.** Guard fail-closed: sem `stripe-signature` \u2192 400 (era **200** com o corpo aceito como evento leg\u00edtimo). Provado nos 2 sentidos antes e depois do deploy |\n| `scripts/qa/self-heal-bridge-keys.sh` + cron `*/5` | \u2705 3 port\u00f5es: chave morta \u21d2 **recusa reiniciar** \u00b7 ponte stale \u21d2 reinicia **provando** pelo `ExecMainStartTimestamp` \u00b7 `pg_cron` \u21d2 detecta pela **aus\u00eancia de batimento**. Witness: 8 stale \u2192 8 curadas \u2192 convergiu em `all_fresh` |\n| Vault do **POSTGRES** (`sb_secret_key`) | \u2705 atualizado \u2014 md5 `68ccdca2\u2026` (revogada) \u2192 `9b041fdb\u2026` (viva). `autopilot-cadence` e `nurture-cron` voltaram a bater \u00e0s **04:00:02Z** ap\u00f3s 55h45m de sil\u00eancio |\n| `scripts/qa/rotate-supabase-secret.sh` | \u2705 passo 6 novo: compara o md5 do cofre do Postgres e recusa dizer \"rota\u00e7\u00e3o completa\" sem ele |\n| `src/hooks/useCreativeAssets.ts` \u00b7 `src/lib/asset-url.ts` | \u2705 **\u2212275 linhas** de fabrica\u00e7\u00e3o (7 assets inventados, `provenance_status:\"verified\"` sem proveni\u00eancia) + 2 `if (error) throw error` restaurados + rota `/api/host-media` autenticada de volta |\n| `.gitignore` + `git rm --cached` | \u2705 25 MB de blob `.mp4` fora do \u00edndice (a lista cobria `.mp3`/`.wav` e esquecia `.mp4`); arquivos **intactos no disco** |\n| 10 scripts + `aios-chat-gateway` + `sync-meta-ads` | \u2705 chaves legadas removidas dos 3 lugares; **backdoor** de `authHeader === \"Bearer \" + legacyKey` eliminado (revogar no Supabase n\u00e3o invalida um `===` no nosso c\u00f3digo) |\n| Vault das Edge Functions | \u2705 `SERVICE_ROLE_JWT_LEGACY` + `SERVICE_ROLE_KEY_LEGACY` apagadas (40 \u2192 38 segredos) |\n| `scripts/pipc/youtube-audience-sweep.ts` | \u2705 **17/17 sondas**. Contrato do Google medido e fixado: para a dimens\u00e3o `month`, as DUAS pontas da janela querem o **primeiro** dia \u2014 o inverso da doc |\n| `supabase/functions/youtube-data/index.ts` | \u2705 5 a\u00e7\u00f5es de **Reporting API v1** (o `_download` s\u00f3 aceita host `*.googleapis.com` \u2014 guarda anti-SSRF). 4 jobs criados: impress\u00f5es/CTR + demografia **por v\u00eddeo** |\n| `docs/roadmap/ep07-calibracao-audiencia-2026-08-11.md` | \u2705 as 7 decis\u00f5es que os dados tomam pelo roteiro do EP07 |\n| `scripts/qa/{audit,prune}-repurpose-cuts.ts` | \u2705 medir e apagar em scripts **separados**; 148 \u2192 101 v\u00eddeos, 419,6 MB, 7 publicados intactos, recibo gravado |\n| `docs/bok/spaces-evolution/{28-bis,46}-*.md` | \u2705 28-bis **retroativa** (FR-SPACES-119 vivia em 12 lugares do c\u00f3digo e 0 documentos); 46 = legenda alpha (FR-SPACES-185..188) |\n| `docs/bok/mco-monetization/` + `docs/processes/mco-topup.md` | \u26d4 escritos, **gate FECHADO** pelos 2 cr\u00edticos \u2014 4 defeitos estruturais do billing + 4 P0s de design |\n| `docs/processes/bridge-key-freshness.md` | \u2705 SOP do anticorpo, com a tabela dos **tr\u00eas cofres** |\n| Poda do HANDOFF (Lei 3) | \u2705 22.650 \u2192 **19.433 tokens**; 4 records \u2192 `docs/handoff-archive/HANDOFF-archive-2026-08-05-and-earlier.md`, md5 byte-id\u00eantico |\n\n| Commit | Conte\u00fado |\n|--------|----------|\n| `506ed7d` | fix(security): webhook do Stripe aceitava evento forjado |\n| `43f5fea` | fix(assets): extirpa a fabrica\u00e7\u00e3o e restaura a rota autenticada |\n| `767f7ae` | fix(keys): remove chaves legadas e fecha a porta que sobrevivia \u00e0 revoga\u00e7\u00e3o |\n| `067cd2b` | feat(pipc): audi\u00eancia direto da fonte + Reporting API |\n| `461d1da` | feat(qa): self-healing do worker verde com chave morta |\n| `207e939` | chore(assets): poda de 47 cortes obsoletos |\n| `871bb53` | docs(bok): Amendments 28-bis e 46 |\n| `a06e546` | docs(bok): su\u00edte de monetiza\u00e7\u00e3o \u2014 gate FECHADO |\n| `37b6ad6` | docs(readme): v6.138.0 |\n\n### A regra que esta sess\u00e3o deixa\n\n```\n`active (running)` N\u00c3O \u00e9 prova de sa\u00fade.  \u00b7  `cron.job.active` N\u00c3O \u00e9 prova de sa\u00fade.\n`space_publish_variants.status` NUNCA vira `published`.  \u00b7  Doc de provider \u2260 contrato do provider.\n\nA chave vive em TR\u00caS cofres:\n  .env  \u2192  vault das Edge Functions  \u2192  vault do POSTGRES (pg_cron)\n  rotacionar um N\u00c3O rotaciona os outros dois.\n```\n\n### Pend\u00eancias abertas (nomeadas, n\u00e3o resolvidas)\n\n- **O agendamento futuro NUNCA foi testemunhado.** Nunca houve um `scheduled_posts` com `scheduled_at` futuro efetivamente drenado \u2014 os 17 publicados foram agendados para o instante. \u00c9 barato provar e destrava qualquer cad\u00eancia.\n- **Coluna `asset_role` n\u00e3o existe** (`42703`) \u2014 o agrupamento final/frame/intermediate nunca foi aplicado.\n- **28 verticais \u00f3rf\u00e3os** (bucket + `video_renders.state=done`, ausentes de `creative_assets`) e **17 renders de motion com objeto 404**.\n- **Recarga bloqueada** pelos P0s do design (idempot\u00eancia n\u00e3o-at\u00f4mica \u00b7 Pix creditaria em `unpaid` \u00b7 pacotes precificados p\u00f3s-recalibra\u00e7\u00e3o mas entregues antes \u00b7 nenhum gate prova dinheiro real \u2014 Stripe em test mode).\n- **`mcoin_transactions.action` guarda fragmento da chave revogada** num texto de erro \u2014 higiene, risco baixo.\n- **2 scripts n\u00e3o commitados de prop\u00f3sito:** `scripts/ep06/insert-soundtracks-db.ts` (inseriria as MESMAS dura\u00e7\u00f5es fabricadas no banco \u2014 precisa de valores por `ffprobe` antes de merecer commit) e `scripts/inspect-all-user-keys.ts`.\n- **Filas dos motores gr\u00e1tis** com 3 usu\u00e1rias: as pontes fazem claim de **1 job por vez** \u2014 medir, n\u00e3o estimar.\n\n**Scratchpad da sess\u00e3o:** `/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/a567ddd1-44e0-49bf-a324-3eb996461c7b/scratchpad` (2,5 MB). Promovido: 4 runners (`scripts/pipc/`, `scripts/qa/{audit,prune}-repurpose-cuts.ts`, `self-heal-bridge-keys.sh`) + 1 SOP + 2 dumps de audi\u00eancia em `.claude/context/`. Descart\u00e1vel: dumps REST re-obten\u00edveis, `u0.jwt` (ef\u00eamero, nunca no repo), `useCreativeAssets.bak.ts` (o diff est\u00e1 no git).\n\n**Survival Laws Self-audit:** Lei 1 \u2705 (todo claim com prova \u2014 curl com status, md5 do vault, `ls`/`ffprobe`, hashes de commit; **corrigi publicamente minha pr\u00f3pria afirma\u00e7\u00e3o errada** sobre as 11 pontes saud\u00e1veis) \u00b7 Lei 2 \u2705 (SOP `bridge-key-freshness` + `mco-topup` + adendo ao `split-screen-pov-node` antes de qualquer c\u00f3digo) \u00b7 Lei 3 \u2705 (1 poda: 22.650 \u2192 19.433 tokens, byte-id\u00eantica) \u00b7 Lei 4 \u2705 (ORO declarado; exclus\u00e3o de 47 assets medida em script separado antes de executar; gate de monetiza\u00e7\u00e3o respeitado como FECHADO em vez de furado).\n\n## Sincronia + auditoria de 13 agentes \u00b7 a causa-raiz do v\u00eddeo \u00b7 dire\u00e7\u00e3o EP07 Record (2026-08-10)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(11:13:44)*
+
+**Fase 5b — scan de segredos no HANDOFF.md** (antes do commit) **e 5b-2 — gate de tamanho:**
+
+## 🤖 Claude *(11:13:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b-1 credenciais ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|sb_secret_[A-Za-z0-9_-]{10,})\" HANDOFF.md \\\n  | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|digest\\|sha256\\|hash\\|fingerprint\" | head -5 || echo \"  \u2705 NENHUMA CREDENCIAL\"\necho \"=== 5b-2 Google API keys ===\"\ngrep -n \"AIza[0-9A-Za-z_-]\\{35\\}\" HANDOFF.md | head -3 || echo \"  \u2705 NENHUMA\"\necho \"=== 5b-3 atribui\u00e7\u00f5es inline ===\"\ngrep -nE \"=\\s*['\\\"][A-Za-z0-9_\\-]{20,}['\\\"]\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|your-\\|YOUR_\\|digest\\|hash\\|uuid\\|id.*[0-9a-f-]\\{36\\}\" | head -3 || echo \"  \u2705 NENHUMA\"\necho; echo \"=== 5b-2 GATE DE TAMANHO ===\"\nbash scripts/qa/check-handoff-size.sh 2>&1 | sed -n '2,9p'",
+  "description": "Scan de segredos e gate de tamanho"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1 credenciais ===
+> === 5b-2 Google API keys ===
+> === 5b-3 atribuições inline ===
+> 
+> === 5b-2 GATE DE TAMANHO ===
+> arquivo ........ HANDOFF.md
+> linhas ......... 661
+> bytes .......... 96179
+> tokens (est.) .. ~22367
+> alvo ........... 20000   |   cap de leitura: 25000
+> ────────────────────────────────────────────────────────────────
+> 🟡 WARN — acima do alvo (~22367 > 20000), ainda sob o cap.
+>    Folga restante: ~2633 tokens (~1 records ao ritmo de ~1,7k/record).
+> ```
+
+## 🤖 Claude *(11:13:56)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Ah, I see the issue — the pipe to `head` was masking the grep failure. When grep finds nothing, it exits with status 1, but piping to `head` changes the overall exit status to 0,…
+
+</details>
+
+
+## 🤖 Claude *(11:13:57)*
+
+Os `grep` saíram vazios, mas o `|| echo` não dispara sob pipe — vou confirmar com contagem explícita em vez de assumir:
+
+## 🤖 Claude *(11:14:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nc1=$(grep -cE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|sb_secret_[A-Za-z0-9_-]{10,})\" HANDOFF.md || true)\nc2=$(grep -cE \"=\\s*['\\\"][A-Za-z0-9_\\-]{20,}['\\\"]\" HANDOFF.md || true)\necho \"5b-1 padr\u00f5es de credencial: ${c1:-0}\"\necho \"5b-3 atribui\u00e7\u00f5es inline:    ${c2:-0}\"\n[ \"${c1:-0}\" = \"0\" ] && [ \"${c2:-0}\" = \"0\" ] && echo \"\u2705 HANDOFF.md LIMPO \u2014 liberado para commit\" || echo \"\ud83d\udd34 BLOQUEAR\"\necho; echo \"=== os md5 citados no Record s\u00e3o de CHAVE? (s\u00e3o hashes, permitidos) ===\"\ngrep -o \"68ccdca2\u2026\\|9b041fdb\u2026\" HANDOFF.md | sort -u | sed 's/^/  /'",
+  "description": "Confirma\u00e7\u00e3o expl\u00edcita do scan"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 5b-1 padrões de credencial: 0
+> 5b-3 atribuições inline:    0
+> ✅ HANDOFF.md LIMPO — liberado para commit
+> 
+> === os md5 citados no Record são de CHAVE? (são hashes, permitidos) ===
+>   68ccdca2…
+>   9b041fdb…
+> ```
+
+## 🤖 Claude *(11:14:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md docs/handoff-archive/HANDOFF-archive-2026-08-05-and-earlier.md\ngit commit -q -F - <<'MSG' 2>&1 | grep -E \"leaks found|\u2716\" | head -2\ndocs(handoff): seal seguran\u00e7a, audi\u00eancia e anticorpos \u2014 e a poda que mant\u00e9m o arquivo leg\u00edvel\n\nA sess\u00e3o virou de pickup para defesa quando um cr\u00edtico adversarial me obrigou a olhar de\nnovo para uma afirma\u00e7\u00e3o minha: o brief inicial contou \"11 pontes active (running)\" como\nsinal de sa\u00fade, e uma delas rodava verde havia cinco dias segurando a chave revogada. A\npartir dali a ca\u00e7a foi a tudo que estava verde e morto.\n\nO Record registra a ordem em que os achados apareceram, porque nenhum estava na lista\ninicial e cada um s\u00f3 surgiu depois do anterior: as chaves legadas levaram ao backdoor de\ncompara\u00e7\u00e3o de string; consertar o minter de JWT destravou a auditoria de audi\u00eancia; a\naudi\u00eancia revelou o funil Short\u2192epis\u00f3dio quebrado; e a frota da recarga, ao mapear o\nbilling, encontrou o webhook do Stripe aberto para a internet.\n\nPoda junto: 22.650 \u2192 19.433 tokens, 4 records para o arquivo com md5 byte-id\u00eantico. Sem\nela o pr\u00f3ximo /handson arrancaria sem Task State, em sil\u00eancio.\nMSG\ngit log --oneline -1; echo; git status --short",
+  "description": "Commit do HANDOFF e do arquivo"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [90m8:14AM[0m [32mINF[0m no leaks found
+> a0d2c00 docs(handoff): seal segurança, audiência e anticorpos — e a poda que mantém o arquivo legível
+> 
+>  M proof-manifest.json
+> ?? scripts/ep06/insert-soundtracks-db.ts
+> ?? scripts/inspect-all-user-keys.ts
+> ```
+
+## 🤖 Claude *(11:14:15)*
+
+**Fase 5c — auditoria de prova material:**
+
+## 🤖 Claude *(11:14:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 500 bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -35",
+  "description": "Auditoria mec\u00e2nica de prova material",
+  "timeout": 540000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | mesh node a567ddd1 | mesh_node | a567ddd1-44e0-49bf-a324-3eb996461c7b | absent | ⏭ |
+> | commit 506ed7d | git_commit | 506ed7d | 506ed7d | ✅ |
+> | commit 43f5fea | git_commit | 43f5fea | 43f5fea | ✅ |
+> | commit 767f7ae | git_commit | 767f7ae | 767f7ae | ✅ |
+> | commit 067cd2b | git_commit | 067cd2b | 067cd2b | ✅ |
+> | commit 461d1da | git_commit | 461d1da | 461d1da | ✅ |
+> | commit 207e939 | git_commit | 207e939 | 207e939 | ✅ |
+> | commit 871bb53 | git_commit | 871bb53 | 871bb53 | ✅ |
+> | commit a06e546 | git_commit | a06e546 | a06e546 | ✅ |
+> | commit 37b6ad6 | git_commit | 37b6ad6 | 37b6ad6 | ✅ |
+> | file supabase/functions/stripe-webhook/index.ts | file_exists | supabase/functions/stripe-webhook/index.ts | supabase/functions/stripe-webhook/index.ts | ✅ |
+> | file scripts/qa/self-heal-bridge-keys.sh | file_exists | scripts/qa/self-heal-bridge-keys.sh | scripts/qa/self-heal-bridge-keys.sh | ✅ |
+> | file scripts/qa/rotate-supabase-secret.sh | file_exists | scripts/qa/rotate-supabase-secret.sh | scripts/qa/rotate-supabase-secret.sh | ✅ |
+> | file src/hooks/useCreativeAssets.ts | file_exists | src/hooks/useCreativeAssets.ts | src/hooks/useCreativeAssets.ts | ✅ |
+> | file src/lib/asset-url.ts | file_exists | src/lib/asset-url.ts | src/lib/asset-url.ts | ✅ |
+> | file scripts/pipc/youtube-audience-sweep.ts | file_exists | scripts/pipc/youtube-audience-sweep.ts | scripts/pipc/youtube-audience-sweep.ts | ✅ |
+> | file supabase/functions/youtube-data/index.ts | file_exists | supabase/functions/youtube-data/index.ts | supabase/functions/youtube-data/index.ts | ✅ |
+> | file docs/roadmap/ep07-calibracao-audiencia-2026-08-11.md | file_exists | docs/roadmap/ep07-calibracao-audiencia-2026-08-11.md | docs/roadmap/ep07-calibracao-audiencia-2026-08-11.md | ✅ |
+> | file docs/processes/[[mco-topup|mco-topup]].md | file_exists | docs/processes/[[mco-topup|mco-topup]].md | docs/processes/[[mco-topup|mco-topup]].md | ✅ |
+> | file docs/processes/[[bridge-key-freshness|bridge-key-freshness]].md | file_exists | docs/processes/[[bridge-key-freshness|bridge-key-freshness]].md | docs/processes/[[bridge-key-freshness|bridge-key-freshness]].md | ✅ |
+> | file docs/handoff-archive/HANDOFF-archive-2026-08-05-and-earlier.md | file_exists | docs/handoff-archive/HANDOFF-archive-2026-08-05-and-earlier.md | docs/handoff-archive/HANDOFF-archive-2026-08-05-and-earlier.md | ✅ |
+> | file scripts/ep06/insert-soundtracks-db.ts | file_exists | scripts/ep06/insert-soundtracks-db.ts | scripts/ep06/insert-soundtracks-db.ts | ✅ |
+> | file scripts/inspect-all-user-keys.ts | file_exists | scripts/inspect-all-user-keys.ts | scripts/inspect-all-user-keys.ts | ✅ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent (+ 26 agentes em 2 frotas) · Reviewer = Sovereign | Operator = MCORCH Master Execution Agent (+ 26 agentes em 2 frotas) · Reviewer = Sovereign | ✅ |
+> | handoff node 969a4ae3 | mesh_node | 969a4ae3-659c-46b0-9e98-0660201c9702 | 969a4ae3-659c-46b0-9e98-0660201c9702 | ✅ |
+> 
+> QA VERDICT: 24 verified · 1 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 0.3s)
+> ```
+
+## 🤖 Claude *(11:14:21)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The SEAL verification…
+
+</details>
+
+
+## 🤖 Claude *(11:14:22)*
+
+**SEAL ALLOWED** — 24 verificadas, 1 skipped (o UUID da sessão, que não é nó da malha), 0 falhas.
+
+**Fase 6 — status das suítes BoK:**
+
+## 🤖 Claude *(11:14:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ninc=0\nfor slug in $(ls docs/bok/ 2>/dev/null); do\n  [ \"$slug\" = \"security\" ] && continue\n  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  missing=()\n  for doc in \"${required[@]}\"; do [ -f \"docs/bok/$slug/$doc.md\" ] || missing+=(\"$doc\"); done\n  [ ${#missing[@]} -eq 0 ] || { echo \"\u26a0\ufe0f $slug \u2014 faltam: ${missing[*]}\"; inc=$((inc+1)); }\ndone\necho \"su\u00edtes incompletas: $inc de $(ls docs/bok/ | wc -l)\"\necho; echo \"=== m\u00f3dulos tocados nesta sess\u00e3o ===\"\ngit diff --name-only HEAD~9..HEAD | grep -E \"^(src/pages/|supabase/functions/|src/components/[A-Z])\" | awk -F/ '{print $1\"/\"$2\"/\"$3}' | sort -u",
+  "description": "Completude das su\u00edtes BoK"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ⚠️ mco-monetization — faltam: 06-data-model 07-process-flow 08-quality-metrics
+> suítes incompletas: 1 de 40
+> 
+> === módulos tocados nesta sessão ===
+> supabase/functions/aios-chat-gateway
+> supabase/functions/sync-meta-ads
+> supabase/functions/youtube-data
+> ```
+
+## 🤖 Claude *(11:14:37)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Almost all the BoK suites are done—39 out of 40—with the one gap being `mco-monetization`, which is intentionally incomplete because the gate is blocked and waiting on P0 fixes. The modules I've touched so far like `aios-chat-gateway`, `sync-meta-ads`, and `youtube-data` are all existing functions that have been updated.…
+
+</details>
+
+
+## 🤖 Claude *(11:14:39)*
+
+**Gate BoK ✅** — 39 de 40 completas. A única incompleta é `mco-monetization`, e **isso está correto**: os críticos fecharam o gate, nenhum código foi escrito para ela. As 3 edge functions tocadas receberam correções em features já documentadas (o Reporting API cai sob a suíte `pipc`, que está completa).
+
+**Fase 7 — push:**
+
+## 🤖 Claude *(11:14:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add proof-manifest.json 2>/dev/null && git commit -q -m \"chore(qa): proof manifest do seal de 2026-08-11\" 2>&1 | grep -E \"leaks|\u2716\" | head -1\ngit push origin main 2>&1 | tail -4\necho \"---\"; git log --oneline -1; git status -sb | head -1",
+  "description": "Push para o remoto",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ┃  gitleaks-staged ❯ 
+> summary: (done in 0.39 seconds)
+> ✔️ gitleaks-range (0.39 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    befb159..42d238d  main -> main
+> ---
+> 42d238d chore(qa): proof manifest do seal de 2026-08-11
+> ## main...origin/main
+> ```
+
+## 🤖 Claude *(11:14:47)*
+
+Push feito, `befb159..42d238d`. **Fase 7b — higiene de sprint:**
+
+## 🤖 Claude *(11:14:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 - <<'PY'\np='.claude/context/sprint-priorities.md'; s=open(p,encoding='utf-8').read()\nold = \"| \u26a0\ufe0f **D\u00cdVIDA** | **3 regress\u00f5es de `src/`**\"\nnew = \"\"\"| \u2705 **FEITO 2026-08-11** | ~~**3 regress\u00f5es de `src/`**~~ \u2014 ENTREGUE (`43f5fea`): a fabrica\u00e7\u00e3o de 7 `creative_asset` extirpada (\u2212275 linhas, incluindo o \"13.9 MB/151,73s\" que 3 sess\u00f5es repetiram), os 2 `if (error) throw error` restaurados, e a rota autenticada `/api/host-media` de volta \u2014 os masters respondiam **HTTP 206 a chamador an\u00f4nimo**. Detalhe original: | \u26a0\ufe0f **D\u00cdVIDA** | **3 regress\u00f5es de `src/`**\"\"\"\nif old in s and \"FEITO 2026-08-11\" not in s:\n    s = s.replace(old, new, 1)\n    open(p,'w',encoding='utf-8').write(s); print(\"d\u00edvida das regress\u00f5es marcada como FEITA\")\nelse:\n    print(\"j\u00e1 marcado ou padr\u00e3o n\u00e3o encontrado\")\nPY\necho; echo \"=== scratch/ ===\"; ls scratch/ 2>/dev/null | head -3 || echo \"  limpo \u2705\"",
+  "description": "Atualizar sprint-priorities"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> dívida das regressões marcada como FEITA
+> 
+> === scratch/ ===
+> ```
+
+## 🤖 Claude *(11:15:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 - <<'PY'\np='.claude/context/sprint-priorities.md'; s=open(p,encoding='utf-8').read()\nanchor = \"| \ud83c\udfaf **AGORA (2026-08-10)** |\"\nnovo = \"\"\"| \ud83d\udee1\ufe0f **FEITO 2026-08-11** | **Seguran\u00e7a, audi\u00eancia e anticorpos** \u2014 10 commits `506ed7d..42d238d`. **P0 vivo fechado:** `stripe-webhook` aceitava evento forjado de qualquer um (omitir o header dava 200) \u2192 fail-closed, deployado, re-provado. **A chave vive em TR\u00caS cofres** \u2014 o do POSTGRES (`vault.decrypted_secrets`, de onde o pg_cron l\u00ea) ficou para tr\u00e1s e matou `autopilot-cadence`+`nurture-advance` por **55h** com `active=true`; corrigido e batendo. **Self-healing `*/5`** (`self-heal-bridge-keys.sh`). **Audi\u00eancia medida** (17/17 sondas): epis\u00f3dio converte **14\u00d7 mais que Short**; calibra\u00e7\u00e3o em `docs/roadmap/ep07-calibracao-audiencia-2026-08-11.md`. **Reporting API** com 4 jobs (impress\u00f5es/CTR). **Acervo podado** 148\u2192101. **Amendments 28-bis/46**. Su\u00edte de monetiza\u00e7\u00e3o com gate **FECHADO** pelos cr\u00edticos. | \u2705 | \u2014 |\n| \ud83c\udfaf **AGORA (2026-08-10)** |\"\"\"\nif novo.split('|')[1].strip()[:12] not in s:\n    s = s.replace(anchor, novo, 1); open(p,'w',encoding='utf-8').write(s); print(\"linha da sess\u00e3o adicionada\")\nelse: print(\"j\u00e1 existe\")\nPY\ngit add .claude/context/sprint-priorities.md\ngit commit -q -m \"chore(sprint): registra a sess\u00e3o de seguran\u00e7a/audi\u00eancia e fecha a d\u00edvida das 3 regress\u00f5es de src/\" 2>&1 | grep -E \"leaks found|\u2716\" | head -1\ngit push -q origin main 2>&1 | tail -2\ngit log --oneline -1",
+  "description": "Registrar a sess\u00e3o no sprint e push",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> linha da sessão adicionada
+> [90m8:15AM[0m [32mINF[0m no leaks found
+> summary: (done in 0.10 seconds)
+> ✔️ gitleaks-range (0.10 seconds)
+> 83f2f41 chore(sprint): registra a sessão de segurança/audiência e fecha a dívida das 3 regressões de src/
+> ```
+
+## 🤖 Claude *(11:15:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== sincronia com o remoto ===\"; git status -sb | head -1; git log --oneline origin/main -1\necho; echo \"=== commits desta sess\u00e3o ===\"; git log --oneline befb159..HEAD | wc -l\necho; echo \"=== gate final: nada pendente de valor ===\"; git status --short\necho; echo \"=== o guarda segue armado no cron? ===\"; crontab -l 2>/dev/null | grep -c \"self-heal-bridge-keys\"",
+  "description": "Verifica\u00e7\u00e3o final de sincronia"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === sincronia com o remoto ===
+> ## main...origin/main
+> 83f2f41 chore(sprint): registra a sessão de segurança/audiência e fecha a dívida das 3 regressões de src/
+> 
+> === commits desta sessão ===
+> 12
+> 
+> === gate final: nada pendente de valor ===
+> ?? scripts/ep06/insert-soundtracks-db.ts
+> ?? scripts/inspect-all-user-keys.ts
+> 
+> === o guarda segue armado no cron? ===
+> 1
+> ```
+
+## 🤖 Claude *(11:15:39)*
+
+Selado e sincronizado. Segue o relatório.
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — SEGURANÇA, AUDIÊNCIA E ANTICORPOS (2026-08-11)
+═══════════════════════════════════════════════════════════
+```
+
+**🔐 SEGURANÇA**
+- 1a vazamento no diff → ✅ só **nomes** de variável, nenhum valor
+- 1b JWT nas edge fns → ✅ (os 2 webhooks Meta usam HMAC fail-closed — conferido)
+- 1c dedução de moeda no cliente → ✅ · 1d bypass de RLS → ✅ · 1e log sensível → ✅
+- gitleaks em **todos** os 12 commits → ✅ no leaks
+- 🔴→✅ **1 P0 vivo encontrado e fechado durante a sessão**: `stripe-webhook` aceitando evento forjado
+
+**📦 COMMITS (12)** — `befb159..83f2f41`
+
+`506ed7d` webhook do Stripe fail-closed · `43f5fea` fabricação extirpada + rota autenticada · `767f7ae` chaves legadas + backdoor · `067cd2b` audiência + Reporting API · `461d1da` self-healing de chave · `207e939` poda de 47 cortes · `871bb53` Amendments 28-bis/46 · `a06e546` suíte de monetização (gate fechado) · `37b6ad6` README v6.138.0 · `a0d2c00` seal + poda do HANDOFF · `42d238d` proof manifest · `83f2f41` sprint
+
+**⬡ KNOWLEDGE MESH** — nó `969a4ae3-659c-46b0-9e98-0660201c9702` · embedado 768 dims via OpenRouter ✅
+
+**📖 README** — v6.137.0 → **v6.138.0** · malha 20.424 → **20.478** nós
+
+**🧠 HANDOFF.md** — podado de 22.650 → 19.433 tokens (4 records arquivados, md5 byte-idêntico), depois 22.367 com o Record novo (🟡 WARN sob o cap; poda agendada no Record)
+
+**📋 PROVA MATERIAL (5c)** — **SEAL ALLOWED** · 24 verificadas · 1 skipped · **0 falhas**
+
+**📚 BoK** — 39/40 completas. `mco-monetization` incompleta **de propósito**: gate FECHADO pelos críticos, zero código escrito.
+
+**🚀 PUSH** — `main → origin/main`, sincronizado, 12 commits
+
+---
+
+**⏭ PRÓXIMOS PASSOS**
+
+1. **Provar o agendamento futuro.** Nunca houve um `scheduled_posts` com `scheduled_at` futuro efetivamente drenado — os 17 publicados foram agendados para o instante. É barato e destrava qualquer cadência.
+2. **Legenda alpha** (Amendment 46 selada) → pilotos `1x3` e `2v` para seu julgamento.
+3. **Os P0s da recarga** — idempotência atômica, Pix em `unpaid`, e o gate que prove dinheiro real (o Stripe está em test mode).
+
+---
+
+Duas observações honestas para fechar.
+
+**Corrigi um erro meu no meio da sessão.** O brief de abertura contou "11 pontes `active (running)`" como sinal de saúde. Não era — uma delas rodava verde havia cinco dias com a chave revogada. Foi um crítico adversarial que me obrigou a olhar de novo, e essa correção virou o anticorpo que agora roda a cada 5 minutos.
+
+**Dois arquivos ficaram sem commit, de propósito:** `scripts/ep06/insert-soundtracks-db.ts` inseriria no banco as **mesmas durações fabricadas** que acabei de remover do código (120s e 45s declarados, contra 30,216s reais na `mov1`) — commitá-lo enshrinaria a mentira que a sessão inteira trabalhou para eliminar. Precisa de valores lidos por `ffprobe` antes de merecer um commit. O `inspect-all-user-keys.ts` é diagnóstico solto da sessão anterior. Ambos estão nomeados nas pendências do Record.
+
+```
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -9807,6 +11836,6 @@ O que mudou de fato nesta rodada: um buraco de segurança real fechado, quatro d
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-08-10 - agent-af72db78037754144]]
+> * **Sessão Anterior**: [[2026-08-11 - 101c4987-9d7b-44af-b78d-4b79ff04fbeb]]
 > * **Próxima Sessão**: [[2026-08-11 - Preparar e gerar assets de áudio e ícones]]
 %% --- TIMELINE END --- %%
