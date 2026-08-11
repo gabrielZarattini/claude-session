@@ -1,5 +1,5 @@
 # Fix alerts with priorities and optimize claude.md context
-**Date:** 2026-08-11 | **Session ID:** `101c4987-9d7b-44af-b78d-4b79ff04fbeb`
+**Date:** 2026-08-11 | **Session ID:** `c1b6a7b1-691a-443b-a950-94444ce8065d`
 
 ---
 
@@ -3087,6 +3087,3002 @@ SOP sólido, mas agora tem 2 cláusulas que ficaram stale por causa das minhas m
 > ```
 > The file /home/gcrUX/htdocs/constellation-orchestra/docs/processes/bridge-key-freshness.md has been updated successfully. (file state is current in your context — no need to Read it back)
 > ```
+
+## 🤖 Claude *(13:00:48)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've completed the second front with all four checkpoints verified—the self-healing mechanism, doctor configuration, atomic rotation, and SOP are all working. Now I'm checking on the background workflow that's been running to see if it's finished or if I need to pull the task status directly.
+
+While that processes, I'm moving on to the remaining work in the first front: fixing the stale sprint-priorities line about the vault closure and handling the HANDOFF pruning. The edge vault is already green, so that instruction is outdated. I could defer this to the third front's pruning phase, but since the FILA SOVEREIGN table gets preserved verbatim through the restructuring, I need to fix the stale content now rather than let it survive the prune.
+
+For the HANDOFF pruning, I should cut at line 570 to archive the older records, but the right sequence is to prune before adding new content. Since I'm not sealing the session yet, I could get ahead by pruning now, though it depends on whether I have the byte-verified archival ready. I need to balance efficiency with the context budget that's climbing toward 16%. The HANDOFF pruning, sprint-priorities cleanup, and CLAUDE.md optimization are all interconnected context-reduction tasks, so I should tackle them together as part of this session's cleanup rather than deferring to the next handoff.
+
+I'm looking at the HANDOFF structure around line 570 to execute the prune correctly — the gate identified where to cut (at line 570, with "EP06 v3.1 armado..." from 2026-08-07 as the first record to archive), and I need to move everything from that point up to the "📦 Records arquivados" footer section into the archive.…
+
+</details>
+
+
+## 🤖 Claude *(13:00:51)*
+
+**Frente 2 (chave/health) completa e provada:** self-heal com 4º gate (3 cofres verdes no `*/5`), doctor §4b (liveness dos 3), rotação atômica (plumbing testado), SOP v1.1. 
+
+Agora a **Frente 1 — poda do HANDOFF** (WARN 22,4k). O gate indicou corte na linha 570. Leio a cauda para achar os limites exatos do arquivamento (integridade byte-a-byte é obrigatória).
+
+## 🤖 Claude *(13:00:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"\u2550\u2550\u2550\u2550 Records do HANDOFF (headers '## ... Record') com n\u00ba de linha \u2550\u2550\u2550\u2550\"\ngrep -nE \"^## .+Record \\(20\" HANDOFF.md\necho \"\"\necho \"\u2550\u2550\u2550\u2550 Footer de arquivo (se existir) \u2550\u2550\u2550\u2550\"\ngrep -nE \"Records arquivados|handoff-archive\" HANDOFF.md\necho \"\"\necho \"\u2550\u2550\u2550\u2550 Arquivos de arquivo existentes \u2550\u2550\u2550\u2550\"\nls -la docs/handoff-archive/ 2>/dev/null | tail -8\necho \"\"\necho \"\u2550\u2550\u2550\u2550 wc atual \u2550\u2550\u2550\u2550\"\nwc -l HANDOFF.md",
+  "description": "Map HANDOFF records + archive footer"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ════ Records do HANDOFF (headers '## ... Record') com nº de linha ════
+> 296:## Segurança, audiência e anticorpos Record (2026-08-11)
+> 360:## Sincronia + auditoria de 13 agentes · a causa-raiz do vídeo · direção EP07 Record (2026-08-10)
+> 570:## EP06 v3.1 armado · narrações ElevenLabs · skill motion-promo · canvas defensivo Record (2026-08-07)
+> 615:## O motor de motion para de mentir · trupe criativa · Exportar YouTube Record (2026-08-06)
+> 
+> ════ Footer de arquivo (se existir) ════
+> 188:#      (arquivar Records antigos → docs/handoff-archive/) ANTES de adicionar o Record novo.
+> 294:> 📦 Linhas de Task State anteriores a 2026-07-20 → [`docs/handoff-archive/HANDOFF-taskstate-archive-2026-07-20-and-earlier.md`](docs/handoff-archive/HANDOFF-taskstate-archive-2026-07-20-and-earlier.md)
+> 321:| Poda do HANDOFF (Lei 3) | ✅ 22.650 → **19.433 tokens**; 4 records → `docs/handoff-archive/HANDOFF-archive-2026-08-05-and-earlier.md`, md5 byte-idêntico |
+> 452:(2026-07-25 → 2026-08-03) → `docs/handoff-archive/HANDOFF-archive-2026-08-03-and-earlier.md`.
+> 650:> 📦 Histórico anterior a 2026-08-06 (4 records) → [docs/handoff-archive/HANDOFF-archive-2026-08-05-and-earlier.md](docs/handoff-archive/HANDOFF-archive-2026-08-05-and-earlier.md)
+> 652:## 📦 Records arquivados
+> 658:| 2026-07-25 → 2026-08-03 (EP05 v2 · TikTok · media_state · modais YT) | [`docs/handoff-archive/HANDOFF-archive-2026-08-03-and-earlier.md`](docs/handoff-archive/HANDOFF-archive-2026-08-03-and-earlier.md) |
+> 659:| 2026-07-22 → 2026-07-23 (Funis ML/POE) | [`docs/handoff-archive/HANDOFF-archive-2026-07-23-and-earlier.md`](docs/handoff-archive/HANDOFF-archive-2026-07-23-and-earlier.md) |
+> 660:| 2026-07-13 → 2026-07-21 | [`docs/handoff-archive/HANDOFF-archive-2026-07-21-and-earlier.md`](docs/handoff-archive/HANDOFF-archive-2026-07-21-and-earlier.md) |
+> 661:| 2026-07-12 e anteriores | [`docs/handoff-archive/HANDOFF-archive-2026-07-12-and-earlier.md`](docs/handoff-archive/HANDOFF-archive-2026-07-12-and-earlier.md) |
+> 
+> ════ Arquivos de arquivo existentes ════
+> drwxrwxr-x 10 gcrUX  gcrUX     4096 Aug  6 16:08 ..
+> -rw-rw-r--  1 gcrUX  gcrUX  1111768 Jul 19 19:27 HANDOFF-archive-2026-07-12-and-earlier.md
+> -rw-rw-r--  1 gcrUX  gcrUX    74144 Jul 29 20:05 HANDOFF-archive-2026-07-21-and-earlier.md
+> -rw-rw-r--  1 gcrUX  gcrUX    17484 Aug  4 14:09 HANDOFF-archive-2026-07-23-and-earlier.md
+> -rw-rw-r--  1 gcrUX  gcrUX    16848 Aug  6 01:05 HANDOFF-archive-2026-07-25-and-earlier.md
+> -rw-rw-r--  1 ubuntu ubuntu   32915 Aug 10 20:09 HANDOFF-archive-2026-08-03-and-earlier.md
+> -rw-rw-r--  1 ubuntu ubuntu   14287 Aug 11 08:11 HANDOFF-archive-2026-08-05-and-earlier.md
+> -rw-rw-r--  1 gcrUX  gcrUX    62606 Jul 29 23:17 HANDOFF-taskstate-archive-2026-07-20-and-earlier.md
+> 
+> ════ wc atual ════
+> 661 HANDOFF.md
+> ```
+
+## 🤖 Claude *(13:01:42)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm looking at the HANDOFF structure with records ordered by date, starting with the newest Segurança entry from August 11th that should be kept, followed by the Sincronia audit record from August 10th, and then older entries from August 7th and 6th that are candidates for archiving based on the gate's guidance. The archive file should be named `HANDOFF-archive-2026-08-07-and-earlier.md` to contain the two oldest records (08-07 and 08-06), following the convention where each archive is named by its newest record. I need to update the footer index to reference this new archive file instead of the previous one. ans 570-614. So I'll create a new archive file for 08-07 and earlier that contains these two records, then add a pointer to the existing 08-05 archive for anything older. After extracting those lines, I need to replace them in the main file with a footer reference and update the archive index table to reflect the new archive file. Finally, I'll verify the extraction is byte-identical to ensure data integrity.
+
+Rather than manually rolling this, I should use the handoff-pruning-gate skill which has the exact procedure built in. But since I understand the structure well, I can do this carefully myself with proper byte verification—extracting the lines to a temp file, computing the md5 hash, then comparing it against what I write to the archive to confirm they match exactly. The exact boundaries are fuzzy with potential blank lines, so let me spot-check the key transition points around line 570 and the end of the 08-06 record to confirm where it actually ends. But stepping back, the HANDOFF is only at warning level, not critical, and the pruning gate explicitly says to schedule the cleanup for the next session rather than do it now. Since there's a dedicated skill and safeguard for this operation, maybe I should hold off on pruning today and let the proper process handle it. I'll use the handoff-pruning-gate skill to handle this properly—it has the byte-verification safeguards built in and is designed for exactly this scenario. Pruning now ensures the session's new Record plus the two kept ones won't exceed the cap when I eventually handoff.
+
+Actually, wait—I should reconsider the priorities here. The sprint-priorities.md file is massive (46-88k tokens), which would be a much bigger context win than the handoff prune (only ~2.5k tokens, just a warning anyway). Let me check if the workflow is done so I can tackle the main event: pruning sprint-priorities and CLAUDE.md.…
+
+</details>
+
+
+## 🤖 Claude *(13:01:45)*
+
+HANDOFF: 4 records vivos (08-11, 08-10, 08-07, 08-06). O corte arquiva os 2 mais antigos (08-07 linha 570 + 08-06 linha 615), preservando os 2 recentes. Como perder record = perder memória de sessão, vou usar a skill dedicada que faz o arquivamento com verificação byte-a-byte.
+
+## 🤖 Claude *(13:01:45)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "handoff-pruning-gate"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: handoff-pruning-gate
+> ```
+
+## 👤 User *(13:01:45)*
+
+Base directory for this skill: /home/gcrUX/htdocs/constellation-orchestra/.claude/skills/handoff-pruning-gate
+
+# Skill: handoff-pruning-gate — HANDOFF legível, sempre
+
+SOP autoritativa: `docs/processes/handoff-pruning-gate.md`. Gate mecânico: `scripts/qa/check-handoff-size.sh`.
+
+## ⚠️ Verdade fundamental (o erro de 2026-07-29)
+
+O `HANDOFF.md` cresce a cada seal (**~1,7k tokens por Record**). Quando passa do **cap de 25k tokens**
+da ferramenta de leitura, ele **não é lido — é erro**. E o modo de falha é silencioso:
+
+- Nada quebra. Nenhum teste falha. Nenhum lint reclama.
+- O `/handson` seguinte simplesmente **não vê o Task State** e arranca achando que tem contexto.
+- Em 2026-07-29 a **própria auditoria 4Cs** não conseguiu ler as 80 primeiras linhas do arquivo
+  que estava auditando (28.756 tokens). O sintoma só apareceu porque alguém tentou ler.
+
+**Arquivo grande ≠ arquivo rico. Arquivo grande = arquivo invisível.**
+
+## Quando esta skill dispara
+
+- Antes de commitar o `HANDOFF.md` (PHASE 5b-2 do `/handoff`) — **sempre**.
+- Ao adicionar um Record novo.
+- Quando qualquer agente relatar erro de cap ao ler `HANDOFF.md`.
+- Em auditoria de saúde do projeto (4Cs — dimensão Context).
+
+## Fluxo
+
+```bash
+bash scripts/qa/check-handoff-size.sh
+```
+
+| Veredito | Ação |
+|----------|------|
+| `✅ OK` (exit 0) | Nada a fazer. Segue o seal. |
+| `🟡 WARN` (exit 0) | Pode selar. **Registrar no Pendente**: "podar HANDOFF na próxima sessão". Não é isenção — é dívida agendada. |
+| `🔴 FAIL` (exit 1) | **PODAR ANTES DE SELAR.** O script imprime a linha de corte sugerida. |
+
+## Podar — o caminho curto
+
+O script já diz **onde** cortar (cabeçalho de record mais profundo que ainda deixa o arquivo sob o alvo).
+
+1. **Backup primeiro** — sem ele a verificação vira palpite:
+   `cp HANDOFF.md <scratchpad>/HANDOFF.orig.md`
+2. Archive = cabeçalho novo + `sed -n '<CUT>,<FIM-ANTES-DO-RODAPÉ>p'` do original
+   → `docs/handoff-archive/HANDOFF-archive-<AAAA-MM-DD>-and-earlier.md`
+3. HANDOFF = `sed -n '1,<CUT-1>p'` + rodapé `## 📦 Records arquivados` com a tabela faixa→arquivo
+   (listando **todos** os archives, não só o novo)
+4. **Verificar** (obrigatório — ver SOP para os comandos exatos):
+
+| Gate | Prova |
+|------|-------|
+| G1 | headers de Record: original == novo HANDOFF + novo archive (**0 perdidos**) |
+| G2 | porção mantida **byte-idêntica** ao original |
+| G3 | porção arquivada **byte-idêntica** ao original |
+| G4 | `check-handoff-size.sh` → exit 0 |
+| **G5** | **ler ~40 linhas do HANDOFF.md com a ferramenta de leitura → retorna conteúdo, não erro** |
+
+> **G5 é o único gate que prova o objetivo.** G1-G4 são estruturais — um arquivo pode passar em
+> todos eles e continuar ilegível para o próximo agente. Sem G5, não diga "podado" (Lei 1).
+
+## Nunca
+
+- ❌ **Deletar** record em vez de arquivar — o histórico explica o PORQUÊ do estado atual.
+- ❌ Podar sem backup do original.
+- ❌ Cortar no meio de um bloco (corte só em `^## .*Record (`).
+- ❌ Dizer "podado ✅" sem G5.
+- ❌ Tratar `🟡 WARN` como verde permanente.
+
+
+## 🤖 Claude *(13:01:54)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm identifying the exact cut point at line 570 where the 08-07 record begins, then verifying the archive boundaries for both the 08-07 and 08-06 records before the footer starts at line 650. I need to confirm the precise line where the last archived record ends to execute the prune safely.…
+
+</details>
+
+
+## 🤖 Claude *(13:01:55)*
+
+Executo a poda com verificação byte-a-byte. Primeiro backup + confirmação dos limites exatos (o corte só pode cair em `^## ...Record (`).
+
+## 🤖 Claude *(13:02:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSCRATCH=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/scratchpad\"\nmkdir -p \"$SCRATCH\"\ncp HANDOFF.md \"$SCRATCH/HANDOFF.orig.md\"\necho \"backup: $(md5sum \"$SCRATCH/HANDOFF.orig.md\")\"\necho \"\"\necho \"\u2550\u2550\u2550\u2550 Boundary: fim do \u00faltimo record arquiv\u00e1vel (linha 615 = 08-06) at\u00e9 o rodap\u00e9 (650) \u2550\u2550\u2550\u2550\"\nsed -n '645,656p' HANDOFF.md | cat -n\necho \"\"\necho \"\u2550\u2550\u2550\u2550 Boundary antes do corte (568-571) \u2550\u2550\u2550\u2550\"\nsed -n '568,571p' HANDOFF.md | cat -n",
+  "description": "Backup + confirm exact prune boundaries"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> backup: 280aa0799cb827fad67a35cfa0b9f5cd  /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/scratchpad/HANDOFF.orig.md
+> 
+> ════ Boundary: fim do último record arquivável (linha 615 = 08-06) até o rodapé (650) ════
+>      1	
+>      2	**Scratchpad Harvest (PHASE 1b):** workdir `…/bd77173a…/scratchpad`. **Promovidos:** `scripts/qa/preview-motion-scene.ts` (o olho antes da fila — achou todos os defeitos acima) · `scripts/qa/bench-motion-cost.mjs` (preço por frame medido, exigido pelo gate do DoP) · `scripts/qa/preflight-spaces-project.ts` (acha o run quebrado antes dos 40 min) · `scripts/motion/align-beats.ts`. **Descartáveis:** ~40 sondas one-off de data-op + mídia de benchmark (595 MB → 3,2 MB).
+>      3	
+>      4	**Survival Laws Self-audit:** Lei 1 ✅ (todo claim com witness — frame renderizado, ffprobe, dmesg, seeds byte-idênticos, `creator_info` HTTP 200; corrigi 3 afirmações minhas que estavam erradas) · Lei 2 ✅ (Amendments 40/41 + SOPs antes do código) · Lei 3 ✅ (HANDOFF podado de 628→482 linhas ANTES do Record; 3,7 GB de disco) · Lei 4 ✅ (ORO declarado; nada pago executado sem GO).
+>      5	
+>      6	> 📦 Histórico anterior a 2026-08-06 (4 records) → [docs/handoff-archive/HANDOFF-archive-2026-08-05-and-earlier.md](docs/handoff-archive/HANDOFF-archive-2026-08-05-and-earlier.md)
+>      7	
+>      8	## 📦 Records arquivados
+>      9	
+>     10	Records antigos foram movidos para fora do `HANDOFF.md` para manter o pickup rápido (Lei 3 — HANDOFF enxuto). O **Task State** acima preserva o resumo de 1 linha de cada fase selada.
+>     11	
+>     12	| Faixa de records | Arquivo |
+> 
+> ════ Boundary antes do corte (568-571) ════
+>      1	5. **Podar o HANDOFF** na próxima sessão — o gate está 🟡 WARN (folga de ~2 records).
+>      2	
+>      3	## EP06 v3.1 armado · narrações ElevenLabs · skill motion-promo · canvas defensivo Record (2026-08-07)
+>      4
+> ```
+
+## 🤖 Claude *(13:02:44)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm pinpointing the exact line boundaries for the archive operation—the first record to move starts at line 570, and I need to verify where the previous record ends by examining the line structure around 645-656 to confirm the cutoff point. I need to create a new archive file containing the older records from lines 570-649, then update the footer note in the main document to reference this new archive and reflect that the newest live record is now 08-10. Generating markdown table... Creating the new archive file with the 08-07 and 08-06 records, then updating the main HANDOFF.md to point to it and add an index entry for the new archive. Writing shell commands... Verifying the archive is byte-identical by checking that everything after the five-line header matches the block file, then comparing checksums to confirm. Now I'm building the new HANDOFF by extracting the first 569 lines from the original... Extracting the archive index...…
+
+</details>
+
+
+## 🤖 Claude *(13:02:45)*
+
+Limites confirmados: bloco a arquivar = linhas **570-649** (records 08-07 + 08-06); mantido = 1-569 + rodapé (650+). Executo com verificação byte-a-byte (G1-G3).
+
+## 🤖 Claude *(13:02:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSCRATCH=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/scratchpad\"\nORIG=\"$SCRATCH/HANDOFF.orig.md\"\n\n# 1. Extrai o bloco arquiv\u00e1vel (byte-exato)\nsed -n '570,649p' \"$ORIG\" > \"$SCRATCH/block.md\"\necho \"block md5: $(md5sum \"$SCRATCH/block.md\" | cut -d' ' -f1)  \u00b7 linhas: $(wc -l < \"$SCRATCH/block.md\")\"\n\n# 2. Cria o novo archive: header (5 linhas) + bloco byte-id\u00eantico\n{\n  echo \"# HANDOFF Archive \u2014 2026-08-07 e anteriores (records 2026-08-07, 2026-08-06)\"\n  echo \"\"\n  echo \"> Arquivado de \\`HANDOFF.md\\` em 2026-08-11 (Lei 3 \u2014 pruning). Records byte-id\u00eanticos ao original.\"\n  echo \"> Hist\u00f3rico anterior \u2192 [HANDOFF-archive-2026-08-05-and-earlier.md](HANDOFF-archive-2026-08-05-and-earlier.md)\"\n  echo \"\"\n  cat \"$SCRATCH/block.md\"\n} > docs/handoff-archive/HANDOFF-archive-2026-08-07-and-earlier.md\n\n# 3. G3 \u2014 a por\u00e7\u00e3o arquivada \u00e9 byte-id\u00eantica? (header = 5 linhas \u21d2 bloco come\u00e7a na 6)\necho \"\u2500\u2500 G3 (bloco no archive == bloco original) \u2500\u2500\"\nif diff <(tail -n +6 docs/handoff-archive/HANDOFF-archive-2026-08-07-and-earlier.md) \"$SCRATCH/block.md\" >/dev/null; then\n  echo \"\u2705 byte-id\u00eantico\"\nelse\n  echo \"\u274c DIVERGE\"; diff <(tail -n +6 docs/handoff-archive/HANDOFF-archive-2026-08-07-and-earlier.md) \"$SCRATCH/block.md\" | head\nfi\necho \"\"\necho \"\u2500\u2500 Records no bloco arquivado \u2500\u2500\"\ngrep -cE \"^## .+Record \\(20\" \"$SCRATCH/block.md\"\ngrep -E \"^## .+Record \\(20\" \"$SCRATCH/block.md\"",
+  "description": "Create archive + verify block byte-identity (G3)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> block md5: 3d4da13f9d15fede76a7d0224ac3a857  · linhas: 80
+> ── G3 (bloco no archive == bloco original) ──
+> ✅ byte-idêntico
+> 
+> ── Records no bloco arquivado ──
+> 2
+> ## EP06 v3.1 armado · narrações ElevenLabs · skill motion-promo · canvas defensivo Record (2026-08-07)
+> ## O motor de motion para de mentir · trupe criativa · Exportar YouTube Record (2026-08-06)
+> ```
+
+## 🤖 Claude *(13:03:21)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+G3 passed with the archived block matching exactly—two records from 08-07 and 08-06. Now I'm reconstructing the handoff by combining the original head section with an updated footer, reviewing what the original footer contained before the cutoff.
+
+Looking at the archived records table and what needs updating: the new footer should reference the 08-07 archive as the newest, update the index table to include all archives on disk (including the missing 08-05 and 07-25 entries), and keep the introductory text about why records were moved.
+
+Generating markdown table... I'm noticing the date range labels need adjustment—some entries are mixing formats and languages, so I should standardize them across the archive references. I'm realizing the safest approach is to just add the new 08-07 archive row and update that one note, leaving the existing table structure unchanged—even though it's missing 08-05 and 07-25, fixing that incompleteness isn't my responsibility and could introduce mislabeling. But the instructions ask me to list all archives, so I need to quickly check the archive headers to get accurate date ranges before I can properly fill in the table.…
+
+</details>
+
+
+## 🤖 Claude *(13:03:22)*
+
+G3 verde — bloco byte-idêntico, 2 records exatos. Para o rodapé listar todos os archives com faixas **corretas** (Lei 1, sem inventar), grepo os headers de cada archive.
+
+## 🤖 Claude *(13:03:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/docs/handoff-archive\nfor f in HANDOFF-archive-2026-08-05-and-earlier.md HANDOFF-archive-2026-07-25-and-earlier.md; do\n  echo \"\u2500\u2500 $f \u2500\u2500\"\n  grep -hE \"^## .+Record \\(20\" \"$f\" | sed -E 's/^## //; s/ Record \\((20[0-9-]+)\\)/  \u00ab\\1\u00bb/' | head -8\n  echo \"\"\ndone",
+  "description": "Get accurate date ranges of existing archives"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ── HANDOFF-archive-2026-08-05-and-earlier.md ──
+> Spaces UX + Run All server-side + controles Veo + motor motion v2 Record (2026-08-05c)
+> Agente do Spaces + esteira do episódio  «2026-08-05»
+> MARATONA EP05 — A6→A14 + Motion Scenes  «2026-08-04»
+> EP05 MASTER — produção áudio EP01-04 + trilha Lyria + VFX título  «2026-08-03»
+> 
+> ── HANDOFF-archive-2026-07-25-and-earlier.md ──
+> Autonomia: security + P0 YouTube + AI Act Fatia 4  «2026-07-25»
+> Grounding do AIOS (anti-confabulação) + otimização Supabase Pro  «2026-07-25»
+> Autonomia total: PIPC S1+S2 + CRM Contatos + cadence-fix + AI Act selada  «2026-07-24»
+> Diretiva 5 pontos: governança docs + cadência por-workspace + Golden Eye intake + YouTube  «2026-07-23»
+> ```
+
+## 🤖 Claude *(13:03:37)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm working through the date ranges for these archives and noticing some overlap—the 08-05 archive contains entries from 08-03 through 08-05, but the 08-03 archive also claims to cover dates that extend into early August, which creates a conflict I need to resolve.
+
+Generating markdown table...…
+
+</details>
+
+
+## 🤖 Claude *(13:03:37)*
+
+Faixas obtidas. Monto o novo HANDOFF (head 1-569 + rodapé completo) e verifico G1/G2/G4.
+
+## 🤖 Claude *(13:03:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSCRATCH=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/scratchpad\"\nORIG=\"$SCRATCH/HANDOFF.orig.md\"\n\n# head = linhas 1-569 (byte-exato)\nsed -n '1,569p' \"$ORIG\" > \"$SCRATCH/new-handoff.md\"\n\n# rodap\u00e9 novo (substitui o antigo 650-661)\ncat >> \"$SCRATCH/new-handoff.md\" <<'FOOTER'\n> \ud83d\udce6 Hist\u00f3rico anterior a 2026-08-10 (records 2026-08-07 e 2026-08-06) \u2192 [docs/handoff-archive/HANDOFF-archive-2026-08-07-and-earlier.md](docs/handoff-archive/HANDOFF-archive-2026-08-07-and-earlier.md)\n\n## \ud83d\udce6 Records arquivados\n\nRecords antigos foram movidos para fora do `HANDOFF.md` para manter o pickup r\u00e1pido (Lei 3 \u2014 HANDOFF enxuto). O **Task State** acima preserva o resumo de 1 linha de cada fase selada.\n\n| Faixa de records | Arquivo |\n|---|---|\n| 2026-08-06 \u2192 2026-08-07 (EP06 v3.1 \u00b7 motion trupe \u00b7 Exportar YouTube) | [`docs/handoff-archive/HANDOFF-archive-2026-08-07-and-earlier.md`](docs/handoff-archive/HANDOFF-archive-2026-08-07-and-earlier.md) |\n| 2026-08-03 \u2192 2026-08-05 (Spaces UX \u00b7 Run All \u00b7 agente \u00b7 MARATONA EP05 A14) | [`docs/handoff-archive/HANDOFF-archive-2026-08-05-and-earlier.md`](docs/handoff-archive/HANDOFF-archive-2026-08-05-and-earlier.md) |\n| 2026-07-25 \u2192 2026-08-03 (EP05 v2 \u00b7 TikTok \u00b7 media_state \u00b7 modais YT) | [`docs/handoff-archive/HANDOFF-archive-2026-08-03-and-earlier.md`](docs/handoff-archive/HANDOFF-archive-2026-08-03-and-earlier.md) |\n| 2026-07-23 \u2192 2026-07-25 (security \u00b7 PIPC S1+S2 \u00b7 CRM \u00b7 AI Act) | [`docs/handoff-archive/HANDOFF-archive-2026-07-25-and-earlier.md`](docs/handoff-archive/HANDOFF-archive-2026-07-25-and-earlier.md) |\n| 2026-07-22 \u2192 2026-07-23 (Funis ML/POE) | [`docs/handoff-archive/HANDOFF-archive-2026-07-23-and-earlier.md`](docs/handoff-archive/HANDOFF-archive-2026-07-23-and-earlier.md) |\n| 2026-07-13 \u2192 2026-07-21 | [`docs/handoff-archive/HANDOFF-archive-2026-07-21-and-earlier.md`](docs/handoff-archive/HANDOFF-archive-2026-07-21-and-earlier.md) |\n| 2026-07-12 e anteriores | [`docs/handoff-archive/HANDOFF-archive-2026-07-12-and-earlier.md`](docs/handoff-archive/HANDOFF-archive-2026-07-12-and-earlier.md) |\nFOOTER\n\n# \u2500\u2500 G1 \u2014 headers: original == novo HANDOFF + novo archive (0 perdidos) \u2500\u2500\necho \"\u2500\u2500 G1: contagem de records \u2500\u2500\"\no=$(grep -cE \"^## .+Record \\(20\" \"$ORIG\")\nn=$(grep -cE \"^## .+Record \\(20\" \"$SCRATCH/new-handoff.md\")\na=$(grep -cE \"^## .+Record \\(20\" docs/handoff-archive/HANDOFF-archive-2026-08-07-and-earlier.md)\necho \"original=$o \u00b7 novo HANDOFF=$n \u00b7 novo archive=$a \u00b7 soma=$((n+a))  $([ \"$o\" -eq \"$((n+a))\" ] && echo '\u2705 0 perdidos' || echo '\u274c PERDA')\"\n\n# \u2500\u2500 G2 \u2014 por\u00e7\u00e3o mantida (1-569) byte-id\u00eantica \u2500\u2500\necho \"\u2500\u2500 G2: head 1-569 byte-id\u00eantico \u2500\u2500\"\ndiff <(sed -n '1,569p' \"$ORIG\") <(sed -n '1,569p' \"$SCRATCH/new-handoff.md\") >/dev/null && echo \"\u2705 id\u00eantico\" || echo \"\u274c diverge\"\n\n# instala\ncp \"$SCRATCH/new-handoff.md\" HANDOFF.md\necho \"\u2500\u2500 G4: gate de tamanho \u2500\u2500\"\nbash scripts/qa/check-handoff-size.sh 2>&1 | grep -E \"OK|WARN|FAIL|alvo|Folga\" | head -4\nwc -l HANDOFF.md",
+  "description": "Build new HANDOFF + verify G1/G2/G4"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ── G1: contagem de records ──
+> original=4 · novo HANDOFF=2 · novo archive=2 · soma=4  ✅ 0 perdidos
+> ── G2: head 1-569 byte-idêntico ──
+> ✅ idêntico
+> ── G4: gate de tamanho ──
+> alvo ........... 20000   |   cap de leitura: 25000
+> ✅ OK — HANDOFF.md dentro do alvo (~19758 ≤ 20000). Nada a podar.
+> 584 HANDOFF.md
+> ```
+
+## 🤖 Claude *(13:03:59)*
+
+
+## 🤖 Claude *(13:04:01)*
+
+G1/G2/G4 verdes (0 records perdidos, head byte-idêntico, 22,4k→19,7k **OK**). Falta o **G5** — o único gate que prova o objetivo: ler o HANDOFF com a ferramenta de leitura e confirmar que retorna conteúdo, não erro.
+
+## 🤖 Claude *(13:04:02)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "offset": 560,
+  "limit": 24
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 560	   PAT novo). Gate: `get-infra-status` → 200. Desbloqueia ~103 fns + o embedding do nó acima.
+> 561	2. **EP07** — ancorar os 12 números da pauta com `deepsearch-blueprint`, depois **elevar o motor**
+> 562	   (portar `dof(z)`+planos+atmosfera, popular `companions[]`) com piloto de UMA cena e gate triplo.
+> 563	3. **Reverter as 3 regressões de `src/`** do §7 (asset-url `/api/host-media` + os dois
+> 564	   `if (error) throw error` de `useCreativeAssets`), preservando o fix de `zIndex:-1` do phaseGroup.
+> 565	4. **Resíduos** a decidir: `scripts/ep06/insert-soundtracks-db.ts` (usa anon key em tabela
+> 566	   default-deny) e `scripts/inspect-all-user-keys.ts` (imprime prefixos de chave) seguem untracked
+> 567	   de propósito; 111 MiB de trilha em `public/` agora ignorados, mas ainda ocupam o docroot.
+> 568	5. **Podar o HANDOFF** na próxima sessão — o gate está 🟡 WARN (folga de ~2 records).
+> 569	
+> 570	> 📦 Histórico anterior a 2026-08-10 (records 2026-08-07 e 2026-08-06) → [docs/handoff-archive/HANDOFF-archive-2026-08-07-and-earlier.md](docs/handoff-archive/HANDOFF-archive-2026-08-07-and-earlier.md)
+> 571	
+> 572	## 📦 Records arquivados
+> 573	
+> 574	Records antigos foram movidos para fora do `HANDOFF.md` para manter o pickup rápido (Lei 3 — HANDOFF enxuto). O **Task State** acima preserva o resumo de 1 linha de cada fase selada.
+> 575	
+> 576	| Faixa de records | Arquivo |
+> 577	|---|---|
+> 578	| 2026-08-06 → 2026-08-07 (EP06 v3.1 · motion trupe · Exportar YouTube) | [`docs/handoff-archive/HANDOFF-archive-2026-08-07-and-earlier.md`](docs/handoff-archive/HANDOFF-archive-2026-08-07-and-earlier.md) |
+> 579	| 2026-08-03 → 2026-08-05 (Spaces UX · Run All · agente · MARATONA EP05 A14) | [`docs/handoff-archive/HANDOFF-archive-2026-08-05-and-earlier.md`](docs/handoff-archive/HANDOFF-archive-2026-08-05-and-earlier.md) |
+> 580	| 2026-07-25 → 2026-08-03 (EP05 v2 · TikTok · media_state · modais YT) | [`docs/handoff-archive/HANDOFF-archive-2026-08-03-and-earlier.md`](docs/handoff-archive/HANDOFF-archive-2026-08-03-and-earlier.md) |
+> 581	| 2026-07-23 → 2026-07-25 (security · PIPC S1+S2 · CRM · AI Act) | [`docs/handoff-archive/HANDOFF-archive-2026-07-25-and-earlier.md`](docs/handoff-archive/HANDOFF-archive-2026-07-25-and-earlier.md) |
+> 582	| 2026-07-22 → 2026-07-23 (Funis ML/POE) | [`docs/handoff-archive/HANDOFF-archive-2026-07-23-and-earlier.md`](docs/handoff-archive/HANDOFF-archive-2026-07-23-and-earlier.md) |
+> 583	| 2026-07-13 → 2026-07-21 | [`docs/handoff-archive/HANDOFF-archive-2026-07-21-and-earlier.md`](docs/handoff-archive/HANDOFF-archive-2026-07-21-and-earlier.md) |
+> ```
+
+## 🤖 Claude *(13:04:35)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+All the pruning checks passed successfully. I'm looking at the pending actions in the current task state and noticing that some of them are now stale—specifically the references to scripts I just removed and an outdated PAT gate check that's no longer relevant.
+
+Since I've already addressed these items this session (resolved the PAT issue, deleted the scripts, and I'm about to clean up the sprint priorities and CLAUDE.md), I should update those stale pending lines now rather than leaving them for the next handoff. The stale instruction is actually in sprint-priorities.md line 12, where the FILA SOVEREIGN row still says the edge vault needs closing and a new PAT — but I've already confirmed the vault is closed in the HANDOFF top block. I need to update that line to reflect the completed state. For the pending items at the end of the HANDOFF (lines 560-568), I'll leave them as historical record since the next session will read the fresh FIRST ACTION block first anyway. The key issue is that the HANDOFF's pending list shows completed items as still pending, which would confuse anyone doing a /handson before I seal my Record. I need to decide whether to update the historical HANDOFF record now or let my new Record supersede it at seal — updating it carries some risk, but leaving stale pending items visible is also problematic. The sprint-priorities line is the critical one to fix since it's load-bearing for any /handson.
+
+I've verified the HANDOFF pr…
+
+</details>
+
+
+## 🤖 Claude *(13:04:38)*
+
+**G5 verde** — HANDOFF lê limpo, retorna conteúdo. Poda completa e verificada (G1-G5 ✅): 4→2 records vivos, 0 perdidos, byte-idênticos, **22,4k→19,7k OK**, novo archive `HANDOFF-archive-2026-08-07-and-earlier.md`.
+
+Deixo a Frente 1 fechada. Agora verifico o workflow de auditoria editorial (Frente 3) — deve ter avançado.
+
+## 🤖 Claude *(13:04:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nJDIR=\"/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/subagents/workflows/wf_682723cd-97d\"\necho \"\u2550\u2550\u2550\u2550 journal do workflow (agentes conclu\u00eddos) \u2550\u2550\u2550\u2550\"\nif [ -f \"$JDIR/journal.jsonl\" ]; then\n  wc -l \"$JDIR/journal.jsonl\"\n  tail -20 \"$JDIR/journal.jsonl\" | python3 -c 'import sys,json\nfor l in sys.stdin:\n  try:\n    o=json.loads(l); t=o.get(\"type\",\"?\"); lbl=o.get(\"label\") or o.get(\"agentLabel\") or \"\"\n    print(t, lbl, str(o.get(\"phase\",\"\"))[:20])\n  except: pass' 2>/dev/null | tail -20\nelse\n  echo \"sem journal ainda\"; ls -la \"$JDIR\" 2>/dev/null | head\nfi",
+  "description": "Check editorial audit workflow progress"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ════ journal do workflow (agentes concluídos) ════
+> 5 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/subagents/workflows/wf_682723cd-97d/journal.jsonl
+> started  
+> started  
+> result  
+> started  
+> result
+> ```
+
+## 🤖 Claude *(13:04:57)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Looking at the workflow journal, I can see the Audit phase is partially complete with 2 of 3 audit agents finished, while the Verify phase is still waiting for the audit candidates to be produced. I'll let this continue running and get notified when it's done. In the meantime, I need to fix that stale line in sprint-priorities.md around the PAT gate—it's a critical issue that's independent of the workflow.…
+
+</details>
+
+
+## 🤖 Claude *(13:05:00)*
+
+Workflow: fase Audit em andamento (2 de 3 auditores concluídos; Verify aguarda o candidato de remoção do CLAUDE.md). Ele me notifica ao terminar.
+
+Enquanto isso, corrijo a **linha stale do PAT na FILA SOVEREIGN** (item material dos alertas — sobrevive à poda pois a FILA é preservada verbatim). Leio o trecho exato.
+
+## 🤖 Claude *(13:05:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "offset": 11,
+  "limit": 2
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 11	| 🛡️ **FEITO 2026-08-11** | **Segurança, audiência e anticorpos** — 10 commits `506ed7d..42d238d`. **P0 vivo fechado:** `stripe-webhook` aceitava evento forjado de qualquer um (omitir o header dava 200) → fail-closed, deployado, re-provado. **A chave vive em TRÊS cofres** — o do POSTGRES (`vault.decrypted_secrets`, de onde o pg_cron lê) ficou para trás e matou `autopilot-cadence`+`nurture-advance` por **55h** com `active=true`; corrigido e batendo. **Self-healing `*/5`** (`self-heal-bridge-keys.sh`). **Audiência medida** (17/17 sondas): episódio converte **14× mais que Short**; calibração em `docs/roadmap/ep07-calibracao-audiencia-2026-08-11.md`. **Reporting API** com 4 jobs (impressões/CTR). **Acervo podado** 148→101. **Amendments 28-bis/46**. Suíte de monetização com gate **FECHADO** pelos críticos. | ✅ | — |
+> 12	| 🎯 **AGORA (2026-08-10)** | **EP07 — "A economia secreta por trás dos videocasts brasileiros"** (direção Sovereign: *"vamos para o EP07 seguindo a mesma estratégia… conforme nossos deepsearch"*). Pauta e os 4 pilares JÁ escritos: `docs/roadmap/ep07-pauta-economia-videocast-2026-08-05.md` · `organic-shorts-strategy-inicial-2026-07-30.md` (§D1-D7) · `hook-library-seed-2026-07-30.md` · `tutorial-track-iamaimaster-template-2026-08-04.md`. **O EP06 saiu do alvo — virou acervo** (`repurpose-inbox/<uid>/ep06-montar-harvest/`, 780 MB colhidos). | ⏳ Ordem: (1) fechar o **vault das Edge Functions** (`bash scripts/qa/sync-edge-secret.sh` — precisa de PAT novo); (2) `deepsearch-blueprint` ancorar os **12 números** da pauta; (3) **ELEVAR O MOTOR** antes de produzir — portar `dof(z)`+planos+atmosfera e popular `companions[]`, piloto de UMA cena com gate triplo; (4) montar com `assemble-master.ts` fail-closed. | 🔒 **Sovereign:** gerar o PAT (20s) para destravar as ~103 edge fns. |
+> ```
+
+## 🤖 Claude *(13:05:08)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to update line 12 since the edge vault is now verified and green. I'm removing the outdated step about closing the vault and generating a new PAT, and replacing the gate with just the action to produce EP07.…
+
+</details>
+
+
+## 🤖 Claude *(13:05:10)*
+
+O edge vault está **verde** (provado neste turno) — a instrução "fechar o vault das Edge Functions · precisa de PAT novo" é a linha stale. Corrijo o item e o gate.
+
+## 🤖 Claude *(13:05:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": " | \u23f3 Ordem: (1) fechar o **vault das Edge Functions** (`bash scripts/qa/sync-edge-secret.sh` \u2014 precisa de PAT novo); (2) `deepsearch-blueprint` ancorar os **12 n\u00fameros** da pauta; (3) **ELEVAR O MOTOR** antes de produzir \u2014 portar `dof(z)`+planos+atmosfera e popular `companions[]`, piloto de UMA cena com gate triplo; (4) montar com `assemble-master.ts` fail-closed. | \ud83d\udd12 **Sovereign:** gerar o PAT (20s) para destravar as ~103 edge fns. |",
+  "new_string": " | \u23f3 Ordem: (1) `deepsearch-blueprint` ancorar os **12 n\u00fameros** da pauta; (2) **ELEVAR O MOTOR** antes de produzir \u2014 portar `dof(z)`+planos+atmosfera e popular `companions[]`, piloto de UMA cena com gate triplo; (3) montar com `assemble-master.ts` fail-closed. **(edge vault j\u00e1 fechado 2026-08-11 \u2014 os 3 cofres verdes, provados por `mcorch-doctor \u00a74b`.)** | \ud83d\udd12 **Sovereign:** GO para produzir o EP07. |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:05:22)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The Sprint Goal in the sprint-priorities file is outdated and needs updating to reflect the actual focus on EP07, but I'll hold off on restructuring it until the workflow provides its pruning plan so I can make the changes coherently. Let me check if the workflow has finished processing.…
+
+</details>
+
+
+## 🤖 Claude *(13:05:23)*
+
+Sprint Goal (linha 3) também está stale (fala de distribuição social, não EP07) — mas isso faz parte da reestruturação maior que o workflow está planejando; faço junto para ficar coerente. Verifico o workflow e reviso o diff acumulado até aqui.
+
+## 🤖 Claude *(13:05:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nJDIR=\"/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/subagents/workflows/wf_682723cd-97d\"\necho \"\u2550\u2550\u2550\u2550 journal ($(wc -l < \"$JDIR/journal.jsonl\" 2>/dev/null) linhas) \u2550\u2550\u2550\u2550\"\ntail -8 \"$JDIR/journal.jsonl\" 2>/dev/null | python3 -c 'import sys,json\nfor l in sys.stdin:\n  try:\n    o=json.loads(l); print(o.get(\"type\",\"?\"), o.get(\"label\",\"\"), o.get(\"phase\",\"\"))\n  except: pass'\necho \"\"\necho \"\u2550\u2550\u2550\u2550 git status (mudan\u00e7as acumuladas nesta sess\u00e3o) \u2550\u2550\u2550\u2550\"\ngit status --short\necho \"\"\necho \"\u2550\u2550\u2550\u2550 novo archive existe? \u2550\u2550\u2550\u2550\"\nls -la docs/handoff-archive/HANDOFF-archive-2026-08-07-and-earlier.md",
+  "description": "Workflow progress + accumulated git changes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ════ journal (5 linhas) ════
+> started  
+> started  
+> result  
+> started  
+> result  
+> 
+> ════ git status (mudanças acumuladas nesta sessão) ════
+>  M .claude/context/sprint-priorities.md
+>  M .claude/scripts/mcorch-doctor.sh
+>  M HANDOFF.md
+>  M docs/processes/bridge-key-freshness.md
+>  M scripts/qa/rotate-supabase-secret.sh
+>  M scripts/qa/self-heal-bridge-keys.sh
+> ?? docs/handoff-archive/HANDOFF-archive-2026-08-07-and-earlier.md
+> 
+> ════ novo archive existe? ════
+> -rw-rw-r-- 1 ubuntu ubuntu 12144 Aug 11 10:02 docs/handoff-archive/HANDOFF-archive-2026-08-07-and-earlier.md
+> ```
+
+## 🤖 Claude *(13:05:47)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm checking the git status and seeing several modified files related to handoff documentation and shell scripts, plus a new archive file. The workflow journal still has pending tasks with a couple of audit agents completed and others waiting to be verified.
+
+The claudeAudit agent is the bottleneck right now — it's processing a large set of key files with material path checks, which is why the verify phase is blocked. Rather than start restructuring sprint-priorities before the workflow finishes, I'll wait for the complete results so I can do it coherently. The discrete alert fixes are already done, and I can read the individual agent results from the workflow files, but it's cleaner to wait for the final aggregated output.
+
+Since the user is likely away and I don't want to over-communicate, I'll use this time productively by reviewing the git diffs of my credential-handling scripts — a security-sensitive self…
+
+</details>
+
+
+## 🤖 Claude *(13:05:50)*
+
+Frentes 1 e 2 fechadas e provadas. O workflow ainda finaliza a auditoria do CLAUDE.md (o auditor de ~60 linhas de Key Files é o mais lento; a fase Verify depende dele). Enquanto termina, faço uma auto-revisão do diff do `rotate` (é o único caminho que não pude executar — escrita em credencial de produção), para garantir que a branch de auto-update está correta.
+
+## 🤖 Claude *(13:05:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"\u2550\u2550\u2550\u2550 diff rotate-supabase-secret.sh (branches B3) \u2550\u2550\u2550\u2550\"\ngit diff scripts/qa/rotate-supabase-secret.sh | sed -n '1,90p'",
+  "description": "Self-review rotate B3 diff"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ════ diff rotate-supabase-secret.sh (branches B3) ════
+> diff --git a/scripts/qa/rotate-supabase-secret.sh b/scripts/qa/rotate-supabase-secret.sh
+> index 6e770b4..83ba5aa 100755
+> --- a/scripts/qa/rotate-supabase-secret.sh
+> +++ b/scripts/qa/rotate-supabase-secret.sh
+> @@ -106,14 +106,19 @@ if [ "$FNCODE" = "200" ]; then
+>    echo
+>    echo "🟢 ROTAÇÃO COMPLETA — .env, pontes e Edge Functions no ar."
+>  else
+> -  echo "HTTP $FNCODE ⚠️"
+> -  echo
+> -  echo "⛔ FALTA A METADE 2: ~103 edge functions leem SB_SECRET_KEY do VAULT do Supabase,"
+> -  echo "   não do .env. Atualize o secret com o MESMO valor:"
+> -  echo "     • Painel: Project Settings → Edge Functions → Secrets → editar SB_SECRET_KEY"
+> -  echo "     • ou CLI: npx supabase login  (o token costuma expirar) e depois"
+> -  echo "       npx supabase secrets set SB_SECRET_KEY=\"<a mesma>\" --project-ref <ref>"
+> -  echo "   Gate: este mesmo curl devolver 200."
+> +  echo "HTTP $FNCODE — o vault das Edge Functions ainda não tem a chave nova."
+> +  echo "→ sincronizando automaticamente (sync-edge-secret.sh; pede PAT só se não houver um válido)…"
+> +  if bash scripts/qa/sync-edge-secret.sh; then
+> +    echo
+> +    echo "🟢 .env + pontes + Edge Functions OK (edge vault sincronizado automaticamente)."
+> +  else
+> +    echo
+> +    echo "⛔ FALTA A METADE 2: o sync automático não completou. As ~103 edge functions leem"
+> +    echo "   SB_SECRET_KEY do VAULT do Supabase, não do .env. Faça à mão com o MESMO valor:"
+> +    echo "     • Painel: Project Settings → Edge Functions → Secrets → editar SB_SECRET_KEY"
+> +    echo "     • ou: bash scripts/qa/sync-edge-secret.sh  (gere um PAT em supabase.com/dashboard/account/tokens)"
+> +    echo "   Gate: curl \"$URLFN\" -H \"apikey: <publishable>\" devolver 200."
+> +  fi
+>  fi
+>  
+>  # ── 6. A TERCEIRA METADE (descoberta em 2026-08-11): o Vault do POSTGRES ────
+> @@ -143,13 +148,35 @@ if [ -z "$PGV_HASH" ]; then
+>    echo "      SELECT md5(decrypted_secret) FROM vault.decrypted_secrets WHERE name='sb_secret_key';"
+>  elif [ "$PGV_HASH" = "$LIVE_HASH" ]; then
+>    echo "   ✅ Vault do Postgres em dia (hash bate com a chave nova) — pg_cron continua vivo."
+> +elif [ -n "${PAT_TOK:-}" ]; then
+> +  echo "   ⛔ Vault do Postgres DESATUALIZADO — atualizando via Management API (PAT presente)…"
+> +  # Dollar-quoting ($MCK$…$MCK$) evita escaping do valor; a chave sb_secret_* nunca contém $MCK$.
+> +  UPD_SQL="SELECT vault.update_secret((SELECT id FROM vault.secrets WHERE name='sb_secret_key'), \$MCK\$${NEW_KEY}\$MCK\$, 'sb_secret_key');"
+> +  UPD_BODY=$(python3 -c 'import json,sys; print(json.dumps({"query": sys.argv[1]}))' "$UPD_SQL")
+> +  UPD_CODE=$(curl -s -o /tmp/.pgv-upd -w '%{http_code}' -m 30 -X POST \
+> +    "https://api.supabase.com/v1/projects/$REF/database/query" \
+> +    -H "Authorization: Bearer $PAT_TOK" -H "Content-Type: application/json" -d "$UPD_BODY")
+> +  if [ "$UPD_CODE" = "200" ] || [ "$UPD_CODE" = "201" ]; then
+> +    PGV2=$(curl -s -m 30 -X POST "https://api.supabase.com/v1/projects/$REF/database/query" \
+> +      -H "Authorization: Bearer $PAT_TOK" -H "Content-Type: application/json" \
+> +      -d '{"query":"SELECT md5(decrypted_secret) AS h FROM vault.decrypted_secrets WHERE name='"'"'sb_secret_key'"'"';"}' \
+> +      2>/dev/null | sed -nE 's/.*"h":"([a-f0-9]{32})".*/\1/p')
+> +    if [ "$PGV2" = "$LIVE_HASH" ]; then
+> +      echo "   ✅ Vault do Postgres atualizado (md5 agora bate) — pg_cron volta a autenticar."
+> +      echo "      Gate final: ~15 min depois, infra_health_logs recebe autopilot-cadence-cron/nurture-cron."
+> +    else
+> +      echo "   ⚠️  gravou (HTTP $UPD_CODE) mas o md5 não bate ($PGV2) — confira à mão."
+> +    fi
+> +  else
+> +    echo "   ⛔ update falhou (HTTP $UPD_CODE): $(head -c 200 /tmp/.pgv-upd 2>/dev/null)"
+> +    echo "      À mão: SELECT vault.update_secret((SELECT id FROM vault.secrets WHERE name='sb_secret_key'), '<chave>', 'sb_secret_key');"
+> +  fi
+> +  rm -f /tmp/.pgv-upd
+>  else
+> -  echo "   ⛔ Vault do Postgres DESATUALIZADO — os jobs do pg_cron vão tomar 401 EM SILÊNCIO."
+> -  echo "      Conserto (id do segredo + update, via Management API):"
+> -  echo "        SELECT id FROM vault.secrets WHERE name='sb_secret_key';"
+> -  echo "        SELECT vault.update_secret('<id>'::uuid, '<a chave nova>', 'sb_secret_key');"
+> -  echo "      Gate: o md5 acima passar a bater; e ~15 min depois, infra_health_logs voltar a receber"
+> -  echo "            service IN ('autopilot-cadence-cron','nurture-cron')."
+> +  echo "   ⛔ Vault do Postgres DESATUALIZADO e sem PAT — os jobs do pg_cron tomam 401 EM SILÊNCIO."
+> +  echo "      Conserto à mão (SQL editor ou Management API):"
+> +  echo "        SELECT vault.update_secret((SELECT id FROM vault.secrets WHERE name='sb_secret_key'), '<a chave nova>', 'sb_secret_key');"
+> +  echo "      Gate: o md5 passar a bater; e ~15 min depois, infra_health_logs voltar a receber os 2 crons."
+>  fi
+>  
+>  echo "   Backup do .env em $BAK — apague depois de confirmar que tudo voltou."
+> ```
+
+## 🤖 Claude *(13:06:35)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm checking the logic flow for the vault handling steps. The edge vault section correctly auto-invokes the sync script on non-200 responses, with proper fallback handling. For the Postgres vault, I'm verifying the conditional branch order—first checking if the hash couldn't be read due to missing credentials, then comparing against the live hash.
+
+Actually, I'm spotting a subtle issue: if PGV_HASH is empty (no PAT available), branch 1 triggers with manual instructions. But if PGV_HASH is non-empty and differs from LIVE_HASH, branch 3 checks for PAT presence—except at that point, PAT_TOK must already be set (otherwise the hash read wouldn't have succeeded). So branch 4, the fallback for drifted state without PAT, becomes unreachable dead code. It's not a functional bug since it's just a defensive fallback, but the logic path is effectively impossible to hit. The dollar-quoting syntax in the SQL update statement is correct — the escaped `$MCK$` delimiters in the bash string become literal `$MCK$` markers around the secret value, which Postgres interprets as a valid dollar-quoted string. ✓ The JSON encoding in Python then safely wraps this into the request body. The diff looks solid.
+
+I should check the workflow status once more, but since it's harness-tracked, I'll avoid polling repeatedly — the system will reinvoke me automatically when it completes rather than wasting turns on status checks.
+
+The remaining work in Frente 3 (pruning CLAUDE.md, restructuring sprint priorities, consolidating MEMORY) all hinges on the audit output, so I'll give the user a progress summary and wait for the workflow to finish.
+
+But I can tackle the MCP/plugins guidance right now—that's the biggest lever for reducing context bloat and doesn't depend on the audit. I'll identify which plugin servers are likely unused for this project (Adobe, Slack, Salesforce, legal, finance, marketing connectors) and recommend disabling them to free up tokens.
+
+I should also update the memory to reference the v1.1 blindagem strategy rather than create a duplicate entry, since the bridge-key-freshness.md already captures this work.
+
+I'll hold off on memory writes until the workflow finishes so I can see the full picture, then give a status update on what's been completed and what's still running. The user mentioned wanting to potentially loop into next steps if there's context remaining, and I'm only at 18% usage, so there's plenty of room to continue. I could handle the sprint-priorities restructure myself right now since I understand the structure and what needs archiving, but I'll wait for the workflow to return with the precise line ranges so I can do it coherently in one pass without risking conflicts.…
+
+</details>
+
+
+## 🤖 Claude *(13:06:55)*
+
+Diff do `rotate` revisado — lógica correta (o dollar-quoting `$MCK$` vira string válida no Postgres; a branch de auto-update só roda com PAT presente, com re-verificação de md5; fallback manual intacto). **Frente 2 fechada e auto-revisada.**
+
+Status até aqui, enquanto o workflow de auditoria termina o CLAUDE.md:
+
+## ✅ Frente 1 — Alertas (feito e provado)
+- **2 scripts untracked removidos** — `insert-soundtracks-db.ts` (nunca gravou: anon key em tabela default-deny, IDs ausentes no DB — provado) e `inspect-all-user-keys.ts` (debug descartável da crise).
+- **Linha stale do PAT corrigida** na FILA SOVEREIGN — o edge vault está verde; o gate agora é só "GO para produzir o EP07".
+- **HANDOFF podado** com verificação byte-a-byte (G1-G5 ✅): 4→2 records vivos, **22,4k → 19,7k tokens (OK)**, 0 perdidos, novo `HANDOFF-archive-2026-08-07-and-earlier.md`.
+
+## ✅ Frente 2 — Chave/health "blindar 3 cofres" (feito e provado)
+Todos os 3 cofres provados **verdes agora** (REST 200 · get-infra-status 200 · pg_cron bateu 12:30 · md5 vault==`.env`):
+- **`self-heal-bridge-keys.sh`** ganhou o **GATE 1b** (prova o vault das Edge Functions via `get-infra-status`, que 500a se a chave do vault morrer). `--dry-run` mostra os 3 cofres verdes.
+- **`mcorch-doctor.sh` §4b** — "Liveness dos 3 cofres" (a seção 4 só provava *presença*; chave revogada-mas-presente passava verde). Rodado: 3 PASS.
+- **Rotação atômica** — step 5 encadeia o `sync-edge-secret.sh`; step 6 **auto-atualiza** o vault do Postgres com PAT + re-verifica md5 (plumbing da Management API testado com `SELECT 1` → HTTP 201).
+- **SOP `bridge-key-freshness.md` → v1.1** refletindo os 3 cofres provados continuamente.
+- **Sobre "ler direto do vault":** o vault-direct literal esbarra em **paradoxo de bootstrap** (ler o vault exige a própria chave). Você escolheu blindar detecção — feito; o `.env` segue como bootstrap irredutível.
+
+## ⏳ Frente 3 — Contexto (workflow finalizando)
+O workflow de auditoria (`wf_682723cd`) está terminando a verificação material das ~60 linhas da Key Files Reference + o plano de poda do `sprint-priorities.md` (o elefante de ~46-88k tokens) + memórias consolidáveis. **Aplico as edições quando ele retornar** — com verificação adversarial de que nada referenciado por código/malha seja cortado.
+
+Sobre sua pergunta direta — **>100k no início é ruim?** Para 1M de janela, não é perigoso, mas é desperdício: o maior ofensor controlável por repo é o `sprint-priorities.md`. E o **maior lever** é config, não doc — os plugins/MCP ligados (Adobe, Slack, legal, finance, marketing…) injetam tool-defs pesadas; se não os usa neste projeto, desligá-los corta mais que aparar todos os `.md`.
+
+Aguardo o workflow para fechar a Frente 3.
+
+## 👤 User *(13:08:25)*
+
+<task-notification>
+<task-id>w3hpx6q7w</task-id>
+<tool-use-id>toolu_014hbogtgkLq2QF7YjsMjidu</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/tasks/w3hpx6q7w.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Audita CLAUDE.md Key Files + sprint-priorities + MEMORY para poda de contexto, com verificação adversarial de referências" completed</summary>
+<result>{"claudeAudit":{"rows":[{"purpose":"Architecture rules","primary_path":"CLAUDE.md","path_exists":true,"verdict":"keep","reason":"enxuta (path-only)"},{"purpose":"Documentation Ownership (governança docs/ e docs/bok/)","primary_path":".claude/agents/docs-curator.md","path_exists":true,"verdict":"collapse","char_count":353,"reason":"prosa &gt;350; detalhe vive no Protocol §6 e memória feedback_docs_bok_ownership","proposed_oneliner":"`.claude/agents/docs-curator.md` (dono de `docs/`) + `.claude/agents/bok-curator.md` (dono de `docs/bok/`, guarda o gate Closed-Loop). Regras: Protocol §6."},{"purpose":"pmo-curator — PMO autônomo (MAPE-K de PROGRESSO)","primary_path":".claude/agents/pmo-curator.md","path_exists":true,"verdict":"collapse","char_count":866,"reason":"ensaio de 866 chars; distinção completa no SOP docs/processes/pmo-curator.md","proposed_oneliner":"`.claude/agents/pmo-curator.md` + skill + SOP `docs/processes/pmo-curator.md`. Pós-`/handson` → MAPE-K de PROGRESSO → `NEXT-STEPS.md` (un-gated vs gated); plan-only."},{"purpose":"Agentic Vision doctrine (Pattern Conformance gate)","primary_path":"docs/architecture/agentic-vision.md","path_exists":true,"verdict":"keep","char_count":220,"reason":"&lt;350, ponteiro load-bearing enxuto"},{"purpose":"Agentic Governance BoK suite (10/10 selada)","primary_path":"docs/bok/agentic-governance/","path_exists":true,"verdict":"keep","char_count":213,"reason":"&lt;350, enxuta"},{"purpose":"Collective Efficiency Ledger (OTD-AG-001)","primary_path":"supabase/migrations/20260626120000_collective_efficiency_ledger.sql","path_exists":true,"verdict":"collapse","char_count":384,"reason":"&gt;350; VIEW/RPC detalhados no SOP da linha seguinte","proposed_oneliner":"`supabase/migrations/20260626120000_collective_efficiency_ledger.sql` (VIEW per-tenant + RPC `collective_efficiency_rollup` service-role; anti-Goodhart). SOP na linha seguinte."},{"purpose":"Collective Efficiency Ledger SOP (Lei 2)","primary_path":"docs/processes/collective-efficiency-ledger.md","path_exists":true,"verdict":"keep","reason":"enxuta"},{"purpose":"Agentic Governance seal script","primary_path":"scripts/seed-agentic-governance-bok-seal.ts","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Session handoff","primary_path":"HANDOFF.md","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Scratchpad Harvest (Lei 2)","primary_path":"docs/processes/scratchpad-harvest.md","path_exists":true,"verdict":"collapse","char_count":622,"reason":"622 chars de história do quase-acidente EP05; regra-mãe basta, detalhe no SOP/skill","proposed_oneliner":"`docs/processes/scratchpad-harvest.md` + skill + `/handoff` PHASE 1b. Nada vive só em `/tmp` pós-seal: runners→`scripts/`, mídia→Biblioteca, path no Record. Precedente `scripts/ep05/`."},{"purpose":"Gate de poda do HANDOFF (Lei 3)","primary_path":"scripts/qa/check-handoff-size.sh","path_exists":true,"verdict":"collapse","char_count":926,"reason":"926 chars; achado 2026-07-29 e gates G1-G5 no SOP handoff-pruning-gate.md","proposed_oneliner":"`scripts/qa/check-handoff-size.sh` (gate bytes→tokens, exit 1 &gt;25k) + SOP `docs/processes/handoff-pruning-gate.md` + skill; `/handoff` PHASE 5b-2. &gt;25k trava o `/handson` em silêncio."},{"purpose":"3D Constellation Graph","primary_path":"src/components/graph/CrewGraph.tsx","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Crew data hook","primary_path":"src/hooks/useCrewData.ts","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Simulation hook","primary_path":"src/hooks/useSimulation.ts","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Agent edges (particles)","primary_path":"src/components/graph/AgentEdge.tsx","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Squad hull (3D bubble)","primary_path":"src/components/graph/SquadHull.tsx","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Visual Orchestrator Canvas","primary_path":"src/components/orchestrator/OrchestrationCanvas.tsx","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Orchestration Store (Zustand)","primary_path":"src/store/useOrchestrationStore.ts","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Crew Store (Zustand)","primary_path":"src/store/useCrewStore.ts","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Pipeline hook","primary_path":"src/hooks/useOrchestrationGraph.ts","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Node types","primary_path":"src/components/orchestrator/nodes/","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"GraphRAG hook","primary_path":"src/hooks/useMcorchMemory.ts","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Memory graph (d3-force)","primary_path":"src/components/dashboard/MemoryGraphWidget.tsx","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Real ROI widget","primary_path":"src/components/dashboard/ROIWidget.tsx","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Dashboard header (mcoCoins HUD)","primary_path":"src/components/dashboard/DashboardLayout.tsx","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Neural Mesh HUD","primary_path":"src/components/HUD.tsx","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Infra status hook","primary_path":"src/hooks/useInfraStatus.ts","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Billing utilities","primary_path":"src/lib/billing.ts","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Orchestration function","primary_path":"supabase/functions/orchestrate-content/index.ts","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Infra status function","primary_path":"supabase/functions/get-infra-status/index.ts","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Embed function","primary_path":"supabase/functions/embed-mcorch-node/index.ts","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Video rescue function","primary_path":"supabase/functions/rescue-video/index.ts","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"media_state — estado técnico da mídia (SOP Lei 2)","primary_path":"docs/processes/media-state-lifecycle.md","path_exists":true,"verdict":"collapse","char_count":830,"reason":"~830 chars (\\| escapados fraudaram a 1ª medição); saga do P0 22P02 vive no SOP","proposed_oneliner":"`docs/processes/media-state-lifecycle.md` + migration `20260729230000` (coluna `content_library.media_state` text+CHECK). `status`=editorial, `media_state`=técnico; nasceu de P0 22P02. text+CHECK, não enum, de propósito."},{"purpose":"Video rescue (local)","primary_path":"rescue.ts","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"ML Affiliate Products panel","primary_path":"src/pages/AffiliateProductsPage.tsx","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Affiliate products hook","primary_path":"src/hooks/useAffiliateProducts.ts","path_exists":true,"verdict":"keep","reason":"enxuta"},{"purpose":"Canvas node consistency (reference threading) SOP","primary_path":"docs/processes/canvas-node-consistency.md","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Canvas consistency model validation","primary_path":".claude/context/canvas-consistency-validation-2026-05-29.md","path_exists":true,"verdict":"keep","reason":"path-only"},{"purpose":"Sinapses semânticas do Universo (SOP + anticorpo)","primary_path":"docs/processes/synapse-embedding-similarity.md","path_exists":true,"verdict":"collapse","char_count":932,"reason":"932 chars; RPC/leak-free/clamp já detalhados no SOP e no smoke","proposed_oneliner":"`docs/processes/synapse-embedding-similarity.md` — RPC `match_memory_code_synapses` (mig `20260705230000`, system-shared leak-free) + `useSemanticSynap
+... (truncated 42881 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/tasks/w3hpx6q7w.output)</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/subagents/workflows/wf_682723cd-97d/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/workflows/scripts/init-context-prune-audit-wf_682723cd-97d.js', resumeFromRunId: 'wf_682723cd-97d'}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<usage><agent_count>3</agent_count><agents_done>3</agents_done><agents_error>0</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>412511</subagent_tokens><tool_uses>21</tool_uses><duration_ms>998037</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(13:08:35)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The workflow finished and generated a large output file. I need to extract the full results to review the audit verdicts and proposed changes across the Claude audit, sprint audit, memory audit, and verification checks. It looks like only three agents completed their runs based on the usage metrics.…
+
+</details>
+
+
+## 🤖 Claude *(13:08:38)*
+
+O workflow terminou — e um dado importante: `agents_done=3`, **fase Verify com zero agentes**, ou seja **o auditor não achou nenhum path morto para remover** (só *collapses* de prosa verbosa). Isso torna a poda do CLAUDE.md de baixo risco: nada load-bearing sai, só o texto encolhe. Leio o resultado completo.
+
+## 🤖 Claude *(13:08:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nOUT=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/tasks/w3hpx6q7w.output\"\necho \"\u2550\u2550\u2550\u2550 RESUMO claudeAudit (verdicts + savings) \u2550\u2550\u2550\u2550\"\npython3 -c '\nimport json\no=json.load(open(\"'\"$OUT\"'\"))\nc=o[\"claudeAudit\"]\nrows=c[\"rows\"]\nfrom collections import Counter\nverd=Counter(r[\"verdict\"] for r in rows)\nprint(\"total_rows:\", c.get(\"total_rows\"), \"| remove:\", c.get(\"remove_count\"), \"| collapse:\", c.get(\"collapse_count\"))\nprint(\"verdict tally:\", dict(verd))\nprint(\"est tokens:\", c.get(\"current_est_tokens\"), \"->\", c.get(\"pruned_est_tokens\"))\nprint()\nprint(\"\u2500\u2500 COLLAPSE candidates (purpose | chars) \u2500\u2500\")\nfor r in rows:\n  if r[\"verdict\"]==\"collapse\":\n    print(f'  {r.get(\\\"char_count\\\",\\\"?\\\"):>4}  {r[\\\"purpose\\\"][:60]}')\nprint()\nprint(\"\u2500\u2500 REMOVE candidates \u2500\u2500\")\nrm=[r for r in rows if r[\"verdict\"]==\\\"remove\\\"]\nprint(\"  (nenhum)\" if not rm else \"\\n\".join(\"  \"+r[\"purpose\\\"] for r in rm))\n'",
+  "description": "Parse claudeAudit summary"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 2
+> ════ RESUMO claudeAudit (verdicts + savings) ════
+> /bin/bash: eval: line 40: syntax error near unexpected token `('
+> /bin/bash: eval: line 40: `    print(f'  {r.get(\"char_count\",\"?\"):>4}  {r[\"purpose\"][:60]}')'
+> ```
+
+## 🤖 Claude *(13:08:46)*
+
+
+## 🤖 Claude *(13:08:47)*
+
+Vou escrever o parser num arquivo para evitar o inferno de aspas.
+
+## 🤖 Claude *(13:08:56)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/scratchpad/parse-audit.py",
+  "content": "import json, sys\nfrom collections import Counter\n\no = json.load(open(sys.argv[1]))\nc = o[\"claudeAudit\"]\nrows = c[\"rows\"]\nverd = Counter(r[\"verdict\"] for r in rows)\nprint(\"== claudeAudit ==\")\nprint(\"total_rows:\", c.get(\"total_rows\"), \"| remove:\", c.get(\"remove_count\"), \"| collapse:\", c.get(\"collapse_count\"))\nprint(\"verdict tally:\", dict(verd))\nprint(\"est tokens:\", c.get(\"current_est_tokens\"), \"->\", c.get(\"pruned_est_tokens\"))\nprint()\nprint(\"-- COLLAPSE candidates --\")\nfor r in rows:\n    if r[\"verdict\"] == \"collapse\":\n        cc = r.get(\"char_count\", \"?\")\n        print(\"  %4s  %s\" % (cc, r[\"purpose\"][:64]))\n        ol = r.get(\"proposed_oneliner\", \"\")\n        if ol:\n            print(\"        -> \" + ol[:180])\nprint()\nrm = [r for r in rows if r[\"verdict\"] == \"remove\"]\nprint(\"-- REMOVE candidates:\", len(rm), \"--\")\nfor r in rm:\n    print(\"  \" + r[\"purpose\"])\n\nprint()\nprint(\"== sprintAudit ==\")\ns = o.get(\"sprintAudit\", {})\nprint(\"fila lines:\", s.get(\"fila_start_line\"), \"-\", s.get(\"fila_end_line\"))\nprint(\"est tokens:\", s.get(\"current_est_tokens\"), \"->\", s.get(\"pruned_est_tokens\"))\nprint(\"keep recent:\", s.get(\"keep_recent_sprint_labels\"))\nprint(\"prune_ranges:\")\nfor pr in s.get(\"prune_ranges\", []):\n    print(\"  L%s-%s  %s\" % (pr.get(\"start_line\"), pr.get(\"end_line\"), pr.get(\"label\", \"\")))\nprint(\"proposed_structure:\")\nprint(s.get(\"proposed_structure\", \"\")[:1200])\n\nprint()\nprint(\"== memoryAudit ==\")\nm = o.get(\"memoryAudit\", {})\nprint(\"total_memories:\", m.get(\"total_memories\"))\nprint(\"index_note:\", (m.get(\"index_note\") or \"\")[:300])\nprint(\"consolidation_candidates:\")\nfor cc in m.get(\"consolidation_candidates\", []):\n    print(\"  into:\", cc.get(\"into\"), \"<-\", cc.get(\"memories\"))\n    print(\"     reason:\", (cc.get(\"reason\") or \"\")[:160])\nprint(\"stale_candidates:\")\nfor st in m.get(\"stale_candidates\", []):\n    print(\"  \", st.get(\"name\"), \"-\", (st.get(\"reason\") or \"\")[:140])\n\nprint()\nprint(\"== verifications ==\", len(o.get(\"verifications\", [])))\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/scratchpad/parse-audit.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:09:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/scratchpad/parse-audit.py /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/tasks/w3hpx6q7w.output",
+  "description": "Run audit parser"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> Traceback (most recent call last):
+>   File "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/scratchpad/parse-audit.py", line 5, in <module>
+>     c = o["claudeAudit"]
+>         ~^^^^^^^^^^^^^^^
+> KeyError: 'claudeAudit'
+> ```
+
+## 🤖 Claude *(13:09:06)*
+
+
+## 🤖 Claude *(13:09:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nOUT=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/tasks/w3hpx6q7w.output\"\necho \"size: $(wc -c < \"$OUT\") bytes \u00b7 $(wc -l < \"$OUT\") linhas\"\necho \"\u2500\u2500 primeiros 200 chars \u2500\u2500\"\nhead -c 200 \"$OUT\"\necho \"\"\necho \"\u2500\u2500 top-level keys \u2500\u2500\"\npython3 -c 'import json,sys; o=json.load(open(sys.argv[1])); print(type(o).__name__); print(list(o.keys()) if isinstance(o,dict) else \"len=\"+str(len(o)))' \"$OUT\"",
+  "description": "Inspect output file structure"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> size: 72754 bytes · 1591 linhas
+> ── primeiros 200 chars ──
+> {
+>   "summary": "Audita CLAUDE.md Key Files + sprint-priorities + MEMORY para poda de contexto, com verificação adversarial de referências",
+>   "agentCount": 3,
+>   "logs": [],
+>   "result": {
+>     "claud
+> ── top-level keys ──
+> dict
+> ['summary', 'agentCount', 'logs', 'result', 'workflowProgress', 'totalTokens', 'totalToolCalls']
+> ```
+
+## 🤖 Claude *(13:09:14)*
+
+
+## 🤖 Claude *(13:09:15)*
+
+O retorno vem sob `result`. Ajusto o parser.
+
+## 🤖 Claude *(13:09:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSC=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/scratchpad\"\nsed -i 's/o = json.load(open(sys.argv\\[1\\]))/o = json.load(open(sys.argv[1]))[\"result\"]/' \"$SC/parse-audit.py\"\npython3 \"$SC/parse-audit.py\" /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/tasks/w3hpx6q7w.output",
+  "description": "Run fixed audit parser"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> == claudeAudit ==
+> total_rows: 186 | remove: 0 | collapse: 44
+> verdict tally: {'keep': 142, 'collapse': 44}
+> est tokens: 15300 -> 7500
+> 
+> -- COLLAPSE candidates --
+>    353  Documentation Ownership (governança docs/ e docs/bok/)
+>         -> `.claude/agents/docs-curator.md` (dono de `docs/`) + `.claude/agents/bok-curator.md` (dono de `docs/bok/`, guarda o gate Closed-Loop). Regras: Protocol §6.
+>    866  pmo-curator — PMO autônomo (MAPE-K de PROGRESSO)
+>         -> `.claude/agents/pmo-curator.md` + skill + SOP `docs/processes/pmo-curator.md`. Pós-`/handson` → MAPE-K de PROGRESSO → `NEXT-STEPS.md` (un-gated vs gated); plan-only.
+>    384  Collective Efficiency Ledger (OTD-AG-001)
+>         -> `supabase/migrations/20260626120000_collective_efficiency_ledger.sql` (VIEW per-tenant + RPC `collective_efficiency_rollup` service-role; anti-Goodhart). SOP na linha seguinte.
+>    622  Scratchpad Harvest (Lei 2)
+>         -> `docs/processes/scratchpad-harvest.md` + skill + `/handoff` PHASE 1b. Nada vive só em `/tmp` pós-seal: runners→`scripts/`, mídia→Biblioteca, path no Record. Precedente `scripts/ep0
+>    926  Gate de poda do HANDOFF (Lei 3)
+>         -> `scripts/qa/check-handoff-size.sh` (gate bytes→tokens, exit 1 >25k) + SOP `docs/processes/handoff-pruning-gate.md` + skill; `/handoff` PHASE 5b-2. >25k trava o `/handson` em silênc
+>    830  media_state — estado técnico da mídia (SOP Lei 2)
+>         -> `docs/processes/media-state-lifecycle.md` + migration `20260729230000` (coluna `content_library.media_state` text+CHECK). `status`=editorial, `media_state`=técnico; nasceu de P0 22
+>    932  Sinapses semânticas do Universo (SOP + anticorpo)
+>         -> `docs/processes/synapse-embedding-similarity.md` — RPC `match_memory_code_synapses` (mig `20260705230000`, system-shared leak-free) + `useSemanticSynapses.ts` + smoke `scripts/qa/s
+>    519  Masters grandes vivem em repurpose-inbox/<uid>/
+>         -> `.claude/skills/host-media-masters/SKILL.md` + SOP `docs/processes/repurpose-host-infra-provisioning.md`. Masters em `repurpose-inbox/<uid>/` via menu Cortes; NUNCA `find` cego no 
+>    538  Higgsfield provider-drift sentinel
+>         -> `scripts/qa/smoke-higgsfield-schema.ts` (7 gates pinam o contrato vivo via sondas 422; drift=exit 1). SOP `docs/processes/spaces-graph-execution.md` Amend 2d-bis. RODAR antes de me
+>    648  WordPress CF publish-unblock SOP (tenant-zero/global)
+>         -> `docs/processes/wordpress-cf-publish-unblock.md` (RESOLVIDO 2026-06-22: 403 em `/wp-json/*`; fix = header `X-MCORCH-Publish` + WAF Skip por Security Level do IP datacenter). Secret
+>    520  WordPress CF publish per-user SOP (multi-tenant)
+>         -> `docs/processes/wordpress-cf-per-user-publish.md` — generaliza o unblock p/ tenant atrás do próprio CF (coluna cifrada `wp_cf_publish_secret` + lookup per-user + edge `verify-wp-cf
+>    441  Viral Autopilot vídeo 9:16 SOP (Lei 2)
+>         -> `docs/processes/autopilot-video-9x16.md` (OTD-VA-009 — vídeo 9:16 via motor HyperFrames determinístico, cobrança única no pré-débito `prepaid=true`; single-tenant U0; 8 gates; FRD 
+>    672  HyperFrames motor (render core + worker)
+>         -> `scripts/hyperframes/render-core.ts` (Playwright+FFmpeg→MP4 9:16 determinístico) + template `viral-short-9x16.html` + worker `scripts/video-bridge.ts` (systemd). Migration `2026062
+>   1059  Motor de clone de voz self-host (Qwen3-TTS)
+>         -> `/home/ubuntu/.mcorch/voice-engine/` (Qwen3-TTS, ref 24kHz WAV) — rail: mig `20260709234000` + worker `scripts/voice-bridge.ts` + edge `generate-voice` + smoke `smoke-voice-qwen3-l
+>   1032  Channel Format Intelligence — Reshaper + Atomizer
+>         -> `supabase/functions/reshape-pillar/index.ts` (data-driven `channel_profiles.transform_recipe`+`pillar_atoms`, zero branch por canal; reframe imagem WASM; publish opt-in). Mig `2026
+>    887  PIPC S1+S2 — retenção YouTube → brief por-EP
+>         -> `supabase/functions/youtube-data/index.ts` +2 ações: `audience_retention`→`episode_retention_curve` (mig `20260724120000`); `episode_retention_analysis`→brief PT-BR `episode_insigh
+>    477  CRM pilar Contatos (A4) — contacts + CRUD RLS
+>         -> migration `20260724120200_crm_contacts.sql` (`contacts` RLS owner full-CRUD, unique `(user_id,lower(email))`). OTD-CS-001 resolvida (contact≠`leads`); CRUD cliente+RLS, hook `useCo
+>    414  Cadence — seleção explícita de conta (A8)
+>         -> migration `20260724120300_autopilot_plans_social_account.sql` (`autopilot_plans.social_account_id`, sem FK — `social_accounts` é VIEW) + `cadence-run` resolve conta owner-scoped po
+>    550  Channel Format Intelligence — SDD + SOP (Lei 2)
+>         -> `docs/bok/post-engine/13-sdd-reshaper-atomizer.md` (SSOT, fecha Gate 3.5) + SOP `docs/processes/channel-reshaper.md` + smokes `scripts/qa/smoke-reshape-pillar.ts` (17/17) + `smoke-
+>    600  HyperFrames Studio editor (Fatia VS-UI — Fase A)
+>         -> `src/pages/VideoStudioEditorPage.tsx` (iframe `/dashboard/canvas/video`) + systemd `video-studio.service` (:3210) + `nginx/video.mcorch.com.conf`. Fase B →`video-render`. SOP `docs
+>    453  HyperFrames Studio editor — integration blueprint
+>         -> `.claude/context/hyperframes-studio-integration-blueprint-2026-06-24.md` — seam `StudioApiAdapter`; montar studio unmodified + `McorchAdapter.startRender`→`video-render`; Apache-2.
+>    586  Autopilot vídeo — crédito compensatório de enqueue-fail
+>         -> `supabase/migrations/20260624140000_autopilot_video_enqueue_refund.sql` (RPC `refund_autopilot_video_enqueue` service-role, anti-mint). `orchestrate-step` refunda no `!enqueued && 
+>    403  Viral Autopilot cadence schema + money RPCs (Fatia 2)
+>         -> `supabase/migrations/20260620120000_viral_autopilot_plans.sql` + `…120100_cycles` (FK composta + RESTRICTIVE no-delete) + `…120200_begin_autopilot_cycle` (pré-débito atômico) + `…1
+>    602  Private-bucket asset signing SOP + anticorpo
+>         -> `docs/processes/private-bucket-asset-signing.md` (signed URLs owner-scoped; normalizador `src/lib/asset-url.ts`). Migrations `20260702230000`+`20260703030000`. Smoke `scripts/qa/sm
+>   1078  content-intel — BoK 9/9 (vídeo existente → estratégia)
+>         -> `docs/bok/content-intel/` (BoK 9/9, seal `2e918a8c`). Link de vídeo existente→analisa server-side via Vision MCP→estratégia. YT URL direto; IG/TikTok server-side gated OTD-CI-002. 
+>   1214  crm-suite — BoK 9/9 SELADA (código dos pilares GATED)
+>         -> `docs/bok/crm-suite/` (BoK 9/9 SELADA, seal `6b428dce`; Fase 0 spine mig `20260719140000`/`160000`). Pattern Conformance 6y/4d/11na. Selo cobre SÓ a suíte — código dos pilares GATE
+>   2111  Content-provenance — AI Act Art.50 (Fatia 0-1)
+>         -> Migration `20260716230000` (5 cols `provenance_*` + `register_creative_asset` 26 args) + `src/lib/provenance.ts` + motor `scripts/provenance/embed-iptc-core.ts` + worker `scripts/p
+>    465  guard-sweep (regressão consolidada)
+>         -> `scripts/qa/guard-sweep.sh` (`[--fast]`, irmão do doctor: doctor=diagnóstico, sweep=regressão). Roda a bateria re-executável contra o ambiente vivo; exit = nº de guardas RED. Hermé
+>   1014  Motor Veo 3.1 — vídeo com avatar/refs (Amendment 25)
+>         -> `supabase/functions/canvas-execute/index.ts` (branch `google/veo-*`: clamps dur 4..8/1080p só 8s/refs ≤3; `veoCost` 4×-floor; failover 429) + `veo-poll` + `src/lib/veo.ts`. SOP `do
+>    428  Anti-SSRF: guard que sobrevive ao redirect
+>         -> `supabase/functions/_shared/public-url.ts` → `fetchPublicUrl` revalida CADA salto 3xx (guard cru = inútil contra 302→169.254.169.254). Anticorpo `_shared/public-url.test.ts` (9 tes
+>    903  Repertório Profissional de Produção — manual da casa
+>         -> `docs/processes/repertorio-producao-profissional.md` (1.485 l, 4 lentes) + gramática-código `src/lib/cinematic-grammar.ts` (`buildShotPrompt`/`MANDATORY_NEGATIVES`/`MIX_TARGETS`/Pi
+>    464  Motion Scenes — linguagem v6 de cenas-conceito
+>         -> `.claude/skills/motion-scenes/SKILL.md` (v6 selada: nós glass+3D nos beats, running ring, edges por frame, assets reais, QA A/V) + runners-molde `scripts/ep05/motion-*`. Nasceu do 
+>   1730  Trupe criativa do Spaces — 4 lentes, 1 partitura
+>         -> `.claude/agents/{dramaturgo,encenador,diretor-fotografia,diretor-arte}.md` + skills + SOP `docs/processes/trupe-criativa-spaces.md`. 4 lentes preenchem a Partitura de Cena v1 (voca
+>   4442  MONTAR, não desenhar — linguagem v1 de camadas em Z
+>         -> SSOT `docs/bok/spaces-evolution/43-amendment-motion-montar-camadas.md` + skill `.claude/skills/motion-montar/SKILL.md` + SOP + molde `scripts/motion/layered/build-scene.mjs`. MONTA
+>   1341  Matte self-host (recorte com alpha) — modelos fora do git
+>         -> `scripts/motion/layered/matte.py` (onnxruntime CPU) + modelos `/home/ubuntu/.mcorch/motion-models/*.onnx` (fora do git, >100MB). A/B 2026-08-06: u2net melhor > u2netp > isnet. Fran
+>    713  Engineer-Spaces — autoria de nós do infinite canvas (L2)
+>         -> `.claude/agents/engineer-spaces.md` + skill + SOP `docs/processes/engineer-spaces-node-authoring.md`. Sistema VIVO (`CanvasEditorPage`/`useCanvasStore`/`canvas-node-registry.ts`) v
+>   1561  Nó Transcrição/SRT (whisper.cpp self-host — Amend 30)
+>         -> BoK `docs/bok/spaces-evolution/30-amendment-transcribe-node.md` + mig `20260721140000` (engine `asr`) + edge `generate-subtitles/` + worker `scripts/subtitle-bridge.ts` (systemd ac
+>    748  Nó-janela — config na superfície do canvas (Amend 31)
+>         -> `docs/bok/spaces-evolution/31-amendment-node-config-window.md`. Sidebar=propriedades + botão Personalizar → `NodeConfigWindow` (radix Dialog). Dispatcher `NodeInspectorBody.tsx` co
+>    660  Pipeline de Publicações — Calendário · Kanban · Tabela
+>         -> `src/pages/CalendarPage.tsx` (state `pageView`): calendário DnD + Kanban `PipelineKanban.tsx` + Tabela `PipelineTable.tsx` (CRUD inline). Vocab `src/lib/pipeline-format.ts`. Sem de
+>    380  Trends credential resolution SOP (per-user)
+>         -> `docs/processes/trends-credential-resolution.md` — fetch-trends Apify/RapidAPI per-user fail-closed; coluna cifrada `rapidapi_key` mig `20260622210000`. Sem key → 402 `trends_not_c
+>    550  Per-user readiness migration (env = só infra)
+>         -> Diretiva Sovereign 2026-06-22: toda provider key é per-user BYOK, env só infra. Commit `432fa01` removeu o fallback global de 25 edge fns; sistema usa `MESH_EMBED_*` dedicadas. Aud
+>    362  Meta/social disconnect RPC (orphaned-secret revocation)
+>         -> `supabase/migrations/20260602160000_meta_social_disconnect_rpc.sql` (`disconnect_meta()`/`disconnect_social(uuid)` — deletam linha + revogam segredo Vault órfão, tenant-safe por PK
+>    486  Security BoK suite (Cyber-Sentinel)
+>         -> `docs/bok/security/` (00-blueprint · 01-brd 12 BRs · 02-srs 15 FRs+RLS Matrix · 03-sdd Arcjet/Dockerfile UID1001 · 04-fmea). FM-04/FM-10 FECHADOS 2026-06-22; restam SEC-006 sentine
+>    828  Senior UX/UI Loop (auditor + fix-loop)
+>         -> `docs/processes/ux-ui-senior-loop.md` + skill + rubrica `scripts/qa/ux-ui-senior-loop/RUBRIC.md` (8 dims) + grader `lib/senior-rubric.ts` (SCORED, fail-closed) + runner `audit-jour
+> 
+> -- REMOVE candidates: 0 --
+> 
+> == sprintAudit ==
+> fila lines: 9 - 30
+> est tokens: 46000 -> 16000
+> keep recent: ['Sprint v6.134.0', 'Sprint v6.133.0', 'Sprint v6.132.0']
+> prune_ranges:
+>   L38-205  Log histórico de sprints v6.129.0 → v6.2.0 + v5.x (2026-07-30 → 2026-05-04)
+> proposed_structure:
+> Estrutura enxuta proposta para .claude/context/sprint-priorities.md (lido em todo /handson):
+> 
+> 1. **Título + Sprint Goal atualizado** (linhas 1-5) — MANTER, mas o Sprint Goal da linha 3 está STALE ("distribuição social autônoma / LinkedIn") face à FILA atual (EP07, Amendment 34, CRM Suite). Sugerir atualizar para o foco vivo: "EP07 + esteira de episódio no Spaces (Amendment 34) + segurança/monetização fail-closed; distribuição orgânica de shorts."
+> 
+> 2. **## FILA SOVEREIGN** (linhas 7-30) — PRESERVAR VERBATIM. Tabela load-bearing de 20 linhas, ordem declarada pelo Sovereign (não reordenar sem GO). É o coração operacional do arquivo.
+> 
+> 3. **3 sprints mais recentes** (linhas 32-37) — MANTER inline: v6.134.0, v6.133.0, v6.132.0. Dão o contexto imediato da última maratona (Spaces UX / spaces-agent / EP05 motion).
+> 
+> 4. **## Top Gap Closures + Loop/rotina + DoD + 3Ms** (linhas 206-318) — MANTER (seções estruturais/template, não são log de sprint). Nota: o "4Cs Audit Snapshot (2026-05-04)" e vários gaps já riscados também estão stale e poderiam ser podados numa segunda passada, mas estão FORA do escopo desta tarefa.
+> 
+> 5. **Ponteiro de arquivo** — inserir 1 linha após os 3 sprints mantidos: "> 📦
+> 
+> == memoryAudit ==
+> total_memories: 167
+> index_note: O índice tem ~167 arquivos e ~4,9k tokens — ainda barato de carregar por inteiro e bem abaixo de qualquer teto de leitura. NÃO justifica poda agressiva. O crescimento é saudável, mas já há vários MICRO-CLUSTERS de reference/feedback sobre o MESMO gotcha (tsc type-gate, chaves Supabase, encrypted vie
+> consolidation_candidates:
+>   into: reference_type_gate_tsc_vs_build.md <- ['reference_app_tsc_is_the_real_type_gate.md', 'reference_root_tsc_noop_use_build.md']
+>      reason: Ambas descrevem o MESMO gate de tipos: `tsc --noEmit` na raiz é no-op e o gate real é `tsc -p tsconfig.app.json` comparado com baseline (ou vite build). Duas fa
+>   into: reference_supabase_secret_key_lifecycle.md <- ['reference_supabase_keys_migrated.md', 'reference_supabase_secret_key_rotation_silent_kill.md']
+>      reason: Ambas são sobre a crise/ciclo da secret key do Supabase: usar SB_SECRET_KEY (SERVICE_ROLE/ANON mortas) e o fato de a rotação matar workers+edge fns em silêncio 
+>   into: reference_encrypted_views_read_write.md <- ['reference_encrypted_views_write_pattern.md', 'reference_user_api_keys_encrypted.md']
+>      reason: Ambas cobrem o mesmo modelo de views mascaradas/cifradas: user_api_keys é VIEW mascarada (ler decrypted_*), e o padrão de escrita .insert() sem ON CONFLICT + RP
+>   into: reference_byok_policy_and_columns.md <- ['feedback_byok_only_available_options.md', 'feedback_paid_byok_post_revenue.md', 'reference_byok_gemini_column.md']
+>      reason: Cluster BYOK: só ofertar providers com BYOK disponível (useConfiguredProviders), BYOK pago só pós-renda/default free, e o detalhe de coluna google_api_key (não 
+>   into: reference_node_born_dead_family.md <- ['reference_ledger_node_needs_node_run_id.md', 'reference_spaces_agent_node_born_dead_traps.md', 'feedback_generate_through_the_node.md']
+>      reason: Família 'nó nasce morto': falta node_run_id cai na branch legada (422); campo-motor≠prompt/handles reais; gerar fora do nó cria reconciliação que erra em silênc
+>   into: project_veo_avatar_video.md <- ['reference_veo_refs_require_8s.md', 'reference_veo_image_xor_references.md', 'project_veo_avatar_video.md']
+>      reason: Cluster Veo: charRef+dur<8=422, image XOR referenceImages, e o módulo de avatar (refs ≤3, failover FR-SPACES-091, 178 mco). Os dois references são contratos que
+> stale_candidates:
+>    project_ep05_master_a_and_spaces_agent_next.md - O topo do índice declara EP07 como o próximo episódio e EP06 virou acervo; esta memória enquadra EP05 como o alvo 'next' (A14 guardado, spac
+> 
+> == verifications == 0
+> ```
+
+## 🤖 Claude *(13:09:55)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Looking at the audit results, I can see the Key Files table has 186 rows with significant compression potential—collapsing 44 entries down to one-liners could cut the token count nearly in half, from around 15,300 to 7,500. The largest candidates for compression are files like "MONTAR," "Content-provenance," and "Trupe criativa," each with thousands of characters that could be summarized with references to where the full details live.
+
+For the sprint audit, the historical log from v6.129.0 back through v5.x is the real token sink at roughly 30,000 tokens—pruning that archive down to just the recent versions (v6.134.0, v6.133.0, v6.132.0) would save around 14,000 tokens. The structural sections like Top Gap Closures and DoD should stay intact, though the Sprint Goal needs updating to reflect the EP07 focus.
+
+The memory audit shows 167 memories consuming about 4,900 tokens, which is relatively lean.  There are a few consolidation clusters worth considering—particularly the duplicate Supabase secret-key memories since they're directly relevant to current work—but the auditor notes this isn't urgent. Since there are no removal candidates, only potential collapses with clear references to where details live, the risk profile stays low.
+
+I should still spot-check the biggest collapses to make sure the proposed summaries don't strip away load-bearing context that isn't documented elsewhere. The most consequential ones like MONTAR and provenance encode important hard-won knowledge, so those deserve extra scrutiny.
+
+For Frente 3, the sprint-priorities.md file is the biggest opportunity—archiving the historical log back to v6.129 while keeping the current FILA and three recent sprints would free up roughly 30k tokens, which is the most significant win available.
+
+The second priority is collapsing the Key Files section in CLAUDE.md, which could save about 7.8k tokens, and MEMORY.md is optional since the auditor flagged it as lower value. I'll start with sprint-priorities since it's the safest move—archiving old sprint summaries that duplicate what's already in HANDOFF records.
+
+For the archive location, I'm putting it in .claude/context/sprint-priorities-archive.md to keep it co-located with the main file. I'll keep the current sprint info and structural sections, add a pointer after the recent sprints, update the stale Sprint Goal, and move everything else to the archive file.
+
+Before I cut anything, I need to verify the exact line boundaries — the audit shows FILA at lines 9-30, but I should double-check against the actual file to make sure the line numbers are accurate, especially since I edited line 12 earlier.…
+
+</details>
+
+
+## 🤖 Claude *(13:09:59)*
+
+Auditoria completa e clara:
+
+- **`sprint-priorities.md`**: FILA load-bearing = linhas 9-30 (preservar), **log histórico L38-205 = ~30k tokens podáveis** (46k→16k), Sprint Goal (linha 3) stale, seções estruturais 206-318 mantidas. **Maior ganho.**
+- **CLAUDE.md Key Files**: 186 linhas, **0 remove, 44 collapse** (15,3k→7,5k). Cada collapse cita onde o detalhe vive. Sem remoção = baixo risco.
+- **MEMORY.md**: 167 memórias, ~4,9k — o auditor diz que **não justifica poda agressiva**; 6 clusters de consolidação + 1 stale (EP05-como-próximo).
+
+Começo pelo maior ganho (sprint-priorities). Confirmo os limites exatos antes de cortar (Lei 1 — os números do auditor precisam bater com o arquivo).
+
+## 🤖 Claude *(13:10:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nF=.claude/context/sprint-priorities.md\necho \"\u2550\u2550\u2550\u2550 Linha 3 (Sprint Goal) \u2550\u2550\u2550\u2550\"\nsed -n '3p' \"$F\" | head -c 200; echo\necho \"\"\necho \"\u2550\u2550\u2550\u2550 Headers de Sprint (v6.x) com linha \u2550\u2550\u2550\u2550\"\ngrep -nE \"^\\*\\*Sprint v\" \"$F\"\necho \"\"\necho \"\u2550\u2550\u2550\u2550 Se\u00e7\u00f5es estruturais (## ...) com linha \u2550\u2550\u2550\u2550\"\ngrep -nE \"^## \" \"$F\"\necho \"\"\necho \"\u2550\u2550\u2550\u2550 Boundary L36-40 (fim dos 3 recentes \u2192 in\u00edcio do arquiv\u00e1vel) \u2550\u2550\u2550\u2550\"\nsed -n '36,40p' \"$F\" | cut -c1-70\necho \"\u2550\u2550\u2550\u2550 Boundary L203-207 (fim do arquiv\u00e1vel \u2192 in\u00edcio estrutural) \u2550\u2550\u2550\u2550\"\nsed -n '203,207p' \"$F\" | cut -c1-70\necho \"\"\necho \"total linhas: $(wc -l < \"$F\")\"",
+  "description": "Verify exact sprint-priorities boundaries"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> <persisted-output>
+> Output too large (156.8KB). Full output saved to: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/tool-results/b3f7rt0r9.txt
+> 
+> Preview (first 2KB):
+> ════ Linha 3 (Sprint Goal) ════
+> **Sprint Goal**: Distribuição social autônoma operacional — pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram após App Review Meta.
+> 
+> 
+> ════ Headers de Sprint (v6.x) com linha ════
+> 32:**Sprint v6.134.0 — Spaces UX + Run All server-side + controles Veo + motor motion v2 (2026-08-05c)** — 14 commits `333c43f..dc1e53e` · tsc-app 0 · vitest 788 · `/security-review` NO FINDINGS. Run All 100% server-side (Amend 36, fecha a aba) + aviso de sessão + execução seletiva (35) + cards de FASE com botão/resize + skip-success anti re-débito (38) + STOP na fila e nós presos + faxina de projeto (39) + motor motion v2 (ícones de contexto/VFX/seed — 37) + UX (handles verticais, painéis colapsados, full-bleed, RF oculto). EP06 v2 `a65eeb05` armado; 4 presenters Veo falharam por Google high-load e foram estornados (1068 mco). Nó `330e77a3` · malha 20.068. **Pendente durável: poller de página do Veo** (Run All headless não finaliza presenters). ⚠️ **Correção de versão:** a sessão anterior selou como v6.133.0 mas não bumpou o badge do README (ficou em 6.132.0); esta é a v6.134.0.
+> ...
+> </persisted-output>
+> ```
+
+## 🤖 Claude *(13:10:09)*
+
+
+## 🤖 Claude *(13:10:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nF=.claude/context/sprint-priorities.md\necho \"\u2550\u2550\u2550\u2550 Headers de Sprint (s\u00f3 n\u00ba linha + in\u00edcio) \u2550\u2550\u2550\u2550\"\ngrep -nE \"^\\*\\*Sprint v\" \"$F\" | cut -c1-50\necho \"\"\necho \"\u2550\u2550\u2550\u2550 Se\u00e7\u00f5es ## (n\u00ba linha + t\u00edtulo) \u2550\u2550\u2550\u2550\"\ngrep -nE \"^## \" \"$F\" | cut -c1-60\necho \"\"\necho \"\u2550\u2550\u2550\u2550 L37-39 e L204-207 (boundaries) \u2550\u2550\u2550\u2550\"\nawk 'NR==37||NR==38||NR==39{printf \"%d: %.60s\\n\",NR,$0} NR>=204&&NR<=207{printf \"%d: %.60s\\n\",NR,$0}' \"$F\"\necho \"total: $(wc -l < \"$F\")\"",
+  "description": "Clean boundary check"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ════ Headers de Sprint (só nº linha + início) ════
+> 32:**Sprint v6.134.0 — Spaces UX + Run All serve
+> 34:**Sprint v6.133.0 — Agente do Spaces + esteir
+> 36:**Sprint v6.132.0 — MARATONA EP05 A6→A14 + 
+> 38:**Sprint v6.129.0 — Estratégia DEFINITIVA de
+> 40:**Sprint v6.128.0 — TikTok App Review destrav
+> 42:**Sprint v6.107.0 — Meta app-review privacida
+> 44:**Sprint v6.100.0 — Assets: seletor de format
+> 46:**Sprint v6.99.0 — Motor Viral Quality + ASR 
+> 48:**Sprint v6.98.0 — YouTube Studio (Fatia 1) +
+> 50:**Sprint v6.97.0 — Motor de repurpose de víd
+> 51:**Sprint v6.96.0 — Voz clonada self-host COMP
+> 52:**Sprint v6.83.1 — Fix Assets: exibição de 
+> 54:**Sprint v6.83.0 — Spaces 2d compose VIVO E2E
+> 56:**Sprint v6.82.1 — Sprint Spaces 1b→2d SELA
+> 58:**Sprint v6.76.0 — Spaces Fase 1b: execução
+> 60:**Sprint v6.75.0 — loop it.2-3 (selo final): 
+> 62:**Sprint v6.74.0 — spaces-evolution BoK 9/9 +
+> 64:**Sprint v6.73.4 — Loop it.4 (selo final): B4
+> 66:**Sprint v6.73.3 — Loop it.2-3: Vision-gate m
+> 68:**Sprint v6.73.2 — Loop it.1: render-decoupli
+> 70:**Sprint v6.53.0 — Doutrina Agêntica AGI→A
+> 72:**Sprint v6.52.0 — Gabriel AI mood board + Vi
+> 74:**Sprint v6.51.0 — Fatia 2 vídeo→Instagram
+> 76:**Sprint v6.50.0 — HyperFrames editor LIVE + 
+> 78:**Sprint v6.49.0/v6.49.1 — Vídeo viral 9:16 
+> 80:**Sprint v6.48.0 — Viral Autopilot ATIVADO + 
+> 82:**Sprint v6.47.0 — Per-user 100% (env = só i
+> 84:**Sprint v6.44.0 — Viral Autopilot Fatia 2: c
+> 86:**Sprint v6.43.0 — Viral Autopilot Fatias 1 +
+> 88:**Sprint v6.42.0 — Viral Autopilot BoK 9/9: m
+> 90:**Sprint v6.41.0 — Unified Sensorial Canvas (
+> 92:**Sprint v6.40.0 — Vision MCP Fatia 3 remaind
+> 94:**Sprint v6.39.1 — Vision MCP público: mcp.m
+> 96:**Sprint v6.39.0 — Vision MCP Fatia 3 core: P
+> 98:**Sprint v6.38.0 — Vision MCP `deepsearch.run
+> 100:**Sprint v6.37.0 — Vision MCP Fatia 2: 4 Bil
+> 102:**Sprint v6.36.2 — Vision MCP: OTD Gates Clo
+> 104:**Sprint v6.36.1 — Vision MCP: BoK 9/9 + 8-A
+> 106:**Sprint v6.36.0 — Native OpenDesign Integra
+> 108:**Sprint v6.35.0 — Core-Fable: Fable 5 Flags
+> 110:**Sprint v6.34.0 — Cyber-Sentinel: Security 
+> 112:**Sprint v6.33.1 — Hotfix Kanban ScrollArea 
+> 114:**Sprint v6.33.0 — ML Attribution Fix + Brow
+> 118:**Sprint v6.32.x — arco Core-v2 Black Hole (
+> 120:**Sprint v6.28.0 selado em 2026-06-04** — **
+> 122:**Sprint v6.27.2 selado em 2026-06-04** — **
+> 124:**Sprint v6.27.1 selado em 2026-06-03** — **
+> 126:**Sprint v6.27.0 selado em 2026-06-03** — **
+> 128:**Sprint v6.26.0 selado em 2026-06-03** — **
+> 130:**Sprint v6.25.0 selado em 2026-06-03** — **
+> 132:**Sprint v6.24.0 selado em 2026-06-03** — **
+> 134:**Sprint v6.23.0 selado em 2026-06-03** — Ma
+> 136:**Sprint v6.22.0 selado em 2026-06-03** — Ca
+> 138:**Sprint v6.21.0 selado em 2026-06-03** — Ma
+> 140:**Sprint v6.20.4 selado em 2026-06-02** — Pr
+> 142:**Sprint v6.20.3 selado em 2026-06-02** — Di
+> 144:**Sprint v6.20.2 selado em 2026-06-02** — Id
+> 146:**Sprint v6.20.1 selado em 2026-06-02** — Wo
+> 148:**Sprint v6.20.0 selado em 2026-06-01** — Af
+> 150:**Sprint v6.19.0 selado em 2026-06-01** — e2
+> 152:**Sprint v6.18.0 selado em 2026-06-01** — Co
+> 154:**Sprint v5.5.2 selado em 2026-05-04** — Soc
+> 156:**Sprint v5.5.5 selado em 2026-05-05** — Set
+> 158:**Sprint v5.5.6 selado em 2026-05-06** — Cor
+> 160:**Sprint v5.6.0 selado em 2026-05-06** — Dev
+> 162:**Sprint v5.6.1 selado em 2026-05-06** — Lay
+> 164:**Sprint v5.7.0 selado em 2026-05-07** — BoK
+> 166:**Sprint v5.9.0 selado em 2026-05-08** — FME
+> 168:**Sprint v5.8.0 selado em 2026-05-08** — FME
+> 170:**Sprint v6.0.0 selado em 2026-05-14** — Con
+> 172:**Sprint v6.1.0 selado em 2026-05-14** — Can
+> 174:**Sprint v6.1.1 selado em 2026-05-14** — vir
+> 176:**Sprint v6.6.9 selado em 2026-05-20** — mco
+> 178:**Sprint v6.6.8 selado em 2026-05-19** — Bri
+> 180:**Sprint v6.6.7 selado em 2026-05-19** — OE-
+> 182:**Sprint v6.6.6 selado em 2026-05-19** — Pla
+> 184:**Sprint v6.6.5 selado em 2026-05-19** — Ope
+> 186:**Sprint v6.6.4 selado em 2026-05-18** — Gam
+> 188:**Sprint v6.6.3 selado em 2026-05-18** — OE-
+> 190:**Sprint v6.6.2 selado em 2026-05-17** — Can
+> 192:**Sprint v6.6.1 selado em 2026-05-17** — Pan
+> 194:**Sprint v6.6.0 selado em 2026-05-17** — SSP
+> 196:**Sprint v6.5.0 selado em 2026-05-17** — SSP
+> 198:**Sprint v6.4.0 selado em 2026-05-16** — P0 
+> 200:**Sprint v6.3.1 selado em 2026-05-16** — Ope
+> 202:**Sprint v6.3.0 selado em 2026-05-15** — Can
+> 204:**Sprint v6.2.0 selado em 2026-05-15** — Ope
+> 
+> ════ Seções ## (nº linha + título) ════
+> 7:## 📋 FILA SOVEREIGN (ordem declarada — não reordenar
+> 208:## 📊 4Cs Audit Snapshot (2026-05-04)
+> 221:## 🔴 Top Gap Closures (by leverage)
+> 245:## 🛠️ Skills a criar ou evoluir
+> 253:## 🔌 Conexões a implementar
+> 261:## ⏱️ Loop / rotina
+> 274:## 📚 Knowledge Mesh Update
+> 281:## ✅ Definition of Done (por tarefa)
+> 291:## 3Ms deste Sprint
+> 308:## 🔁 Sprint Retrospective (responder ao final com `/h
+> 
+> ════ L37-39 e L204-207 (boundaries) ════
+> 37: 
+> 38: **Sprint v6.129.0 — Estratégia DEFINITIVA de shorts orgânico
+> 39: 
+> 204: **Sprint v6.2.0 selado em 2026-05-15** — OpenClaw Bootstrap 
+> 205: 
+> 206: ---
+> 207: 
+> total: 318
+> ```
+
+## 🤖 Claude *(13:10:40)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm mapping out the exact line numbers for the document structure—identifying which sprints to keep at the top, which ones to archive, and where the section breaks fall. The structural sections like the 4Cs snapshot from May are stale and add dead weight to every handson read, but they're flagged as out-of-scope by the audit and used by other commands, so I'll keep them for now. The real win is archiving the 30k sprint log—that's the main context reduction.
+
+I should also refresh the Sprint Goal to reflect the current focus on EP07 with the episode pipeline and security/monetization safeguards. Now I'm ready to execute the sprint-priorities prune: back up the file, extract the sprint log section into an archive block with byte verification, and create the archive file. the intended change. I'll do the prune first to archive lines 38-205 while keeping 1-37 and the rest byte-identical, verify that preservation, then make the Sprint Goal edit as a separate step. Now I'm building the archive file with its header and the archived content block.…
+
+</details>
+
+
+## 🤖 Claude *(13:10:42)*
+
+Limites confirmados: arquivar **linhas 38-205** (log v6.129.0 → v6.2.0, ~30k tokens), manter 1-37 (título·goal·FILA·3 recentes) + 206-318 (seções estruturais). Executo com verificação byte-a-byte, depois atualizo o Sprint Goal stale separadamente.
+
+## 🤖 Claude *(13:10:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nF=.claude/context/sprint-priorities.md\nSCRATCH=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/scratchpad\"\ncp \"$F\" \"$SCRATCH/sprint.orig.md\"\n\n# bloco arquiv\u00e1vel = 38-205 (byte-exato)\nsed -n '38,205p' \"$SCRATCH/sprint.orig.md\" > \"$SCRATCH/sprint-block.md\"\necho \"bloco: $(wc -l < \"$SCRATCH/sprint-block.md\") linhas \u00b7 md5 $(md5sum \"$SCRATCH/sprint-block.md\" | cut -d' ' -f1)\"\n\n# archive (header 4 linhas + bloco)\nARCH=.claude/context/sprint-priorities-archive-2026-08-11.md\n{\n  echo \"# Sprint Priorities Archive \u2014 log hist\u00f3rico v6.129.0 \u2192 v6.2.0 (2026-07-30 \u2192 2026-05-04)\"\n  echo \"\"\n  echo \"> Arquivado de \\`.claude/context/sprint-priorities.md\\` em 2026-08-11 (Lei 3 \u2014 poda de contexto). Byte-id\u00eantico ao original. A FILA SOVEREIGN e os 3 sprints recentes seguem no arquivo vivo.\"\n  echo \"\"\n  cat \"$SCRATCH/sprint-block.md\"\n} > \"$ARCH\"\n\n# G3 \u2014 bloco no archive byte-id\u00eantico (header=4 linhas \u21d2 bloco na 5)\ndiff <(tail -n +5 \"$ARCH\") \"$SCRATCH/sprint-block.md\" >/dev/null && echo \"\u2705 G3 archive byte-id\u00eantico\" || echo \"\u274c G3 diverge\"\n\n# novo arquivo vivo: 1-37 + pointer + 206-318\n{\n  sed -n '1,37p' \"$SCRATCH/sprint.orig.md\"\n  echo \"> \ud83d\udce6 Log hist\u00f3rico de sprints v6.129.0 \u2192 v6.2.0 (2026-07-30 \u2192 2026-05-04) \u2192 [.claude/context/sprint-priorities-archive-2026-08-11.md](sprint-priorities-archive-2026-08-11.md)\"\n  echo \"\"\n  sed -n '206,318p' \"$SCRATCH/sprint.orig.md\"\n} > \"$SCRATCH/sprint.new.md\"\n\n# G1 \u2014 contagem de sprint headers preservada\no=$(grep -cE \"^\\*\\*Sprint v\" \"$SCRATCH/sprint.orig.md\")\nn=$(grep -cE \"^\\*\\*Sprint v\" \"$SCRATCH/sprint.new.md\")\na=$(grep -cE \"^\\*\\*Sprint v\" \"$ARCH\")\necho \"G1 sprints: orig=$o \u00b7 novo=$n \u00b7 archive=$a \u00b7 soma=$((n+a))  $([ \"$o\" -eq \"$((n+a))\" ] && echo \u2705 || echo \u274c)\"\n\n# G2 \u2014 por\u00e7\u00e3o mantida 1-37 e 206-318 byte-id\u00eantica\ndiff <(sed -n '1,37p' \"$SCRATCH/sprint.orig.md\") <(sed -n '1,37p' \"$SCRATCH/sprint.new.md\") >/dev/null && echo \"\u2705 G2a head 1-37 id\u00eantico\" || echo \"\u274c G2a\"\ndiff <(sed -n '206,318p' \"$SCRATCH/sprint.orig.md\") <(tail -n 113 \"$SCRATCH/sprint.new.md\") >/dev/null && echo \"\u2705 G2b tail 206-318 id\u00eantico\" || echo \"\u274c G2b (checar offset)\"\n\ncp \"$SCRATCH/sprint.new.md\" \"$F\"\necho \"novo total: $(wc -l < \"$F\") linhas \u00b7 $(wc -c < \"$F\") bytes (era 183011)\"",
+  "description": "Prune sprint-priorities historical log with byte-verification"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> bloco: 168 linhas · md5 1518b5b8f7fb914a5af9f82eaaf73b16
+> ✅ G3 archive byte-idêntico
+> G1 sprints: orig=87 · novo=3 · archive=84 · soma=87  ✅
+> ✅ G2a head 1-37 idêntico
+> ✅ G2b tail 206-318 idêntico
+> novo total: 152 linhas · 25676 bytes (era 183011)
+> ```
+
+## 🤖 Claude *(13:11:07)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The pruning worked really well—cut the file down to just over 25k bytes while keeping all 87 sprint headers intact, which freed up about 30k tokens from the context. Now I need to update the stale Sprint Goal on line 3 since the file was just modified.…
+
+</details>
+
+
+## 🤖 Claude *(13:11:09)*
+
+Poda do sprint-priorities: **183 KB → 25,7 KB** (~30k tokens fora de todo `/handson`), G1/G2/G3 verdes, 87 headers preservados (3 vivos + 84 arquivados). Agora atualizo o **Sprint Goal** stale para o foco real.
+
+## 🤖 Claude *(13:11:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint Goal**: Distribui\u00e7\u00e3o social aut\u00f4noma operacional \u2014 pipeline publica LinkedIn automaticamente, Twitter desbloqueado quando API tier subir, Instagram ap\u00f3s App Review Meta.",
+  "new_string": "**Sprint Goal**: **EP07** (\"economia dos videocasts\") ancorado (12 n\u00fameros via deepsearch) e produzido com o motor MONTAR elevado (`dof(z)`+planos+`companions[]`); esteira de p\u00f3s-produ\u00e7\u00e3o de epis\u00f3dio no Spaces (Amendment 34); seguran\u00e7a/monetiza\u00e7\u00e3o fail-closed (3 cofres da secret key verdes); distribui\u00e7\u00e3o org\u00e2nica de shorts."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:11:16)*
+
+
+## 🤖 Claude *(13:11:17)*
+
+Verifico a legibilidade e a costura do ponteiro no sprint-priorities (equivalente ao G5).
+
+## 🤖 Claude *(13:11:18)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "offset": 31,
+  "limit": 14
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 31	
+> 32	**Sprint v6.134.0 — Spaces UX + Run All server-side + controles Veo + motor motion v2 (2026-08-05c)** — 14 commits `333c43f..dc1e53e` · tsc-app 0 · vitest 788 · `/security-review` NO FINDINGS. Run All 100% server-side (Amend 36, fecha a aba) + aviso de sessão + execução seletiva (35) + cards de FASE com botão/resize + skip-success anti re-débito (38) + STOP na fila e nós presos + faxina de projeto (39) + motor motion v2 (ícones de contexto/VFX/seed — 37) + UX (handles verticais, painéis colapsados, full-bleed, RF oculto). EP06 v2 `a65eeb05` armado; 4 presenters Veo falharam por Google high-load e foram estornados (1068 mco). Nó `330e77a3` · malha 20.068. **Pendente durável: poller de página do Veo** (Run All headless não finaliza presenters). ⚠️ **Correção de versão:** a sessão anterior selou como v6.133.0 mas não bumpou o badge do README (ficou em 6.132.0); esta é a v6.134.0.
+> 33	
+> 34	**Sprint v6.133.0 — Agente do Spaces + esteira do episódio ponta-a-ponta (2026-08-05)** — 19 commits `de5bdb5..9a1fac5` · tsc-app 0 · vitest 765 · `/security-review` NO FINDINGS. Pivô editorial (EP05/A14 guardado; 2 vídeos/semana) + **spaces-agent VIVO** (Amendment 33: chat que monta o canvas, BoK 10/10, sugestões contextuais de custo zero) + **Amendment 34** fechando o gap CLI→UI: nós **Cena Motion** · **Efeito Sonoro** (motor duplo, licença carimbada) · **Montar Master**, todos no `Executar tudo`, com console de execução e barra do agente flutuante. **Repertório profissional** (manual 1.485 l + guia de SFX 386 l + `cinematic-grammar.ts`, 18 regras nos agentes). EP06 com roteiro motion-first (−82% de custo) e 15 narrações IVC (3:24). 5 anticorpos novos — o mais caro: **o autosave da UI apaga escrita server-side**. **Próximo:** o clique em Executar tudo.
+> 35	
+> 36	**Sprint v6.132.0 — MARATONA EP05 A6→A14 + linguagem MOTION SCENES (2026-08-03/04)** — sessão-maratona iterada por parecer: MASTER A14 COMPLETO na Biblioteca (`6e3175b3`, 488s, QA A/V verde) = VFX título + 19 presenters BLOCKBUSTER (frota 19/19, débito exato 5.073+267+267; QA A/V pegou p47 muda) + 22 cenas-conceito em MOTION SCENES v6 (6 peças na Biblioteca; veredito Sovereign: motion > telas gravadas) + narração 100% voz IVC Sovereign eleven_v3 tom NOVIDADES (EL Creator, pool único provado) + trilha v2 D-major + CTA + créditos template. Síntese: skill `motion-scenes` + contratos (spaces-agent dirige · engineer-spaces executa · creative-director produz) + Scratchpad Harvest = PHASE 1b do /handoff + QA A/V sync como lei + playbook dark-channel + pivô editorial novidades + blueprint ai-news-brief (BoK-gated). Handoff node `2622eece`. **Próximo:** parecer Sovereign no A14 → thumbnail ciano → DOMINGO; retake opcional p14; poda do HANDOFF (WARN 23.8k); spaces-agent segue AGORA gated.
+> 37	
+> 38	> 📦 Log histórico de sprints v6.129.0 → v6.2.0 (2026-07-30 → 2026-05-04) → [.claude/context/sprint-priorities-archive-2026-08-11.md](sprint-priorities-archive-2026-08-11.md)
+> 39	
+> 40	---
+> 41	
+> 42	## 📊 4Cs Audit Snapshot (2026-05-04)
+> 43	
+> 44	| C            | Pontuação | Lacuna principal                                             |
+> ```
+
+## 🤖 Claude *(13:12:27)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Looking at the sprint-priorities structure, I see it flows cleanly from title through goal, FILA, recent sprints, and pointer sections. I notice the 4Cs Audit Snapshot from May is three months stale and flagged as out-of-scope—since it's read on every /handson call and adds no value, it's probably worth pruning to optimize context.
+
+The audit suggested leaving it for a second pass, so I'll hold off for now and focus on the bigger wins. The sprint-priorities file is essentially done (183KB → ~26KB), which is the main objective.
+
+Now I'm moving to the CLAUDE.md Key Files section—44 individual collapses that could shrink 15.3k tokens down to 7.5k. Each collapse replaces a detailed table row with a concise one-liner, and the risk is losing nuance, but since each one cites where the full detail lives, the tradeoff seems reasonable.
+
+The challenge is execution: 44 individual Edit calls would be tedious and create many round-trips, or I could try a script-based approach to do the replacements programmatically, but that risks mismatching the multi-line table rows. A cleaner option might be to rebuild the entire Key Files table in one go—extract it, replace each collapse row with its one-liner, keep the 142 rows that stay unchanged. But I'm second-guessing the value here: 7.8k tokens saved is good, but CLAUDE.md is a core file with a lot of hard-won context baked in, so I need to be careful about over-pruning.
+
+Looking at the risk more carefully, I could take a middle path: collapse only the 10 largest rows (the ones over 1000 characters each—MONTAR, provenance, Trupe, and others). Those 10 account for most of the bloat and would get me most of the token savings with far less risk and fewer edits.
+
+But actually, the audit already confirmed the detail lives in the SOPs, and the collapse one-liners preserve the path and a reference point. The Key Files table is meant to be a lookup index, not a knowledge base—so moving verbose prose into the SOPs is the right call for keeping the file lean and focused. The user asked for optimization, and this is the right kind of optimization.
+
+Rather than making 44 individual edits, I should build the collapses programmatically since each table row is a single physical line in the markdown. That makes it feasible to match and replace rows in bulk.
+
+The challenge is that the audit gives me abbreviated purpose text and the proposed one-liner replacement, but the actual CLAUDE.md rows have the full Purpose cell text which might differ slightly. Reconstructing the exact row safely this way is getting complicated, so maybe individual Edit calls for the bigger collapses is the cleaner approach after all.
+
+But 44 edits is substantial, and I'm second-guessing whether to tackle the CLAUDE.md collapse in this session at all. It's a load-bearing Sovereign doctrine file, and while the audit verified these changes, transforming hard-won content is a significant editorial decision. The user did ask to optimize CLAUDE.md, but I've already delivered the biggest win with sprint-priorities. The CLAUDE.md collapse would only save another 7.8k.
+
+I'm leaning toward doing the collapse carefully and programmatically—extracting the current Key Files table, matching rows against the audit's collapse candidates, replacing the Purpose cells with one-liners, and verifying the result preserves all paths and row counts. But matching rows programmatically is tricky since the audit's purpose field may not exactly match what's in CLAUDE.md.
+
+Actually, maybe the smarter move is to batch the edits for just the biggest wins—the rows over 800 characters, roughly 25 of the 44—which gets me about 90% of the token savings with half the work. Though even 25 edits feels like a lot. Let me step back: the sprint-priorities prune and HANDOFF prune are already delivering ~33k tokens off every session, which is the real win here.
+
+The CLAUDE.md collapse would save another 7.8k, but it's a delicate edit to a core doctrine file. The safest approach is to surgically rebuild just the Key Files Reference section in one operation, replacing the whole section at once rather than doing scattered edits. Though honestly, given the risk and that this is the user's foundational doctrine, maybe I should hand this off to the docs-curator agent—they own documentation governance and have the discipline to avoid cutting anything load-bearing.
+
+But that's another round-trip, and I can do this myself more efficiently. My plan: read the full current Key Files table, write a Python transformation that matches each collapse candidate to its row and swaps the right cell, then verify the result has the same row count and all original paths still exist. The tricky part is that the audit gave me abbreviated purposes and proposed oneliners, which makes fuzzy matching to the full rows risky.
+
+Let me take a step back and be pragmatic. I'll target the top ~14 biggest rows by character count—those over 800 chars like MONTAR, provenance, Trupe, and others—and collapse them via precise Edit calls. That's about 20k characters across those rows, which should yield roughly 75% of the token savings with much lower risk.
+
+Actually, I should go further since the user wants more optimization. I'll rebuild the table programmatically using the audit's collapse candidates, matching rows by their primary_path since that's a unique identifier present in both the audit data and the markdown table. This gives me a reliable way to apply all the proposed one-liners systematically. Writing a Python script...
+
+Actually, I'm second-guessing the effort here. The 7.8k token savings on CLAUDE.md is meaningful but carries real risk—it's a critical file and programmatic edits could break something. I've already trimmed about 33k tokens from the session context elsewhere, so the marginal gain might not justify the danger.
+
+Let me take a middle path instead: apply the safest, highest-impact collapses through a careful script that preserves all file paths and verifies the output, rather than trying to be comprehensive.…
+
+</details>
+
+
+## 🤖 Claude *(13:12:31)*
+
+Sprint-priorities e Sprint Goal fechados — costura limpa. (Notei que a seção "4Cs Audit Snapshot (2026-05-04)" também está stale, mas é estrutural e fora do escopo desta poda — anoto para depois.)
+
+Agora a **poda do CLAUDE.md** (44 collapses, 0 removes → 15,3k→7,5k na tabela). Como é a doutrina Sovereign load-bearing, vou aplicar programaticamente **chaveado pelo path** (chave única e confiável) e verificar duro que **nenhum path se perde**. Extraio o mapa de collapses do resultado da auditoria.
+
+## 🤖 Claude *(13:12:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nOUT=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/tasks/w3hpx6q7w.output\"\nSC=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/scratchpad\"\npython3 - \"$OUT\" \"$SC/collapse-map.json\" <<'PY'\nimport json, sys\no = json.load(open(sys.argv[1]))[\"result\"][\"claudeAudit\"][\"rows\"]\nm = []\nfor r in o:\n    if r.get(\"verdict\") == \"collapse\" and r.get(\"proposed_oneliner\") and r.get(\"primary_path\"):\n        m.append({\"path\": r[\"primary_path\"], \"purpose\": r[\"purpose\"], \"oneliner\": r[\"proposed_oneliner\"], \"chars\": r.get(\"char_count\", 0)})\njson.dump(m, open(sys.argv[2], \"w\"), ensure_ascii=False, indent=1)\nprint(\"collapse candidates:\", len(m))\n# checa unicidade dos paths (chave)\npaths = [x[\"path\"] for x in m]\ndups = set(p for p in paths if paths.count(p) > 1)\nprint(\"paths duplicados (chave amb\u00edgua):\", dups or \"nenhum\")\nPY",
+  "description": "Extract collapse map keyed by path"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> collapse candidates: 44
+> paths duplicados (chave ambígua): nenhum
+> ```
+
+## 🤖 Claude *(13:13:26)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've identified 44 collapse candidates with unique paths that I can use as reliable keys. Now I'm building a transform that locates the "## Key Files Reference" section in CLAUDE.md, then iterates through each table row to replace the right cell with the one-liner summary whenever the path matches one of my 44 candidates—while keeping the Purpose column intact. I need to parse the row format carefully by splitting on the pipe delimiter to preserve the left cell exactly as it is.
+
+I'm realizing that some cells might contain escaped pipes (`\|`), so I need to split on unescaped pipes only using a regex pattern that ignores backslash-escaped delimiters. For a row like `| A | B\|C |`, splitting on unescaped pipes gives me the correct cell boundaries at positions 1 and 2, with the escaped pipe preserved inside the right cell.
+
+Now for the matching logic: I'll iterate through each data row and check if any collapse candidate's path appears as a substring. If exactly one candidate matches, I'll replace the right cell with the oneliner while keeping the left cell (Purpose) unchanged. If multiple candidates match the same row or none match, I'll skip it to avoid ambiguity. The oneliners themselves might contain pipe characters, so I need to handle those carefully when inserting them into the markdown cell.
+
+Writing the transform script... Continuing with the collapse logic...
+
+I'm checking if the right cell is long enough to justify collapsing, then escaping any unescaped pipes in the oneliner before inserting it, updating the line, and tracking which paths have been applied. If there are multiple matching candidates, I'm flagging that as a mismatch to investigate.
+
+Now I need to report which paths weren't applied, and I'm also refining the separator detection — instead of my current approach, I should use a regex that checks if the row contains only pipes, dashes, colons, and spaces. The header row with "Purpose" and "Path" will naturally skip since it won't match any collapse paths, and when rejoining the parts with pipes, I need to make sure the reconstruction is exact for unchanged cells.
+
+I'm verifying that escaped pipes within cells stay intact during the split and rejoin process, and I'm adding a safety check to only collapse rows longer than 300 characters as a double-check against the initial filtering. Let me write this as a script and test it to confirm the row count stays the same before and after processing.
+
+Now I need to verify that every path from the original table still exists in the new one—this is the critical validation. I'm also checking whether the one-liner replacements might lose secondary paths that appeared in the original prose, since the collapse keeps only the primary path plus the essential reference.
+
+The real concern is whether secondary paths that only appear in CLAUDE.md get lost entirely. The audit assumed details would live in the SOP, but I haven't actually verified that all secondary paths are referenced elsewhere. The adversarial verification only ran on removed rows, not collapsed ones, so I should add a check: for each collapsed row, I'll extract any paths from the original that aren't in the new one-liner and confirm they're findable in other parts of the documentation. Writing the validation script...…
+
+</details>
+
+
+## 🤖 Claude *(13:13:29)*
+
+44 collapses, todos com path único (chave confiável). Vou aplicar programaticamente, mas com uma verificação adversarial que a auditoria **não** fez para collapses: cada one-liner mantém o path primário, mas uma linha podia citar paths secundários — preciso garantir que nenhum path **exclusivo do CLAUDE.md** se perca. Backup + aplico em arquivo novo + checo os paths derrubados.
+
+## 🤖 Claude *(13:13:45)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/scratchpad/apply-collapse.py",
+  "content": "import json, re, sys, subprocess, os\n\nROOT = \"/home/gcrUX/htdocs/constellation-orchestra\"\nSC = \"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/scratchpad\"\ncm = json.load(open(SC + \"/collapse-map.json\"))\nby_path = {c[\"path\"]: c for c in cm}\n\nsrc = open(ROOT + \"/CLAUDE.md\").read()\nlines = src.split(\"\\n\")\n\n# localizar a se\u00e7\u00e3o Key Files Reference\nstart = next(i for i, l in enumerate(lines) if l.strip().startswith(\"## Key Files Reference\"))\nend = len(lines)\nfor i in range(start + 1, len(lines)):\n    if lines[i].startswith(\"## \"):\n        end = i; break\n\nPATH_RE = re.compile(r'`([^`]+\\.(?:ts|tsx|sql|sh|md|mjs|py|json|html|conf|css)[^`]*|[^`]*/)`')\n\ndef cell_paths(text):\n    return set(m.group(1).split(':')[0].split(' ')[0] for m in PATH_RE.finditer(text))\n\ndef split_cells(row):\n    return re.split(r'(?<!\\\\)\\|', row)\n\nchanged = 0\ndropped = {}   # path -> row purpose (paths que sumiram do \u00edndice)\napplied = set()\nfor i in range(start, end):\n    l = lines[i]\n    if not l.startswith(\"|\"): continue\n    stripped = l.replace(\"|\", \"\").replace(\"-\", \"\").replace(\":\", \"\").strip()\n    if stripped == \"\": continue          # separador\n    parts = split_cells(l)\n    if len(parts) != 4: continue          # n\u00e3o \u00e9 linha de 2 c\u00e9lulas limpa\n    right = parts[2]\n    matches = [c for c in cm if c[\"path\"] in right]\n    if len(matches) != 1: continue\n    c = matches[0]\n    if len(right) <= 300: continue        # seguran\u00e7a: s\u00f3 colapsa prosa longa\n    old_paths = cell_paths(right)\n    ol = re.sub(r'(?<!\\\\)\\|', r'\\\\|', c[\"oneliner\"])\n    new_paths = cell_paths(ol)\n    for p in (old_paths - new_paths):\n        dropped[p] = c[\"purpose\"]\n    parts[2] = \" \" + ol + \" \"\n    lines[i] = \"|\".join(parts)\n    changed += 1\n    applied.add(c[\"path\"])\n\n# quais paths derrubados existem S\u00d3 no CLAUDE.md? (grep no repo, excluindo CLAUDE.md e o pr\u00f3prio archive)\ndef referenced_elsewhere(p):\n    try:\n        r = subprocess.run(\n            [\"grep\", \"-rIl\", \"--exclude=CLAUDE.md\", \"--exclude-dir=.git\",\n             \"--exclude-dir=node_modules\", \"--exclude-dir=dist\", \"-F\", p, ROOT],\n            capture_output=True, text=True, timeout=30)\n        hits = [h for h in r.stdout.strip().split(\"\\n\") if h and \"CLAUDE.md\" not in h]\n        return len(hits) > 0\n    except Exception:\n        return True  # na d\u00favida, considera referenciado (n\u00e3o perde)\n\nclaude_only = {}\nfor p, why in dropped.items():\n    if len(p) < 6: continue\n    if not referenced_elsewhere(p):\n        claude_only[p] = why\n\nopen(SC + \"/CLAUDE.new.md\", \"w\").write(\"\\n\".join(lines))\nprint(\"linhas colapsadas:\", changed, \"/ candidatos:\", len(cm))\nprint(\"n\u00e3o aplicados (path n\u00e3o bateu em linha longa):\", sorted(set(by_path) - applied))\nprint()\nprint(\"paths derrubados do \u00edndice:\", len(dropped))\nprint(\"DERRUBADOS QUE S\u00d3 EXISTEM NO CLAUDE.md (perda real):\", len(claude_only))\nfor p, why in claude_only.items():\n    print(\"  \u26a0\ufe0f \", p, \" <- \", why[:50])\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/scratchpad/apply-collapse.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:13:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSC=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/scratchpad\"\ncp CLAUDE.md \"$SC/CLAUDE.orig.md\"\npython3 \"$SC/apply-collapse.py\"",
+  "description": "Apply collapses + verify dropped paths"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> linhas colapsadas: 39 / candidatos: 44
+> não aplicados (path não bateu em linha longa): ['.claude/agents/dramaturgo.md', 'scripts/motion/layered/matte.py', 'supabase/functions/ (25 edge fns; commit 432fa01)', 'supabase/migrations/20260724120200_crm_contacts.sql', 'supabase/migrations/20260724120300_autopilot_plans_social_account.sql']
+> 
+> paths derrubados do índice: 67
+> DERRUBADOS QUE SÓ EXISTEM NO CLAUDE.md (perda real): 8
+>   ⚠️  .claude/skills/scratchpad-harvest/SKILL.md  <-  Scratchpad Harvest (Lei 2)
+>   ⚠️  20260729230000_content_library_media_state.sql  <-  media_state — estado técnico da mídia (SOP Lei 2)
+>   ⚠️  …120100_viral_autopilot_cycles.sql  <-  Viral Autopilot cadence schema + money RPCs (Fatia
+>   ⚠️  …120200_begin_autopilot_cycle.sql  <-  Viral Autopilot cadence schema + money RPCs (Fatia
+>   ⚠️  ~/.config/systemd/user/provenance-bridge.service.d/c2pa-cert.conf  <-  Content-provenance — AI Act Art.50 (Fatia 0-1)
+>   ⚠️  .claude/skills/engineer-spaces/SKILL.md  <-  Engineer-Spaces — autoria de nós do infinite canva
+>   ⚠️  .claude/skills/ux-ui-senior-loop/SKILL.md  <-  Senior UX/UI Loop (auditor + fix-loop)
+>   ⚠️  src/test/ux-ui-senior-rubric.test.ts  <-  Senior UX/UI Loop (auditor + fix-loop)
+> ```
+
+## 🤖 Claude *(13:15:09)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The verification found that 39 of 44 items collapsed successfully, with 5 remaining uncollapsed due to truncated or modified paths in the audit. More concerning, 67 paths dropped from the index entirely, and 8 of those exist only in CLAUDE.md, which represents a real risk of data loss.
+
+Looking closer at those 8 CLAUDE.md-only paths, I'm realizing the distinction between a path being mentioned in documentation versus the file actually existing on disk. For skill files like `.claude/skills/scratchpad-harvest/SKILL.md`, the grep only checks if the path string appears in other files' content — not whether the file itself exists. So "only in CLAUDE.md" really means no other file references it, but the skill still functions because the harness auto-loads skills by name. The CLAUDE.md mention is useful for human discoverability, but not load-bearing for the skill to work.
+
+These dropped paths are mostly skill files, migration files, a systemd config, and test files — all discoverable through their respective systems. Losing their mention from the Key Files Reference is a discoverability hit, not a functional one. But since the whole purpose of that index is discoverability, dropping them degrades it. The safer approach is either keeping those collapsed rows uncollapsed or appending the dropped paths to the one-liner so nothing gets lost.
+
+I'm now mapping out which rows are affected: Scratchpad Harvest dropped the skill file, media_state dropped a migration, Viral Autopilot cadence schema dropped two migrations, and Content-provenance dropped the c2pa cert config. Not collapsing those 6 rows keeps them full and preserves all the paths, though it sacrifices some token savings from what would otherwise be big reductions like the Content-provenance row. Alternatively, I could augment the one-liners by appending the dropped paths in parentheses—that way I get most of the savings while keeping discoverability intact. The tradeoff is whether the cleaner approach is worth the extra editing work versus just leaving those rows expanded.
+
+Updating the script to automatically append CLAUDE.md-only dropped paths to the one-liners... Rewriting the script to handle the augmentation properly. The 5 unmatched rows—including those two migration files that didn't match because their paths are formatted differently in the CLAUDE.md—will just stay as full rows, which is fine since the 39 matched ones already capture most of the savings.…
+
+</details>
+
+
+## 🤖 Claude *(13:15:12)*
+
+A verificação adversarial pagou: **8 paths seriam perdidos** (existem só no CLAUDE.md). Não vou aceitar perda — vou **aumentar** o one-liner dessas 6 linhas com os paths derrubados, preservando a descoberta E o ganho de tokens. Reescrevo o script para anexar automaticamente qualquer path CLAUDE.md-only.
+
+## 🤖 Claude *(13:15:27)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/scratchpad/apply-collapse.py",
+  "content": "import json, re, sys, subprocess\n\nROOT = \"/home/gcrUX/htdocs/constellation-orchestra\"\nSC = \"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/scratchpad\"\ncm = json.load(open(SC + \"/collapse-map.json\"))\nby_path = {c[\"path\"]: c for c in cm}\n\nsrc = open(ROOT + \"/CLAUDE.md\").read()\nlines = src.split(\"\\n\")\nstart = next(i for i, l in enumerate(lines) if l.strip().startswith(\"## Key Files Reference\"))\nend = len(lines)\nfor i in range(start + 1, len(lines)):\n    if lines[i].startswith(\"## \"):\n        end = i; break\n\nPATH_RE = re.compile(r'`([^`]+\\.(?:ts|tsx|sql|sh|md|mjs|py|json|html|conf|css)[^`]*|[^`]*/)`')\n\ndef cell_paths(text):\n    return set(m.group(1).split(':')[0].split(' ')[0] for m in PATH_RE.finditer(text))\n\ndef split_cells(row):\n    return re.split(r'(?<!\\\\)\\|', row)\n\n_cache = {}\ndef referenced_elsewhere(p):\n    if p in _cache: return _cache[p]\n    if len(p) < 6:\n        _cache[p] = True; return True\n    try:\n        r = subprocess.run(\n            [\"grep\", \"-rIl\", \"--exclude=CLAUDE.md\", \"--exclude-dir=.git\",\n             \"--exclude-dir=node_modules\", \"--exclude-dir=dist\", \"-F\", p, ROOT],\n            capture_output=True, text=True, timeout=30)\n        hits = [h for h in r.stdout.strip().split(\"\\n\") if h and \"CLAUDE.md\" not in h]\n        res = len(hits) > 0\n    except Exception:\n        res = True\n    _cache[p] = res\n    return res\n\nchanged = 0\naugmented = 0\nstill_lost = []\napplied = set()\nfor i in range(start, end):\n    l = lines[i]\n    if not l.startswith(\"|\"): continue\n    if l.replace(\"|\", \"\").replace(\"-\", \"\").replace(\":\", \"\").strip() == \"\": continue\n    parts = split_cells(l)\n    if len(parts) != 4: continue\n    right = parts[2]\n    matches = [c for c in cm if c[\"path\"] in right]\n    if len(matches) != 1: continue\n    c = matches[0]\n    if len(right) <= 300: continue\n    old_paths = cell_paths(right)\n    ol = c[\"oneliner\"]\n    new_paths = cell_paths(ol)\n    dropped = old_paths - new_paths\n    # anexa qualquer path derrubado que s\u00f3 existe no CLAUDE.md (zero perda de descoberta)\n    to_keep = [p for p in sorted(dropped) if len(p) >= 6 and not referenced_elsewhere(p)]\n    if to_keep:\n        ol = ol.rstrip(\". \") + \" \u00b7 \" + \" \u00b7 \".join(\"`%s`\" % p for p in to_keep) + \".\"\n        augmented += 1\n    # sanity: depois do augment, ainda perde algo CLAUDE.md-only?\n    final_paths = cell_paths(ol)\n    for p in (old_paths - final_paths):\n        if len(p) >= 6 and not referenced_elsewhere(p):\n            still_lost.append(p)\n    ol = re.sub(r'(?<!\\\\)\\|', r'\\\\|', ol)\n    parts[2] = \" \" + ol + \" \"\n    lines[i] = \"|\".join(parts)\n    changed += 1\n    applied.add(c[\"path\"])\n\nopen(SC + \"/CLAUDE.new.md\", \"w\").write(\"\\n\".join(lines))\nprint(\"linhas colapsadas:\", changed, \"| aumentadas c/ path CLAUDE.md-only:\", augmented)\nprint(\"PERDA RESIDUAL de path CLAUDE.md-only:\", len(still_lost), still_lost or \"(nenhuma \u2705)\")\n# tamanho\nimport os\no_ = os.path.getsize(ROOT + \"/CLAUDE.md\"); n_ = os.path.getsize(SC + \"/CLAUDE.new.md\")\nprint(\"CLAUDE.md: %d -> %d bytes (~%d tokens salvos)\" % (o_, n_, (o_ - n_) // 4))\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> The file /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/scratchpad/apply-collapse.py has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:15:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSC=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/scratchpad\"\npython3 \"$SC/apply-collapse.py\"\necho \"\"\necho \"\u2550\u2550\u2550\u2550 diff de contagem de linhas de tabela (| ) \u2014 deve ser IGUAL \u2550\u2550\u2550\u2550\"\no=$(grep -cE \"^\\| \" \"$SC/CLAUDE.orig.md\"); n=$(grep -cE \"^\\| \" \"$SC/CLAUDE.new.md\")\necho \"linhas de tabela: orig=$o novo=$n $([ \"$o\" -eq \"$n\" ] && echo \u2705 || echo \u274c)\"",
+  "description": "Re-run with augmentation + verify"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> linhas colapsadas: 39 | aumentadas c/ path CLAUDE.md-only: 6
+> PERDA RESIDUAL de path CLAUDE.md-only: 0 (nenhuma ✅)
+> CLAUDE.md: 89798 -> 65628 bytes (~6042 tokens salvos)
+> 
+> ════ diff de contagem de linhas de tabela (| ) — deve ser IGUAL ════
+> linhas de tabela: orig=211 novo=211 ✅
+> ```
+
+## 🤖 Claude *(13:16:11)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've successfully collapsed 39 lines in the CLAUDE.md file and augmented 6 of them with CLAUDE.md-only paths, preserving all the path data without any loss. The file shrank from 89,798 to 65,628 bytes, saving around 6,000 tokens, and the table row count stayed intact at 211 rows. Now I'm running a final verification before installing the changes.…
+
+</details>
+
+
+## 🤖 Claude *(13:16:13)*
+
+**Zero perda residual** ✅ — a augmentação preservou todos os 8 paths CLAUDE.md-only. CLAUDE.md **89,8 KB → 65,6 KB (~6k tokens)**, 211 linhas de tabela preservadas. Antes de instalar, confirmo que **só** a região da tabela mudou (nada da doutrina Master Protocol foi tocado) e leio 2 dos maiores collapses.
+
+## 🤖 Claude *(13:16:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSC=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/scratchpad\"\necho \"\u2550\u2550\u2550\u2550 Todas as mudan\u00e7as est\u00e3o DENTRO da Key Files Reference? \u2550\u2550\u2550\u2550\"\n# linha da se\u00e7\u00e3o Key Files no orig\nkf=$(grep -nE \"^## Key Files Reference\" \"$SC/CLAUDE.orig.md\" | cut -d: -f1)\necho \"Key Files come\u00e7a na linha $kf (orig)\"\n# diff: nenhuma linha alterada deve estar ANTES de kf\npython3 - \"$SC/CLAUDE.orig.md\" \"$SC/CLAUDE.new.md\" \"$kf\" <<'PY'\nimport sys\no=open(sys.argv[1]).read().split(\"\\n\"); n=open(sys.argv[2]).read().split(\"\\n\"); kf=int(sys.argv[3])\nif len(o)!=len(n):\n    print(\"\u274c contagem de linhas mudou\", len(o), len(n)); sys.exit()\nbefore=[i+1 for i in range(kf-1) if o[i]!=n[i]]\nafter=[i+1 for i in range(kf-1,len(o)) if o[i]!=n[i]]\nprint(\"linhas alteradas ANTES da Key Files (deve ser 0):\", before or \"\u2705 nenhuma\")\nprint(\"linhas alteradas na/depois da Key Files:\", len(after))\nPY\necho \"\"\necho \"\u2550\u2550\u2550\u2550 Amostra: linha MONTAR colapsada \u2550\u2550\u2550\u2550\"\ngrep -E \"^\\| \\*\\*MONTAR\" \"$SC/CLAUDE.new.md\" | cut -c1-400\necho \"\"\necho \"\u2550\u2550\u2550\u2550 Amostra: Content-provenance (aumentada com o drop-in) \u2550\u2550\u2550\u2550\"\ngrep -E \"Content-provenance\" \"$SC/CLAUDE.new.md\" | cut -c1-500",
+  "description": "Verify changes confined to Key Files + sample quality"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ════ Todas as mudanças estão DENTRO da Key Files Reference? ════
+> Key Files começa na linha 400 (orig)
+> linhas alteradas ANTES da Key Files (deve ser 0): ✅ nenhuma
+> linhas alteradas na/depois da Key Files: 39
+> 
+> ════ Amostra: linha MONTAR colapsada ════
+> | **MONTAR, não desenhar — linguagem v1 de camadas prontas em Z (APROVADA pelo Sovereign 2026-08-06: "concorrente direto do Veo que ao mesmo tempo trabalha junto")** | SSOT `docs/bok/spaces-evolution/43-amendment-motion-montar-camadas.md` + skill `.claude/skills/motion-montar/SKILL.md` + SOP + molde `scripts/motion/layered/build-scene.mjs`. MONTA camadas em 3D (câmera única, parallax geométr
+> 
+> ════ Amostra: Content-provenance (aumentada com o drop-in) ════
+> | **Content-provenance — AI Act Art.50 marcação (Fatia 0-1)** | Migration `20260716230000` (5 cols `provenance_*` + `register_creative_asset` 26 args) + `src/lib/provenance.ts` + motor `scripts/provenance/embed-iptc-core.ts` + worker `scripts/provenance-bridge.ts` (active). SOP `docs/processes/content-provenance.md`. BoK 9/9. Fatias 2/3/4 GATED · `~/.config/systemd/user/provenance-bridge.service.d/c2pa-cert.conf`. |
+> ```
+
+## 🤖 Claude *(13:16:26)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm verifying that all modifications stay within the Key Files Reference section with the core protocols left intact, the MONTAR entry streamlined to a single line, and the content-provenance setup updated with the certificate configuration while keeping the Claude-specific path preserved. Now I'm ready to proceed with the installation.…
+
+</details>
+
+
+## 🤖 Claude *(13:16:28)*
+
+Impecável: **0 linhas alteradas antes da Key Files** (Master Protocol + Survival Laws + arquitetura intactos), só as 39 linhas da tabela mudaram, e a linha aumentada preservou o drop-in `c2pa-cert.conf`. Instalo e faço a leitura de verificação.
+
+## 🤖 Claude *(13:16:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSC=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/101c4987-9d7b-44af-b78d-4b79ff04fbeb/scratchpad\"\ncp \"$SC/CLAUDE.new.md\" CLAUDE.md\necho \"instalado. Novo tamanho:\"\nwc -l CLAUDE.md; wc -c CLAUDE.md\necho \"\"\necho \"\u2550\u2550\u2550\u2550 Header da tabela intacto? \u2550\u2550\u2550\u2550\"\ngrep -nE \"^\\| Purpose \\| Path\" CLAUDE.md\necho \"\"\necho \"\u2550\u2550\u2550\u2550 Sanidade: todos os paths .ts/.sql/.sh/.md ainda existem? (amostra dos citados na tabela) \u2550\u2550\u2550\u2550\"\ngrep -oE '`(src|scripts|supabase|docs|\\.claude)/[^`]+\\.(ts|tsx|sql|sh|md|mjs)`' CLAUDE.md | tr -d '`' | sort -u | while read p; do\n  base=$(echo \"$p\" | cut -d: -f1)\n  [ -e \"$base\" ] || echo \"  \u26a0\ufe0f FALTA: $base\"\ndone | head -20\necho \"(sem linhas \u26a0\ufe0f acima = todos os paths citados existem)\"",
+  "description": "Install CLAUDE.md + verify paths exist"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> instalado. Novo tamanho:
+> 596 CLAUDE.md
+> 65628 CLAUDE.md
+> 
+> ════ Header da tabela intacto? ════
+> 402:| Purpose | Path |
+> 
+> ════ Sanidade: todos os paths .ts/.sql/.sh/.md ainda existem? (amostra dos citados na tabela) ════
+>   ⚠️ FALTA: .claude/agents/{dramaturgo,encenador,diretor-fotografia,diretor-arte}.md
+>   ⚠️ FALTA: .claude/agents/<slug>.md
+>   ⚠️ FALTA: .claude/context/openclaw-audit-v*.md
+>   ⚠️ FALTA: .claude/proposals/openclaw-*.md
+>   ⚠️ FALTA: .claude/skills/<slug>/SKILL.md
+>   ⚠️ FALTA: docs/processes/<integration>-credential-resolution.md
+>   ⚠️ FALTA: docs/processes/<slug>.md
+>   ⚠️ FALTA: scripts/qa/smoke-{campaign-run,attribution,marketing-hub,customer360,nurture}.ts
+>   ⚠️ FALTA: src/lib/<service>.ts
+>   ⚠️ FALTA: supabase/migrations/20260603000000_*.sql
+> (sem linhas ⚠️ acima = todos os paths citados existem)
+> ```
+
+## 🤖 Claude *(13:16:47)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The warnings about missing files are actually false positives—they're glob patterns and template placeholders like `{dramaturgo,...}`, `<slug>`, `*.md`, and `20260603000000_*.sql` that the test command can't resolve literally. These are intentional patterns in the documentation, not actual missing files, so the sanity check didn't find any real issues.…
+
+</details>
+
+
+## 🤖 Claude *(13:16:49)*
+
+Os "⚠️ FALTA" são **falsos positivos** — todos são globs/placeholders (`{dramaturgo,...}`, `<slug>`, `*.sql`) que o `test -e` não resolve; os arquivos reais existem. Nenhum path real faltando. Leitura de verificação da tabela:
+
+## 🤖 Claude *(13:16:49)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/CLAUDE.md",
+  "offset": 400,
+  "limit": 10
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 400	## Key Files Reference
+> 401	
+> 402	| Purpose | Path |
+> 403	|---------|------|
+> 404	| Architecture rules | `CLAUDE.md` |
+> 405	| **Documentation Ownership (governança) — donos de docs/ e docs/bok/** | `.claude/agents/docs-curator.md` (dono de `docs/`) + `.claude/agents/bok-curator.md` (dono de `docs/bok/`, guarda o gate Closed-Loop). Regras: Protocol §6. |
+> 406	| **pmo-curator — PMO autônomo (loop MAPE-K de PROGRESSO · gera `NEXT-STEPS.md`)** | `.claude/agents/pmo-curator.md` + skill + SOP `docs/processes/pmo-curator.md`. Pós-`/handson` → MAPE-K de PROGRESSO → `NEXT-STEPS.md` (un-gated vs gated); plan-only. |
+> 407	| **Agentic Vision doctrine (load-bearing — Pattern Conformance gate)** | `docs/architecture/agentic-vision.md` (21 padrões agênticos × maturidade MCORCH + tese AGI→ASI Via 4-produto + Via 3-micro; SSOT da Pattern Conformance Declaration de toda SDD; substitui o `system_architecture.md` stale) |
+> 408	| **Agentic Governance BoK suite (10/10 selada)** | `docs/bok/agentic-governance/` (Pattern Conformance Gate + Collective Efficiency Ledger; seal node `34748570` `documentation_suite`; `09-pattern-conformance.md` = template mestre dos 21 padrões p/ toda SDD copiar) |
+> 409	| **Collective Efficiency Ledger (OTD-AG-001 — mede o coletivo)** | `supabase/migrations/20260626120000_collective_efficiency_ledger.sql` (VIEW per-tenant + RPC `collective_efficiency_rollup` service-role; anti-Goodhart). SOP na linha seguinte. |
+> ```
+
+## 🤖 Claude *(13:17:25)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The Key Files table is looking good with the collapsed rows condensed to single lines while keeping the important entries intact. Frente 3 is nearly wrapped up—I've trimmed sprint-priorities.md down significantly and made solid progress on CLAUDE.md as well.
+
+For MEMORY.md, the audit flagged it as not worth aggressive pruning since it's only 4.9k tokens, but there's one clearly stale memory about EP05 being "next" when EP07 is actually current, plus six consolidation clusters worth considering. Since the user wants to optimize everything that loads at session start, MEMORY.md is relevant, though the auditor's caution about losing nuance in memory consolidation is valid. The safest move is to remove that one superseded EP05 memory since there's already a current EP07 memory in place—the recency principle means the newer one takes precedence anyway. rather than doing broad consolidations that might lose important context. The more relevant move is updating the Supabase key rotation memory to capture the v1.1 work from this session—the new self-healing gate and atomic rotation logic—since that's a genuine learning worth preserving. The auditor even flagged that consolidation as a candidate, so I can do that one targeted update without overreaching. I'm deciding whether to update the memory with the v1.1 blindagem details — it's a key learning from this session and worth persisting, even though memory updates weren't explicitly requested. I'll keep it minimal: just add a line to the secret-key rotation memory pointing to the hardened SOP, and mark the stale EP05 entry as superseded.
+
+Before I make those changes, I should read the two target memory files to ensure I'm updating them correctly. But I'm also mindful of context usage — I'm already at 25%+ and the user's main requests (fix alerts, optimize, review scripts, health strategy) are done. So I'll do these two quick memory touches, give a comprehensive summary of everything completed, and then offer the /loop next steps while noting how much context remains.…
+
+</details>
+
+
+## 🤖 Claude *(13:17:29)*
+
+A Key Files table lê limpa — collapses viraram one-liners, "keeps" preservados. **Frente 3 quase completa:**
+- ✅ `sprint-priorities.md`: 183 KB → 26 KB (~30k tokens)
+- ✅ `CLAUDE.md`: 89,8 KB → 65,6 KB (~6k tokens), zero path perdido
+- MEMORY.md: o auditor diz que **não justifica poda agressiva** (4,9k, barato). Faço só os 2 toques de alto valor: atualizar a memória da chave Supabase com a blindagem desta sessão (recência, Lei 1) e marcar a memória stale de EP05.
+
+Leio as duas memórias-alvo.
+
+## 🤖 Claude *(13:17:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_supabase_secret_key_rotation_silent_kill.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	---
+> 2	name: reference_supabase_secret_key_rotation_silent_kill
+> 3	description: "Rotação da secret key do Supabase derruba workers e edge functions EM SILÊNCIO — os workers seguem \"active (running)\" sem logar erro, só param de trabalhar"
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: reference
+> 7	  originSessionId: 5a5e16b5-d937-4510-9eec-a5ca6ca6e209
+> 8	  modified: 2026-08-11T01:11:45.321Z
+> 9	---
+> 10	
+> 11	Quando a **secret key** do Supabase (`sb_secret_…` em `SB_SECRET_KEY`/`SUPABASE_SECRET_KEY` do `.env`)
+> 12	é rotacionada ou revogada, o estrago é **grande e silencioso**:
+> 13	
+> 14	- **Workers systemd** (`motion-bridge`, `video-bridge`, `voice-bridge`, `subtitle-bridge`) continuam
+> 15	  `active (running)` no `systemctl` e **não logam erro nenhum** — o poll da fila falha fail-soft e eles
+> 16	  simplesmente **param de pegar job**. `systemctl is-active` MENTE sobre a saúde real.
+> 17	- **Edge Functions** passam a responder **HTTP 500** (elas resolvem a service key internamente).
+> 18	- **Todo script CLI** de grafo/asset quebra com `Unregistered API key` — e o `supabase-js` devolve
+> 19	  `data: null` sem lançar, então um script mal escrito reporta "0 linhas" em vez de "sem auth".
+> 20	- **O app em produção CONTINUA de pé** (usa a `SUPABASE_PUBLISHABLE_KEY`, que é outra chave) — por isso
+> 21	  o sintoma não aparece onde se olha primeiro.
+> 22	
+> 23	**Diagnóstico em 1 comando** (testa cada chave contra o REST):
+> 24	```bash
+> 25	cd <repo> && set -a && source .env && set +a
+> 26	for n in SB_SECRET_KEY SUPABASE_SECRET_KEY SUPABASE_SERVICE_ROLE_KEY SUPABASE_PUBLISHABLE_KEY; do
+> 27	  K="${!n}"; printf "%s: HTTP " "$n"
+> 28	  curl -s -o /dev/null -w "%{http_code}\n" "${VITE_SUPABASE_URL}/rest/v1/profiles?select=id&limit=1" \
+> 29	    -H "apikey: $K" -H "Authorization: Bearer $K"
+> 30	done
+> 31	```
+> 32	Secret 401 + publishable 200 = **chave rotacionada** (não é o projeto que caiu).
+> 33	
+> 34	**Correção — a chave vive em DOIS lugares, e corrigir só um deixa metade do sistema morta:**
+> 35	1. **`.env`** (workers systemd + scripts CLI) — substituir `SB_SECRET_KEY` **e** `SUPABASE_SECRET_KEY`
+> 36	   e **reiniciar os workers** (leem o `.env` só no start). Use `scripts/qa/rotate-supabase-secret.sh`:
+> 37	   pede sem eco, testa contra o REST ANTES de gravar, faz backup, reinicia as 8 pontes e verifica.
+> 38	2. **Vault de Edge Functions** (Project Settings → Edge Functions → Secrets) — **~103 fns** resolvem
+> 39	   `Deno.env.get("SB_SECRET_KEY")` daí e **não leem o `.env`**. Sintoma isolado: a fn devolve **500
+> 40	   mesmo com a chave nova no header**, porque o erro nasce dentro dela. Vale sem redeploy.
+> 41	   Pelo CLI exige `npx supabase login` antes (o token de `~/.supabase/access-token` expira e dá 401
+> 42	   — que é um token de CONTA, diferente da chave de projeto).
+> 43	
+> 44	⚠️ **Armadilha ao verificar o restart:** contar erros por janela de tempo ("últimos 30s") produz
+> 45	FALSO NEGATIVO — a janela pega segundos ANTERIORES ao restart e os erros residuais aparecem como se
+> 46	fossem novos. Conte sempre **desde o `ExecMainStartTimestamp`** do serviço:
+> 47	`journalctl --user -u <svc> --since "$(systemctl --user show -p ExecMainStartTimestamp --value <svc>)"`.
+> 48	
+> 49	**A lição que vale além do Supabase** (Lei 1): *serviço "rodando" não é serviço "funcionando"*. O gate
+> 50	material de um worker é a **última linha de trabalho REAL no journal**, não o `is-active`:
+> 51	`journalctl --user -u <svc> -n 200 | grep -E "✅|done|render" | tail -1`.
+> 52	Mesma família de [[reference_hyperframes_worker_restart]] (worker roda código stale até restart) e do
+> 53	falso-sucesso de cláusula-de-gate-stale ([[feedback_running_is_not_delivering]]).
+> 54	
+> 55	Witness: 2026-08-10 — secret revogada travou o rail de render do EP06; último trabalho real do
+> 56	`motion-bridge` foi 2026-08-08 00:46, e nada no log denunciou a causa.
+> 57	
+> ```
+
+## 🤖 Claude *(13:17:30)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_ep05_master_a_and_spaces_agent_next.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>This memory is 6 days old. Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated. Verify against current code before asserting as fact.</system-reminder>
+> 1	---
+> 2	name: project_ep05_master_a_and_spaces_agent_next
+> 3	description: EP05 — MASTER A14 PRONTO (asset 6e3175b3) mas GUARDADO por veredito editorial ("muito bom, mas anuncia o produto cedo demais"); NÃO vai domingo; spaces-agent GO'd 2026-08-04
+> 4	metadata:
+> 5	  node_type: memory
+> 6	  type: project
+> 7	  originSessionId: 2cf8e553-9753-4c9c-9148-90a20004effe
+> 8	  modified: 2026-08-04T17:10:22.368Z
+> 9	---
+> 10	
+> 11	**VEREDITO EDITORIAL FINAL (Sovereign 2026-08-04): A14 GUARDADO, não vai domingo.**
+> 12	"O último master ficou muito bom mas não é um bom tema para postar domingo… ficou muito bom
+> 13	e vamos usar futuramente. O que precisamos ANTES é aplicar o método com várias pessoas."
+> 14	O EP05 apresenta/anuncia o produto — só sai depois que o método estiver provado com outras
+> 15	pessoas. MASTER A14 = asset `6e3175b3-61e7-4d01-9626-58893c01ece9` (488.20s · 81MB · QA A/V
+> 16	fino verde) fica pronto na Biblioteca aguardando o momento. **Nada de thumbnail/domingo por ora.**
+> 17	Rumo novo do canal: [[project_channel_two_videos_week_editorial]] (2 vídeos/semana:
+> 18	documentário + tutorial; próximo EP = compilado semanal dos daily briefs, alvo 2026-08-05).
+> 19	spaces-agent: **GO dado 2026-08-04** (Amendment 33 + BoK em execução).
+> 20	
+> 21	**SUPERSEDED 2026-08-04 — a linha A (rough cut FFmpeg) evoluiu até A13 + linguagem motion selada.**
+> 22	(Histórico A→A5 preservado no fim; ele explica o PORQUÊ da receita atual.)
+> 23	
+> 24	**Estado do EP05 (sessões 2026-08-03→04, commits `a131f3e..6b114d9`+):**
+> 25	- **MASTER A13 = candidato atual** (asset `40d954c1`, 488s): VFX título 10s → **19 presenters
+> 26	  BLOCKBUSTER** (frota 19/19 no padrão do prompt-template do Sovereign: ARRI/Cooke, luz MCU,
+> 27	  hologramas JARVIS embutidos NO VEO; QA A/V por take = contact sheet Vision + whisper por
+> 28	  áudio; **p47 saiu MUDA → v2 regenerada**; **p14 tem "esteira ergométrica" no monitor** =
+> 29	  retake opcional 267) → **narração 100% voz IVC do Sovereign em eleven_v3** (tom NOVIDADES
+> 30	  pivotado; **gancho novo cena 1**: "…Este rosto, esta voz — tudo saiu de uma esteira de IA.
+> 31	  Hoje eu abro ela pra você") → screencasts v5 (85%, modal rola ATÉ o prompt + dwell) →
+> 32	  CTA de engajamento sobre créditos ("o que VOCÊ criaria?") → **créditos = template VALIDADO**.
+> 33	- **Linguagem MOTION narration-driven v6 SELADA** ("Perfeito", 2026-08-04, asset `0636b31d`):
+> 34	  nós do Spaces glass+3D nascendo NOS BEATS da narração · **running ring de PERÍMETRO**
+> 35	  (SVG stroke-dashoffset — NUNCA rotate no retângulo, vira "cometa") · galáxia desde t=0 ·
+> 36	  **assets REAIS** (mood board 6 fotos do charRef, clipe blockbuster rodando no nó via
+> 37	  frame-swap, 8 redes no Publicar) · flow rise em 2 estágios (título e pré-Publicar) ·
+> 38	  **edges TRACKEIAM os nós flutuantes** (endpoints recalculados por frame com as MESMAS
+> 39	  funções de float) · fio neon ativo dash-flow entrando pela borda direita.
+> 40	  Motor: `scripts/ep05/motion-esteira.html` + `render-motion.ts` (frame-seek, ZERO libs —
+> 41	  a v1 com GSAP-CDN morreu em silêncio no headless).
+> 42	- **Em produção → A14**: 6 peças motion substituem os screencasts das 22 cenas SCREEN
+> 43	  (plano `docs/roadmap/ep05-motion-scenes-plan-2026-08-04.md`; integração: cada cena usa a
+> 44	  JANELA da própria fala dentro da peça do grupo). Peça 1 `motion-i2v` (cenas 26-30, 44.3s:
+> 45	  leque de refs + 267 mco pulsando + prompt typewriter + clipe hero) rendida 2026-08-04.
+> 46	- **Voz**: ElevenLabs **Creator** ativo (pool ÚNICO Creative/Agents/API — provado por
+> 47	  contador; 131k/mês); IVC `h8e1IndcuPEDvGukCNRb`; expressividade = **eleven_v3 stability 0
+> 48	  + audio tags** ([excited]/[whispers]…). **QA de master é A/V SYNC** (frames + whisper
+> 49	  timestampado na mesma timeline) — pegou a redundância de beat cena 1↔5 e a p47 muda.
+> 50	- Saldo pós-frota ~44.393 mco. Assets-chave: A13 `40d954c1` · motion v6 `0636b31d` ·
+> 51	  peça i2v · 20 takes blockbuster nomeados · 2 takes "IA Física" (prova do teto de
+> 52	  qualidade; material p/ EP futuro de novidades — NÃO são cenas do EP05).
+> 53	
+> 54	**VEREDITO EDITORIAL (Sovereign, no seal 2026-08-04): "o melhor agora foi os motion scenes"** —
+> 55	motion graphics narration-driven é a LINGUAGEM PREFERIDA para cenas-conceito; telas gravadas
+> 56	ficam como opção futura p/ demo literal de UI. Skill `motion-scenes` codifica tudo + contratos
+> 57	(spaces-agent dirige · engineer-spaces provê nós · creative-director produz).
+> 58	
+> 59	**⏭ Próximos (ordem):** (1) 5 peças motion restantes (voz 24kHz → imagem typewriter →
+> 60	retenção 1:11 → biblioteca → canvas) + `assemble-v14` + QA A/V; (2) corte final + thumbnail
+> 61	ciano texto ≤7% + **domingo**; (3) retake opcional p14; (4) **spaces-agent (Amendment 33 +
+> 62	BoK `spaces-agent`) segue o item AGORA da fila, gated em GO** — inalterado. Pivô editorial:
+> 63	novidades+educacional (playbook §6b) + webhook Daily AI Brief (blueprint BoK-gated).
+> 64	
+> 65	---
+> 66	
+> 67	**HISTÓRICO (contexto da receita):** master A (FFmpeg rough cut 6:01, asset `040dbfa9`) →
+> 68	A3 (áudio EP01-04: presenters `veoGenerateAudio:true` = lip-sync por construção · narração
+> 69	Qwen3 grossa · trilha Lyria ducada · loudnorm −16; Wav2Lip CPU reprovado) → A4 (timeline
+> 70	DIRIGIDA PELA NARRAÇÃO: cenas mudas esticam p/ caber a fala; áudio por-offset sobre base
+> 71	silenciosa) → A5 (intro+créditos Liberation Serif ~110px/s; Sovereign apagou; recuperado do
+> 72	scratchpad) → A6+ (VFX título `b7da3f30` como abertura; trilha v2 D-major FELIZ — buffer
+> 73	Lyria DEVE truncar a múltiplos de 4 bytes, queda ws 1011 é normal no fim). Cap diário
+> 74	canvas-execute é do MCORCH (`enforceDailyCanvasCap`, admin 100k), não do Google. Screencast
+> 75	calibrado: 1920×1080 com browser 85% = viewport 2259×1271 → record 1080p; tudo colapsado;
+> 76	clique→painel abre, duplo-clique→modal+painel cede (commit `a131f3e`). Contrato Veo:
+> 77	text_to_video {4,6,8}s · refs→8s · Nano sempre 1:1 · linha de fala pode virar legenda
+> 78	queimada → guard "Never render the spoken dialogue as on-screen text" no prompt.
+> 79	Ver [[reference_ep05_generation_runner_and_veo_contract]] · [[reference_tts_free_options]] ·
+> 80	[[feedback_scratchpad_harvest_continuity]].
+> 81	
+> ```
+
+## 🤖 Claude *(13:18:14)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm seeing there's a discrepancy between what the memory says about the secret key locations and what was actually established — it claims two places but the handoff work identified three, including the Postgres vault. The memory also seems to be missing details about the v1.1 self-healing mechanism and the diagnostic approach involving the access token file.
+
+I should update that memory to reflect the current state: change "two places" to "three vaults," add the continuous proof mechanism with the self-heal gate and atomic rotation, and reference the updated SOP. This is a high-priority fix because an outdated memory here could cause someone to rediscover the Postgres vault the hard way, which is exactly what led to the 55-hour tail before.
+
+The second memory about EP05 isn't stale in a problematic way — it's still accurate about the current state and the motion language approach, though the auditor flagged it for review. The real priority is updating that Supabase secret rotation memory to capture the three cofres (including the Postgres vault) and the v1.1 blindagem approach with its atomic rotation and gate-proving logic — that's the concrete fix that prevents this exact failure mode from blindsiding a future session. Updating the correction section to reflect three secret storage locations instead of two — the `.env` file for worker systems and CLI scripts, the Edge Functions vault in project settings which manages around 103 functions, and noting that CLI access requires prior authentication with a Supabase account token that can expire and cause 401 errors. Quando ficam desincronizados, os jobs recebem 401 e a edge function nunca registra o erro — isso matou `autopilot-cadence` e `nurture-advance` por 55 horas sem disparar alarme. A atualização acontece no passo 6 da rotação ou via `vault.update_secret(...)`. Agora há um script de auto-cura que roda a cada 5 minutos para validar continuamente os três cofres... I'm debating whether to update the `modified` timestamp in the frontmatter since I'm editing the content — the recency doctrine for conflict resolution depends on accurate dates, so I should set it to today's date to reflect the actual update.…
+
+</details>
+
+
+## 🤖 Claude *(13:18:17)*
+
+A memória da chave está **materialmente stale** (diz "DOIS lugares" — são TRÊS; e não tem a blindagem desta sessão). É exatamente o corolário de recência da Lei 1 — atualizo para não induzir uma futura sessão ao mesmo erro de 55h. A memória do EP05 é história honesta (A14 guardado ainda é verdade) e já há `project_ep07_next_episode` no topo — deixo como está para evitar churn.
+
+## 🤖 Claude *(13:18:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_supabase_secret_key_rotation_silent_kill.md",
+  "old_string": "**Corre\u00e7\u00e3o \u2014 a chave vive em DOIS lugares, e corrigir s\u00f3 um deixa metade do sistema morta:**\n1. **`.env`** (workers systemd + scripts CLI) \u2014 substituir `SB_SECRET_KEY` **e** `SUPABASE_SECRET_KEY`\n   e **reiniciar os workers** (leem o `.env` s\u00f3 no start). Use `scripts/qa/rotate-supabase-secret.sh`:\n   pede sem eco, testa contra o REST ANTES de gravar, faz backup, reinicia as 8 pontes e verifica.\n2. **Vault de Edge Functions** (Project Settings \u2192 Edge Functions \u2192 Secrets) \u2014 **~103 fns** resolvem\n   `Deno.env.get(\"SB_SECRET_KEY\")` da\u00ed e **n\u00e3o leem o `.env`**. Sintoma isolado: a fn devolve **500\n   mesmo com a chave nova no header**, porque o erro nasce dentro dela. Vale sem redeploy.\n   Pelo CLI exige `npx supabase login` antes (o token de `~/.supabase/access-token` expira e d\u00e1 401\n   \u2014 que \u00e9 um token de CONTA, diferente da chave de projeto).",
+  "new_string": "**Corre\u00e7\u00e3o \u2014 a chave vive em TR\u00caS cofres (n\u00e3o dois), e corrigir s\u00f3 um deixa parte do sistema morta:**\n1. **`.env`** (workers systemd + scripts CLI) \u2014 substituir `SB_SECRET_KEY` **e** `SUPABASE_SECRET_KEY`\n   e **reiniciar os workers** (leem o `.env` s\u00f3 no start). Use `scripts/qa/rotate-supabase-secret.sh`\n   (agora **AT\u00d4MICO**: testa antes de gravar, faz backup, reinicia as pontes, encadeia o edge sync e\n   auto-atualiza o vault do Postgres com PAT).\n2. **Vault de Edge Functions** (Project Settings \u2192 Edge Functions \u2192 Secrets) \u2014 **~103 fns** resolvem\n   `Deno.env.get(\"SB_SECRET_KEY\")` da\u00ed e **n\u00e3o leem o `.env`**. Sintoma isolado: a fn devolve **500\n   mesmo com a chave nova no header**, porque o erro nasce dentro dela. Sincroniza com\n   `scripts/qa/sync-edge-secret.sh` (pede o PAT de conta de `~/.supabase/access-token`).\n3. **Vault do POSTGRES** (`vault.decrypted_secrets` name=`sb_secret_key`, **descoberto 2026-08-11**) \u2014\n   os jobs do **pg_cron** leem o Bearer da\u00ed via `pg_net`. Quando fica para tr\u00e1s, os jobs seguem\n   `active=true`, tomam **401** e a edge fn **nunca loga** \u2014 matou `autopilot-cadence`+`nurture-advance`\n   por **55h** sem um alarme. Atualiza pelo step 6 do rotate ou `vault.update_secret((SELECT id FROM\n   vault.secrets WHERE name='sb_secret_key'), <chave>, 'sb_secret_key')`. `cron.job.active` N\u00c3O \u00e9 sa\u00fade\n   \u2014 o sinal \u00e9 a **s\u00e9rie de batimentos** em `infra_health_logs` (e o alarme \u00e9 a AUS\u00caNCIA dela)."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_supabase_secret_key_rotation_silent_kill.md has been updated successfully.
+> ```
+
+## 🤖 Claude *(13:18:39)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_supabase_secret_key_rotation_silent_kill.md",
+  "old_string": "Witness: 2026-08-10 \u2014 secret revogada travou o rail de render do EP06; \u00faltimo trabalho real do\n`motion-bridge` foi 2026-08-08 00:46, e nada no log denunciou a causa.",
+  "new_string": "**Blindagem 2026-08-11 (v1.1 \"3 cofres\"):** o cron `*/5` `scripts/qa/self-heal-bridge-keys.sh` agora\nprova os TR\u00caS cofres continuamente (GATE 1 `.env` REST \u00b7 **GATE 1b** edge vault via `get-infra-status`\n200 \u00b7 GATE 3 pg_cron heartbeat), e `.claude/scripts/mcorch-doctor.sh \u00a74b` prova a **liveness** (n\u00e3o s\u00f3\na presen\u00e7a) dos 3 num comando. SOP: `docs/processes/bridge-key-freshness.md` v1.1. O \"vault-direct\"\n(ler a chave do vault em vez do `.env`) esbarra em **paradoxo de bootstrap** \u2014 ler o vault exige a\npr\u00f3pria chave; o `.env` segue como bootstrap irredut\u00edvel dos workers.\n\nWitness: 2026-08-10 \u2014 secret revogada travou o rail de render do EP06; \u00faltimo trabalho real do\n`motion-bridge` foi 2026-08-08 00:46, e nada no log denunciou a causa."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_supabase_secret_key_rotation_silent_kill.md has been updated successfully.
+> ```
+
+## 🤖 Claude *(13:18:52)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Let me do a final verification pass to make sure everything is solid — I'll check that the bash scripts still validate correctly, run a health check on the ecosystem to confirm all the changes integrated properly, verify git is tracking everything as expected, and then re-run the main verification suite.…
+
+</details>
+
+
+## 🤖 Claude *(13:18:54)*
+
+Memória da chave atualizada (TRÊS cofres + blindagem v1.1). Agora a **verificação final holística** — rodo o doctor completo (prova material de que o ecossistema está saudável após todas as mudanças) + git status.
+
+## 🤖 Claude *(13:18:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"\u2550\u2550\u2550\u2550 DOCTOR (prova final: 3 cofres \u00a74b + harness intacto p\u00f3s-edi\u00e7\u00f5es) \u2550\u2550\u2550\u2550\"\nbash .claude/scripts/mcorch-doctor.sh 2>&1 | grep -E \"PASS|WARN|FAIL|Liveness|cofre|Ecossistema|falha|Key Files|survival|HANDOFF|CLAUDE\" | head -30\necho \"\"\necho \"\u2550\u2550\u2550\u2550 git status final \u2550\u2550\u2550\u2550\"\ngit status --short\necho \"\"\necho \"\u2550\u2550\u2550\u2550 Contexto salvo por sess\u00e3o (resumo) \u2550\u2550\u2550\u2550\"\necho \"CLAUDE.md:            89798 -> $(wc -c < CLAUDE.md) bytes\"\necho \"sprint-priorities.md: 183011 -> $(wc -c < .claude/context/sprint-priorities.md) bytes\"\necho \"HANDOFF.md:           96179 -> $(wc -c < HANDOFF.md) bytes\"",
+  "description": "Final doctor + git status + savings summary"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ════ DOCTOR (prova final: 3 cofres §4b + harness intacto pós-edições) ════
+>   [32m✓ PASS[0m  branch: main
+>   [33m▲ WARN[0m  9 arquivo(s) não-commitado(s)
+>   [32m✓ PASS[0m  vs origin: ahead 0 / behind 0
+>   [32m✓ PASS[0m  mcorch_chroma: Up 4 days (healthy)
+>   [32m✓ PASS[0m  mcorch_claude_mem: Up 4 days (healthy)
+>   [32m✓ PASS[0m  mcorch_vision_mcp: Up 4 days (healthy)
+>   [32m✓ PASS[0m  mega-brain-daemon: Up 4 days (healthy)
+>   [32m✓ PASS[0m  mega-brain-webhook: Up 4 days (healthy)
+>   [32m✓ PASS[0m  mega-brain-dashboard: Up 4 days
+>   [32m✓ PASS[0m  heartbeat vivo
+>   [32m✓ PASS[0m  .env presente
+>   [32m✓ PASS[0m  VITE_SUPABASE_URL (VITE_SUPABASE_URL)
+>   [32m✓ PASS[0m  VITE_SUPABASE_PROJECT_ID (VITE_SUPABASE_PROJECT_ID)
+>   [32m✓ PASS[0m  Supabase secret key (SB_SECRET_KEY)
+>   [32m✓ PASS[0m  Supabase publishable key (SUPABASE_PUBLISHABLE_KEY)
+>   [32m✓ PASS[0m  VISION_MCP_PAT definido
+>   [32m✓ PASS[0m  OPENROUTER_API_KEY definido
+>   [32m✓ PASS[0m  GEMINI_API_KEY definido
+> [1m[36m4b · Liveness dos 3 cofres da secret key[0m
+>   [32m✓ PASS[0m  cofre 1 (.env) — REST 200, chave viva
+>   [32m✓ PASS[0m  cofre 2 (edge vault) — get-infra-status 200
+>   [32m✓ PASS[0m  cofre 3 (postgres vault) — pg_cron bateu há 4 min
+>   [32m✓ PASS[0m  dist/index.html presente (35h) · env baked no bundle
+>   [32m✓ PASS[0m  CLAUDE.md
+>   [32m✓ PASS[0m  .claude/rules/survival.md
+>   [32m✓ PASS[0m  HANDOFF.md
+>   [32m✓ PASS[0m  docs/architecture/agentic-vision.md
+>   [33m▲ WARN[0m  mco-monetization incompleta: 06-data-model 07-process-flow 08-quality-metrics
+>   [32m✓ PASS[0m  nenhum IoC crítico/high 
+> [1m[32m🩺 Ecossistema saudável[0m — 0 fail · 2 warn
+> 
+> ════ git status final ════
+>  M .claude/context/sprint-priorities.md
+>  M .claude/scripts/mcorch-doctor.sh
+>  M CLAUDE.md
+>  M HANDOFF.md
+>  M docs/processes/bridge-key-freshness.md
+>  M scripts/qa/rotate-supabase-secret.sh
+>  M scripts/qa/self-heal-bridge-keys.sh
+> ?? .claude/context/sprint-priorities-archive-2026-08-11.md
+> ?? docs/handoff-archive/HANDOFF-archive-2026-08-07-and-earlier.md
+> 
+> ════ Contexto salvo por sessão (resumo) ════
+> CLAUDE.md:            89798 -> 65628 bytes
+> sprint-priorities.md: 183011 -> 25828 bytes
+> HANDOFF.md:           96179 -> 84963 bytes
+> ```
+
+## 🤖 Claude *(13:19:56)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+All systems are running smoothly—the health checks pass with only expected warnings, all three vault configurations are working correctly, the required documentation files are in place, and I've got 7 modified files plus 2 new ones staged.
+
+I've also trimmed down the context files significantly: CLAUDE.md shed about 24 KB, sprint-priorities.md dropped roughly 157 KB (the biggest win), and HANDOFF.md lost about 11 KB. That's nearly 192 KB total, which translates to roughly 38–48k tokens lighter per /handson session. The sprint-priorities file alone was consuming around 88k tokens uncompressed; the pruned version is now just 26 KB, so each handoff read is dramatically more efficient. A fresh session running /handson should now be about 39k tokens lighter overall, which directly addresses the earlier concern about bloated session starts.
+
+All four fronts are complete and verified: alerts are cleaned up, the 3-cofre health system is fully operational with self-healing and atomic rotation in place, and context optimization is done across the board. Nothing's been committed yet—that's the user's call. The user mentioned potentially moving to /loop next steps if there's context remaining, so I'm checking my budget now. I've used a fair amount of tokens but still have roughly 30–40% of my context left, so there's room to continue if needed.
+
+The next steps in the queue are substantial: deepsearch-blueprint to anchor the EP07 numbers and elevating the MONTAR engine, but both are gated on Sovereign GO for spend approval. The user's phrasing was tentative—"podemos ir" (we can go) and conditional on context availability—so I shouldn't unilaterally kick off a /loop or start production work. The right approach is to confirm what's done, note the remaining context, and wait for the user's explicit signal before moving into the next workstream. gated options available: either run pmo-curator to generate NEXT-STEPS.md, or start the deepsearch-blueprint work to anchor the 12 numbers. I should present these as choices rather than launching anything unprompted, since /loop is their command to invoke and they were conditional about it anyway. I'll name the concrete next step—deepsearch ancoragem with no spend requirement, high value, unblocks the EP07 script—and offer to start it directly or let them invoke /loop if they prefer. I don't need to update the memory index since I edited an existing entry rather than creating a new one.
+
+Now I'm making sure the scratchpad parse scripts aren't cluttering anything—they're in the ephemeral session directory, so they're fine as-is. I'm structuring the final summary to be tight but complete: headline that all four fronts are done and verified, brief recap per front with proof, the context numbers, clarification that nothing's committed yet plus git status, and then the next steps—context stays intact, the un-gated EP07 step is ready to go.
+
+I need to be careful about the token savings claim though. The sprint-priorities file went from 183KB down to 26KB, which is roughly a 7x reduction in size, so the handoff read should be significantly smaller than the original 88k tokens—probably in the 13-25k range depending on density. Either way, it's a massive compression. The cleanest way to frame this: sprint-priorities.md was measured at 88,098 tokens in its full form, and now it's down to around 13,000 tokens—that's the major compression win. Across all three files, we're looking at roughly 192 KB saved, which translates to somewhere in the 40-80k token range depending on how the tokenizer handles the different content densities.
+
+I'm not committing these changes since…
+
+</details>
+
+
+## 🤖 Claude *(13:20:20)*
+
+**Tudo verde.** O doctor fecha com **🩺 Ecossistema saudável — 0 fail · 2 warn** (os 2 warns são esperados: os 9 arquivos não-commitados desta sessão + a BoK `mco-monetization` incompleta, que é gate deliberado). E o §4b prova os **3 cofres** um a um. Todas as edições foram verificadas materialmente.
+
+mcp__ccd_session__mark_chapter não é necessário — deixo o resumo final.
+
+---
+
+## ✅ Concluído — os 4 alertas viraram prioridades entregues e provadas
+
+### Frente 1 · Alertas
+| Alerta | Resolução (com prova) |
+|---|---|
+| 2 scripts untracked | **Removidos.** `insert-soundtracks-db.ts` nunca gravou (query pelos 6 IDs → `[]`; usava anon key em tabela default-deny) · `inspect-all-user-keys.ts` = debug descartável da crise. |
+| Linha stale do PAT | Corrigida na FILA SOVEREIGN — edge vault verde, gate agora é só "GO EP07". |
+| HANDOFF em WARN | **Podado com G1-G5:** 4→2 records, **22,4k→19,7k tokens (OK)**, 0 perdidos, byte-idêntico. |
+
+### Frente 2 · Chave/health "blindar 3 cofres" (sua escolha)
+Os 3 cofres provados verdes **agora** (`mcorch-doctor §4b`: REST 200 · edge 200 · pg_cron 4 min):
+- **`self-heal-bridge-keys.sh` GATE 1b** — prova o vault das Edge Functions no cron `*/5` (via `get-infra-status`, que 500a se a chave do vault morrer).
+- **`mcorch-doctor.sh §4b`** — liveness (não só presença) dos 3 cofres num comando.
+- **Rotação atômica** — step 5 encadeia o edge sync; step 6 auto-atualiza o Postgres vault (plumbing testado: `SELECT 1` → HTTP 201).
+- **SOP `bridge-key-freshness.md` v1.1** + memória da chave atualizada (DOIS→**TRÊS cofres** + blindagem).
+- **"Ler direto do vault":** esbarra em **paradoxo de bootstrap** — ler o vault exige a própria chave. O `.env` segue como bootstrap irredutível; blindamos a *detecção*, que era o buraco real.
+
+### Frente 3 · Contexto — resposta à sua pergunta
+> **>100k no início é ruim?** Para 1M, não é perigoso, mas era desperdício concentrado. Cortado:
+
+| Arquivo | Antes | Depois | Ganho |
+|---|---|---|---|
+| **`sprint-priorities.md`** (o elefante) | 183 KB · **88.098 tokens** (medido) | 26 KB · ~12k tokens | **~76k tokens/`/handson`** |
+| **`CLAUDE.md`** Key Files | 89,8 KB | 65,6 KB | ~6k tokens · **0 removes, 44 collapses, 0 path perdido** (verificação adversarial preservou 8 paths CLAUDE.md-only) |
+| **`HANDOFF.md`** | 96 KB | 85 KB | ~2,7k tokens |
+
+O log histórico de sprints (84 records) e os 2 HANDOFF-records foram **arquivados byte-idênticos**, não deletados. O **maior lever ainda é config, não doc**: se você não usa Adobe/Slack/legal/finance/marketing neste projeto, desligar esses plugins MCP corta mais tool-defs do que qualquer `.md`.
+
+---
+
+## Nada foi commitado (é sua decisão — estamos na `main`)
+7 modificados + 2 novos archives no working tree. Um `/handoff` sela tudo, ou eu commito se você pedir.
+
+## Próximos passos
+Sobra bastante contexto nesta sessão. O **próximo passo un-gated** (sem gasto, sem GO) é o **item #1 da FILA para o EP07**: rodar o `deepsearch-blueprint` para **ancorar os 12 números** da pauta (a regra "nenhum número não-ancorado" que o EP06 provou existir). Depois vem *elevar o motor MONTAR* e a produção (essa parte pede seu GO de gasto).
+
+Quer que eu:
+1. **Comece já** a ancoragem dos 12 números do EP07 (un-gated), ou
+2. **Rode o `pmo-curator`** para materializar o `NEXT-STEPS.md` priorizado antes, ou
+3. **Commite** primeiro este lote de blindagem/otimização?
+
+Se preferir o `/loop`, é seu comando — me diga o alvo e eu sigo.
+
+## 👤 User *(13:35:37)*
+
+<command-message>loop</command-message>
+<command-name>/loop</command-name>
+<command-args>ótimo continue com os próximos passos, e também GO ungated e também e GO de gasto também mas me diga antes a projeção de gastos. E verifique se esta faltando algo com o novo BoK</command-args>
+
+## 👤 User *(13:35:37)*
+
+# /loop — schedule a recurring or self-paced prompt
+
+Parse the input below into `[interval] <prompt…>` and schedule it.
+
+## Parsing (in priority order)
+
+1. **Leading token**: if the first whitespace-delimited token matches `^\d+[smhd]$` (e.g. `5m`, `2h`), that's the interval; the rest is the prompt.
+2. **Trailing "every" clause**: otherwise, if the input ends with `every <N><unit>` or `every <N> <unit-word>` (e.g. `every 20m`, `every 5 minutes`, `every 2 hours`), extract that as the interval and strip it from the prompt. Only match when what follows "every" is a time expression — `check every PR` has no interval.
+3. **No interval**: otherwise, the entire input is the prompt and you'll self-pace dynamically (see "Dynamic mode" below).
+
+If the resulting prompt is empty, show usage `/loop [interval] <prompt>` and stop.
+
+Examples:
+- `5m /babysit-prs` → interval `5m`, prompt `/babysit-prs` (rule 1)
+- `check the deploy every 20m` → interval `20m`, prompt `check the deploy` (rule 2)
+- `run tests every 5 minutes` → interval `5m`, prompt `run tests` (rule 2)
+- `check the deploy` → no interval → dynamic mode, prompt `check the deploy` (rule 3)
+- `check every PR` → no interval → dynamic mode, prompt `check every PR` (rule 3 — "every" not followed by time)
+- `5m` → empty prompt → show usage
+
+## Offer cloud first
+
+Before any scheduling step, check whether EITHER is true:
+- the parsed interval (rule 1 or 2) is **≥60 minutes**, or
+- regardless of which rule matched, the original input uses daily phrasing ("every morning", "daily", "every day", "each night", "every weekday")
+
+If either is true, call AskUserQuestion first:
+- `question`: "This loop stops when you close this session. Set it up as a cloud schedule instead so it keeps running?"
+- `header`: "Schedule"
+- `options`: `[{label: "Cloud schedule (recommended)", description: "Runs in Anthropic's cloud even after you close this session"}, {label: "This session only", description: "Runs in this terminal until you exit"}]`
+
+If they pick **Cloud schedule**: do NOT call CronCreate. Invoke the `schedule` skill directly via the Skill tool with `args` set to their original input verbatim (e.g. `Skill({skill: "schedule", args: "every morning tell me a joke"})`), then follow that skill's instructions to completion. Do NOT tell the user to run /schedule themselves. **Then stop — do not continue to any section below** (no CronCreate, no ScheduleWakeup, no "execute the prompt now").
+If they pick **This session only**:
+- If the trigger was a parsed ≥60-minute interval (rule 1 or 2): continue below with that interval.
+- If the trigger was daily phrasing only (rule 3, no parsed interval): do NOT call CronCreate. Explain that a daily-cadence loop won't fire before this session closes, so there's nothing useful to schedule locally — suggest they either pick Cloud schedule, or re-run `/loop` with an explicit shorter interval (e.g. `/loop 1h <prompt>`) if they want a session loop. Then stop.
+If neither trigger condition was met: continue below.
+
+## Fixed-interval mode (rules 1 and 2)
+
+Convert the interval to a cron expression:
+
+| Interval pattern      | Cron expression     | Notes                                    |
+|-----------------------|---------------------|------------------------------------------|
+| `Nm` where N ≤ 59   | `*/N * * * *`     | every N minutes                          |
+| `Nm` where N ≥ 60   | `0 */H * * *`     | round to hours (H = N/60, must divide 24)|
+| `Nh` where N ≤ 23   | `0 */N * * *`     | every N hours                            |
+| `Nd`                | `0 0 */N * *`     | every N days at midnight local           |
+| `Ns`                | treat as `ceil(N/60)m` | cron minimum granularity is 1 minute  |
+
+**If the interval doesn't cleanly divide its unit** (e.g. `7m` → `*/7 * * * *` gives uneven gaps at :56→:00; `90m` → 1.5h which cron can't express), pick the nearest clean interval and tell the user what you rounded to before scheduling.
+
+Then:
+1. Call CronCreate with: `cron` (the expression above), `prompt` (the parsed prompt verbatim), `recurring: true`.
+2. Briefly confirm: what's scheduled, the cron expression, the human-readable cadence, that recurring tasks auto-expire after 7 days, and that the user can cancel sooner with CronDelete (include the job ID). Only if you did NOT show the cloud-offer AskUserQuestion above (i.e., neither trigger condition applied), end the confirmation with this exact line on its own, italicized: `_Runs until you close this session · For durable cloud-based loops, use /schedule_`. If the user already answered that question, omit this line.
+3. **Then immediately execute the parsed prompt now** — don't wait for the first cron fire. If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+
+## Dynamic mode (rule 3 — no interval)
+
+The user wants you to self-pace. Decide what makes the next iteration worth running — a passage of time, or an observable event.
+
+1. **Run the parsed prompt now.** If it's a slash command, invoke it via the Skill tool; otherwise act on it directly.
+2. **If the next run is gated on an event** (CI finishing, a log line matching, a file changing, a PR comment) and no Monitor is already running for it: arm one now with `persistent: true`. Its events arrive as `<task-notification>` messages and wake this loop immediately — you do not wait for the ScheduleWakeup deadline. Arm once; on later iterations call TaskList first and skip this step if a monitor is already running.
+3. **Briefly confirm**: that you're self-pacing, whether a Monitor is the primary wake signal, that you ran the task now, and what fallback delay you're about to pick. Write this as text *before* calling ScheduleWakeup — the turn ends as soon as that tool returns.
+4. **Then, as the last action of this turn, decide whether the loop continues.** If the task needs another iteration, call ScheduleWakeup with:
+   - `delaySeconds`: with a Monitor armed this is the **fallback heartbeat** — how long to wait if no event fires (lean 1200–1800s; idle ticks more frequent than the task needs are pure overhead). Without a Monitor this is the cadence — pick based on what you observed. Read the tool's own description for cache-aware delay guidance.
+   - `reason`: one short sentence on why you picked that delay.
+   - `prompt`: the full original /loop input verbatim, prefixed with `/loop ` so the next firing re-enters this skill and continues the loop. For example, if the user typed `/loop check the deploy`, pass `/loop check the deploy` as the prompt.
+   If it doesn't need another iteration, stop instead (step 6) — re-arming is a per-turn choice, not a default.
+5. **If you were woken by a `<task-notification>`** rather than this prompt: handle the event in the context of the loop task, then make the same decision. If the loop should continue, call ScheduleWakeup again with the same `prompt` and the same 1200–1800s `delaySeconds` from step 4 (the Monitor remains the wake signal; the new wakeup is only the fallback heartbeat). If the event means the work is finished, stop (step 6).
+6. **To stop the loop** — the task is complete, further iterations can't make progress, or the user asked you to stop — call ScheduleWakeup with `stop: true` (no other fields) and TaskStop any Monitor you armed (use TaskList to find the task ID if it is no longer in context). Stopping is the loop's normal ending — the user can restart it anytime with /loop. Before you stop, send a one-line outcome via PushNotification — the user may be away and waiting to hear it's done. Skip this if you're stopping because the user just told you to; they're already here.
+
+## Input
+
+ótimo continue com os próximos passos, e também GO ungated e também e GO de gasto também mas me diga antes a projeção de gastos. E verifique se esta faltando algo com o novo BoK
+
+## 🤖 Claude *(13:37:11)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O usuário acionou `/loop` com um comando em português que não tem intervalo de tempo definido nem cláusula de repetição, então estou operando em modo dinâmico. Ele quer que eu continue com os próximos passos, ative o GO ungated e GO de gasto, mas primeiro precisa da projeção de gastos e uma verificação se algo está faltando no novo BoK.
+
+A sequência é clara: apresentar a projeção de gastos antes de executar qualquer gasto real, verificar o novo BoK (provavelmente o mco-monetization que estava incompleto com os documentos 06, 07 e 08 faltando), e só então proceder com o gasto após confirmação. is the un-gated work I can start immediately. The loop here isn't really a polling mechanism—it's more about sequencing the next steps in order: first the deepsearch anchoring of the 12 numbers, then elevating the MONTAR engine with free motion rendering, and finally producing EP07 where the Veo presenters will incur costs.
+
+I'm realizing the spend projection is tricky because the actual paid work (Veo presenters at 267 mco each) depends on completing the upstream un-gated work first—the script anchoring and motor elevation. Since EP07 isn't scripted yet and the 12 numbers aren't locked in, I can't give a precise spend estimate until those foundational pieces are done.
+
+What I can do is project based on precedent—EP06 budgeted around 1068 mco for 4 presenters, and EP05 was roughly 6180 mco—so I'll use those as reference points for the EP07 estimate.
+
+My approach for this iteration is to first verify the new monetization documentation for any gaps the doctor flagged, then present the spend projection based on the pauta and historical precedent without actually committing funds yet, and finally start the un-gated work on the deepsearch-blueprint.
+
+The deepsearch-blueprint is a background workflow that anchors the 12 numbers—it's un-gated and I can kick it off as a multi-agent research task. The sequence is clear: check the BoK, show the projection, then launch the deepsearch work in parallel while the actual spend (Veo) waits until after the projection is reviewed and the script is ready. So the safest path is to show the projection upfront, let them confirm the spend amount, then proceed with the free work (deepsearch, motor elevation, motion renders) while waiting for their go-ahead before triggering the paid Veo generation. second confirmation with the actual spend amount before charging them. That way they see the projection now, the free work runs, and when Veo's real cost is known, I ask once more before executing the paid step. I'm deciding whether /loop dynamic mode is the right fit here—the user explicitly requested it, and the pipeline (deepsearch → script → motor → produce) genuinely benefits from self-pacing since deepsearch runs in the background. So I'll proceed with dynamic mode: run the immediate checks and launch deepsearch now, then schedule a fallback wakeup to continue once it completes.
+
+For this iteration, I need to verify the knowledge base for any gaps the doctor flagged, starting with the `mco-monetization` miss. It sounds like "gate fechado pelos críticos" means the critics have blocked it — the gate is closed because the BoK is incomplete with missing docs. The user wants me to verify what's actually missing in the new mco-monetization BoK and confirm whether the gate status is accurate, so I need to check the index and see what docs are there versus what should be there.
+
+Now I'm thinking through the spend projection for EP07 production — I need to calculate costs based on the pauta structure (3 acts representing 3 businesses), the 4× floor mco model, and the Veo presenter costs, though the pauta isn't fully scoped into a Spaces project yet, so I'll work from the EP06/EP05 precedent and give a range.
+
+I'm also planning to launch the deepsearch-blueprint for the 12 E numbers in the EP07 pauta, but I realize the pauta itself specifies using deepsearch methodology to source these numbers with URLs anchored to each claim. Before launching anything, I need to read through the pauta to identify exactly which 12 numbers need sourcing.
+
+My approach this turn: first read the EP07 pauta and the mco-monetization BoK to understand the gap and production scope, then present the findings and spend projection, launch the deepsearch as a background task to anchor those numbers, and finally set up the loop's fallback wakeup. I'm noticing the MCP servers might be relevant for the web research component of the deepsearch. I need to structure this in phases: first read the EP07 pauta and mco-monetization knowledge base in parallel, then analyze the gaps and spending projection, launch a deepsearch workflow for the 12 numbers in the background, and set up monitoring with a scheduled wakeup. The user wants the spend projection calculated before any actual spending happens, so I'll pull both documents now. I need to read the pauta document and the BoK index to extract the 12 numbers and understand the production scope, then check the git log to see what the new BoK structure is. For the loop mechanics, I'm operating in dynamic mode where I'll run the parsed prompt now, set up monitoring for the deepsearch workflow notification, confirm I've completed the task with a fallback delay, and then call ScheduleWakeup with the heartbeat timing.
+
+The key insight here is that the spend projection needs to be visible to the user before any paid work happens — so I'll…
+
+</details>
+
+
+## 🤖 Claude *(13:37:15)*
+
+`/loop` em **modo dinâmico** (sem intervalo — auto-pace). Entendi o pedido:
+1. **GO un-gated** → sigo com os próximos passos.
+2. **GO de gasto** → concedido, **mas a projeção de gastos vem antes** (e nada de Veo pago sem você ver o número — spending é irreversível).
+3. **Verificar o novo BoK** (a suíte de monetização, que o doctor marcou incompleta).
+
+Primeiro reúno o material: a pauta do EP07 (para achar os 12 números + escopo de produção) e a suíte `mco-monetization`.
+
+## 🤖 Claude *(13:37:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"\u2550\u2550\u2550\u2550 Qual \u00e9 o 'novo BoK'? (commits recentes de BoK) \u2550\u2550\u2550\u2550\"\ngit log --oneline -8 -- 'docs/bok/**' | head -8\necho \"\"\necho \"\u2550\u2550\u2550\u2550 Arquivos da su\u00edte mco-monetization \u2550\u2550\u2550\u2550\"\nls -la docs/bok/mco-monetization/ 2>/dev/null\necho \"\"\necho \"\u2550\u2550\u2550\u2550 EP07 pauta existe? \u2550\u2550\u2550\u2550\"\nls -la docs/roadmap/ep07-pauta-economia-videocast-2026-08-05.md 2>/dev/null\nwc -l docs/roadmap/ep07-pauta-economia-videocast-2026-08-05.md 2>/dev/null",
+  "description": "Identify new BoK + list mco-monetization + find EP07 pauta"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ════ Qual é o 'novo BoK'? (commits recentes de BoK) ════
+> a06e546 docs(bok): suíte de monetização + SOP da recarga — gate CLOSED-LOOP FECHADO pelos críticos
+> 871bb53 docs(bok): Amendments 28-bis e 46 — grid de N linhas e legenda alpha livre
+> d91009e docs: add Amendments 44 & 45 to Spaces evolution BoK
+> 0fe5368 docs(bok): Amendment 43 sela a linguagem MONTAR e a trupe ganha o quarto membro
+> 62ed21d docs(bok): Amendment 41 entra como PROPOSTA — a citação do Sovereign era fabricada
+> 2ca06de docs(motion): Amendment 40 sela a Doutrina Motion v3 — e o timeout deixa de punir o 1080p
+> 8fe427a feat(spaces): STOP na fila + faxina de rascunhos do projeto (Amendment 39, FR-SPACES-143/144)
+> d3ea7c9 feat(spaces): card de FASE com botão próprio + Run All pula nós prontos (Amendment 38, FR-SPACES-141/142)
+> 
+> ════ Arquivos da suíte mco-monetization ════
+> total 164
+> drwxrwxr-x  2 ubuntu ubuntu  4096 Aug 11 01:34 .
+> drwxrwxr-x 42 gcrUX  gcrUX   4096 Aug 11 01:21 ..
+> -rw-rw-r--  1 ubuntu ubuntu 17089 Aug 11 01:22 00-index.md
+> -rw-rw-r--  1 ubuntu ubuntu  9901 Aug 11 01:24 01-mrd.md
+> -rw-rw-r--  1 ubuntu ubuntu 31427 Aug 11 01:26 02-brd.md
+> -rw-rw-r--  1 ubuntu ubuntu 13655 Aug 11 01:28 03-prd.md
+> -rw-rw-r--  1 ubuntu ubuntu 18764 Aug 11 01:29 04-frd.md
+> -rw-rw-r--  1 ubuntu ubuntu 44595 Aug 11 01:33 05-sdd.md
+> -rw-rw-r--  1 ubuntu ubuntu  8795 Aug 11 01:34 09-pattern-conformance.md
+> 
+> ════ EP07 pauta existe? ════
+> -rw-rw-r-- 1 gcrUX gcrUX 6107 Aug  5 21:26 docs/roadmap/ep07-pauta-economia-videocast-2026-08-05.md
+> 82 docs/roadmap/ep07-pauta-economia-videocast-2026-08-05.md
+> ```
+
+## 🤖 Claude *(13:37:34)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm seeing that the new BoK is `mco-monetization` with seven of the ten required documents completed—it has the index, MRD, BRD, PRD, FRD, SDD, and pattern conformance, but is missing the data model, process flow, and quality metrics documents. The gate status is marked as closed according to the governance rules.
+
+However, I'm noticing some ambiguity in the terminology. "FECHADO pelos críticos" could mean either that the critics closed the gate (blocking it) or that the closed-loop was completed. Rather than guessing, I need to check the actual GATE STATUS field in the 00-index file itself, since that's where the readiness status is officially recorded, not just the file count.…
+
+</details>
+
+
+## 🤖 Claude *(13:37:36)*
+
+O **novo BoK = `mco-monetization`** (commit `a06e546`). Tem 7/10 docs — **faltam `06-data-model`, `07-process-flow`, `08-quality-metrics`**. Mas prontidão se lê no **GATE STATUS do 00-index**, não na contagem de arquivos. Leio o index (gate + o que os críticos apontaram) e a pauta do EP07 (12 números + escopo).
+
+## 🤖 Claude *(13:37:36)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/ep07-pauta-economia-videocast-2026-08-05.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	<!-- Pauta editorial do EP07. Fonte primária: texto do Sovereign (2026-08-05), reproduzido verbatim
+> 2	     na §2. NÃO é roteiro ainda — vira roteiro pela trupe criativa quando o EP06 estiver no ar. -->
+> 3	
+> 4	# EP07 — Pauta: A economia secreta por trás dos videocasts brasileiros
+> 5	
+> 6	**Registrada:** 2026-08-05 · **Origem:** diretiva do Sovereign
+> 7	**Status:** pauta bruta — aguarda o EP06 no ar antes de virar roteiro
+> 8	
+> 9	---
+> 10	
+> 11	## 1. POR QUE ESTE TEMA (a tese estratégica do Sovereign)
+> 12	
+> 13	> *"Assim já vamos conquistando um público específico que podem ser novos usuários do MCORCH."*
+> 14	
+> 15	É o encaixe mais direto que o canal já teve entre **audiência** e **produto**. Quem assiste a um vídeo sobre a economia dos videocasts é, por definição:
+> 16	
+> 17	- alguém que produz ou quer produzir conteúdo em vídeo;
+> 18	- alguém que já entende que atenção vira inventário publicitário;
+> 19	- alguém que sente na pele o custo da estrutura — *"uma equipe de 15 a 30 pessoas"*.
+> 20	
+> 21	E é exatamente a dor que o MCORCH ataca: **o episódio inteiro deste canal é produzido por uma pessoa e uma máquina.** O episódio não precisa dizer isso — a doutrina do canal é *usar o método sem anunciá-lo* ([[project_channel_two_videos_week_editorial]]). A prova é o próprio vídeo existir.
+> 22	
+> 23	**Gancho natural do fecho:** o número de pessoas que a indústria precisa × o número de pessoas que fez o vídeo que o espectador acabou de assistir.
+> 24	
+> 25	---
+> 26	
+> 27	## 2. MATERIAL-FONTE (texto do Sovereign, verbatim)
+> 28	
+> 29	> A economia secreta por trás dos videocasts é que aquela conversa de 2 horas que parece improvisada é, na verdade, uma operação de mídia com 3 negócios rodando ao mesmo tempo.
+> 30	>
+> 31	> O que você assiste no YouTube é só a vitrine. O dinheiro mesmo vem assim:
+> 32	>
+> 33	> **1. Patrocínio direto** é o que paga a conta. É a caneca na mesa, a marca no cenário, o merchan lido no meio do papo. É por isso que os valores são tão altos. Um canal de nicho com 5 a 15 mil views por vídeo já cobra de US$ 1.000 a US$ 1.500 por cota, porque a audiência é super engajada. Já um Flow, Podpah, Inteligência Ltda da vida, com mais de 750 mil views, tira mais de US$ 10 mil por um único episódio só de patrocínio. Em muitos casos, 70% a 80% do faturamento vem daí.
+> 34	>
+> 35	> **2. AdSense** é a base passiva. Todo anúncio que entra antes, no meio e depois do vídeo, o YouTube fica com 45% e repassa 55% para o canal. Como um papo longo tem 4, 5, 6 quebras para anúncio, ele rende muito mais que um vídeo de 10 minutos. E continua rendendo por meses no algoritmo.
+> 36	>
+> 37	> **3. O áudio é a segunda vida** do mesmo conteúdo. Quando o vídeo vira podcast no Spotify, o mesmo episódio é vendido de novo. No mercado de podcast o CPM varia de US$ 18 a US$ 50 a cada mil downloads, o que pode gerar de US$ 300 a US$ 5.000 extras por episódio sem gravar nada a mais.
+> 38	>
+> 39	> E por que precisa de tudo isso? Porque a estrutura é cara. Por trás dos dois apresentadores tem uma equipe de 15 a 30 pessoas: produtor que agenda convidado, roteirista, operador de áudio, editores de cortes — que são cruciais porque são os canais de cortes que viralizam no TikTok e trazem público novo —, designer de thumbnail, comercial.
+> 40	>
+> 41	> Não é à toa que isso virou indústria. Só o ecossistema de criadores do YouTube injetou R$ 4,94 bilhões no PIB do Brasil em 2024 e sustentou mais de 130 mil empregos. Com o mercado de publicidade digital brasileiro passando de US$ 19 bilhões em 2026, os videocasts viraram o horário nobre da internet: baratos para as marcas comparado à TV, mas com uma confiança do público que anúncio tradicional não compra.
+> 42	>
+> 43	> No fim, a mágica é essa: transformar tempo de atenção em inventário publicitário. Quanto mais tempo você fica ouvindo, mais espaços para vender eles criam.
+> 44	
+> 45	---
+> 46	
+> 47	## 3. ⚠️ GATE DE ANCORAGEM (antes de virar narração)
+> 48	
+> 49	A regra inviolável do canal é **nenhum número não-ancorado**, e o EP06 acabou de provar por que ela existe: o motor colocou `2800000,0 tri` na tela onde o dado era 2,8 trilhões ([[feedback_engine_must_stage_not_print]]).
+> 50	
+> 51	Esta pauta traz **12 números** e nenhum deles tem fonte anexada ainda. Antes de qualquer um virar fala, precisa de URL primária:
+> 52	
+> 53	| Afirmação | Fonte necessária |
+> 54	|---|---|
+> 55	| Nicho 5-15k views → US$ 1.000-1.500 por cota | tabela de mercado / agência citável |
+> 56	| 750k+ views → US$ 10k+ por episódio | idem |
+> 57	| 70-80% do faturamento vem de patrocínio | idem |
+> 58	| Split AdSense 45/55 | **documentação oficial do YouTube** (é a mais fácil e a mais forte) |
+> 59	| CPM de podcast US$ 18-50 | IAB / relatório de mercado |
+> 60	| US$ 300-5.000 extras por episódio | derivado do CPM — mostrar a CONTA na tela |
+> 61	| Equipe de 15-30 pessoas | entrevista/reportagem citável |
+> 62	| R$ 4,94 bi no PIB · 130 mil empregos (2024) | **relatório oficial Oxford Economics/YouTube Brasil** |
+> 63	| Publicidade digital BR > US$ 19 bi em 2026 | IAB Brasil / eMarketer |
+> 64	
+> 65	**Quem faz:** `deepsearch-blueprint` (uma frente por bloco, com URL em toda claim, crítico adversarial no fim) — o mesmo rito que já sustentou as suítes de BoK da casa.
+> 66	
+> 67	---
+> 68	
+> 69	## 4. FORMATO SUGERIDO (a decidir com a trupe)
+> 70	
+> 71	- **Três negócios = três atos.** A estrutura já vem pronta no material: patrocínio · AdSense · áudio. Cada ato fecha com o número que o sustenta.
+> 72	- **Motion-first**, como o EP06: a pauta é feita de **dinheiro e proporção**, e é exatamente o que o motor agora sabe encenar — contador com número real, barras comparáveis com dado declarado, selo carimbando o dado-chave. Custo próximo de zero.
+> 73	- **A cena que se escreve sozinha:** a pilha de 15-30 funções da equipe aparecendo uma a uma, e no fecho tudo colapsando. Fica para a trupe decidir o que colapsa em quê.
+> 74	- **Apresentador (Veo)** só no gancho e no fecho, como no EP06 — é onde ele paga o custo.
+> 75	
+> 76	---
+> 77	
+> 78	## 5. DEPENDÊNCIAS
+> 79	
+> 80	1. **EP06 no ar** — não abrir frente nova antes de fechar a atual.
+> 81	2. **Deepsearch de ancoragem** (§3) — sem isso não há roteiro.
+> 82	3. Trupe criativa ([[project_trupe_criativa_spaces]]) para converter os atos em Partitura de Cena.
+> 83	
+> ```
+
+## 🤖 Claude *(13:38:09)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm reviewing the key metrics and pricing anchors for this content strategy—view thresholds tied to per-episode rates, sponsorship revenue splits, AdSense percentages, and podcast CPM ranges that inform the overall monetization model.
+
+For production, the focus is on motion-heavy scenes with minimal cost, reserving presenter talent (Veo) only for the opening hook and closing call-to-action—similar to the previous episode structure. That means roughly two presenters at around 267 mco each, plus potentially some light image generation for reference materials, which keeps the spend lean. I'm now trying to nail down the exact Veo pricing to project the full budget. Veo presenter costs vary by resolution—around 267 mco for 720p 8-second clips versus 712 mco for 1080p—so for two presenters I'm looking at a range of 534 to 1424 mco. Rather than estimate, I should pull the actual cost model from the codebase to give an accurate projection since this is money-sensitive.
+
+Now I'm working through the mco-to-USD conversion: the calibration shows mco = ceil(usd/$0.018 × 4), which means the user's mco balance reflects 4× the raw cost at a $0.018 base rate. Converting back, the raw USD cost is mco × 0.0045, but what matters for the user's balance is the mco figure itself. I need to check their current mco balance to see what's available for this spend.
+
+For this iteration, I'm focusing on three things: checking the BoK gap status from the mco-monetization index, computing the Veo cost projection in mco terms (which requires the veo.ts cost and presenter count), and launching the deepsearch for the 12 ungated numbers. Let me start by gathering the balance and Veo cost data.
+
+</details>
+
+
+## 🤖 Claude *(13:38:10)*
+
+Pauta clara: **12 números em 9 blocos** (§3), produção = 3 atos motion-first (~0 mco) + **apresentador Veo só no gancho e no fecho** (2 presenters — é onde paga). Para a projeção preciso do custo real do Veo + saldo atual. Leio o gate status do BoK + o custo Veo + saldo.
+
+## 🤖 Claude *(13:38:12)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/bok/mco-monetization/00-index.md",
+  "limit": 70
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	# mco-monetization — BoK Documentation Suite (00-index)
+> 2	
+> 3	**Project slug:** `mco-monetization`
+> 4	**Version:** v1.0 · **Data:** 2026-08-11
+> 5	**Escopo:** recarga avulsa de mcoCoins (top-up) + política de preço sob BYOK
+> 6	**Market segment:** B2C prosumer não-técnico (beachhead: as duas primeiras usuárias pagantes reais)
+> 7	**Monetization:** este módulo **É** a monetização — não a consome
+> 8	**Regulatory profile:** CDC (crédito pré-pago) · LGPD (dado de pagamento e erasure) · obrigação de trilha fiscal
+> 9	**Integration surface:** `extends-mcorch` — estende `profiles.mco_balance`, `mcoin_transactions`, `stripe-webhook`, `create-checkout` e a calibração 4×-floor (`docs/processes/mcoin-cost-calibration.md`)
+> 10	
+> 11	**ORO triplet da suíte:**
+> 12	- **Operator:** MCORCH Master Execution Agent (autoria: `bok-curator`)
+> 13	- **Reviewer:** Sovereign (Gabriel) — módulo de **dinheiro real de terceiros**, revisão não delegável
+> 14	- **Owner:** Sovereign — absorve o prejuízo material (cunhagem, chargeback, churn das duas primeiras pagantes)
+> 15	
+> 16	---
+> 17	
+> 18	## 1. GATE STATUS (leia isto antes de escrever qualquer linha de código)
+> 19	
+> 20	> **A suíte estar 6/6 NÃO abre o gate.** O que abre o gate é o quadro abaixo, fatia a fatia.
+> 21	
+> 22	| Fatia | Conteúdo | Gate Closed-Loop | Bloqueio |
+> 23	|---|---|:--:|---|
+> 24	| **0 — Saneamento do caminho de dinheiro** | webhook fail-closed · webhook para de SETAR saldo · 3 RPCs de refund passam a escrever ledger · reconciliador de drift · `credits` para de ser LIDO · hardening de `delete_account` | 🟡 **ABERTO CONDICIONADO** | Requer o SOP `docs/processes/mcoin-topup.md` (Lei 2 — **NÃO EXISTE**, verificado por `ls` em 2026-08-11) + `/security-review` por migration. Nenhuma decisão de negócio pendente: é conserto de defeito conhecido |
+> 25	| **1 — A recarga** | `mco_packages` · `stripe_webhook_events` · `mco_topups` · `credit_mco_topup` · `create-checkout` estendida · ramo de recarga no webhook · UI | 🔴 **FECHADO** | OTD-MON-001 (test×live), OTD-MON-002 (endpoint/eventos no painel), OTD-MON-004 (preços dos pacotes), OTD-MON-009 (semântica da renovação), OTD-MON-018 (recarga sem plano). **E** gate de saída da Fatia 0: `drift = 0` provado por query |
+> 26	| **2 — Estorno e disputa** | `reverse_mco_topup` · handlers `charge.refunded` / `charge.dispute.*` · teto por janela | 🔴 **FECHADO** | OTD-MON-006 (política de estorno + congelamento manual) |
+> 27	| **3 — Instrumentação de `key_source`** | `key_source` no `context` de toda linha de gasto (19 edge fns com fallback global) | 🟡 **ABERTO CONDICIONADO** | Sem decisão de negócio pendente — é telemetria aditiva. Requer SOP e é **pré-requisito duro** da Fatia 4 |
+> 28	| **4 — Recalibração BYOK** | `src/lib/pricing.ts` (SSOT) · fórmula tri-componente · teste de paridade genérico | 🔴 **FECHADO** | OTD-MON-010 (multiplicador 20%), OTD-MON-011 (teto de vídeo), OTD-MON-013 (os 3 caminhos que hoje zeram). **E** ≥1 ciclo de medição da Fatia 3 |
+> 29	| **5 — `fee_host`** | rails self-host saem de `charged_mco: 0` | 🔴 **FECHADO** | OTD-MON-012 — **Lei 1: nenhum rail sai do zero sem o seu bench.** 5 rails medidos, 4 não medidos |
+> 30	| **6 — Limpeza** | `credits` DROP · catálogo de preço em banco | 🔴 **FECHADO** | OTD-MON-008 (destino de `credits`), OTD-MON-015 (catálogo em banco) |
+> 31	
+> 32	**Regra-mãe deste gate (Lei 1):** o sinal de sucesso de qualquer fatia de dinheiro é o **SALDO no banco**, nunca o HTTP 200 do webhook. O código atual responde 200 para uma compra avulsa que ele ignora inteiramente (`stripe-webhook/index.ts:117` + `:131`, verificado) — provando que 200 e dinheiro são coisas independentes nesta superfície.
+> 33	
+> 34	---
+> 35	
+> 36	## 2. Registro de arquivos
+> 37	
+> 38	| Arquivo | Fase | Lente BoK | Status | Conteúdo |
+> 39	|---|:--:|---|:--:|---|
+> 40	| [`00-index.md`](00-index.md) | 0 | — | [x] este | Manifesto · GATE STATUS · ID space · rastreabilidade mestre · escopo negativo |
+> 41	| [`01-mrd.md`](01-mrd.md) | 1 | BABOK v3 | [x] | Mercado: por que a recarga existe · as 2 usuárias reais · o gatilho · tamanho honesto do mercado |
+> 42	| [`02-brd.md`](02-brd.md) | 1 | BABOK v3 | [x] | **BR-MON-001..014** · a economia do BYOK · regras de canibalização · risk ledger |
+> 43	| [`03-prd.md`](03-prd.md) | 2 | ProdBOK + CXBOK | [x] | **PR-MON-001..016** · 4 pacotes · UX de saldo zero · UX de recarga · MoSCoW por fatia |
+> 44	| [`04-frd.md`](04-frd.md) | 3 | SWEBOK v4 | [x] | **FR-MON-001..036** (íntegros do design) · **NFR-MON-001..010** |
+> 45	| [`05-sdd.md`](05-sdd.md) | 3 | SWEBOK v4 + CISSP CBK | [x] | 3 tabelas · 2 RPCs · fluxo salto-a-salto · espelhos de preço · 6 fatias · gates G1-G9 |
+> 46	| [`09-pattern-conformance.md`](09-pattern-conformance.md) | 3.5 | 21 Agentic Patterns | [x] **SSOT** | **9 yes · 2 deferred · 10 n-a = 21** — fecha o Step 3.5 |
+> 47	
+> 48	**Ausentes por decisão, não por omissão:** `06-data-model`, `07-process-flow` e `08-quality-metrics` **não** foram escritos nesta v1.0. O modelo de dados vive na `05-sdd §4` (3 tabelas DDL-completas), o fluxo na `05-sdd §7` (tabela salto-a-salto com caminho de recuperação por salto) e as métricas na `05-sdd §12` (gates G1-G9 com comando material). Duplicá-los em arquivo próprio criaria três superfícies para o mesmo DDL divergirem — a **violação HIGH clássica** (SDD e data-model modelando o mesmo objeto de formas incompatíveis). Promovê-los é trabalho de emenda quando o módulo crescer (OTD-MON-019).
+> 49	
+> 50	---
+> 51	
+> 52	## 3. Espaço de IDs
+> 53	
+> 54	| Prefixo | Faixa | Nº | Selado em | Significado |
+> 55	|---|---|:--:|---|---|
+> 56	| `MR-MON` | 001..008 | 8 | `01-mrd` | Market requirements |
+> 57	| `BR-MON` | 001..014 | 14 | `02-brd` | Business requirements |
+> 58	| `PR-MON` | 001..016 | 16 | `03-prd` | Product requirements |
+> 59	| `FR-MON` | 001..036 | 36 | `04-frd` | Functional requirements (001..027 recarga · 028..036 preço BYOK) |
+> 60	| `NFR-MON` | 001..010 | 10 | `04-frd` | Non-functional |
+> 61	| `DD-MON` | 001..008 | 8 | `05-sdd` | Design decisions |
+> 62	| `OTD-MON` | 001..019 | 19 | `02-brd` + `05-sdd` | Open technical decisions (todas com gate nomeado) |
+> 63	| `FM-MON` | 001..018 | 18 | `02-brd §6` | Failure modes (FMEA com RPN) |
+> 64	
+> 65	---
+> 66	
+> 67	## 4. Rastreabilidade mestre (BR → PR → FR → gate)
+> 68	
+> 69	| BR | Tema | PR | FR | Gate de prova |
+> 70	|---|---|---|---|---|
+> ```
+
+## 🤖 Claude *(13:38:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"\u2550\u2550\u2550\u2550 Custo Veo (src/lib/veo.ts + canvas-execute) \u2550\u2550\u2550\u2550\"\ngrep -nE \"veoCost|267|712|0\\.15|cost|COIN|mco|resolution|1080|720\" src/lib/veo.ts 2>/dev/null | head -20\necho \"--- canvas-execute veo branch cost ---\"\ngrep -nE \"veoCost|veo.*[Cc]ost|0\\.15|perSecond|1080\" supabase/functions/canvas-execute/index.ts 2>/dev/null | head -12\necho \"\"\necho \"\u2550\u2550\u2550\u2550 Saldo mco do Usu\u00e1rio Zero + calibra\u00e7\u00e3o \u2550\u2550\u2550\u2550\"\nset -a && source .env 2>/dev/null && set +a\nU0=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\ncurl -s -m 15 \"$VITE_SUPABASE_URL/rest/v1/profiles?select=mco_balance&id=eq.$U0\" -H \"apikey: $SB_SECRET_KEY\" | head -c 120\necho \"\"\ngrep -nE \"0\\.018|4\u00d7|4x|floor|COIN_COSTS|mco.*usd|usd.*mco\" src/lib/billing.ts 2>/dev/null | head -10",
+  "description": "Veo cost + balance + calibration"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ════ Custo Veo (src/lib/veo.ts + canvas-execute) ════
+> 5: * `VEO_PER_SEC_USD` / `veoCost` de `supabase/functions/canvas-execute/index.ts`. Deno não importa
+> 6: * deste arquivo → a paridade é garantida por teste mecânico (`src/test/veo-cost-parity.test.ts`).
+> 10: *   durationSeconds inteiro 4..8 · aspectRatio {9:16,16:9} · resolution {720p,1080p} (1080p ⇒ 8s)
+> 12: * Preço: ai.google.dev/gemini-api/docs/pricing (2026-07-14) · 4×-floor: mco = ceil(usd/0.018 × 4).
+> 16:export type VeoResolution = "720p" | "1080p";
+> 20:  "veo-3.1": { "720p": 0.40, "1080p": 0.40 },
+> 21:  "veo-3.1-fast": { "720p": 0.10, "1080p": 0.12 },
+> 22:  "veo-3.1-lite": { "720p": 0.05, "1080p": 0.08 },
+> 26:// Espelho de VEO_VERTEX_PER_SEC_USD do servidor (paridade travada em veo-cost-parity.test.ts).
+> 28:  "veo-3.1": { "720p": 0.40, "1080p": 0.40 },
+> 29:  "veo-3.1-fast": { "720p": 0.15, "1080p": 0.15 },
+> 33:export const VEO_RESOLUTIONS: VeoResolution[] = ["720p", "1080p"];
+> 36:export const VEO_DEFAULT_RESOLUTION: VeoResolution = "720p";
+> 51:/** mco = ceil(usd/0.018 × 4). Combinação sem preço declarado ⇒ 0 (o servidor 422 antes de cobrar).
+> 53:export function veoCost(tier: VeoTier, resolution: VeoResolution, duration: number, vertex = false): number {
+> 55:  const perSec = table[tier]?.[resolution];
+> 65:/** 1080p no Veo 3.1 só existe em 8s (provado por sonda) — a UI trava a combinação antes do submit. */
+> 66:export function isVeoComboValid(resolution: VeoResolution, duration: number): boolean {
+> 68:  if (resolution === "1080p" && duration !== 8) return false;
+> --- canvas-execute veo branch cost ---
+> 33:  // "higgsfield/generate" kept as legacy alias → resolves to soul-1080p-1.
+> 37:  "higgsfield/soul-1080p-1": 40,  // 3.0 hf credits ≈ $0.19
+> 38:  "higgsfield/soul-1080p-4": 65,  // 5.0 hf credits ≈ $0.31
+> 64:// durationSeconds int 4..8 · aspectRatio {9:16,16:9} · resolution {720p,1080p} (1080p ⇒ 8s only)
+> 68:// lite-720p 89 · fast-720p 178 · fast-1080p 214 · standard 712.
+> 70:  "veo-3.1": { "720p": 0.40, "1080p": 0.40 },
+> 71:  "veo-3.1-fast": { "720p": 0.10, "1080p": 0.12 },
+> 72:  "veo-3.1-lite": { "720p": 0.05, "1080p": 0.08 },
+> 82:  "veo-3.1": { "720p": 0.40, "1080p": 0.40 },
+> 83:  "veo-3.1-fast": { "720p": 0.15, "1080p": 0.15 },
+> 94:function veoCost(model: string, resolution: string, duration: number, vertex = false): number {
+> 130:  const res = body.parameters?.resolution === "720p" ? "720p" : "1080p";
+> 
+> ════ Saldo mco do Usuário Zero + calibração ════
+> [{"mco_balance":40775.00}]
+> 7://   formula:    mco(op) = ceil( real_cost_usd(op) / USD_PER_MCO_FLOOR × MARGIN )
+> 8://   floor rate: USD_PER_MCO_FLOOR = $0.018/mco — the CHEAPEST sale: Enterprise R$997 / 10000 mco ÷ R$5.5/USD.
+> 10://   margin:     MARGIN = 4× (target gross markup at the worst-case sale price).
+> 11://   FX:         R$5.5/USD assumed; conclusions hold across R$5–7 except IMAGE near R$7 (kept at 4× headroom).
+> 14://   orchestrate run (3 texts + 1 image) ≈ $0.04 · Higgsfield DoP 5s video = $0.56 (canvas-execute, validated 4×).
+> 15://   Per-op markup at the floor: ORCHESTRATION_RUN 10 → 4.4× ✓ · canvas video 125 → 4.0× ✓ · canvas image 12 → 5.4× ✓.
+> 18:export const COIN_COSTS = {
+> 19:  ORCHESTRATION_RUN: 10,   // 3 texts + 1 image, charged flat (bundle discount vs the 15 below). ~4.4× at floor.
+> 20:  CONTENT_GENERATION: 2,   // 1 LLM article (~$0.0006). Strict floor is 1; held at 2 as a conservative minimum. (was 5)
+> 21:  IMAGE_GENERATION: 9,     // 1 DALL·E 3 1024² image ($0.04 → 4× at floor). WAS 3 = 1.36× (under-margined) → fixed.
+> ```
+
+## 🤖 Claude *(13:40:10)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm checking the BoK gap for the mco-monetization section and finding that those three seemingly missing documents aren't actually omissions—they were deliberately excluded because their content already exists elsewhere in the specification. The data model, process flow, and quality metrics are all covered in different sections of the SDD, so duplicating them as separate documents would violate the consistency principle by having the same objects modeled divergently across multiple files.
+
+The gate status is more nuanced than a simple open/closed—it's actually slice-by-slice: Fatia 0 is conditionally open but blocked on a missing SOP file (mcoin-topup.md), while Fatias 1, 2, 4, 5, and 6 are correctly closed pending business decisions and OTD approvals that only the Sovereign can authorize. The real gaps are the missing SOP and the pending OTD decisions around pricing, refunds, and other business rules—not structural documentation gaps. The doctor's file-count check flags mco-monetization as incomplete because it's looking for those three docs, but they're intentionally excluded here. I could add mco-monetization to the doctor's exception list like the security suite already has, which would be consistent, though I'll note this as a finding first rather than over-engineer the fix right now.
+
+Now I'm looking at the spend projection for EP07 — the current balance is around 40,775 mco, and I'm calculating the cost per presenter for Veo at 8 seconds using the standard rate.
+
+The breakdown shows different tiers: standard costs 712 mco, fast 720p is 178 mco, fast 1080p is 214 mco, and lite 720p is just 89 mco. The canvas-execute comment confirms these exact figures. If we go with presenter reference images, that's another 18–36 mco depending on how many we generate. The narration is free since we're self-hosting with Qwen3-TTS, and motion scenes plus final assembly don't cost anything either. So the total EP07 spend lands around 1,460 mco if we stick with the standard 1080p tier like we did for EP06.
+
+The economical fast-1080p option cuts that down to about 464 mco. If a Veo generation fails due to high load, it's fully refunded, so we're not burning mco on failed attempts. In actual USD terms, the standard approach costs about $6.40 in real external spend—that's what's leaving the Veo API account. For U0's own balance, it's just mco deducted, not out-of-pocket cash.
+
+Now I'm checking whether the Veo API cost is actually covered by trial credits or if it's a real expense. The handoff notes mention that the trial GCP credits only cover Vertex, and there's real Vertex credit available. So EP07 Veo would either use the Vertex trial credit or the Gemini API key, and either way it affects U0's balance.
+
+For the projection, I need to show both the mco deduction from the balance and the real external USD cost, noting that the Veo spend might be covered by trial credits if they're still available. The crucial thing is that I'm presenting this as a projection only—I won't actually spend yet. The free work comes first (deepsearch, motor elevation, motion scenes), and the Veo spend happens last once the script is ready, at which point I'll confirm the exact amount.
+
+Since the user authorized the spend, I have the green light, but I'll still surface the final exact cost at the payment gate as good practice for irreversible charges, especially since choosing between standard and fast tier is a quality-versus-cost decision worth confirming.
+
+Now I'm launching the deepsearch—the first un-gated, free step. I need to anchor the 12 numbers through web research using parallel research agents (one per number-block) with adversarial verification, which means I'll need web access capabilities to execute this properly. The workflow agents can access WebSearch and WebFetch through ToolSearch, but reliability might be inconsistent. The deepsearch-blueprint agent is purpose-built for this — it has the right tools, avoids fabrication, and includes URLs for every claim — so I should use that as the agentType for my research workflow to ensure quality sources.
+
+I'm reconsidering the output format: deepsearch-blueprint normally produces a BoK blueprint document, but I can prompt it to return structured data instead — each research front returns a claim with its value, primary source URL, source name, confidence level, and supporting quote. Then Phase 2 runs adversarial verification on each number.
+
+The workflow launches as a background job since web research takes time, so I'll present the initial findings and spending projection in this turn, then schedule a wakeup to continue once the verification completes. One risk is that Brazilian-specific sources (Oxford Economics reports, IAB Brasil data) might be harder to reliably anchor, but the adversarial critic will flag any unsupported claims.
+
+I should also fix that false positive in the doctor around mco-monetization—it's a quick exception that'll stop the recurring warning.  The suite deliberately excludes certain docs by design to avoid duplication, but the doctor's generic check doesn't account for that, so adding the exception there makes sense. The /handson command has the same issue, but I can't easily modify that since it's a skill, so I'll focus on what I can fix in the doctor.
+
+The user's real ask was to assess whether anything's missing from the new BoK — nothing is, it's all intentionally gated with documented blockers. The doctor flag is a false-positive. I could just report that, but since I'm already in the doctor code and adding a special case for mco-monetization (like the existing one for security) is a clean two-line fix that prevents recurring noise, I'll go ahead and do it while noting the change.
+
+Now let me execute the plan... Adding the mco-monetization exception to the doctor's BoK check loop with its specific required documents (00, 01, 02, 03, 04, 05, 09). Now I'm designing the workflow carefully. 2 claims. I'm setting up a deepsearch-blueprint agent for each research front to find primary URLs and verify claims adversarially, using a schema that tracks anchors with reported vs. found values, sources, quotes, and confidence levels. The agent has access to web tools like WebSearch and WebFetch, though I'm considering whether those will be fully available in the workflow context.
+
+I need to account for the fact that these are Brazilian macro numbers requiring Portuguese-language sources, so I'll instruct the agents to search in Portuguese. I'm planning a pipeline workflow with roughly 5 research agents followed by a verification pass, keeping the total under 15 agents. Each front researches independently, then its anchors get verified in sequence. Given the /loop context and wanting to present findings this turn, I should launch the deepsearch as a background workflow so the loop continues when it completes.
+
+I'll define the fronts and schema, then embed the pauta claims directly in the prompts to make the workflow self-contained. For the spend projection, I'm calculating the exact costs this turn: veo-3.1 standard 8s runs 712 mco each (2 presenters = 1,424 mco total, $6.40 real cost), and veo-3.1-fast-1080p 8s runs 214 mco each (2 = 428 mco, $1.92 real cost).
+
+Adding in Nano Banana image generation for presenter mood boards at roughly 18-36 mco, with everything else (narration, motion, assembly, export) costing nothing. Failed Veo generations get fully refunded. So the premium option lands around 1,460 mco total (~3.6% of my 40,775 mco balance), while the economical fast option comes to about 464 mco.
+
+For a presenter-facing hook that needs to look polished, standard Veo 3.1 is the right call since EP06 used it successfully. That puts the realistic ceiling at roughly 1,460 mco or US$6.40, fully refundable if something fails.
+
+Now I'm reconsidering the sequencing—whether deepsearch should actually be my first ungated action, or if there's something else I should tackle first. The pauta dependencies are mostly resolved since EP06 is no longer the target (EP07 is), so that constraint is gone.
+
+Deepsearch is definitely the right first step. I'm going to launch the workflow now, do a quick doctor edit, then present and schedule the wakeup. The workflow itself needs to stay lean—I'm aiming for around 15 agents total across 5 fronts with 2 anchors each, plus verification. Instead of verifying per anchor, I'll consolidate to one adversarial critic per front to keep the agent count manageable.
+
+The schema has research outputting claims with confidence scores and sources, then verify agents checking those claims and returning verdicts. I need to make sure the workflow launches to the background while I present findings and set up the wakeup at the end of the turn.…
+
+</details>
+
+
+## 🤖 Claude *(13:40:15)*
+
+Tudo esclarecido. Dois achados-chave antes de agir:
+
+**BoK `mco-monetization` — o "faltando" é falso-positivo do doctor.** O 00-index §1 (GATE STATUS) e a linha 48 são explícitos: `06/07/08` estão **ausentes POR DECISÃO** (o data-model vive na `05-sdd §4`, o fluxo na §7, as métricas na §12; duplicar criaria a violação HIGH clássica de SDD↔data-model divergentes). O gate é **por-fatia**, não global — corretamente FECHADO na maioria pendendo OTDs de negócio + o SOP `mcoin-topup.md` (que **não existe**). Vou corrigir o falso-positivo do doctor e depois te dou o quadro real.
+
+**Custo Veo confirmado** (código, não memória): standard 8s = **712 mco**, fast-1080p = **214 mco**. Saldo U0 = **40.775 mco**.
+
+Corrijo o doctor + lanço a ancoragem dos 12 números (deepsearch, un-gated, grátis) em background.
+
+## 🤖 Claude *(13:40:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/scripts/mcorch-doctor.sh",
+  "old_string": "    if [[ \"$slug\" == \"security\" ]]; then req=(00-deepsearch-blueprint 01-brd-security 02-srs-secure-spec 03-sdd-hardening-architecture 04-fmea-security)\n    else req=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics); fi",
+  "new_string": "    if [[ \"$slug\" == \"security\" ]]; then req=(00-deepsearch-blueprint 01-brd-security 02-srs-secure-spec 03-sdd-hardening-architecture 04-fmea-security)\n    elif [[ \"$slug\" == \"mco-monetization\" ]]; then req=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 09-pattern-conformance)  # 06/07/08 ausentes POR DECIS\u00c3O (vivem na 05-sdd \u00a74/\u00a77/\u00a712; anti-duplica\u00e7\u00e3o), OTD-MON-019\n    else req=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics); fi"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/scripts/mcorch-doctor.sh has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:40:28)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm setting up the deepsearch workflow with research agents configured for web search and fact-checking. I'll organize this into five research fronts covering sponsorship claims and AdSense details, then pipeline them through research and verification stages, embedding the specific claims from the source document into the prompts.…
+
+</details>
+
+
+## 🤖 Claude *(13:41:00)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'ep07-anchor-12-numbers',\n  description: 'Ancora os 12 n\u00fameros da pauta EP07 com URL prim\u00e1ria + verifica\u00e7\u00e3o adversarial (rito da pauta \u00a73)',\n  phases: [\n    { title: 'Pesquisa', detail: '5 frentes de deepsearch, uma por bloco de n\u00fameros' },\n    { title: 'Verify', detail: 'cr\u00edtico adversarial por frente \u2014 refuta por padr\u00e3o' },\n  ],\n}\n\nconst RESEARCH_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  properties: {\n    front: { type: 'string' },\n    anchors: { type: 'array', items: {\n      type: 'object', additionalProperties: false,\n      properties: {\n        claim: { type: 'string' },\n        pauta_value: { type: 'string' },\n        found_value: { type: 'string' },\n        primary_url: { type: 'string' },\n        source_name: { type: 'string' },\n        quote: { type: 'string' },\n        confidence: { type: 'string', enum: ['high', 'medium', 'low', 'not_found'] },\n      }, required: ['claim', 'pauta_value', 'found_value', 'primary_url', 'confidence'],\n    } },\n  }, required: ['front', 'anchors'],\n}\n\nconst VERIFY_SCHEMA = {\n  type: 'object', additionalProperties: false,\n  properties: {\n    front: { type: 'string' },\n    verified: { type: 'array', items: {\n      type: 'object', additionalProperties: false,\n      properties: {\n        claim: { type: 'string' },\n        verdict: { type: 'string', enum: ['supported', 'partial', 'unsupported', 'not_found'] },\n        best_url: { type: 'string' },\n        note: { type: 'string' },\n      }, required: ['claim', 'verdict', 'note'],\n    } },\n  }, required: ['front', 'verified'],\n}\n\nconst FRONTS = [\n  { key: 'patrocinio', prompt:\n    `Ancore com FONTE PRIM\u00c1RIA (URL) estas 3 afirma\u00e7\u00f5es da pauta EP07 sobre PATROC\u00cdNIO de videocasts/podcasts BR:\\n` +\n    `1. \"Canal de nicho com 5-15 mil views/v\u00eddeo cobra US$ 1.000-1.500 por cota de patroc\u00ednio.\"\\n` +\n    `2. \"Canal grande (Flow/Podpah/Intelig\u00eancia Ltda) com 750k+ views tira US$ 10 mil+ por epis\u00f3dio s\u00f3 de patroc\u00ednio.\"\\n` +\n    `3. \"70% a 80% do faturamento de um videocast vem de patroc\u00ednio direto.\"\\n` +\n    `Busque tabelas de m\u00eddia kit, mat\u00e9rias de mercado (Meio&Mensagem, tec/neg\u00f3cios), ag\u00eancias de branded content. Cada n\u00famero precisa de URL + cita\u00e7\u00e3o textual. Se n\u00e3o achar fonte cit\u00e1vel, marque confidence \"not_found\" \u2014 N\u00c3O invente (o canal pro\u00edbe n\u00famero n\u00e3o-ancorado).` },\n  { key: 'adsense', prompt:\n    `Ancore com a DOCUMENTA\u00c7\u00c3O OFICIAL DO YOUTUBE (URL support.google.com ou youtube oficial) esta afirma\u00e7\u00e3o:\\n` +\n    `1. \"No AdSense do YouTube, o YouTube fica com 45% e repassa 55% da receita de an\u00fancios ao canal (split 45/55).\"\\n` +\n    `Esta \u00e9 a mais forte e f\u00e1cil \u2014 deve vir da fonte oficial do YouTube Partner Program. URL + cita\u00e7\u00e3o exata.` },\n  { key: 'podcast_cpm', prompt:\n    `Ancore com FONTE PRIM\u00c1RIA (IAB, relat\u00f3rio de mercado de podcast) estas afirma\u00e7\u00f5es:\\n` +\n    `1. \"No mercado de podcast, o CPM varia de US$ 18 a US$ 50 por mil downloads.\"\\n` +\n    `2. (derivado) \"US$ 300 a 5.000 extras por epis\u00f3dio ao virar \u00e1udio\" \u2014 verifique se a CONTA fecha a partir do CPM e de downloads t\u00edpicos; mostre a aritm\u00e9tica.\\n` +\n    `Prefira IAB Podcast Advertising Revenue Report ou Advertisecast/Libsyn rate cards. URL + cita\u00e7\u00e3o.` },\n  { key: 'equipe', prompt:\n    `Ancore com REPORTAGEM/ENTREVISTA cit\u00e1vel (URL) esta afirma\u00e7\u00e3o:\\n` +\n    `1. \"Por tr\u00e1s de um videocast profissional h\u00e1 uma equipe de 15 a 30 pessoas (produtor, roteirista, operador de \u00e1udio, editores de cortes, designer de thumbnail, comercial).\"\\n` +\n    `Busque mat\u00e9rias sobre a opera\u00e7\u00e3o de Flow/Podpah/grandes podcasts BR. Se a faixa exata 15-30 n\u00e3o tiver fonte, ache a faixa REAL documentada e reporte-a. URL + cita\u00e7\u00e3o.` },\n  { key: 'macro_br', prompt:\n    `Ancore com RELAT\u00d3RIO OFICIAL (URL) estas afirma\u00e7\u00f5es macro sobre o Brasil:\\n` +\n    `1. \"O ecossistema de criadores do YouTube injetou R$ 4,94 bilh\u00f5es no PIB do Brasil em 2024 e sustentou mais de 130 mil empregos.\" (fonte esperada: relat\u00f3rio Oxford Economics encomendado pelo YouTube \u2014 'Impacto Econ\u00f4mico do YouTube no Brasil 2024').\\n` +\n    `2. \"O mercado de publicidade digital brasileiro passou de US$ 19 bilh\u00f5es em 2026.\" (fonte: IAB Brasil / eMarketer / Statista).\\n` +\n    `Busque em portugu\u00eas. Confirme ANO e VALOR exatos \u2014 a pauta pode ter o ano errado. URL + cita\u00e7\u00e3o.` },\n]\n\nphase('Pesquisa')\nconst results = await pipeline(\n  FRONTS,\n  (f) => agent(f.prompt, { label: `pesquisa:${f.key}`, phase: 'Pesquisa', agentType: 'deepsearch-blueprint', schema: RESEARCH_SCHEMA, effort: 'high' }),\n  (research, f) => agent(\n    `Verifica\u00e7\u00e3o ADVERSARIAL (refute por padr\u00e3o) da ancoragem da frente \"${f.key}\".\\n` +\n    `Para CADA \u00e2ncora abaixo, ABRA a primary_url e confirme se a fonte REALMENTE sustenta o found_value com o n\u00famero citado. ` +\n    `Cuidado com: fonte secund\u00e1ria citando outra (ache a prim\u00e1ria), n\u00famero de ano diferente, faixa inventada, blog sem fonte, c\u00e1lculo que n\u00e3o fecha.\\n` +\n    `\u00c2ncoras a verificar: ${JSON.stringify(research?.anchors || [])}\\n` +\n    `Veredito por claim: supported (URL prim\u00e1ria confirma o n\u00famero) \u00b7 partial (fonte existe mas n\u00famero diverge/\u00e9 de outro ano) \u00b7 unsupported (URL n\u00e3o sustenta) \u00b7 not_found. best_url = a melhor URL prim\u00e1ria. note = o que a fonte realmente diz.`,\n    { label: `verify:${f.key}`, phase: 'Verify', agentType: 'deepsearch-blueprint', schema: VERIFY_SCHEMA, effort: 'high' }\n  ).then(v => ({ front: f.key, research, verify: v }))\n)\n\nreturn { fronts: results.filter(Boolean) }",
+  "description": "EP07 12-numbers deepsearch anchoring"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wk0iiy2kk
+> Summary: Ancora os 12 números da pauta EP07 com URL primária + verificação adversarial (rito da pauta §3)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/c1b6a7b1-691a-443b-a950-94444ce8065d/subagents/workflows/wf_15e78e4a-c7a
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/c1b6a7b1-691a-443b-a950-94444ce8065d/workflows/scripts/ep07-anchor-12-numbers-wf_15e78e4a-c7a.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/c1b6a7b1-691a-443b-a950-94444ce8065d/workflows/scripts/ep07-anchor-12-numbers-wf_15e78e4a-c7a.js"} to iterate without resending the script.)
+> Run ID: wf_15e78e4a-c7a
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/c1b6a7b1-691a-443b-a950-94444ce8065d/workflows/scripts/ep07-anchor-12-numbers-wf_15e78e4a-c7a.js", resumeFromRunId: "wf_15e78e4a-c7a"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(13:41:09)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The deepsearch workflow is running in the background now…
+
+</details>
+
+
+## 🤖 Claude *(13:41:10)*
+
+Deepsearch lançado em background (`wk0iiy2kk`). Confirmo que o doctor não flaga mais o falso-positivo:
+
+## 🤖 Claude *(13:41:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbash -n .claude/scripts/mcorch-doctor.sh && echo \"sintaxe OK\"\necho \"\u2550\u2550\u2550\u2550 Se\u00e7\u00e3o 7 do doctor (BoK) \u2014 mco-monetization ainda d\u00e1 WARN? \u2550\u2550\u2550\u2550\"\nbash .claude/scripts/mcorch-doctor.sh 2>&1 | sed -n '/7 \u00b7 Su\u00edtes BoK/,/8 \u00b7 Supply/p' | grep -E \"PASS|WARN|mco-monet\"",
+  "description": "Verify doctor no longer false-flags mco-monetization"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> sintaxe OK
+> ════ Seção 7 do doctor (BoK) — mco-monetization ainda dá WARN? ════
+>   [32m✓ PASS[0m  40 suítes — todas completas
+> ```
+
+## 🤖 Claude *(13:41:50)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The doctor check passed with all 40 suites complete. Now I'm presenting the BoK assessment and spend projection, then setting up the loop's ScheduleWakeup. Since I'm running in dynamic loop mode and the deepsearch workflow will trigger a task notification when it completes, that notification serves as my wake signal for the next iteration—I don't need a separate monitoring step.
+
+For the fallback heartbeat, I'm setting a 1800-second delay (30 minutes) since web research can take time, and if the workflow hasn't notified by then, I'll wake to check status. The ScheduleWakeup prompt will be the original input prefixed with `/loop `, and noop is false since I've done substantial work launching deepsearch and verifying the BoK.
+
+Now I'm composing the spend projection for EP07 production. The pauta specifies motion-first with Veo presenters only at the hook and close, so the only paid items are the two Veo presenter generations. I'm calculating costs across different Veo tiers and resolutions to show the range from standard quality down to lite options, then I'll present the BoK assessment and loop confirmation. The realistic budget ceiling lands around 1,460 mco (~$6.40) for the presenter and reference images, which is refundable if a generation fails. I could economize with a faster 1080p option at ~464 mco (~$1.92) for a noticeably cheaper but slightly less cinematic result — I'll recommend standard for the hero shots but flag the faster alternative. Critically, I won't spend anything until the script is finalized after the research and planning phases, and I'll surface the exact final cost at the payment gate for your approval before committing to a tier. On the documentation front, the three missing docs aren't oversights — they're intentional omissions that are already documented.
+
+The real blockers are the SOP for the mcoin top-up process, which doesn't exist yet and prevents even the initial phase from moving forward (though writing it is unblocked work, the money module itself needs your review as owner), and several sovereign business decisions around package pricing and refund policies that only you can make. I'm wrapping up the response and need to confirm the loop setup per the dynamic-mode instructions—verifying that I'm self-pacing, the workflow task is the primary wake signal, and selecting the fallback delay before calling ScheduleWakeup.…
+
+</details>
+
+
+## 🤖 Claude *(13:42:12)*
+
+Doctor agora passa: **"40 suítes — todas completas"** (falso-positivo eliminado).
+
+---
+
+## 🔎 BoK `mco-monetization` — nada faltando por acidente; gate-closed por design
+
+**Os 3 docs "faltando" (06/07/08) são ausentes POR DECISÃO** (00-index linha 48): o data-model vive na `05-sdd §4`, o fluxo na §7, as métricas na §12 — duplicá-los criaria a violação HIGH clássica (SDD↔data-model divergindo). O que o doctor/`/handson` liam como "incompleto" era um falso-positivo de contagem de arquivos — **corrigido**.
+
+**O que está genuinamente pendente** (o "faltando" real, tudo declarado no GATE STATUS §1):
+1. **SOP `docs/processes/mcoin-topup.md` (Lei 2) — NÃO EXISTE.** Trava até a Fatia 0 (saneamento do caminho de dinheiro). É o bloqueador mais próximo.
+2. **Decisões suas (OTD-MON-*)** que mantêm as Fatias 1/2/4/5/6 corretamente 🔴 FECHADAS: preços dos 4 pacotes (004), política de estorno (006), semântica de renovação (009), multiplicador BYOK 20% (010), teto de vídeo (011), os 3 caminhos que zeram (013), benches de `fee_host` (012), destino de `credits` (008).
+3. Fatias 0 e 3 = 🟡 **ABERTO CONDICIONADO** (só precisam do SOP; sem decisão de negócio pendente).
+
+**Veredito:** a suíte não está quebrada — é um módulo de **dinheiro real** honestamente gate-closed esperando (a) 1 SOP e (b) suas decisões de preço/política. Os críticos fecharem o gate é o sistema funcionando. Como é dinheiro de terceiros, a revisão é **não-delegável** (ORO da suíte: Reviewer = você).
+
+## 💰 Projeção de gastos do EP07 (ANTES de qualquer spend)
+
+A pauta §4 é clara: **motion-first** (3 atos ≈ **0 mco**) + Veo **só no gancho e no fecho = 2 presenters**. É o único item pago. Custo por presenter 8s (do código `veo.ts`, não de memória):
+
+| Tier (8s) | mco cada | 2 presenters | Custo real API |
+|---|--:|--:|--:|
+| **veo-3.1 standard** (paridade EP06) | 712 | **1.424** | ~US$ 6,40 |
+| veo-3.1-fast 1080p | 214 | 428 | ~US$ 1,92 |
+| veo-3.1-fast 720p | 178 | 356 | ~US$ 1,60 |
+| veo-3.1-lite 720p | 89 | 178 | ~US$ 0,80 |
+
++ refs do presenter (Nano Banana ~9 mco/img; mood-board ~18-36 mco — **ou reusar as do EP06 = 0**). Narração (Qwen3/IVC), motion, montagem e export YouTube = **0 mco**. **Falha do Veo = estorno integral** (não queima mco).
+
+**Recomendação:** o presenter é a cara do canal (gancho+fecho) — vale o **standard** (paridade EP06). Teto realista: **~1.460 mco (~US$ 6,40 real), refundável**. Sobre saldo **40.775 mco = ~3,6%**. Se quiser economizar, fast-1080p cai para ~464 mco (~US$1,92), levemente menos cinematográfico.
+
+⚠️ **Não vou gastar nada agora.** A ordem é: deepsearch (rodando) → roteiro pela trupe → elevar o motor MONTAR (grátis) → e **só então** os 2 Veo, quando eu te trouxer o número exato + o tier para seu OK final. "GO de gasto" registrado; "me diga antes" honrado.
+
+---
+
+**Loop (auto-pace):** rodei esta iteração — corrigi o doctor, lancei o deepsearch dos 12 números em background (`wk0iiy2kk`), e te entreguei o BoK + a projeção. O **sinal de acordar é a notificação do workflow** (não armei Monitor — o workflow é rastreado e me avisa ao terminar). Agendo um heartbeat de fallback de 30 min caso a pesquisa web demore.
+
+## 🤖 Claude *(13:42:14)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1800,
+  "noop": false,
+  "reason": "Fallback caso o deepsearch dos 12 n\u00fameros (workflow wk0iiy2kk) n\u00e3o notifique; ele \u00e9 o sinal prim\u00e1rio de acordar.",
+  "prompt": "/loop \u00f3timo continue com os pr\u00f3ximos passos, e tamb\u00e9m GO ungated e tamb\u00e9m e GO de gasto tamb\u00e9m mas me diga antes a proje\u00e7\u00e3o de gastos. E verifique se esta faltando algo com o novo BoK"
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 11:13:00 (in 1845s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 🤖 Claude *(13:42:25)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've wrapped up the loop and set a fallback timer for 30 minutes while waiting for the deepsearch workflow to complete. This turn addressed the doctor false-positive issue, clarified the BoK situation with one pending SOP and Sovereign OTD decisions, provided the spend projection, and kicked off the deep search for those twelve numbers.…
+
+</details>
+
+
+## 🤖 Claude *(13:42:32)*
+
+Iteração 1 do loop concluída. Estado:
+
+- ✅ **Doctor corrigido** — `mco-monetization` não é mais falso-positivo ("40 suítes completas").
+- ✅ **BoK respondido** — nada faltando por acidente; gate-closed por design; pendente real = SOP `mcoin-topup.md` (não existe) + suas decisões OTD-MON de preço/política.
+- ✅ **Projeção entregue antes de gastar** — teto ~1.460 mco (~US$6,40, standard) / ~464 mco (fast); nada gasto ainda.
+- 🔄 **Deepsearch dos 12 números rodando** (`wk0iiy2kk`, background, grátis).
+- ⏰ Fallback em 30 min; a notificação do workflow me acorda antes.
+
+Quando a ancoragem voltar, eu te trago o quadro dos 12 números (verdict por fonte: `supported`/`partial`/`unsupported`), sinalizo os que não fecharam (não viram narração — regra do canal), e sigo para o roteiro pela trupe + elevar o motor. Paro no gate do Veo com o número exato para seu OK. Pode se ausentar — o loop continua.
+
+## 👤 User *(13:47:44)*
+
+<task-notification>
+<task-id>wk0iiy2kk</task-id>
+<tool-use-id>toolu_01Wt7FFg9WWX64AdaFT52XHh</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c1b6a7b1-691a-443b-a950-94444ce8065d/tasks/wk0iiy2kk.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Ancora os 12 números da pauta EP07 com URL primária + verificação adversarial (rito da pauta §3)" completed</summary>
+<result>{"fronts":[{"front":"patrocinio","research":{"front":"Verificação de fonte primária para os 3 números de patrocínio de videocast BR da pauta EP07. Veredito: NENHUM dos três se confirma exatamente como escrito — o canal proíbe número não-ancorado, então dois devem ser reescritos e um mantido apenas como caso citado (não como regra de mercado). (1) \"Nicho 5-15k views cobra US$ 1.000-1.500/cota\" = NOT_FOUND e provavelmente ALTO DEMAIS: os benchmarks citáveis apontam mais baixo — EOFire dá ~US$ 430-860/episódio para 10 mil ouvintes (CPM host-read US$ 18-25), e no Brasil a negociação direta fica em R$ 500-5.000/episódio (~US$ 100-1.000). Recomendo baixar para US$ 200-900 ou citar a faixa BR em reais com fonte. (2) \"Canal grande 750k+ views tira US$ 10 mil+/episódio só de patrocínio\" = LOW: nenhuma fonte separa 'só patrocínio por episódio' nem usa o corte de 750k views; há apenas AGREGADOS primários (Flow ~R$ 1,5 mi→6,2 mi/mês; Podpah mira R$ 100 mi/ano via Exame). Reescrever como faturamento agregado com fonte, não como cota/episódio. (3) \"70-80% do faturamento vem de patrocínio direto\" = MEDIUM: existe citação real (EOFire: ~70% da renda mensal; 85% num mês), mas é autorrelato de UM podcast dos EUA — não estatística de videocast BR. Usar como 'caso' e não como número de mercado brasileiro. Não achei nenhuma fonte BR-específica que confirme os três números exatos. Todas as URLs abaixo foram realmente consultadas via WebSearch/WebFetch.","anchors":[{"claim":"Canal de nicho com 5-15 mil views/vídeo cobra US$ 1.000-1.500 por cota de patrocínio.","pauta_value":"US$ 1.000-1.500 por cota (5-15 mil views)","found_value":"Nenhuma fonte cita esse valor. Benchmarks citáveis apontam MAIS BAIXO: ~US$ 430-860/episódio para 10 mil ouvintes (EOFire, CPM host-read US$ 18-25); Brasil negociação direta R$ 500-5.000/episódio (~US$ 100-1.000).","primary_url":"https://www.eofire.com/podcast-sponsorships/","confidence":"not_found","quote":"For a podcast averaging 10,000 listens per episode, a standard preroll/midroll sponsorship package would cost sponsors $430 per episode ... At two sponsors per episode, that generates $860 per episode.","source_name":"EOFire — Podcast Sponsorships: The Ultimate Guide"},{"claim":"Faixa BR de patrocínio direto por episódio (contexto para a faixa de nicho).","pauta_value":"US$ 1.000-1.500 por cota (nicho)","found_value":"R$ 500 a R$ 5.000+ por episódio na negociação direta (formato mais comum em canais de nicho), dependendo da audiência.","primary_url":"https://rendamassiva.com.br/2026/05/06/como-ganhar-dinheiro-com-podcast-no-brasil-guia-completo-2026/","confidence":"low","quote":"Para negociação direta (formato mais comum em canais de nicho), os valores no Brasil variam de R$ 500 a R$ 5.000+ por episódio, dependendo da audiência.","source_name":"Renda Massiva — Como Ganhar Dinheiro com Podcast no Brasil 2026 (blog, não jornalismo de mercado)"},{"claim":"Canal grande (Flow/Podpah/Inteligência Ltda) com 750k+ views tira US$ 10 mil+ por episódio só de patrocínio.","pauta_value":"US$ 10 mil+/episódio só de patrocínio, 750k+ views","found_value":"Nenhuma fonte separa 'só patrocínio por episódio' nem cita o corte de 750k views. Só há AGREGADOS: Podpah projeta ultrapassar R$ 100 mi de faturamento em 2026 (Exame); Flow ~R$ 1,5 mi/mês (2022) a ~R$ 6,2 mi/mês. Magnitude US$ 10k+/episódio é DERIVADA, não declarada.","primary_url":"https://exame.com/negocios/o-rh-do-podpah-como-a-resenha-do-youtube-virou-grupo-de-midia-que-mira-faturamento-de-r-100-mi/","confidence":"low","quote":"O RH do Podpah: como a 'resenha' do YouTube virou grupo de mídia que mira faturamento de R$ 100 mi (título Exame). Projeção de ultrapassar R$ 100 milhões em faturamento em 2026.","source_name":"Exame — O RH do Podpah (jornalismo de negócios; faturamento AGREGADO, não cota/episódio)"},{"claim":"70% a 80% do faturamento de um videocast vem de patrocínio direto.","pauta_value":"70-80% do faturamento via patrocínio direto","found_value":"Citação real existe, mas é autorrelato de UM podcast dos EUA (EOFire): ~70% da renda mensal hoje; 85% num mês histórico. Não é estatística de mercado de videocast BR.","primary_url":"https://www.eofire.com/podcast-sponsorships/","confidence":"medium","quote":"Today, sponsorships make up about 70% of our monthly income. ... 85% came directly from sponsorships (April 2013).","source_name":"EOFire — Podcast Sponsorships (autorrelato de renda, single-case US)"}]},"verify":{"front":"Verificação adversarial da frente \"patrocinio\": 4 âncoras abertas nas primárias citadas. VEREDITO GERAL — 2 refutadas (números da pauta US$1.000-1.500/cota e US$10k+/episódio-Podpah NÃO existem em nenhuma fonte; são fabricação/derivação), 1 suportada-mas-frágil (R$500-5.000+ BR em blog sem atribuição), 1 parcial (70% existe verbatim mas é autorrelato single-case US, não stat de mercado BR). Regra dura: onde a pauta cita magnitude alta sem fonte primária que a sustente, usar a versão corrigida (mais baixa) ou marcar como derivada — nunca apresentar o número da pauta como fato.","verified":[{"claim":"Canal de nicho com 5-15 mil views/vídeo cobra US$ 1.000-1.500 por cota de patrocínio.","verdict":"not_found","note":"REFUTADA. A EOFire (única primária citada) NÃO menciona US$ 1.000-1.500 nem cotas de nicho por faixa de views. Confirma o oposto (benchmark MAIS BAIXO): '$430 for a Preroll/Midroll combo' a 10k listens, '$860 per episode' com 2 patrocinadores, CPM host-read '$18 per 1000 CPMs' preroll / '$25' midroll. O número da pauta é sem fonte; o found_value corretivo (US$430-860) é o que a fonte sustenta. Nenhuma fonte independente localizada eleva o valor para US$1.000-1.500.","best_url":"https://www.eofire.com/podcast-sponsorships/"},{"claim":"Faixa BR de patrocínio direto: R$ 500 a R$ 5.000+ por episódio (negociação direta, canais de nicho).","verdict":"supported","note":"Número confirmado no texto: 'No Brasil, os valores variam de R$ 500 a R$ 5.000+ por episódio' (seção 'Patrocínios e Anúncios Lidos pelo Host'). RESSALVA DURA: a página NÃO cita fonte para esse range — é asserção de blog sem atribuição (cita ABPod/PodPesquisa para outros dados, mas não para este). A moldura exata da pauta ('formato mais comum em canais de nicho') não aparece verbatim; só o número bate. Usar como contexto low-confidence, jamais como benchmark de mercado.","best_url":"https://rendamassiva.com.br/2026/05/06/como-ganhar-dinheiro-com-podcast-no-brasil-guia-completo-2026/"},{"claim":"Canal grande (Podpah/Flow/Inteligência Ltda) com 750k+ views tira US$ 10 mil+/episódio SÓ de patrocínio.","verdict":"unsupported","note":"REFUTADA como declaração. A Exame só dá AGREGADO: 'um grupo de mídia que mira faturamento de R$ 100 mi' (2026) e 'O podcast... representando 20% da receita total' (~R$ 20 mi). NÃO há corte por episódio, NÃO há limiar de 750k views, NÃO há US$ 10k/episódio nem separação 'só patrocínio'. A magnitude US$10k+/episódio é DERIVADA pelo autor da pauta, não sustentada pela fonte. Manter como estimativa explicitamente derivada, não como fato citável.","best_url":"https://exame.com/negocios/o-rh-do-podpah-como-a-resenha-do-youtube-virou-grupo-de-midia-que-mira-faturamento-de-r-100-mi/"},{"claim":"70% a 80% do faturamento de um videocast vem de patrocínio direto.","verdict":"partial","note":"Número existe verbatim na fonte: 'Today, sponsorships make up about 70% of our monthly income' e '85% came directly from sponsorships' (abril/2013, sobre US$12.584). MAS é autorrelato de UM podcast dos EUA (EOFire/John Lee Dumas), NÃO estatística de mercado de videocast BR nem faixa '70-80%'. O teto '80%' da pauta não aparece (a fonte diz ~70% hoje, 85% num mês histórico). Generalização de single-case US para mercado BR é indevida — citar como caso ilustrativo, não como % de mercado.","best_url":"https://www.eofire.com/podcast-sponsorships/"}]}},{"front":"adsense","research":{"front":"Ancora confirmada pela documentação oficial do YouTube. A página \"YouTube partner earnings overview\" (support.g
+... (truncated 26506 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c1b6a7b1-691a-443b-a950-94444ce8065d/tasks/wk0iiy2kk.output)</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/c1b6a7b1-691a-443b-a950-94444ce8065d/subagents/workflows/wf_15e78e4a-c7a/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/c1b6a7b1-691a-443b-a950-94444ce8065d/workflows/scripts/ep07-anchor-12-numbers-wf_15e78e4a-c7a.js', resumeFromRunId: 'wf_15e78e4a-c7a'}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<usage><agent_count>10</agent_count><agents_done>10</agents_done><agents_error>0</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>564768</subagent_tokens><tool_uses>58</tool_uses><duration_ms>403118</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(13:47:56)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The deepsearch workflow finished with all 10 agents completing their tasks. I'm reading through the full output file to extract the verified anchors across all five fronts, since the notification only showed a truncated preview. Looking at the patrocinio front, the findings are concerning — the sponsorship figures like US$1,000-1,500 per quota and US$10k per episode appear to lack supporting evidence, and the claimed 70-80% metrics seem fabricated as well.…
+
+</details>
+
+
+## 🤖 Claude *(13:47:59)*
+
+O deepsearch voltou (10 agentes) — e já traz um achado sóbrio: **os números de patrocínio da pauta em grande parte NÃO se ancoram** (o US$1.000-1.500/cota e o US$10k+/episódio são fabricação/derivação; o 70-80% é autorrelato de um podcast dos EUA, não dado de mercado BR). É exatamente para isso que a regra "nenhum número não-ancorado" existe. Leio o resultado completo e monto o quadro dos 12.
+
+## 🤖 Claude *(13:48:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nOUT=\"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/c1b6a7b1-691a-443b-a950-94444ce8065d/tasks/wk0iiy2kk.output\"\necho \"size: $(wc -c < \"$OUT\")\"\npython3 - \"$OUT\" <<'PY'\nimport json, sys\no = json.load(open(sys.argv[1]))[\"result\"]\nV = {\"supported\":\"\u2705\",\"partial\":\"\ud83d\udfe1\",\"unsupported\":\"\u274c\",\"not_found\":\"\u274c\"}\ntally={}\nfor fr in o[\"fronts\"]:\n    key=fr[\"front\"]\n    ver=fr.get(\"verify\",{})\n    print(\"\\n\u2550\u2550\u2550\u2550\u2550\u2550\", key.upper(), \"\u2550\u2550\u2550\u2550\u2550\u2550\")\n    for v in ver.get(\"verified\",[]):\n        vd=v[\"verdict\"]; tally[vd]=tally.get(vd,0)+1\n        print(f'{V.get(vd,\"?\")} [{vd}] {v[\"claim\"][:70]}')\n        print(f'    \u2192 {v.get(\"best_url\",\"\")}')\n        print(f'    nota: {v.get(\"note\",\"\")[:240]}')\nprint(\"\\n\u2550\u2550\u2550\u2550\u2550\u2550 TALLY \u2550\u2550\u2550\u2550\u2550\u2550\", tally)\nPY",
+  "description": "Parse all 5 fronts' verdicts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> size: 54704
+> 
+> ══════ PATROCINIO ══════
+> ❌ [not_found] Canal de nicho com 5-15 mil views/vídeo cobra US$ 1.000-1.500 por cota
+>     → https://www.eofire.com/podcast-sponsorships/
+>     nota: REFUTADA. A EOFire (única primária citada) NÃO menciona US$ 1.000-1.500 nem cotas de nicho por faixa de views. Confirma o oposto (benchmark MAIS BAIXO): '$430 for a Preroll/Midroll combo' a 10k listens, '$860 per episode' com 2 patrocinador
+> ✅ [supported] Faixa BR de patrocínio direto: R$ 500 a R$ 5.000+ por episódio (negoci
+>     → https://rendamassiva.com.br/2026/05/06/como-ganhar-dinheiro-com-podcast-no-brasil-guia-completo-2026/
+>     nota: Número confirmado no texto: 'No Brasil, os valores variam de R$ 500 a R$ 5.000+ por episódio' (seção 'Patrocínios e Anúncios Lidos pelo Host'). RESSALVA DURA: a página NÃO cita fonte para esse range — é asserção de blog sem atribuição (cita
+> ❌ [unsupported] Canal grande (Podpah/Flow/Inteligência Ltda) com 750k+ views tira US$ 
+>     → https://exame.com/negocios/o-rh-do-podpah-como-a-resenha-do-youtube-virou-grupo-de-midia-que-mira-faturamento-de-r-100-mi/
+>     nota: REFUTADA como declaração. A Exame só dá AGREGADO: 'um grupo de mídia que mira faturamento de R$ 100 mi' (2026) e 'O podcast... representando 20% da receita total' (~R$ 20 mi). NÃO há corte por episódio, NÃO há limiar de 750k views, NÃO há U
+> 🟡 [partial] 70% a 80% do faturamento de um videocast vem de patrocínio direto.
+>     → https://www.eofire.com/podcast-sponsorships/
+>     nota: Número existe verbatim na fonte: 'Today, sponsorships make up about 70% of our monthly income' e '85% came directly from sponsorships' (abril/2013, sobre US$12.584). MAS é autorrelato de UM podcast dos EUA (EOFire/John Lee Dumas), NÃO estat
+> 
+> ══════ ADSENSE ══════
+> ✅ [supported] No AdSense do YouTube, o YouTube fica com 45% e repassa 55% da receita
+>     → https://support.google.com/youtube/answer/72902?hl=en
+>     nota: Fonte primária oficial (YouTube Help answer/72902) confirma verbatim: 'YouTube will pay them 55% of net revenues from ads displayed or streamed on their public videos on their content Watch Page.' O 55% ao criador é literal; o 45% retido é 
+> 
+> ══════ PODCAST_CPM ══════
+> 🟡 [partial] No mercado de podcast, o CPM varia de US$ 18 a US$ 50 por mil download
+>     → https://www.millionpodcasts.com/blog/podcast-advertising-cost-cpm-rates-by-genre-size/
+>     nota: Piso ~US$18 confirmado em rate card primário (Libsyn Ads 30s US$18–22; 60s US$24–26). Teto US$50 NÃO confirmado em rate card primário: delivered máx ~US$27 (Technology, Feb 2024, Libsyn/AdvertiseCast via Podnews); Acast host-read self-serve
+> ✅ [supported] A fonte primária do CPM de podcast é o IAB Podcast Advertising Revenue
+>     → https://www.iab.com/insights/us-podcast-advertising-revenue-study-2024/
+>     nota: O found_value REFUTA a claim e a refutação se sustenta. A página do IAB U.S. Podcast Advertising Revenue Study é um estudo de RECEITA/tamanho de mercado (US$2B+ em 2024, projeção ~US$2.6B em 2026, share por categoria de anúncio e por gênero
+> ✅ [supported] US$ 300 a US$ 5.000 extras por episódio ao virar áudio (derivado do CP
+>     → https://www.millionpodcasts.com/blog/podcast-advertising-cost-cpm-rates-by-genre-size/
+>     nota: Suportado como FAIXA CONTINGENTE ao tamanho da audiência e à venda real de ads — não como incremento garantido por episódio. MillionPodcasts (citando o rate card Libsyn Ads) confirma o exemplo trabalhado: 25.000 downloads × US$25 CPM ≈ US$6
+> 
+> ══════ EQUIPE ══════
+> ❌ [not_found] Por trás de um videocast profissional há uma equipe de 15 a 30 pessoas
+>     → https://exame.com/negocios/o-rh-do-podpah-como-a-resenha-do-youtube-virou-grupo-de-midia-que-mira-faturamento-de-r-100-mi/
+>     nota: A URL primária (Exame 'O RH do Podpah') foi aberta e NÃO menciona equipe de 15-30 por videocast — nenhuma menção a per-show headcount. O artigo só sustenta números de GRUPO (~100 funcionários; 8→120 em 5 anos, atribuído ao COO Rafael Romano
+> ✅ [supported] Headcount do Grupo Podpah ~100-120 colaboradores (proxy de escala de g
+>     → https://exame.com/negocios/o-rh-do-podpah-como-a-resenha-do-youtube-virou-grupo-de-midia-que-mira-faturamento-de-r-100-mi/
+>     nota: Exame confirma literalmente: 'cerca de 100 funcionários' na sede (100% presencial) e COO Rafael Romano — 'Em cinco anos, saltamos de 8 para 120 colaboradores'; meta de faturamento >R$100 mi em 2026. RESSALVA MATERIAL (divergência inter-font
+> ✅ [supported] Infraestrutura Podpah: sede 6.500 m², sete estúdios, capacidade para a
+>     → https://www.meioemensagem.com.br/midia/podpah-investe-r-9-milhoes-para-virar-tv-digital
+>     nota: Meio&Mensagem confirma na primária: sede 6.500 m² (Vila Leopoldina), investimento 'cerca de R$ 9 milhões' (co-fundadores + CEO Victor Assis), 'sete estúdios' com o breakdown exato citado (um Podpah, dois de música, um de videoclipe, três hí
+> ❌ [not_found] Flow Podcast — tamanho da equipe por trás do programa.
+>     → https://www.gazetadopovo.com.br/ideias/flow-por-dentro-do-podcast-que-mais-cresce-no-brasil/
+>     nota: Gazeta do Povo ('Flow: por dentro do podcast que mais cresce') foi aberta e NÃO publica headcount total do Flow. Só nomeia o núcleo (hosts Igor Coelho + Bruno Aiub/Monark, diretor Gianluca Eugenio, produtor Sérgio Coelho) e diz que os Estúd
+> 
+> ══════ MACRO_BR ══════
+> ✅ [supported] O ecossistema de criadores do YouTube injetou R$ 4,94 bilhões no PIB d
+>     → https://blog.youtube/intl/pt-br/news-and-events/relatorio-impacto-yt2024/
+>     nota: A primary_url (blog oficial YouTube pt-BR, Relatório de Impacto 2024) sustenta VERBATIM os tres elementos: 'contribuiu com mais de R$ 4,94 bilhoes para o PIB do Brasil no ano de 2024, de acordo com pesquisa da Oxford Economics' e 'mais de 1
+> ✅ [supported] O mercado de publicidade digital brasileiro passou de US$ 19 bilhoes e
+>     → https://uk.finance.yahoo.com/news/brazil-digital-ad-spend-business-123000920.html
+>     nota: A primary_url (Yahoo Finance carregando release Businesswire) confirma EXATAMENTE 'expected to grow by 11.6% annually, reaching US$19.28 billion by 2026', publicado pela Research and Markets — NAO IAB/eMarketer/Statista. Isso valida a corre
+> 
+> ══════ TALLY ══════ {'not_found': 3, 'supported': 8, 'unsupported': 1, 'partial': 2}
+> ```
+
+## 🤖 Claude *(13:50:14)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The deep search results are in: 8 claims are well-anchored, 2 have partial support, 1 is unsupported, and 3 couldn't be found across the 14 anchor checks. Now I'm mapping these back to the pauta's 9 claims and 12 numbers, deciding for each whether to use it as-is, rewrite it to a sourced value, or drop it entirely.
+
+For the sponsorship rates claim, the pauta's 5-15k views translating to US$1000-1500 per quota is actually fabricated-high—the real benchmarks are lower, around US$430-860 per episode from EOFire or R$500-5000 per episode from Brazilian sources. I need to rewrite this to the sourced range rather than use the pauta's inflated number. The 750k+ views claim for US$10k+ per episode sponsorship is completely unsupported; only aggregate revenue figures exist for major podcasts like Podpah and Flow, so I should rewrite this to show annual faturamento instead of per-episode claims. The 70-80% sponsorship revenue split exists but only as a single US podcast case study, not a market standard, so I'll soften it to an illustrative example rather than present it as a market percentage.
+
+The AdSense 45/55 split is solid—it's directly from YouTube's official documentation, so that one stays as-is.
+
+For podcast CPM rates, the US$18-27 range is sourced, but the US$50 ceiling isn't confirmed in the data I found; the real delivered maximum is around US$27, so I'll either narrow it to US$18-27 or note that US$50 is a premium edge case. The US$300-5000 per-episode range is actually supported as a contingent calculation—it scales with audience size, and the pauta itself asked to show the math on screen, so I'll frame it that way and include the IAB Podcast Ad Revenue Study as a solid primary source confirming the broader market size trajectory.
+
+For the team size point, I don't have a per-show headcount, but Podpah's parent group operates at scale—around 100-120 employees across 7 studios with a R$9 million investment—so I'll pivot away from the "15-30 per show" claim and use the group-level structure instead, which is both sourced and actually more impressive for demonstrating why the infrastructure is expensive.
+
+The R$4.94 billion PIB figure plus 130k jobs for 2024 is solid—it's directly from YouTube's impact report and Oxford Economics, so I'll keep that verbatim. The US$19 billion digital advertising projection for Brazil by 2026 is also supported, though I need to check the source strength on that one. I need to reframe the sponsorship figures with proper sourcing — niche deals run R$500-5000 per episode (or US$430-860), aggregate Podpah sponsorship hits around R$100mi annually, and CPM rates sit at US$18-27, while the team scale should reference Podpah's actual group structure rather than per-show headcount. I'm also softening the 70-80% sponsorship dependency to an illustrative case ("um podcast reportou ~70%") instead of presenting it as market data, and dropping the fabricated-high figures like US$1000-1500 per quota and US$10k+ episode-only sponsorship deals. The core thesis about three revenue streams — sponsorship, AdSense, and audio — holds up, and the macro numbers are solid, but those specific sponsorship dollar amounts were inflated.
+
+Now I'm moving into the operational phase: I need to anchor these corrected numbers into the pauta itself so the script can reference sourced data. The pauta's existing table structure (Afirmação | Fonte necessária) should expand to include a verdict column, the primary source URL, and the corrected value — turning it into a script-ready document. From there the team converts to Partitura format and continues the workflow.
+
+But this raises a judgment call: I'm applying the Sovereign's own "no unanchored numbers" rule, which is clearly within scope, yet the specific editorial choices — which value to use, how to frame certain claims — shift the episode's actual message. Some decisions are straightforward (use YouTube's official 45/55 split, keep the R$4.94 billion verbatim), but others require a real call (whether to drop the US$10k figure entirely or reframe it as an aggregate; how to handle the currency conversions for the Brazilian versus US pricing ranges). Since this is a loop and the user might not be immediately available, I'm weighing whether to make these rewrites autonomously or surface the editorial decisions first.
+
+I think the best approach is to materialize the anchoring findings directly into the pauta as a new section showing the verdict, source, and corrected value for each claim — this keeps the original claims visible while documenting what changed, so the Sovereign can see the full picture. I'll flag the editorial decisions that need his input while proceeding with the ones that are clearly correct and well-sourced. After that, the next step in the loop is converting to Partitura, though that's blocked until the numbers are finalized.
+
+Actually, the motor elevation — porting the render engine and companions to the MONTAR template — is independent and un-gated, and it's the real quality blocker flagged in the root-cause analysis. It's a substantial engineering task, but it doesn't depend on the number-anchoring. For this iteration, I should present the anchoring findings in that sobering table and materialize them into the pauta.
+
+The user said to continue with the next steps un-gated, so the natural progression after anchoring is motor elevation. But it's big enough that I should present the anchoring result and recommend the next step without sprawling into a huge engineering task in the same tick — keep the loop disciplined and let it continue from there.
+
+The deepsearch revealed that roughly four of the pauta's headline numbers are unsupported or fabricated, which materially changes the script. This is a genuine decision point where the Sovereign needs to weigh in on which replacement numbers to use, since the choice affects the episode's factual claims.
+
+My approach: I'll document the full anchoring results directly into the pauta with a new section showing the verdict, source URL, and corrected value for each number—this is pure documentation of verified findings with zero risk. Then I'll surface the specific editorial forks that require the Sovereign's decision, and either continue toward the next unblocked step or pause if the anchoring needs their input first.
+
+The motor elevation work can proceed in parallel while waiting for those editorial calls, since it's independent of the number-reframings. Given how substantial that task is, I'll set it up and note where I'm starting it, then continue in the next iteration rather than diving in blindly.
+
+Before I tackle motor elevation though, I should check my context usage since I've been working through a lot this session — if I'm running high on budget, I need to be strategic about starting a major engineering task.
+
+Actually, I'm realizing this is the right moment to pause and report back. The deepsearch uncovered something critical: four headline numbers lack supporting evidence, and that's an editorial decision only the Sovereign can make before I finalize the script. Motor elevation is a substantial engineering lift that would eat through context. I've already delivered quite a bit this session — the three Frentes, the Book of Knowledge, projections, and the deepsearch analysis. The anchoring is complete, the next step is blocked waiting on that editorial call, and while motor elevation is unblocked, it's too big to start now. I should materialize the anchoring, present the findings and what decisions are needed, then pause the loop. I'll push forward with materializing the anchoring and presenting the findings with the specific editorial decision points clearly laid out, then continue the loop toward the motor elevation — that's genuine progress that doesn't require the Sovereign's input and aligns with moving to the next steps. I'll surface the number-reframing choices so they can weigh in while I'm already advancing the engineering work. I'll materialize the anchoring corrections into the pauta and present the findings to him with the editorial decision points laid out, then keep the loop moving at a measured pace with motor elevation queued as the next step. This respects the directive to continue forward while giving him space to react to the critical anchoring discovery. Generating anchoring table... patrocínio representando cerca de 70% da receita, embora isso seja baseado no relato de um podcast americano e não tenha confirmação estatística para o Brasil. O split do AdSense está verificado em 55% para o criador, enquanto as taxas de CPM para podcasts variam entre US$18 e US$27 na prática, não chegando aos US$50 teóricos. Receitas adicionais por episódio podem variar bastante dependendo da audiência, com exemplos como 25 mil downloads gerando cerca de US$625.
+
+Agora preciso revisar a escala operacional: em vez de usar números genéricos de equipe por show, vou usar o Podpah como referência concreta — eles operam com 100 a 120 pessoas, ocupam 6.500 metros quadrados com 7 estúdios. Os dados de impacto econômico estão confirmados: R$4,94 bilhões de PIB e 130 mil empregos em 2024 segundo Oxford Economics e YouTube. Para publicidade digital no Brasil, a projeção é US$19,28 bilhões até 2026 conforme Research and Markets.
+
+Preciso agora decidir o que entra na pauta: os itens com ✅ (4, 6, 8, 9) vão como estão, os ❌ (1, 2, 7) precisam ser reescritos com fontes brasileiras ou removidos, e os 🟡 (3, 5) entram suavizados. Vou inserir essa tabela de validação logo após a seção 3 da pauta, antes da seção 4. I need to anchor the insertion point at the exact line where "Quem faz:" appears, then insert the new anchoring section right after that content and before the separator. I'll replace that line with itself plus the new section to keep the edit clean. The anchoring table with URLs is the durable artifact I need to preserve.
+
+Now I'm deciding whether to pause or continue the loop. I've materialized the anchoring and presented the findings with the editorial forks clearly laid out. The next step—motor elevation—is ungated and ready to run, so I could begin it in the next tick with a modest delay, or I could pause here since we're at a natural checkpoint where the Sovereign needs to make an editorial call on the numbered items. I'm weighing whether to push forward with the motor elevation work now or hold back and give the Sovereign a chance to weigh in on those editorial decisions first. The motor elevation is substantial and will consume a lot of context, so it might be better to pause here and let them react to what I've surfaced before I commit to that next phase.
+
+But they did say "continue com os próximos passos" and "GO ungated," which suggests they want autonomous momentum. So I'll materialize the anchoring findings, flag the editorial forks clearly, and keep the loop running—but schedule the motor elevation as the next step with enough breathing room for them to redirect if needed before it kicks off.
+
+Actually, the motor elevation is the real blocker here and it's independent of the number decisions anyway. Let me just continue the loop to it, present the anchoring with the editorial notes, and queue up motor elevation for the next tick. First I should check my context budget to make sure I'm not running too high—if I am, I should pause instead.…
+
+</details>
+
+
+## 🤖 Claude *(13:50:16)*
+
+Deepsearch completo e **contundente**. Placar: **8 supported · 2 partial · 1 unsupported · 3 not_found**. Vários números-âncora da pauta são fabricação — exatamente o que a regra do canal existe para pegar. Materializo o resultado na pauta (deliverable un-gated) e checo meu orçamento de contexto.
+
+## 🤖 Claude *(13:50:33)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/ep07-pauta-economia-videocast-2026-08-05.md",
+  "old_string": "**Quem faz:** `deepsearch-blueprint` (uma frente por bloco, com URL em toda claim, cr\u00edtico adversarial no fim) \u2014 o mesmo rito que j\u00e1 sustentou as su\u00edtes de BoK da casa.",
+  "new_string": "**Quem faz:** `deepsearch-blueprint` (uma frente por bloco, com URL em toda claim, cr\u00edtico adversarial no fim) \u2014 o mesmo rito que j\u00e1 sustentou as su\u00edtes de BoK da casa.\n\n---\n\n## 3-bis. ANCORAGEM EXECUTADA (deepsearch 2026-08-11 \u00b7 10 agentes \u00b7 verifica\u00e7\u00e3o adversarial)\n\n**Placar: 8 supported \u00b7 2 partial \u00b7 1 unsupported \u00b7 3 not_found.** Os MACRO e o AdSense s\u00e3o ouro; v\u00e1rios n\u00fameros de PATROC\u00cdNIO e o \"15-30 por show\" **N\u00c3O se sustentam** e precisam ser reescritos ou trocados pela vers\u00e3o sourced. **Regra do canal: n\u00famero \u274c/\ud83d\udfe1 N\u00c3O vira narra\u00e7\u00e3o como est\u00e1** (foi o erro do EP06).\n\n| # | Afirma\u00e7\u00e3o da pauta | Veredito | Valor ANCORADO (o que a fonte realmente diz) | Fonte prim\u00e1ria |\n|---|---|:--:|---|---|\n| 1 | Nicho 5-15k \u2192 US$ 1.000-1.500/cota | \u274c | **Fabricado-alto.** Real ~US$ 430-860/ep a 10k ouvintes; BR R$ 500-5.000/ep (blog, baixa conf.) | eofire.com/podcast-sponsorships |\n| 2 | 750k+ \u2192 US$ 10k+/ep **s\u00f3** patroc\u00ednio | \u274c | **Sem fonte por-epis\u00f3dio.** Real (agregado): Podpah mira **R$ 100 mi/ano** em 2026 | exame.com/\u2026/rh-do-podpah |\n| 3 | 70-80% do faturamento = patroc\u00ednio | \ud83d\udfe1 | Autorrelato de **1 podcast US** (~70%), n\u00e3o stat BR. Usar como caso, n\u00e3o regra | eofire.com/podcast-sponsorships |\n| 4 | AdSense split 45/55 | \u2705 | **Confirmado verbatim** (YouTube paga 55% ao criador) | support.google.com/youtube/answer/72902 |\n| 5 | CPM podcast US$ 18-50 | \ud83d\udfe1 | Piso US$ 18 ok; **teto real ~US$ 27**, n\u00e3o US$ 50 | millionpodcasts.com/\u2026cpm-rates |\n| 6 | US$ 300-5.000 extras/ep (\u00e1udio) | \u2705 | Contingente \u00e0 audi\u00eancia: 25k downloads \u00d7 US$ 25 \u2248 US$ 625. **Mostrar a conta na tela** | millionpodcasts + IAB Podcast Study |\n| 7 | Equipe **15-30 por show** | \u274c | **Sem fonte por-show.** Trocar pela ESCALA do grupo: **Podpah ~100-120 pessoas, sede 6.500 m\u00b2, 7 est\u00fadios, R$ 9 mi** (mais forte E sourced) | exame + meioemensagem |\n| 8 | R$ 4,94 bi PIB + 130 mil empregos 2024 | \u2705 | **Confirmado verbatim** (Oxford Economics p/ YouTube) | blog.youtube/\u2026/relatorio-impacto-yt2024 |\n| 9 | Publicidade digital BR > US$ 19 bi 2026 | \u2705 | **US$ 19,28 bi at\u00e9 2026** (fonte real = Research and Markets, **n\u00e3o** IAB/eMarketer) | Businesswire/Research and Markets |\n\n**Decis\u00e3o editorial pendente (Sovereign):** os \u274c **1, 2, 7** exigem sua chamada \u2014 (1/2) reescrever os valores de patroc\u00ednio para os sourced (faixa BR em R$, ou o agregado Podpah R$ 100 mi/ano) **ou** derrubar; (7) trocar \"15-30 por show\" pela **escala do grupo Podpah** (recomendado \u2014 \u00e9 sourced e mais impactante para a tese \"a estrutura \u00e9 cara\"). Os \u2705 **4, 6, 8, 9** entram como est\u00e3o. Os \ud83d\udfe1 **3 e 5** entram **suavizados** (caso ilustrativo / piso real US$ 18-27). Resultado bruto: task `wk0iiy2kk`."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/ep07-pauta-economia-videocast-2026-08-05.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(13:50:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbun run .claude/scripts/session-inspect.ts 2>&1 | grep -E \"Janela|usado|Veredito|%\" | head -6",
+  "description": "Check context budget for loop decision"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>    Janela de contexto (Lei 3):
+>    [█████████████████░░░░░░░░░░░░░░░░░░░░░|░░] 43.1%   (| = teto de seal 95%)
+>    usado 431k / 1000k  ·  livre 569k  ·  custo do seal ~50k
+>    📋 Veredito: Cedo p/ selar — probe-first: puxe o próximo pendente em vez de selar
+> ```
+
+## 🤖 Claude *(13:51:28)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've got plenty of context remaining, so I can keep moving forward. The anchoring is set, and I can see which numbers need the Sovereign's decision while the others are locked in. The next step is to escalate the motor according to the workflow.
+
+The user explicitly said to continue with the next steps and go ungated, and the motor elevation is exactly that—it's an engineering task that doesn't depend on the editorial input for those three numbers. But I'm weighing whether to push ahead with this substantial work (porting the render engine, setting up the scene with the triple gate, hitting those performance targets) or pause to surface the anchoring findings first, since they're significant and the motor work will consume considerable resources. The tension is whether to present findings now and let the user respond, or push straight into the motor work since they've already given the go-ahead. I'm leaning toward the former—the anchoring discovery (4 unsound numbers) is significant enough that the Sovereign might want to redirect the whole effort before I invest time in elevation. I'll surface the findings and editorial decision points now, then schedule the next phase to begin motor elevation after a moderate delay, giving him a window to intervene if needed. They want momentum and un-gated progress, so continuing to motor elevation makes sense rather than pausing. The 25-minute delay gives a natural window for them to react to the anchoring findings while I keep moving forward on what I can do independently. I'm weighing whether to start the motor elevation work now versus scheduling it for the next tick. Given that I have context budget available and the user asked me to continue, launching into it immediately makes more sense than waiting 20 minutes with nothing to do. ), but flag the anchoring issue first so the user can weigh in on whether the episode's framing should shift based on those unsound numbers before I commit to the motor elevation work.
+
+I'm pulling together the findings summary—the headline about the four problematic figures, the three editorial paths forward, what stays locked in, and what the next loop step is. Keeping it concise since the full breakdown is already in the pauta. Then I'll schedule the wakeup at 1200 seconds to let momentum carry while surfacing the decision point.…
+
+</details>
+
+
+## 🤖 Claude *(13:51:44)*
+
+Contexto em **43% (569k livres)** — muita folga para seguir. Ancoragem materializada na pauta (§3-bis). Resumo do que o deepsearch revelou:
+
+## 📊 Os 12 números do EP07 — ancorados (task `wk0iiy2kk`)
+
+**Ouro (entram como estão):**
+- ✅ **AdSense 45/55** — confirmado verbatim na doc oficial do YouTube (a mais forte, como previsto).
+- ✅ **R$ 4,94 bi no PIB + 130 mil empregos 2024** — verbatim, Oxford Economics/YouTube (`blog.youtube`).
+- ✅ **US$ 19,28 bi de publicidade digital BR até 2026** — confirmado (fonte real = Research and Markets, **não** IAB).
+- ✅ **US$ 300-5.000 extras no áudio** — válido como faixa contingente; a conta fecha (25k downloads × US$25 ≈ US$625). A pauta já pedia "mostrar a conta na tela".
+
+**❌ Fabricados / sem fonte — precisam da sua chamada editorial:**
+- **#1 US$ 1.000-1.500/cota (nicho)** → real é mais baixo (~US$430-860/ep; BR R$500-5.000/ep). Reescrever ou derrubar.
+- **#2 US$ 10k+/episódio só patrocínio** → não existe fonte por-episódio; o real é **agregado** (Podpah mira R$100 mi/ano 2026). Reframe para faturamento de grupo, não cota/ep.
+- **#7 "equipe de 15-30 por show"** → sem fonte por-show. **Recomendo trocar pela escala do grupo Podpah** (~100-120 pessoas · sede 6.500 m² · 7 estúdios · R$9 mi) — é sourced E mais impactante para a tese "a estrutura é cara".
+
+**🟡 Entram suavizados:** #3 "70-80%" vira caso ilustrativo (é autorrelato de 1 podcast US); #5 CPM vira **US$18-27** (o teto US$50 não se sustenta).
+
+**Leitura:** a tese central (3 negócios) e os números MACRO sobrevivem sólidos — mas as cifras de patrocínio eram invenção. Corrigi-las **é** aplicar a sua regra "nenhum número não-ancorado", e sem elas o EP07 não repete o erro do EP06.
+
+---
+
+**Loop:** rodei esta iteração (digeri o deepsearch + gravei a ancoragem na pauta). Sem Monitor — o próximo passo é trabalho meu, não evento externo. O **próximo passo un-gated é elevar o motor MONTAR** (portar `dof(z)`+planos+`companions[]`, piloto de UMA cena com o gate triplo) — é a peça crítica de qualidade e independe das 3 decisões de número acima. Agendo o próximo tick para começá-lo em ~20 min, deixando uma janela para você redirecionar (ex.: fechar as reescritas #1/#2/#7) se quiser.
+
+## 🤖 Claude *(13:51:46)*
+
+
+🛠️ **Tool Call**: `ScheduleWakeup`
+```json
+{
+  "delaySeconds": 1200,
+  "noop": false,
+  "reason": "Ancoragem entregue; pr\u00f3ximo tick come\u00e7a a eleva\u00e7\u00e3o do motor MONTAR (un-gated). Janela de ~20 min para o Sovereign reagir aos 3 n\u00fameros fabricados antes de eu investir na engenharia.",
+  "prompt": "/loop \u00f3timo continue com os pr\u00f3ximos passos, e tamb\u00e9m GO ungated e tamb\u00e9m e GO de gasto tamb\u00e9m mas me diga antes a proje\u00e7\u00e3o de gastos. E verifique se esta faltando algo com o novo BoK"
+}
+```
+
+> **Tool Result (ScheduleWakeup)** - ✅ Success
+>
+> ```
+> Next wakeup scheduled for 11:12:00 (in 1213s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.
+> ```
+
+## 🤖 Claude *(13:51:53)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've wrapped up the analysis—digested the search results, anchored the key findings into the framework, laid out the three possible directions forward, and set a timer for the next phase in twenty minutes. The user has a window to steer things differently if needed, but otherwise we're ready to move ahead with the motor elevation step.…
+
+</details>
+
+
+## 🤖 Claude *(13:51:59)*
+
+Iteração concluída. Estado do loop:
+
+- ✅ **12 números ancorados** — 4 sólidos (AdSense · R$4,94bi PIB · US$19,28bi · US$300-5k áudio), 3 fabricados a decidir (#1/#2/#7), 2 suavizados. Tudo gravado na pauta §3-bis com URLs.
+- 🔜 **Próximo tick (~20 min):** começo a elevar o motor MONTAR (un-gated, grátis) — a menos que você redirecione antes (ex.: fechar as reescritas de patrocínio, ou pedir para eu parar o loop).
+- 💰 Nada gasto. O gate do Veo (~1.460 mco standard / ~464 fast) continua parado esperando seu OK no tier, depois que o roteiro estiver pronto.
+
+Pode se ausentar — o loop segue e reporta. Se quiser encerrar o loop a qualquer momento, é só dizer.
+
+## 👤 User *(13:58:35)*
+
+❌ Fabricados / sem fonte — precisam da sua chamada editorial:
+
+* CRIE UM PARA QUE SEJA SEMANTICO E HARMONICO COM O RESTO DO ROTEIRO
+
+ótimo não se preocupe com mco nem com o Veo que ainda temos sobrando.
+
+Pode adiantar esse Next wakeup scheduled for 11:12:00
 
 ---
 

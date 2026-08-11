@@ -92,9 +92,9 @@ ninguém viu: **rotacionar a chave em um lugar não rotaciona nos outros dois.**
 
 | # | Onde | Quem lê | Como sincronizar | Sintoma quando fica para trás |
 |---|------|---------|------------------|-------------------------------|
-| 1 | `.env` do repo | as 9 pontes systemd · todo script CLI | `rotate-supabase-secret.sh` | worker `active (running)` sem pegar job |
-| 2 | **Vault das Edge Functions** (Supabase) | as ~103 edge fns via `Deno.env.get` | `sync-edge-secret.sh` (precisa de PAT) | `get-infra-status` devolve 500 **com a chave certa no header** — o erro nasce DENTRO da função |
-| 3 | **Vault do POSTGRES** — `vault.decrypted_secrets` name=`sb_secret_key` | os jobs do **`pg_cron`** via `pg_net` | `vault.update_secret(<id>, <chave>, 'sb_secret_key')` | jobs seguem `active=true`, disparam no horário, tomam **401**, e a edge function **nunca loga** |
+| 1 | `.env` do repo | as 9 pontes systemd · todo script CLI | `rotate-supabase-secret.sh` (steps 1-4) | worker `active (running)` sem pegar job |
+| 2 | **Vault das Edge Functions** (Supabase) | as ~103 edge fns via `Deno.env.get` | `sync-edge-secret.sh` (auto no **step 5** do rotate; precisa de PAT) | `get-infra-status` devolve 500 **com a chave certa no header** — o erro nasce DENTRO da função |
+| 3 | **Vault do POSTGRES** — `vault.decrypted_secrets` name=`sb_secret_key` | os jobs do **`pg_cron`** via `pg_net` | **step 6** do rotate (auto-atualiza com PAT) · à mão: `vault.update_secret((SELECT id FROM vault.secrets WHERE name='sb_secret_key'), <chave>, 'sb_secret_key')` | jobs seguem `active=true`, disparam no horário, tomam **401**, e a edge function **nunca loga** |
 
 O terceiro é o mais traiçoeiro: `cron.job.active = true` continua verdadeiro o tempo todo. Em
 2026-08-08 20:15 `autopilot-cadence` e `nurture-advance` morreram assim e ficaram **55 horas** sem um
@@ -111,10 +111,13 @@ Onde os jobs leem o cofre (para achar de novo):
 
 - **Código stale.** O guarda compara o start da ponte com o `.env`, não com o `.ts`. Um worker rodando
   código velho passa por aqui como saudável (memória `reference_hyperframes_worker_restart`).
-- **O vault das Edge Functions não é auto-curável.** O guarda não o consulta (exige PAT). Quem fecha é o
-  passo 5 do `rotate-supabase-secret.sh` + o `sync-edge-secret.sh`.
-- **O Vault do Postgres é detectado, não curado.** O GATE 3 acusa o silêncio e nomeia a causa provável,
-  mas não escreve no cofre sozinho — escrever segredo em produção fica com quem tem a chave na mão.
+- **O cofre 2 é DETECTADO pelo guarda (v1.1), mas não curado por ele.** O GATE 1b consulta o
+  `get-infra-status` (leitura, sem PAT) e marca `edge_vault_suspect`; escrever no vault exige PAT ⇒ a cura é o
+  `sync-edge-secret.sh` (auto no step 5 do rotate). ~~O guarda não o consulta~~ — superseded na v1.1.
+- **O cofre 3 (Postgres) é DETECTADO pelo guarda; a cura automática vive no rotate.** O GATE 2b acusa o
+  silêncio do heartbeat; o **step 6 do `rotate-supabase-secret.sh`** auto-atualiza o cofre quando há PAT (com
+  re-verificação de md5). O guarda `*/5` continua só detectando — escrever segredo fora de uma rotação
+  declarada fica com quem tem a chave na mão.
 - **Outros crons do host.** O `auto-publish` acumulou 634 ticks 401 no mesmo incidente e continua sem
   sentinela própria: ele loga em arquivo, não em `infra_health_logs`.
 
