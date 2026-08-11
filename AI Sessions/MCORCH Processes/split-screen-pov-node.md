@@ -1,6 +1,6 @@
-# SOP — Nó Tela Dividida (POV) · split-screen 9:16 (Lei 2)
+# SOP — Nó Tela Dividida (POV) · split-screen / split-grid 9:16 (Lei 2)
 
-**Status:** ACTIVE · v1.0 · 2026-07-21 · SSOT: `docs/bok/spaces-evolution/27-amendment-split-screen-pov.md` (FR-SPACES-097..100)
+**Status:** ACTIVE · v1.2 · 2026-08-11 · SSOT: `docs/bok/spaces-evolution/27-amendment-split-screen-pov.md` (FR-SPACES-097..100) + [`28-amendment-split-grid.md`](../bok/spaces-evolution/28-amendment-split-grid.md) + [`28-bis`](../bok/spaces-evolution/28-bis-amendment-split-grid-layouts-and-framing.md) (FR-SPACES-118/119) + [`46-amendment-grid-caption-layer.md`](../bok/spaces-evolution/46-amendment-grid-caption-layer.md) (FR-SPACES-185..188)
 
 ## Operator
 
@@ -35,6 +35,48 @@ Hoje (manual): o Sovereign — ou o Agent em scratch — compõe com FFmpeg à m
 ## Success signal
 
 Asset novo `kind=video` 1080×1920 na biblioteca do usuário, com as duas metades vivas, áudio conforme seleção, proveniência embedada pelo provenance-bridge, e o nó no Spaces exibindo o preview — reproduzindo pela UI o witness manual de 2026-07-20 sem nenhum passo de terminal.
+
+---
+
+## Adendo v1.2 (2026-08-11) — grid de N linhas · corte 16:9 nativo · legenda alpha livre
+
+Diretiva Sovereign de 2026-08-11: cortes em **16:9 nativo** compostos num grid vertical de **2 e de 3 linhas**,
+com a legenda como **camada alpha posicionável livremente**, inclusive na costura entre linhas.
+
+### Sequence (o que muda em relação ao fluxo acima)
+
+| # | Passo | Critério de sucesso material |
+|---|-------|------------------------------|
+| 1' | Cortar em **16:9 nativo** (não 9:16): no wizard de Cortes, Formato = **"16:9 (Horizontal)"** → `reframe:'16:9'` → alvo 1920×1080 | `ffprobe` do corte = 1920×1080, não 1080×1920 |
+| 2' | ⚠️ **A legenda de beats NÃO acompanha o corte 16:9.** `segment-core` recusa o overlay fora de 9:16 (os templates são safe-area 9:16) e **avisa em vez de renderizar errado** — guarda OTD-VR-008. Corte 16:9 sai **sem legenda queimada**, por design: quem legenda é o `caption_layer` do grid | log `overlay de beats indisponível em 16:9`; clipe limpo |
+| 3' | Escolher o layout: **`2v`** (2 linhas, célula 1080×960) ou **`1x3`** (3 linhas, célula 1080×640) | botão do layout marcado; `CELL_COUNTS` exige 2 ou 3 células |
+| 4' | Escolher o encaixe (FR-SPACES-186): **Preencher** corta as laterais (`2v` −37%, `1x3` −5%); **Encaixar** preserva o quadro e abre faixa (`2v` = 352px contíguos na costura; `1x3` = 32px, praticamente nada) | preview espelha o encaixe escolhido |
+| 5' | Posicionar a legenda (FR-SPACES-185): texto + `y ∈ [0,1]` + faixa `none/solid/gradient` | preview mostra a legenda na altura pedida |
+
+### Verification gates adicionais
+
+- **G5' (determinismo):** sem `caption_layer` e sem `cell_fit`, o render sai **sha-idêntico** ao anterior — `sha256sum` de duas saídas da mesma spec (NFR-VS-016).
+- **G6' (injeção):** legenda com `"` `\` `%` `:` e emoji renderiza correto e **não escapa o filtergraph** — o texto vai por `textContent` no template HTML, nunca na string do filtro.
+- **G7' (o falso-sucesso conhecido):** layout ausente do `CELL_COUNTS` deve **falhar**, não colapsar para `2x2` em silêncio (armadilha registrada em `video-bridge.ts:154-156`).
+- **G8' (ocular):** frame extraído com Vision QA — a legenda está legível **e** na altura pedida; a faixa, quando `fit`, não engole imagem.
+
+### Escolha de formato — a aritmética que decide
+
+| Grid | Preencher (perda lateral) | Encaixar (faixa contígua) | Quando usar |
+|------|---------------------------|---------------------------|-------------|
+| `2v`  | −37% da largura | **352px** de faixa | quando a legenda precisa de faixa própria |
+| `1x3` | **−5%** da largura | 32px (inútil) | quando o quadro 16:9 precisa sobreviver inteiro → legenda **sobreposta** |
+
+**Regra prática:** `1x3` + Preencher + legenda sobreposta é o formato barato que quase não corta.
+`2v` + Encaixar + faixa é o formato com tarja. Nunca `2v` + Preencher com material que tenha informação nas
+bordas — 37% da largura vai embora.
+
+### Recovery path adicional
+
+- Legenda ilegível/na altura errada → é composição, não infra: re-renderizar com outro `y`/faixa. O débito
+  foi por render entregue (mesma semântica das demais falhas de conteúdo).
+- Corte 16:9 saiu com legenda queimada indevida → veio de spec com `caption_mode` explícito; o default correto
+  para célula de grid é `caption_mode:'none'`.
 
 ---
 

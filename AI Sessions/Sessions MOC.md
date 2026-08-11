@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3493
-> * **Sessões do Claude**: 3440
+> * **Total de Sessões Registradas**: 3504
+> * **Sessões do Claude**: 3451
 > * **Sessões do Gemini**: 53
 
 ---
@@ -75,19 +75,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-08-11 - agent-affd011111ebdc10c]]` - *2026-08-11*
+*   `[[2026-08-11 - agent-af9a325cc8b0c5a92]]` - *2026-08-11*
+*   `[[2026-08-11 - agent-ac4da245bfce0a6ee]]` - *2026-08-11*
+*   `[[2026-08-11 - agent-aab6112db5cb360a5]]` - *2026-08-11*
+*   `[[2026-08-11 - agent-a670df97706a26eea]]` - *2026-08-11*
+*   `[[2026-08-11 - agent-a64ac9a5b5c6c2dd8]]` - *2026-08-11*
+*   `[[2026-08-11 - agent-a4bd2dbde4edcf296]]` - *2026-08-11*
+*   `[[2026-08-11 - agent-a47182235433875a8]]` - *2026-08-11*
+*   `[[2026-08-11 - agent-a4664e2fcf1fdac77]]` - *2026-08-11*
+*   `[[2026-08-11 - agent-a268ca539e739b166]]` - *2026-08-11*
 *   `[[2026-08-11 - Preparar e gerar assets de áudio e ícones]]` - *2026-08-11*
-*   `[[2026-08-10 - handson]]` - *2026-08-10*
-*   `[[2026-08-10 - agent-af72db78037754144]]` - *2026-08-10*
-*   `[[2026-08-10 - agent-af6b0e7bd9a00182e]]` - *2026-08-10*
-*   `[[2026-08-10 - agent-add924c5e7bfd2ba7]]` - *2026-08-10*
-*   `[[2026-08-10 - agent-ad087de1f31aaa095]]` - *2026-08-10*
-*   `[[2026-08-10 - agent-ac7f88eba18209ce1]]` - *2026-08-10*
-*   `[[2026-08-10 - agent-aac6453fbaa290cd8]]` - *2026-08-10*
-*   `[[2026-08-10 - agent-a62977df3c2a60526]]` - *2026-08-10*
-*   `[[2026-08-10 - agent-a5f8396085d5741d1]]` - *2026-08-10*
-*   `[[2026-08-10 - agent-a44b70726f9371ebf]]` - *2026-08-10*
-*   `[[2026-08-10 - agent-a32fcd123b8949619]]` - *2026-08-10*
-*   *... e mais 3435 sessões nessa categoria.*
+*   `[[2026-08-11 - Corrigir alertas e iniciar cadência redes sociais]]` - *2026-08-11*
+*   *... e mais 3446 sessões nessa categoria.*
 
 ---
 
@@ -3314,7 +3314,18 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-01 - Configurar loop autônomo e definir fila soberana]]` (ClaudeSessions)
 
 ### Agosto 2026
+*   `[[2026-08-11 - agent-affd011111ebdc10c]]` (ClaudeSessions)
+*   `[[2026-08-11 - agent-af9a325cc8b0c5a92]]` (ClaudeSessions)
+*   `[[2026-08-11 - agent-ac4da245bfce0a6ee]]` (ClaudeSessions)
+*   `[[2026-08-11 - agent-aab6112db5cb360a5]]` (ClaudeSessions)
+*   `[[2026-08-11 - agent-a670df97706a26eea]]` (ClaudeSessions)
+*   `[[2026-08-11 - agent-a64ac9a5b5c6c2dd8]]` (ClaudeSessions)
+*   `[[2026-08-11 - agent-a4bd2dbde4edcf296]]` (ClaudeSessions)
+*   `[[2026-08-11 - agent-a47182235433875a8]]` (ClaudeSessions)
+*   `[[2026-08-11 - agent-a4664e2fcf1fdac77]]` (ClaudeSessions)
+*   `[[2026-08-11 - agent-a268ca539e739b166]]` (ClaudeSessions)
 *   `[[2026-08-11 - Preparar e gerar assets de áudio e ícones]]` (ClaudeSessions)
+*   `[[2026-08-11 - Corrigir alertas e iniciar cadência redes sociais]]` (ClaudeSessions)
 *   `[[2026-08-10 - handson]]` (GeminiSessions)
 *   `[[2026-08-10 - agent-af72db78037754144]]` (ClaudeSessions)
 *   `[[2026-08-10 - agent-af6b0e7bd9a00182e]]` (ClaudeSessions)
