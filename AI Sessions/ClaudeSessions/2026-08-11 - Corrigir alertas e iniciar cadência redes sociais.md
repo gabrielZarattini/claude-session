@@ -9381,6 +9381,423 @@ Resolveu o que dependia de código: `2v` e `1x3` já existem, `reframe: '16:9'` 
 
 Ainda **nada foi commitado** — 24 arquivos no worktree.
 
+## 👤 User *(04:02:04)*
+
+<task-notification>
+<task-id>bicyfg109</task-id>
+<tool-use-id>toolu_01DBkkNBMT7mAXWCAowHgzgi</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/a567ddd1-44e0-49bf-a324-3eb996461c7b/tasks/bicyfg109.output</output-file>
+<status>completed</status>
+<summary>Background command "Verificar retorno dos crons após o tique" completed (exit code 0)</summary>
+</task-notification>
+
+## 🤖 Claude *(04:02:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/a567ddd1-44e0-49bf-a324-3eb996461c7b/tasks/bicyfg109.output",
+  "description": "Resultado da verifica\u00e7\u00e3o do tique"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === após o tique */15 ===
+> [{"service":"autopilot-cadence-cron","status":"healthy","last_seen_at":"2026-08-11T04:00:04.487413+00:00"}, 
+>  {"service":"nurture-cron","status":"healthy","last_seen_at":"2026-08-11T04:00:02.819247+00:00"}, 
+>  {"service":"nurture-cron","status":"healthy","last_seen_at":"2026-08-08T20:15:01.581844+00:00"}, 
+>  {"service":"autopilot-cadence-cron","status":"healthy","last_seen_at":"2026-08-08T20:15:00.910638+00:00"}]
+> === veredito do guarda ===
+> [2026-08-11T01:02:04-03:00] ✅ autopilot-cadence-cron bateu há 2 min
+> [2026-08-11T01:02:04-03:00] ✅ nurture-cron bateu há 2 min
+> ```
+
+## 🤖 Claude *(04:02:19)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The cron jobs…
+
+</details>
+
+
+## 🤖 Claude *(04:02:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "D2=\"/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/a567ddd1-44e0-49bf-a324-3eb996461c7b/subagents/workflows/wf_a9ee2112-57b\"\necho \"frota da recarga: $(grep -c '\"type\":\"result\"' \"$D2/journal.jsonl\" 2>/dev/null || echo 0)/13 \u00b7 \u00faltimo toque $(ls -la --time-style=+%H:%M \"$D2/journal.jsonl\" 2>/dev/null | awk '{print $6}')\"\necho \"arquivos no worktree: $(git status --short | wc -l)\"",
+  "description": "Estado da frota e do worktree"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> frota da recarga: 8/13 · último toque 01:01
+> arquivos no worktree: 36
+> ```
+
+## 🤖 Claude *(04:02:39)*
+
+Os crons ressuscitaram. Prova material:
+
+```
+nurture-cron            2026-08-08T20:15:01   ← último sinal antes da morte
+autopilot-cadence-cron  2026-08-08T20:15:00
+                        ······ 55h45m de silêncio ······
+nurture-cron            2026-08-11T04:00:02   healthy  ← primeiro tique após o Vault
+autopilot-cadence-cron  2026-08-11T04:00:04   healthy
+```
+
+E o guarda confirma de forma independente: `✅ autopilot-cadence-cron bateu há 2 min` · `✅ nurture-cron bateu há 2 min`.
+
+O buraco de 55 horas está fechado, e agora existe quem o veja: se a série parar de novo por mais de 40 minutos, o cron `*/5` grava `pg_cron_silent` em `infra_health_logs` e nomeia a causa provável.
+
+## Estado consolidado
+
+| Achado | Estado |
+|---|---|
+| Worker verde com chave morta (`youtube-upload`, 5 dias) | ✅ corrigido + guarda `*/5` no cron |
+| `pg_cron` mudo há 55h — **Vault do Postgres com chave revogada** | ✅ cofre atualizado, crons batendo, gate no script de rotação |
+| Cortes com legenda + duplicados | ✅ 47 podados, 419,6 MB, 7 publicados preservados |
+| Chaves legadas em 3 lugares + backdoor de string | ✅ removidas e deployadas |
+| A chave vive em **três** cofres, não dois | ✅ documentado e com gate |
+
+Continuam abertos, sem conserto ainda: a coluna `asset_role` que nunca existiu, os **28 verticais órfãos** (no bucket e em `video_renders`, ausentes de `creative_assets`), os **17 renders de motion com objeto 404**, e o mais consequente — **o agendamento futuro nunca foi testemunhado funcionando**. Esse último é barato de provar e destrava qualquer cadência; sem ele, o calendário inteiro apoia-se numa inferência.
+
+A frota da recarga está em **8 de 13** — passou o recon e a verificação, está no design. O worktree acumulou **36 arquivos** sem commit.
+
+Vou seguir pelos órfãos e pela prova do agendamento enquanto a frota fecha, a menos que você queira outra ordem.
+
+## 👤 User *(04:41:59)*
+
+<task-notification>
+<task-id>wmscpvtrv</task-id>
+<tool-use-id>toolu_01NZ5QuEb9KrwovTSAynaNTg</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/a567ddd1-44e0-49bf-a324-3eb996461c7b/tasks/wmscpvtrv.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Abre o gate Closed-Loop para RECARGA (top-up) de mcoCoins + recalibração de preço sob BYOK universal: recon material, design adversarial, suíte BoK e SOP" completed</summary>
+<result>{"recons":[{"frente":"stripe","recon":{"frente":"Superfície Stripe — o que existe hoje em create-checkout / stripe-webhook / check-subscription / create-portal e o que a recarga (top-up) avulsa exige que ainda não existe","resumo":"A superfície Stripe do MCORCH é um esqueleto de assinatura que **nunca completou uma única venda em produção** — as 6 linhas de `subscriptions` estão todas em `plan='free'`, `stripe_customer_id NULL`, e `credits.balance=100` para todos os 6 usuários (valor do `handle_new_user`, jamais tocado pelo webhook). Ou seja: o caminho de pagamento inteiro é código não-exercitado, e qualquer afirmação de que \"a assinatura funciona\" é não-provada. Sobre esse esqueleto, três defeitos estruturais tornam a recarga impossível de construir com segurança sem correção prévia. **(1) O webhook aceita evento forjado:** o guard é `if (webhookSecret &amp;&amp; sig)` — quem simplesmente **omite** o header `stripe-signature` cai no `else { event = JSON.parse(body) }` e é processado como evento legítimo. Provei materialmente nos dois sentidos contra produção: POST anônimo sem header → `HTTP 200`; POST com header inválido → `HTTP 400 Webhook signature verification failed`. O segredo ESTÁ no vault e funciona — ele só não é exigido. Como a fn tem `verify_jwt = false` (config.toml:105), o endpoint é público. Um handler de recarga que confie em `metadata`/`amount_total` do corpo seria uma **casa da moeda anônima**. **(2) O crédito de plano é um SET absoluto fora do ledger:** `stripe-webhook:76` faz `.update({ mco_balance: mcoCoins })` direto na tabela — não é incremento, não passa por `add_mco_coins`/`award_mco_coins`, e não gera linha em `mcoin_transactions`. Passa pelo trigger `profiles_block_privileged_client_update` porque este só barra `current_user IN ('authenticated','anon')` e o webhook roda como `service_role`. Consequência para a recarga: **qualquer** `customer.subscription.updated` posterior (renovação mensal, troca de cartão, reentrega) sobrescreve o saldo com o valor do plano e **apaga a recarga comprada**. **(3) Nenhum RPC de crédito existente serve:** `add_mco_coins` credita mas **não escreve linha no ledger** e não tem chave de idempotência; `award_mco_coins` escreve no ledger mas tem teto rígido de **1000** por chamada (`RAISE EXCEPTION 'Single award cannot exceed 1000 mcoCoins'`) — menor que o próprio plano Pro (2000) e Enterprise (10000), e menor que qualquer pacote de recarga significativo. `mcoin_transactions` continua sem UNIQUE nem coluna de referência externa (só dois índices não-únicos). Além disso: o `mode:\"subscription\"` é literal (`create-checkout:57`), o `priceId` vem do corpo do cliente **sem allowlist** (`create-checkout:32`), os price IDs estão **hardcoded no bundle do frontend** em dois arquivos (pacote novo = rebuild + deploy, e os IDs são públicos), e `checkout.session.completed` só age `if (session.subscription)` — uma sessão `mode:'payment'` seria **ignorada em silêncio com HTTP 200**. Não existe BoK de monetização (`docs/bok/` tem 40 suítes, nenhuma de billing) nem SOP de recarga em `docs/processes/` ⇒ **os dois gates (Lei 2 e Closed-Loop) estão fechados para o código da recarga**.","achados":[{"titulo":"P0 — Verificação de assinatura do webhook é contornável OMITINDO o header (endpoint público)","detalhe":"O guard é condicional: `if (webhookSecret &amp;&amp; sig)` verifica; o `else` faz `event = JSON.parse(body)` e trata o corpo como evento confiável. O atacante não precisa quebrar a assinatura — basta NÃO enviar o header `stripe-signature`. A função é pública (`verify_jwt = false`), então não há JWT barrando. O segredo está provisionado e funciona (prova pelo lado oposto: com header inválido dá 400), o que torna o defeito puramente lógico. Efeito colateral hoje: `upsertSubscription` ainda faz round-trips reais na API Stripe (`customers.retrieve`, `prices.retrieve`), o que limita a exploração atual; mas um handler de recarga que leia `metadata`/`amount_total` do corpo (a implementação natural) não faria round-trip nenhum e viraria cunhagem direta por POST anônimo.","prova":"supabase/functions/stripe-webhook/index.ts:95-104 — `if (webhookSecret &amp;&amp; sig) { try { event = stripe.webhooks.constructEvent(body, sig, webhookSecret); } catch ... return 400 } else { event = JSON.parse(body) as Stripe.Event; }`\nsupabase/config.toml:104-105 — `[functions.stripe-webhook]` / `verify_jwt = false`\nPROVA VIVA (2 lados, contra produção):\n$ curl -s -o /dev/null -w \"HTTP %{http_code}\\n\" -X POST \"$SUPABASE_URL/functions/v1/stripe-webhook\" -H 'Content-Type: application/json' -d '{\"id\":\"evt_probe_readonly\",\"type\":\"ping.probe\",\"data\":{\"object\":{}}}'\n→ HTTP 200            (SEM header stripe-signature = ramo else, corpo aceito)\n$ curl ... -H 'stripe-signature: t=1,v1=deadbeef' ...\n→ Webhook signature verification failed / HTTP 400   (COM header = constructEvent roda, segredo existe)","implicacao":"A recarga NÃO pode ser construída sobre este webhook como está. A verificação tem de virar incondicional e fail-closed (`if (!sig || !webhookSecret) return 400`), e o crédito jamais pode confiar em valor vindo do corpo — o pacote deve ser re-resolvido server-side a partir do `line_items`/`price.id` da sessão consultada na API Stripe, nunca de `metadata` do payload."},{"titulo":"O crédito de plano é UPDATE absoluto direto na tabela, fora do ledger e fora dos RPCs de billing","detalhe":"`upsertSubscription` escreve `mco_balance` com um valor fixo do plano (SET, não incremento), sem passar por `add_mco_coins`/`award_mco_coins` e sem inserir linha em `mcoin_transactions`. Escapa do trigger de proteção porque este só barra `current_user IN ('authenticated','anon')` e o webhook usa a service key. Três consequências encadeadas: (a) reentrega do MESMO evento re-seta o saldo; (b) qualquer `customer.subscription.updated` futuro (renovação, atualização de cartão) re-seta o saldo ao valor do plano — apagando recarga comprada e apagando consumo do mês; (c) não há trilha contábil: o dinheiro entra sem linha no ledger, quebrando o invariante do SOP de reconciliação (`drift = mco_balance - SUM(amount)` = 0).","prova":"supabase/functions/stripe-webhook/index.ts:73-77 — `const mcoMap: Record&lt;string, number&gt; = { starter: 500, pro: 2000, enterprise: 10000 };` / `const mcoCoins = mcoMap[plan] ?? 0;` / `if (mcoCoins &gt; 0) { await supabase.from(\"profiles\").update({ mco_balance: mcoCoins }).eq(\"id\", user.id); }`\nsupabase/functions/stripe-webhook/index.ts:70 — `await supabase.from(\"credits\").update({ balance: credits, lifetime_earned: credits }).eq(\"user_id\", user.id);`  (mesmo padrão SET na tabela morta)\nsupabase/functions/stripe-webhook/index.ts:5 — cliente criado com `SB_SECRET_KEY ?? SUPABASE_SERVICE_ROLE_KEY` (= service_role)\nsupabase/migrations/20260701010000_fr_sec_014_pt2_economic_freeze.sql:32-35 — `IF current_user IN ('authenticated', 'anon') THEN IF NEW.mco_balance IS DISTINCT FROM OLD.mco_balance THEN RAISE EXCEPTION 'mco_balance só muda via RPC de billing (deduct/add_mco_coins)'` ⇒ service_role passa\ndocs/processes/mcoins-ledger-reconciliation.md:'Success signal' — exige `drift=0 ∀ row`","implicacao":"A recarga precisa de um caminho de crédito INCREMENTAL e com linha de ledger obrigatória, e o crédito de plano precisa deixar de ser SET (senão a primeira renovação de assinatura destrói a recarga que o usuário pagou — reembolso manual e perda de confiança logo nas duas primeiras usuárias reais)."},{"titulo":"Nenhum RPC de crédito existente serve para recarga: um não tem ledger, o outro tem teto de 1000","detalhe":"São os dois únicos caminhos de crédito positivo. `add_mco_coins(uuid,integer)` faz `mco_balance = mco_balance + p_amount` (incremento correto), mas NÃO insere em `mcoin_transactions` — crédito invisível para a contabilidade — e não tem âncora de idempotência. `award_mco_coins(uuid,integer,text,jsonb)` insere no ledger, mas rejeita qualquer valor acima de 1000, o que já é incompatível com Pro (2000
+... (truncated 331943 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/a567ddd1-44e0-49bf-a324-3eb996461c7b/tasks/wmscpvtrv.output)</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/a567ddd1-44e0-49bf-a324-3eb996461c7b/subagents/workflows/wf_a9ee2112-57b/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/a567ddd1-44e0-49bf-a324-3eb996461c7b/workflows/scripts/bok-mco-monetizacao-wf_a9ee2112-57b.js', resumeFromRunId: 'wf_a9ee2112-57b'}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<usage><agent_count>13</agent_count><agents_done>13</agents_done><agents_error>0</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>2312735</subagent_tokens><tool_uses>412</tool_uses><duration_ms>4388684</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(04:42:18)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've uncovered a critical security vulnerability in the Stripe webhook handler—it's accepting forged events by skipping signature verification when the header is missing, falling back to parsing the raw body instead. Testing confirms this is live in production: requests without the signature header return HTTP 200, while invalid headers get rejected with 400, and since JWT verification is disabled, the endpoint is completely public. This is an active P0 security issue that needs immediate remediation.
+
+The blast radius is currently contained because the subscription handler makes real Stripe API calls that would fail on forged data, but a top-up handler reading metadata directly would become a money printer. Beyond the webhook bypass, I'm seeing a cascade of other critical issues: the subscription renewal logic does an absolute SET on the balance instead of incrementing, completely wiping any purchased top-ups; the coin credit functions either skip ledger entries entirely or have a hard cap of 1000 that's smaller than the tier limits; price IDs are pulled directly from the client without any allowlist validation; and the payment completion handler silently ignores one-time payment sessions with HTTP 200 instead of processing them. The entire payment system appears to have never successfully completed a single transaction in production.…
+
+</details>
+
+
+## 🤖 Claude *(04:42:20)*
+
+A frota da recarga fechou — e trouxe um **P0 de segurança vivo em produção**. Antes de agir, verifico eu mesmo (claim de segurança não se aceita de terceiro):
+
+## 🤖 Claude *(04:42:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== o guard condicional ===\"\nsed -n '93,106p' supabase/functions/stripe-webhook/index.ts\necho; echo \"=== a fn \u00e9 p\u00fablica? ===\"\ngrep -n -A2 \"functions.stripe-webhook\" supabase/config.toml",
+  "description": "Ler o guard de assinatura"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === o guard condicional ===
+>   const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+> 
+>   if (webhookSecret && sig) {
+>     try {
+>       event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+>     } catch (err) {
+>       console.error("Webhook signature verification failed:", err);
+>       return new Response("Webhook signature verification failed", { status: 400 });
+>     }
+>   } else {
+>     event = JSON.parse(body) as Stripe.Event;
+>   }
+> 
+>   console.log("Stripe event:", event.type);
+> 
+> === a fn é pública? ===
+> 104:[functions.stripe-webhook]
+> 105-verify_jwt = false
+> 106-
+> ```
+
+## 🤖 Claude *(04:42:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\necho \"=== SEM header de assinatura (o ramo else) ===\"\ncurl -s -o /dev/null -m 25 -w \"HTTP %{http_code}\\n\" -X POST \"$VITE_SUPABASE_URL/functions/v1/stripe-webhook\" \\\n  -H 'Content-Type: application/json' -d '{\"id\":\"evt_probe_readonly\",\"type\":\"ping.probe\",\"data\":{\"object\":{}}}'\necho \"=== COM header inv\u00e1lido (constructEvent roda) ===\"\ncurl -s -o /dev/null -m 25 -w \"HTTP %{http_code}\\n\" -X POST \"$VITE_SUPABASE_URL/functions/v1/stripe-webhook\" \\\n  -H 'Content-Type: application/json' -H 'stripe-signature: t=1,v1=deadbeef' -d '{\"id\":\"evt_probe_readonly\",\"type\":\"ping.probe\",\"data\":{\"object\":{}}}'",
+  "description": "Provar o P0 contra produ\u00e7\u00e3o"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === SEM header de assinatura (o ramo else) ===
+> HTTP 200
+> === COM header inválido (constructEvent roda) ===
+> HTTP 400
+> ```
+
+## 🤖 Claude *(04:42:34)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've confirmed the vulnerability in production—missing the webhook secret entirely returns 200, while an invalid signature returns 400, which is backwards. The fix is to make it fail-closed: if there's no secret configured, reject with a 500 error immediately, and if there's no signature in the request, return 400.…
+
+</details>
+
+
+## 🤖 Claude *(04:42:36)*
+
+Confirmado com sonda própria contra produção. E o resultado é perverso: **apresentar uma assinatura ruim é mais seguro do que não apresentar nenhuma** — quem omite o header cai no `else` e tem o corpo aceito como evento legítimo. Endpoint público, `verify_jwt = false`.
+
+Corrigindo agora:
+
+## 🤖 Claude *(04:42:37)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/stripe-webhook/index.ts",
+  "offset": 84,
+  "limit": 12
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 84	      "Access-Control-Allow-Methods": "POST, OPTIONS",
+> 85	      "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-user-token"
+> 86	    }});
+> 87	  }
+> 88	
+> 89	  const body = await req.text();
+> 90	  const sig = req.headers.get("stripe-signature");
+> 91	
+> 92	  let event: Stripe.Event;
+> 93	  const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+> 94	
+> 95	  if (webhookSecret && sig) {
+> ```
+
+## 🤖 Claude *(04:42:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/supabase/functions/stripe-webhook/index.ts",
+  "old_string": "  if (webhookSecret && sig) {\n    try {\n      event = stripe.webhooks.constructEvent(body, sig, webhookSecret);\n    } catch (err) {\n      console.error(\"Webhook signature verification failed:\", err);\n      return new Response(\"Webhook signature verification failed\", { status: 400 });\n    }\n  } else {\n    event = JSON.parse(body) as Stripe.Event;\n  }",
+  "new_string": "  // \u26d4 FAIL-CLOSED. N\u00c3O transformar isto num `if (secret && sig)` de novo.\n  //\n  // At\u00e9 2026-08-11 o guard era condicional e o `else` fazia `JSON.parse(body)` \u2014 ou seja, quem\n  // simplesmente OMITIA o header `stripe-signature` tinha o corpo aceito como evento leg\u00edtimo. Como a\n  // fun\u00e7\u00e3o \u00e9 p\u00fablica (`config.toml` \u2192 `verify_jwt = false`), qualquer um na internet podia postar um\n  // evento inventado. Provado contra PRODU\u00c7\u00c3O em 2026-08-11:\n  //     POST sem header ............ HTTP 200   \u2190 evento forjado ACEITO\n  //     POST com header inv\u00e1lido ... HTTP 400\n  // O paradoxo denuncia a falha: apresentar uma assinatura RUIM era mais seguro do que n\u00e3o apresentar\n  // nenhuma. O raio de dano era limitado s\u00f3 porque `upsertSubscription` faz round-trip real na API do\n  // Stripe \u2014 mas um handler de RECARGA que leia `metadata`/`amount_total` do corpo viraria uma casa da\n  // moeda an\u00f4nima. Por isso o fail-closed entra ANTES da recarga existir.\n  if (!webhookSecret) {\n    // Configura\u00e7\u00e3o ausente \u00e9 erro NOSSO \u2014 mas nunca vira \"aceita tudo\".\n    console.error(\"STRIPE_WEBHOOK_SECRET ausente no vault \u2014 recusando o evento (fail-closed).\");\n    return new Response(\"Webhook secret not configured\", { status: 500 });\n  }\n  if (!sig) {\n    return new Response(\"Missing stripe-signature header\", { status: 400 });\n  }\n  try {\n    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);\n  } catch (err) {\n    console.error(\"Webhook signature verification failed:\", err);\n    return new Response(\"Webhook signature verification failed\", { status: 400 });\n  }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/supabase/functions/stripe-webhook/index.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(04:42:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport SUPABASE_ACCESS_TOKEN=$(cat ~/.supabase/access-token)\ntimeout 200 npx supabase functions deploy stripe-webhook --project-ref bcyvddsykvehvpwstlfa 2>&1 | grep -E \"Deployed|rror\" | head -3",
+  "description": "Deploy do fix fail-closed",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Deployed Functions on project bcyvddsykvehvpwstlfa: stripe-webhook
+> ```
+
+## 🤖 Claude *(04:43:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a && source .env 2>/dev/null && set +a\nsleep 8\necho \"=== RE-PROVA ap\u00f3s o deploy ===\"\necho -n \"sem header (era 200, deve ser 400): \"\ncurl -s -o /dev/null -m 25 -w \"HTTP %{http_code}\\n\" -X POST \"$VITE_SUPABASE_URL/functions/v1/stripe-webhook\" \\\n  -H 'Content-Type: application/json' -d '{\"id\":\"evt_probe_readonly\",\"type\":\"ping.probe\",\"data\":{\"object\":{}}}'\necho -n \"header inv\u00e1lido (deve seguir 400): \"\ncurl -s -o /dev/null -m 25 -w \"HTTP %{http_code}\\n\" -X POST \"$VITE_SUPABASE_URL/functions/v1/stripe-webhook\" \\\n  -H 'Content-Type: application/json' -H 'stripe-signature: t=1,v1=deadbeef' -d '{\"id\":\"evt_probe_readonly\",\"type\":\"ping.probe\",\"data\":{\"object\":{}}}'\necho -n \"corpo do erro sem header: \"\ncurl -s -m 25 -X POST \"$VITE_SUPABASE_URL/functions/v1/stripe-webhook\" -H 'Content-Type: application/json' -d '{}' | head -c 80",
+  "description": "Provar que o buraco fechou"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === RE-PROVA após o deploy ===
+> sem header (era 200, deve ser 400): HTTP 400
+> header inválido (deve seguir 400): HTTP 400
+> corpo do erro sem header: Missing stripe-signature header
+> ```
+
+## 🤖 Claude *(04:43:24)*
+
+
+## 🤖 Claude *(04:43:26)*
+
+**Buraco fechado e provado:** sem header era `200`, agora é `400 Missing stripe-signature header`.
+
+Agora colho o resto da frota — e verifico se os documentos foram mesmo escritos (agente que diz que escreveu é o falso-sucesso clássico):
+
+## 🤖 Claude *(04:43:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== a su\u00edte BoK existe MESMO no disco? ===\"\nls -la docs/bok/mco-monetization/ 2>/dev/null || echo \"  \u274c pasta n\u00e3o existe\"\necho; echo \"=== o SOP existe? ===\"\nls -la docs/processes/mco-topup.md 2>/dev/null || echo \"  \u274c n\u00e3o existe\"",
+  "description": "Verificar materialmente os documentos"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === a suíte BoK existe MESMO no disco? ===
+> total 164
+> drwxrwxr-x  2 ubuntu ubuntu  4096 Aug 11 01:34 .
+> drwxrwxr-x 42 gcrUX  gcrUX   4096 Aug 11 01:21 ..
+> -rw-rw-r--  1 ubuntu ubuntu 17089 Aug 11 01:22 00-index.md
+> -rw-rw-r--  1 ubuntu ubuntu  9901 Aug 11 01:24 01-mrd.md
+> -rw-rw-r--  1 ubuntu ubuntu 31427 Aug 11 01:26 02-brd.md
+> -rw-rw-r--  1 ubuntu ubuntu 13655 Aug 11 01:28 03-prd.md
+> -rw-rw-r--  1 ubuntu ubuntu 18764 Aug 11 01:29 04-frd.md
+> -rw-rw-r--  1 ubuntu ubuntu 44595 Aug 11 01:33 05-sdd.md
+> -rw-rw-r--  1 ubuntu ubuntu  8795 Aug 11 01:34 09-pattern-conformance.md
+> 
+> === o SOP existe? ===
+> -rw-rw-r-- 1 ubuntu ubuntu 27206 Aug 11 01:25 docs/processes/mco-topup.md
+> ```
+
+## 🤖 Claude *(04:43:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "D2=\"/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/a567ddd1-44e0-49bf-a324-3eb996461c7b/subagents/workflows/wf_a9ee2112-57b\"\npython3 -c \"\nimport json\nres=[json.loads(l)['result'] for l in open('$D2/journal.jsonl') if json.loads(l).get('type')=='result']\nprint('resultados:',len(res))\nfor i,r in enumerate(res):\n    if isinstance(r,dict) and 'veredito' in r and 'furos' in r:\n        print()\n        print('=== CR\u00cdTICO',i,'\u2014',r['veredito'])\n        for f in r.get('furos',[])[:6]:\n            print(f\\\"  [{f['gravidade']}] {f['descricao'][:175]}\\\")\n\"",
+  "description": "Vereditos dos cr\u00edticos da recarga"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> resultados: 13
+> 
+> === CRÍTICO 11 — GATE_FECHADO
+>   [P0] O dedupe de ENTREGA (stripe_webhook_events) é gravado numa transação SEPARADA e ANTERIOR ao crédito, e o §7 passo 4b devolve 200 {duplicate:true} sem NUNCA ler a coluna `handl
+>   [P0] Pix/boleto: o FR-MON-013 grava `status='pending'` na PRIMEIRA passagem (checkout.session.completed com payment_status='unpaid') e manda creditar depois, em `checkout.session.a
+>   [P1] `credit_mco_topup` é uma primitiva de cunhagem pura cujo ÚNICO guarda é o GRANT. Ela não verifica nada contra o Stripe: recebe `p_session_id` como TEXTO LIVRE escolhido pelo c
+>   [P1] `mco_packages` é MUTÁVEL e a RPC lê o preço no momento do WEBHOOK, não no momento do checkout. Não há trigger de imutabilidade, nem snapshot de `mco_amount`/`price_cents` na s
+>   [P1] O teto de 3 recargas/24h (FR-MON-023) é declarado como a prevenção proporcional de fraude (§8.2 item 5) mas não sobrevive nem à concorrência nem ao custo-zero de criar conta. 
+>   [P2] O §5.1 mapeia todo `RAISE 22023` (moeda inesperada, pacote inexistente, payload malformado) para HTTP 400, o que contradiz a regra-mãe que o próprio design declara em DD-MON-0
+> 
+> === CRÍTICO 12 — GATE_FECHADO
+>   [P0] SEQUÊNCIA INVERTIDA: a recarga (Fatia 1) é vendida ANTES da recalibração (Fatia 4), mas os quatro pacotes foram DIMENSIONADOS com os preços pós-recalibração. `docs/bok/mco-mon
+>   [P0] A PRIMEIRA EXPERIÊNCIA DAS DUAS USUÁRIAS PIORA ANTES DE MELHORAR. `profiles.mco_balance` nasce em zero (`supabase/migrations/20260417000000_gamification_engine.sql:2` — `ADD C
+>   [P0] O CUSTO QUE A USUÁRIA PAGA AO PROVEDOR NUNCA É DECLARADO, E NÃO HÁ EMBARQUE BYOK. `grep -rniE 'do próprio bolso|paga ao google|fatura do google|US\$ ?[0-9]' docs/bok/mco-monet
+>   [P1] NENHUM GATE PROVA QUE O DINHEIRO CHEGOU. O gate G4 (`05-sdd.md:614`) é 'Compra real de R$57 → Saldo +150 e handled=true' — satisfeito integralmente em Stripe **test mode** com
+>   [P1] A ESCADA DE PREÇOS DOS PACOTES ESTÁ ANCORADA EM TEXTO DE UI, NÃO NO PREÇO REAL DO STRIPE. A regra-mãe do catálogo ('nenhum pacote abaixo de 0,294 R$/mco') deriva de R$147/500 
+>   [P1] AUMENTO DE PREÇO EM OPERAÇÕES VIVAS ENTRA NA TABELA SEM CLÁUSULA E SEM OTD. `05-sdd.md:484-486` lista, na coluna 'Plataforma', valores ACIMA dos de hoje para operações que a p
+> ```
+
+## 🤖 Claude *(04:43:50)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Both reviewers flagged the design as not ready—there are critical issues that need fixing before we can move forward with implementation. The documentation is complete (the BoK suite and SOP are done), but the design gate caught some fundamental problems: the deduplication logic isn't atomic with the credit operation, the payment flow would credit before payment is actually confirmed for Pix and boleto, and the package sequencing was sized incorrectly.
+
+There are also user experience concerns—the first experience gets worse before it improves with a zero balance and new paywall—plus missing transparency around what users actually pay providers, and no verification that money actually arrived in test mode. These are legitimate findings that prevented shipping a flawed money-handling feature. The gate worked exactly as intended, and I'm documenting the real value here: we fixed a live…
+
+</details>
+
+
+## 🤖 Claude *(04:44:10)*
+
+Os dois críticos adversariais devolveram **GATE_FECHADO** — e isso é o gate funcionando, não falhando.
+
+## O P0 vivo em produção — encontrado e fechado
+
+O `stripe-webhook` aceitava **evento forjado por qualquer um na internet**. O guard era condicional:
+
+```js
+if (webhookSecret && sig) { verifica } else { event = JSON.parse(body) }
+```
+
+Quem **omitia** o header `stripe-signature` caía no `else` e tinha o corpo tratado como evento legítimo. A função é pública (`verify_jwt = false`). Provei nos dois sentidos contra produção — e o resultado denuncia a lógica: apresentar assinatura **ruim** dava 400, não apresentar **nenhuma** dava 200.
+
+Corrigido para fail-closed e deployado. Re-provado: **200 → 400 `Missing stripe-signature header`**.
+
+O dano estava contido só porque o handler de assinatura faz round-trip real na API do Stripe. **Um handler de recarga lendo `metadata`/`amount_total` do corpo seria uma casa da moeda anônima** — por isso o fix entrou antes da recarga existir.
+
+## O que mais a frota achou no encanamento atual
+
+**O caminho de pagamento nunca completou uma venda.** As 6 assinaturas estão em `plan='free'` com `stripe_customer_id NULL`. "A assinatura funciona" nunca foi provado.
+
+**O crédito de plano é `SET`, não incremento** (`stripe-webhook:76` → `.update({ mco_balance: mcoCoins })`), fora do ledger. Consequência direta: **qualquer renovação mensal apagaria uma recarga comprada**.
+
+**Nenhum RPC de crédito serve.** O `add_mco_coins` credita sem escrever no ledger; o `award_mco_coins` escreve no ledger mas tem teto rígido de **1000** — menor que o próprio plano Pro (2000).
+
+E o `priceId` vem do corpo do cliente **sem allowlist**; uma sessão `mode:'payment'` seria **ignorada em silêncio com HTTP 200**.
+
+## Por que o gate ficou fechado
+
+A suíte foi escrita e existe no disco (7 documentos, 144 KB, + SOP de 27 KB — verifiquei com `ls`, não confiei no relato). Mas os críticos acharam P0s no **design**:
+
+- **A idempotência não é atômica com o crédito** — o dedupe grava em transação separada e anterior.
+- **Pix/boleto creditaria antes do pagamento** (`payment_status='unpaid'` na primeira passagem).
+- **Sequência invertida:** os pacotes foram dimensionados com os preços **pós-recalibração**, mas a recarga sai **antes** dela. Estão precificados para um mundo que ainda não existe.
+- **A experiência das duas usuárias piora antes de melhorar:** saldo nasce zero e agora encontra um paywall.
+- **O custo que elas pagam ao provedor nunca é declarado** e não há embarque de BYOK.
+- **Nenhum gate prova que dinheiro chegou** — o critério de aceite é satisfeito inteiro em Stripe *test mode*.
+
+Esse último me parece o mais importante para você: seu Stripe está em Sandbox por decisão sua. Um "gate verde" ali não significa faturamento.
+
+---
+
+O gate fechado significa que **a recarga não pode ser codificada hoje** — o design precisa de outra rodada. Não vou furar isso; é justamente a lei que impediu a fabricação de assets e o webhook aberto de virarem produção.
+
+O que mudou de fato nesta rodada: um buraco de segurança real fechado, quatro defeitos estruturais do billing mapeados com `file:line`, e a suíte pronta para a correção dos P0s.
+
+**36+ arquivos no worktree, nada commitado.** Sugiro selar agora — a sessão acumulou muita coisa verificada, e um `/handoff` com commits granulares protege o trabalho antes de qualquer nova frente.
+
 ---
 
 %% --- PROJECT METADATA START --- %%

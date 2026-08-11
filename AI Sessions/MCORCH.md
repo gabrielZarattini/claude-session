@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 117
-> * **Total de Sessões**: 3510
+> * **Total de Processos**: 118
+> * **Total de Sessões**: 3515
 
 ---
 
@@ -69,6 +69,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[kanban-roadmap-reconciler]]` - *Processo*
 *   `[[landing-bundler]]` - *Processo*
 *   `[[llm-cascading-fallback]]` - *Processo*
+*   `[[mco-topup]]` - *Processo*
 *   `[[mcoin-cost-calibration]]` - *Processo*
 *   `[[mcoins-ledger-reconciliation]]` - *Processo*
 *   `[[media-state-lifecycle]]` - *Processo*
@@ -143,11 +144,15 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-08-11 - agent-affd011111ebdc10c]]` (ClaudeSessions) - *2026-08-11*
 *   `[[2026-08-11 - agent-af9a325cc8b0c5a92]]` (ClaudeSessions) - *2026-08-11*
 *   `[[2026-08-11 - agent-ad243b3db3113613a]]` (ClaudeSessions) - *2026-08-11*
+*   `[[2026-08-11 - agent-ad005ca49d3753c74]]` (ClaudeSessions) - *2026-08-11*
 *   `[[2026-08-11 - agent-ac4da245bfce0a6ee]]` (ClaudeSessions) - *2026-08-11*
+*   `[[2026-08-11 - agent-abe9b83914f48d844]]` (ClaudeSessions) - *2026-08-11*
 *   `[[2026-08-11 - agent-aab6112db5cb360a5]]` (ClaudeSessions) - *2026-08-11*
 *   `[[2026-08-11 - agent-a9fd330808ad55bb0]]` (ClaudeSessions) - *2026-08-11*
+*   `[[2026-08-11 - agent-a975a5238787c062a]]` (ClaudeSessions) - *2026-08-11*
 *   `[[2026-08-11 - agent-a8cc6a0d2b6dc5a56]]` (ClaudeSessions) - *2026-08-11*
 *   `[[2026-08-11 - agent-a8ca9cb22c76b38e6]]` (ClaudeSessions) - *2026-08-11*
+*   `[[2026-08-11 - agent-a861137dd7d9e4863]]` (ClaudeSessions) - *2026-08-11*
 *   `[[2026-08-11 - agent-a7b9670520f9075e3]]` (ClaudeSessions) - *2026-08-11*
 *   `[[2026-08-11 - agent-a670df97706a26eea]]` (ClaudeSessions) - *2026-08-11*
 *   `[[2026-08-11 - agent-a64ac9a5b5c6c2dd8]]` (ClaudeSessions) - *2026-08-11*
@@ -156,6 +161,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[2026-08-11 - agent-a47182235433875a8]]` (ClaudeSessions) - *2026-08-11*
 *   `[[2026-08-11 - agent-a4664e2fcf1fdac77]]` (ClaudeSessions) - *2026-08-11*
 *   `[[2026-08-11 - agent-a2953c952ad940407]]` (ClaudeSessions) - *2026-08-11*
+*   `[[2026-08-11 - agent-a283024663588d78d]]` (ClaudeSessions) - *2026-08-11*
 *   `[[2026-08-11 - agent-a268ca539e739b166]]` (ClaudeSessions) - *2026-08-11*
 *   `[[2026-08-11 - agent-a233ea18f74f3e23a]]` (ClaudeSessions) - *2026-08-11*
 *   `[[2026-08-11 - agent-a0ffe84ea51e2d287]]` (ClaudeSessions) - *2026-08-11*
