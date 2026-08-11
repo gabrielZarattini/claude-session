@@ -1,9 +1,16 @@
 # SOP — Frescor de chave nas pontes: o worker VERDE que segura a chave MORTA (Lei 1 · Lei 2)
 
-**Status:** ACTIVE · v1.0 · 2026-08-11
-**Anticorpo:** `scripts/qa/self-heal-bridge-keys.sh` (cron `*/5`)
-**Irmãos:** `scripts/qa/rotate-supabase-secret.sh` (a rotação) · `scripts/qa/sync-edge-secret.sh` (o vault)
+**Status:** ACTIVE · v1.1 · 2026-08-11
+**Anticorpo:** `scripts/qa/self-heal-bridge-keys.sh` (cron `*/5`) — prova os **3 cofres** continuamente (v1.1)
+**Irmãos:** `scripts/qa/rotate-supabase-secret.sh` (rotação **atômica** dos 3 cofres) · `scripts/qa/sync-edge-secret.sh` (cofre 2) · `.claude/scripts/mcorch-doctor.sh` §4b (prova on-demand dos 3 cofres)
 **Memórias:** `reference_supabase_secret_key_rotation_silent_kill` · `reference_hyperframes_worker_restart`
+
+> **v1.1 (2026-08-11):** decisão Sovereign "blindar detecção 3-cofres". O guarda `*/5` ganhou o **GATE 1b**
+> (prova o cofre 2 — vault das Edge Functions — via `get-infra-status`, que devolve 500 se a chave do vault
+> estiver morta); a rotação virou **atômica** (step 5 encadeia o `sync-edge-secret.sh`; step 6 **auto-atualiza**
+> o vault do Postgres quando há PAT, com re-verificação de md5); e o `mcorch-doctor.sh §4b` prova a **liveness**
+> (não só a presença) dos 3 cofres num comando. O `.env` continua o bootstrap dos workers — o "vault-direct"
+> literal esbarra em paradoxo de bootstrap (ler o vault exige a própria chave que se buscaria).
 
 ## O incidente que este SOP existe para nunca mais permitir
 
@@ -42,10 +49,12 @@ Com o anticorpo: o cron `*/5` faz isso e **cura sozinho** o que é curável.
 
 | # | Passo | Critério de sucesso material |
 |---|-------|------------------------------|
-| 1 | **Gate da chave** — `curl REST /profiles?limit=1` com a `SB_SECRET_KEY` do `.env` | HTTP **200**. Qualquer outro código ⇒ pare no passo 1 |
+| 1 | **Gate do cofre 1** (`.env`) — `curl REST /profiles?limit=1` com a `SB_SECRET_KEY` do `.env` | HTTP **200**. Qualquer outro código ⇒ pare no passo 1 (chave morta, não auto-curável) |
+| 1b | **Gate do cofre 2** (vault das edge fns) — `curl /functions/v1/get-infra-status` com a publishable | HTTP **200** (a fn usa a `SB_SECRET_KEY` do vault por dentro ⇒ 500 = cofre defasado). Não-200 ⇒ marca `edge_vault_suspect`/`degraded` + recomenda `sync-edge-secret.sh`; **não** bloqueia a cura das pontes (elas usam o `.env`) |
 | 2 | **Gate do frescor** — para cada ponte, `systemctl --user show <b> -p ExecMainStartTimestamp` × `stat -c %Y .env` | `start_epoch >= env_epoch` ⇒ fresca |
-| 3 | **Cura** — reinicia SÓ as stale | o `ExecMainStartTimestamp` **mudou** E `ActiveState=active` |
-| 4 | **Telemetria** — grava em `infra_health_logs` (`service='bridge-key-guard'`) | linha nova com `event` ∈ `all_fresh` \| `stale_bridges_healed` \| `secret_key_dead` |
+| 2b | **Gate do cofre 3** (vault do Postgres) — frescor do heartbeat `autopilot-cadence-cron`/`nurture-cron` em `infra_health_logs` | idade ≤ 40 min. Ausência = 401 silencioso do pg_cron ⇒ `pg_cron_silent` |
+| 3 | **Cura** — reinicia SÓ as pontes stale | o `ExecMainStartTimestamp` **mudou** E `ActiveState=active` |
+| 4 | **Telemetria** — grava em `infra_health_logs` (`service='bridge-key-guard'`) | linha nova com `event` ∈ `all_fresh` \| `stale_bridges_healed` \| `secret_key_dead` \| `edge_vault_suspect` \| `pg_cron_silent` |
 
 ## Verification gates
 

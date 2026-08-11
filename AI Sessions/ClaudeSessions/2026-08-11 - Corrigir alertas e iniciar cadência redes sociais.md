@@ -11837,5 +11837,5 @@ Duas observações honestas para fechar.
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-08-11 - 101c4987-9d7b-44af-b78d-4b79ff04fbeb]]
-> * **Próxima Sessão**: [[2026-08-11 - Preparar e gerar assets de áudio e ícones]]
+> * **Próxima Sessão**: [[2026-08-11 - Fix alerts with priorities and optimize claude.md context]]
 %% --- TIMELINE END --- %%
