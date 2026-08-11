@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3535
-> * **Sessões do Claude**: 3482
+> * **Total de Sessões Registradas**: 3536
+> * **Sessões do Claude**: 3483
 > * **Sessões do Gemini**: 53
 
 ---
@@ -87,7 +87,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-08-11 - agent-ac4da245bfce0a6ee]]` - *2026-08-11*
 *   `[[2026-08-11 - agent-abe9b83914f48d844]]` - *2026-08-11*
 *   `[[2026-08-11 - agent-aab6112db5cb360a5]]` - *2026-08-11*
-*   *... e mais 3477 sessões nessa categoria.*
+*   *... e mais 3478 sessões nessa categoria.*
 
 ---
 
@@ -3353,6 +3353,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-08-11 - agent-a03d05402a07b6741]]` (ClaudeSessions)
 *   `[[2026-08-11 - agent-a011cf57780126bf0]]` (ClaudeSessions)
 *   `[[2026-08-11 - agent-a009dbe3d64435481]]` (ClaudeSessions)
+*   `[[2026-08-11 - Revisar piloto de vídeo motion e aprovar camadas Z]]` (ClaudeSessions)
 *   `[[2026-08-11 - Preparar e gerar assets de áudio e ícones]]` (ClaudeSessions)
 *   `[[2026-08-11 - Fix alerts with priorities and optimize claude.md context]]` (ClaudeSessions)
 *   `[[2026-08-11 - Corrigir alertas e iniciar cadência redes sociais]]` (ClaudeSessions)
