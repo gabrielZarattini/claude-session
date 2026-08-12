@@ -6982,6 +6982,1348 @@ Confirmação material: **behind=0 ahead=0** — o remoto tem exatamente os trê
 
 Pendente só a pesquisa de video-to-video, ainda rodando em background. Aviso quando o documento de decisão sair — ele responde as suas três perguntas (Seedance por API vs Higgsfield · clipes de terceiros no BR · Nano Banana 2 para as peças) e diz sem rodeio se existe hoje um caminho de **API** para re-encenar câmera preservando rosto, ou se isso ainda vive só dentro de app.
 
+## 👤 User *(14:12:18)*
+
+<task-notification>
+<task-id>wvkg1s8tq</task-id>
+<tool-use-id>toolu_011CrrPUZ7NUDd3pAkQifhrC</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/9b9cb2fa-663b-4f25-98b8-c32877cbffb1/tasks/wvkg1s8tq.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Decisao de motor: VIDEO-TO-VIDEO real (quem faz, com API) · Seedance vs Veo vs HeyGen p/ presenter crivel · Higgsfield plano vs API · Nano Banana 2 p/ foto de objeto · clipes de terceiros no BR" completed</summary>
+<result>{"frentes":"6/6 (v2v-quem-faz, kinetic-multicam, presenter-real, higgsfield, imagem-cirurgica, clipes-terceiros)","critico":"ok","doc":"docs/roadmap/motor-video-decisao-v2v-2026-08-12.md"}</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9b9cb2fa-663b-4f25-98b8-c32877cbffb1/subagents/workflows/wf_1802549a-cbe/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/9b9cb2fa-663b-4f25-98b8-c32877cbffb1/workflows/scripts/v2v-motor-decision-wf_1802549a-cbe.js', resumeFromRunId: 'wf_1802549a-cbe', args: "{\"date\":\"2026-08-12\"}"}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<usage><agent_count>8</agent_count><agents_done>8</agents_done><agents_error>0</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>1235793</subagent_tokens><tool_uses>327</tool_uses><duration_ms>2725440</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(14:12:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "ls -la docs/roadmap/motor-video-decisao-v2v-2026-08-12.md && wc -l docs/roadmap/motor-video-decisao-v2v-2026-08-12.md",
+  "description": "Verify decision doc exists"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> -rw-rw-r-- 1 ubuntu ubuntu 61770 Aug 12 11:11 docs/roadmap/motor-video-decisao-v2v-2026-08-12.md
+> 535 docs/roadmap/motor-video-decisao-v2v-2026-08-12.md
+> ```
+
+## 🤖 Claude *(14:12:32)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/motor-video-decisao-v2v-2026-08-12.md",
+  "limit": 120
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	<!-- DOCUMENTO DE DECISÃO — motor de vídeo v2v · presenter · imagem · clipes de terceiros.
+> 2	     Síntese de 5 frentes de pesquisa + parecer do crítico adversarial. Todas as consultas: 2026-08-12.
+> 3	     Regra-mãe: claim sem URL + data não existe. Claim derrubada pelo crítico entra como A VERIFICAR ou não entra. -->
+> 4	
+> 5	# Motor de vídeo — decisão v2v · presenter · imagem · clipes
+> 6	
+> 7	**Data:** 2026-08-12 · **Operator:** MCORCH Master Execution Agent · **Reviewer/Owner:** Sovereign
+> 8	**Legenda:** `[FATO]` = fonte primária citada com URL · `[INFERÊNCIA]` = raciocínio derivado de fato citado · `[A VERIFICAR]` = afirmação que a pesquisa NÃO provou (inclui as claims derrubadas pelo crítico) · `[NÃO ENCONTRADO]` = ausência declarada.
+> 9	**Custo:** reportado em **USD real por unidade**, nunca em mco. Custo não é a trava desta decisão — capacidade e qualidade são.
+> 10	
+> 11	---
+> 12	
+> 13	## 1. A DIRETIVA
+> 14	
+> 15	O Sovereign disse, em 2026-08-12:
+> 16	
+> 17	> *"não se preocupe com os mco por enquanto… agora já podemos ir para os próximos níveis. video to video"*
+> 18	
+> 19	Antes disso, no mesmo arco de conversa, ele relatou quatro coisas — e cada uma é uma pergunta desta pesquisa:
+> 20	
+> 21	| # | O que ele disse | Pergunta operacional |
+> 22	|---|---|---|
+> 23	| D1 | O Veo *"parece personagem"* — o presenter não lê como pessoa | Qual é o caminho para ele aparecer como apresentador **crível**? |
+> 24	| D2 | Seedance via API mais barata **vs.** assinar o plano Higgsfield | Assinar Higgsfield destrava rail? Seedance faz v2v? |
+> 25	| D3 | Usar **vídeo público da internet** para cortes rápidos | Isso é seguro num canal BR monetizado? |
+> 26	| D4 | As fotos de objeto sairiam **melhores geradas com Nano Banana 2 + prompt cirúrgico** | Qual é o ID exato e o prompt? |
+> 27	| D5 | *"vamos para video to video"* | Existe v2v de recâmera preservando rosto, por API, hoje? |
+> 28	
+> 29	---
+> 30	
+> 31	## 2. RESPOSTA CURTA
+> 32	
+> 33	1. **v2v de recâmera preservando rosto: não existe caminho de API PROVADO hoje.** Antes de qualquer compra, rodar os 2 probes de US$ 5,20 do §11 — o Aleph 2 é hipótese, não recomendação.
+> 34	2. **Presenter: pare de gerar o rosto.** Grave uma *plate* real do Sovereign (US$ 0) e sincronize a boca com `sync.so lipsync-2-pro` sobre o take, com a voz do Qwen3-TTS self-host.
+> 35	3. **Higgsfield: não assinar como rail.** A API não tem nenhuma entrada de vídeo e o ToS §11.5 proíbe pass-through/service bureau. No máximo, 1 assinatura manual de estúdio, depois de teste.
+> 36	4. **Imagem: migrar para `gemini-3.1-flash-image` (= Nano Banana 2)** com o template cirúrgico do §7 + gate de OCR/Vision antes de o PNG virar camada.
+> 37	5. **Clipes de terceiros: vermelho como formato do canal.** A trava é a política de monetização do YouTube, não a lei. Recriar em MONTAR — a alternativa segura é também a superior.
+> 38	6. **EP07 sai agora:** 6 peças geradas com o modelo novo, gancho/fecho resolvidos por "Veo abre + motion continua", v2v fica de fora do episódio.
+> 39	
+> 40	---
+> 41	
+> 42	## 3. VIDEO-TO-VIDEO: o mapa honesto
+> 43	
+> 44	> ### 🔴 A frase em voz alta, primeiro
+> 45	> **Não existe hoje, provado em fonte primária, um caminho de API para "recamerar um take real preservando o rosto".**
+> 46	> O único modelo que documentava *novel view generation* explicitamente era o **`gen4_aleph` da Runway — e ele foi desligado da API em 2026-07-30** `[FATO]` ([changelog Runway](https://docs.dev.runwayml.com/api-details/api_changelog/), consultado 2026-08-12). O sucessor `aleph2` está vivo e é chamável, mas **o changelog dele descreve edição por texto + até 5 keyframes e não menciona ângulo de câmera em lugar nenhum** `[FATO]`; o anúncio oficial do Aleph 2.0 também não menciona ([runway.com/news/introducing-aleph-2-and-edit-studio](https://runway.com/news/introducing-aleph-2-and-edit-studio), 2026-05-21). Quem afirma que herdou são revendedores. **Portanto: capacidade `[A VERIFICAR]`, com teste de US$ 4,20 (§11 probe 1).**
+> 47	> A segunda hipótese — Seedance `reference-to-video` preservando o take — **foi derrubada** pela própria evidência de schema: o vídeo de referência entra em **480p–720p, ≤50 MB, 2–15 s somados**, e a doc literal diz *"**Reference** videos to **guide** video generation"* `[FATO]` ([fal — Seedance 2.0 reference-to-video](https://fal.ai/models/bytedance/seedance-2.0/reference-to-video)). Ninguém manda o master em 480p para re-renderizar: isso é condicionamento de movimento, não plate. **`[A VERIFICAR]` com probe de <US$ 1 (§11 probe 2).**
+> 48	
+> 49	### 3.1 Os sabores de v2v e quem realmente faz o quê
+> 50	
+> 51	| Produto / modelo | Sabor de v2v | APP/API | Endpoint · URL | Preço USD real | Duração / resolução | Preserva áudio? | Veredito para nós |
+> 52	|---|---|---|---|---|---|---|---|
+> 53	| **Runway Aleph 2.0** `aleph2` | edição in-context por texto · **recâmera `[A VERIFICAR]`** | **[API]** | `POST /v1/video_to_video` · [docs.dev.runwayml.com/guides/pricing](https://docs.dev.runwayml.com/guides/pricing/) | **28 créditos/s × $0,01 = $0,28/s**, com **piso de 56 créditos = $0,56 por chamada** `[FATO]` | in **2–30 s** · até 1080p | `[A VERIFICAR]` — Runway não documenta | **Único candidato a recâmera. Testar, não comprar.** |
+> 54	| Runway Gen-4 Aleph `gen4_aleph` | recâmera documentada | **MORTO na API 2026-07-30** `[FATO]` | — | — | — | — | Era ele quem provava a capacidade. Já não existe. |
+> 55	| **Gemini Omni Flash** | edição por instrução, conversacional | **[API]** | `gemini-omni-flash-preview` · [ai.google.dev/gemini-api/docs/omni](https://ai.google.dev/gemini-api/docs/omni) — ⚠️ a página de models lista `gemini-omni-flash`; **dois IDs circulando `[A VERIFICAR]`** | **11 créditos/s de vídeo de entrada = $0,11/s, cap de 10 s** (rate card Runway) `[FATO]` | **entrada ≤10 s** · 720p 24 fps | **NÃO** — *"Uploading audio references is unsupported in the current version of the API"* `[FATO]` | **Elimina-se sozinho:** o cap de 10 s não come um take de 15 s, e o áudio é regerado. |
+> 56	| **Luma Modify Video** `ray-2`/`ray-flash-2` | restyle com retenção de performance | **[API]** | `POST /reference/modifyvideo` · [docs.lumalabs.ai/docs/modify-video](https://docs.lumalabs.ai/docs/modify-video) | `ray-2` $0,01582/megapixel · `ray-flash-2` $0,00544/MP → 720p 5 s ≈ **$1,75 / $0,60** | ≤10 s / ≤15 s | `[NÃO ENCONTRADO]` | Restyle, não recâmera. Serve para tratamento estético do take. |
+> 57	| **Decart Lucy Edit Pro/Fast** | edição por instrução preservando movimento | **[API]** | `decart/lucy-edit/pro` · [fal.ai/models/decart/lucy-edit/pro](https://fal.ai/models/decart/lucy-edit/pro) | $0,15/video-s (720p) · Fast $0,04/video-s — ⚠️ a fal normaliza **16 frames = 1 "video second"** no Wan Animate; **se valer aqui, 30 fps custa ~1,9×** `[A VERIFICAR]` | `[NÃO ENCONTRADO]` | `[NÃO ENCONTRADO]` | Troca roupa/objeto/estilo. Não muda a câmera. |
+> 58	| **Wan 2.2 Animate — Replace** | troca de personagem preservando cena | **[API]** + pesos **Apache-2.0** | [fal.ai/models/fal-ai/wan/v2.2-14b/animate/replace](https://fal.ai/models/fal-ai/wan/v2.2-14b/animate/replace) | $0,08/video-s (720p), **16 frames = 1 s** `[FATO]` | `[NÃO ENCONTRADO]` | — | Preserva a sala, **substitui a pessoa** — o inverso do que queremos. |
+> 59	| **Wan 2.1 VACE 14B** | V2V + masked V2V | **[API]** + pesos **Apache-2.0** | [fal.ai/models/fal-ai/wan-vace-14b](https://fal.ai/models/fal-ai/wan-vace-14b) | $0,08/s (720p) · `video-edit` $0,10/s | — | — | A aposta open-source séria de edição local. Não recamera. |
+> 60	| **Seedance 2.0 / 2.5** | referência de movimento + (2.5) re-draw regional | **[API]** | `bytedance/seedance-2.0/reference-to-video` · Runway `seedance2_5` | Runway **30 cr/s de saída + 15 cr/s de entrada** = $0,30/s + $0,15/s `[FATO]` · fal 2.0 Std c/ vídeo $0,1814/s | ref 2–15 s ≤50 MB 480–720p · saída 4–15 s (2.0) / 4–30 s (2.5) | **NÃO** — `generate_audio` default `true` gera fala sintética `[FATO]` | **Não preserva o take `[A VERIFICAR]`, com forte evidência contrária.** Útil para b-roll, não para recâmera. ⚠️ **Correção:** o `seedance2_5` **está callable** (rate card publicado pela Runway) — a informação de "coming soon" era do canal BytePlus. |
+> 61	| **Dreamina / CapCut "Video to Video"** | v2v real de produto | **[APP]** | [dreamina.capcut.com/tools/seedance-video-to-video](https://dreamina.capcut.com/tools/seedance-video-to-video) | assinatura | — | — | 🔴 **Bloqueio ESTRUTURAL para BYOK: sem API pública.** Não se revende capacidade que o usuário não chama com a própria chave. |
+> 62	| **Higgsfield Video-to-Video** | restyle / face swap / motion transfer / extend | **[APP]** | [higgsfield.ai/video-to-video](https://higgsfield.ai/video-to-video) | assinatura | — | — | 🔴 **Zero endpoints com entrada de vídeo na API** — provado por varredura do [openapi.json](https://docs.higgsfield.ai/docs/openapi.json) (50 paths, nenhuma propriedade `input_video`/`video_url`/`source_video`) `[FATO]`. Ver §6. |
+> 63	| **Kling 3.0 "Omni One"** | editor multimodal 7-em-1 | **[APP]** presumido | — | — | — | — | `[NÃO ENCONTRADO]` paridade de API em fonte primária. Tratar como app. |
+> 64	| **sync.so lipsync-2 / -pro / sync-3** | re-sincroniza **só a boca** sobre vídeo real | **[API]** | [sync.so/docs/models/lipsync](https://sync.so/docs/models/lipsync) | **faixa por tier**: `lipsync-2` **$0,04–0,05/s** · `lipsync-2-pro` **$0,067–0,083/s** · `sync-3` **$0,107–0,133/s** `[FATO]` | face regenerada a **512×512** (2/2-pro); sync-3 4K | **SIM — o áudio original É o driver** | ⭐ **A peça mais valiosa da tabela.** Ver §5. |
+> 65	
+> 66	### 3.2 Open-source de recâmera — o inventário e a verdade
+> 67	
+> 68	| Projeto | Licença | Comercial? | Estado real |
+> 69	|---|---|---|---|
+> 70	| **ReCamMaster** ([KwaiVGI](https://github.com/KwaiVGI/ReCamMaster)) | **MIT** (código + ckpt) | ✅ | ⚠️ Os autores declaram que **o modelo do paper não foi liberado**; o que existe é re-implementação sobre Wan2.1 e *"may not achieve the same performance"*. Saída 81 frames @15 fps = **5,4 s**. |
+> 71	| **TrajectoryCrafter** ([repo](https://github.com/TrajectoryCrafter/TrajectoryCrafter)) | **`[NÃO ENCONTRADO]`** — sem LICENSE | 🔴 tratar como não-licenciado | Tecnicamente o mais alinhado ao problema (ICCV'25 Oral, ≥28 GB VRAM) e o mais arriscado juridicamente. |
+> 72	| **GCD** ([basilevh/gcd](https://github.com/basilevh/gcd)) | código GPLv3 · **pesos CC BY-NC-SA** | 🔴 **NÃO** | v2v de verdade, bloqueado por licença. |
+> 73	| **Stable Virtual Camera** | Non-Commercial | 🔴 **NÃO** | Novel view de imagens, não de take em movimento. |
+> 74	| Go-with-the-Flow · DimensionX · CameraCtrl · MotionCtrl | Apache/`[NÃO ENCONTRADO]` | varia | Nenhum resolve "recamera de take real preservando identidade". |
+> 75	
+> 76	**Bloqueio de hardware, verificado neste host em 2026-08-12** `[FATO]`: `nvidia-smi: NOT FOUND` · `no /dev/nvidia*` · `uname -m = aarch64` · 4 vCPU · 24 GB RAM. **Nenhum motor de difusão de vídeo roda aqui.** O truque do matte (u2net em onnxruntime CPU) não se transporta. Self-host de v2v ou de presenter é decisão de **CapEx de GPU**, não escolha de modelo.
+> 77	
+> 78	### 3.3 Conclusão da seção
+> 79	
+> 80	`[INFERÊNCIA]` O "próximo nível" que o Sovereign pediu tem **duas metades, e só uma existe hoje**:
+> 81	- ✅ **Metade que existe e é comprável agora:** manipular a *superfície* de um take real (lip-sync, restyle, troca de objeto/roupa, extensão) — `sync.so`, Luma, Lucy Edit, VACE.
+> 82	- ❌ **Metade que não existe provada:** manipular a *geometria* do take (câmera nova, paralaxe nova, mesma pessoa) por API.
+> 83	
+> 84	Enquanto a segunda metade não passar no probe, **a recâmera do MCORCH continua sendo a câmera virtual do motor MONTAR** — que é geometria de verdade, determinística e a US$ 0.
+> 85	
+> 86	---
+> 87	
+> 88	## 4. O caso kinetic-multicam — o que é real, o que é [APP], o que é portável
+> 89	
+> 90	### 4.1 A auditoria material
+> 91	
+> 92	`[FATO]` [github.com/aipauloshimas/kinetic-multicam](https://github.com/aipauloshimas/kinetic-multicam), verificado 2026-08-12: existe, **MIT**, **25 ★**, **1 único commit**, 8 arquivos / 737 linhas, raiz = `.gitignore LICENSE README.md SKILL.md requirements.txt scripts/`. **Zero chamadas de API, zero render, zero ffmpeg de vídeo** — a saída é um arquivo `<video>_kinetic_multicam_prompt.txt`. Transcrição = `openai-whisper` CLI local. **Nenhuma demo** no README (sem imagem, gif, mp4 ou link). Issue #1 + PR #1 abertos em 2026-08-03 por terceiro com traceback real (bug de `str | None` sob Python <3.10), **sem resposta do autor há 9 dias**.
+> 93	
+> 94	`[INFERÊNCIA]` **O hype está invertido.** A skill não é o motor — ela escreve um pedido em prosa. Quem trabalha é o Seedance. E o pedido é escrito para a **UI do app** (abre com *"Use the uploaded video as the source"*, nunca usa a sintaxe `@Video1` que a API exige) — ou seja, **não é portável tal-e-qual para API**.
+> 95	
+> 96	`[FATO]` A claim mais vendável da técnica — *"preserva o áudio e o lip sync"* — é falsa como enunciada: a doc da fal descreve `generate_audio` como *"Whether to **generate** synchronized audio… including **lip-synced speech**. Default: `true`"* e `audio_urls` como *"Reference audio to **guide**"*. **O que sai é voz sintética clonada, não a gravação.** O conserto determinístico é `generate_audio:false` + remux por ffmpeg — e **só funciona se o timing sair frame-exato**, que ninguém mediu.
+> 97	
+> 98	### 4.2 O placar honesto: o que já é nosso
+> 99	
+> 100	| Camada do workflow | Quem faz melhor | Prova |
+> 101	|---|---|---|
+> 102	| ASR word-level | **NÓS** — whisper.cpp self-host, nó `transcribe` vivo (Amendment 30, `generate-subtitles` + `subtitle-bridge`) | O `beats.py` deles é wrapper fino do CLI com download de 460 MB por usuário |
+> 103	| Beat na palavra falada | **NÓS** — `anchorWord` do Dramaturgo; doutrina *"o beat cai na PALAVRA, não no cronômetro"* | O `naive_cuts()` deles é maior-silêncio + lista de stopwords hardcoded |
+> 104	| Tipografia cinética (supers) | **NÓS** — motor motion desenha no frame exato, US$ 0, determinístico | No Seedance a tipografia é palpite de difusão, com risco de erro ortográfico |
+> 105	| Planejamento semântico de corte | **NÓS** — trupe criativa com vocabulário fechado | Eles delegam em prosa livre ao LLM |
+> 106	| Clone de voz | **NÓS** — Qwen3-TTS self-host, US$ 0 | — |
+> 107	| Matting | **NÓS** — u2net self-host, `semi=12.430` medido | — |
+> 108	| **Re-encenação do take (recâmera)** | **NINGUÉM PROVADO** | §3 |
+> 109	
+> 110	`[INFERÊNCIA]` ~90% do workflow divulgado já é nosso, com mais rigor. **O delta é um único verbo: recamera.** E ele está `[A VERIFICAR]`, não disponível.
+> 111	
+> 112	### 4.3 O desenho concreto do que dá para fazer JÁ, sem o motor de re-encenação
+> 113	
+> 114	Chamo de **"multicam falso de alta resolução"**. É um nó/runner novo no rail MONTAR, que trata o take real como **camada plana num espaço 3D** e resolve tudo o que não for paralaxe:
+> 115	
+> 116	| Peça | Como se faz com o que já temos | Onde vive |
+> 117	|---|---|---|
+> 118	| **1. Ancoragem por palavra** | whisper.cpp → word timestamps → beats do Dramaturgo casados na palavra falada (não em fração aritmética) | já existe |
+> 119	| **2. "Ângulos" por crop-e-escala em alta resolução** | Filma-se **uma vez em 4K**, entrega-se em 1080p. Cada "câmera" é uma janela 1080p dentro do 4K: *wide* (quadro cheio), *medium* (crop 1,6×), *close* (crop 2,2×). Corte seco entre janelas no beat = a sensação de corte de câmera. **Perda de resolução zero até 2× de crop** | runner novo |
+> 120	| **3. Push-in / pull-out** | Interpolação da janela de crop ao longo de N frames com easing — é *dolly óptico* real, não upscale | motor MONTAR |
+> ```
+
+## 🤖 Claude *(14:12:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '120,300p' docs/roadmap/motor-video-decisao-v2v-2026-08-12.md",
+  "description": "Read middle section of decision doc"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> | **3. Push-in / pull-out** | Interpolação da janela de crop ao longo de N frames com easing — é *dolly óptico* real, não upscale | motor MONTAR |
+> | **4. "Orbita" simulada** | Skew/perspectiva sutil + deslocamento horizontal da janela + micro-rotação (≤2°) durante o push-in | motor MONTAR |
+> | **5. Whip pan / snap** | Motion blur direcional de 3–5 frames entre duas janelas — o truque clássico que esconde o corte | FFmpeg |
+> | **6. Profundidade falsa** | Matte u2net do apresentador → camada FG; take desfocado → camada BG; janelas de crop com **fatores diferentes** para FG e BG = **paralaxe real de 2 planos** | u2net + MONTAR |
+> | **7. Supers cinéticos** | Tipografia de verdade no frame exato do beat, com a grade da casa | motor MONTAR |
+> | **8. Áudio intacto** | Nada toca o áudio. Zero re-síntese, zero risco de proveniência | — |
+> 
+> **Custo: US$ 0. Determinístico. Sem provedor externo. Sem risco de ToS.**
+> 
+> **Onde essa simulação CONVENCE** `[INFERÊNCIA]`:
+> - Apresentador sentado ou de pé, quadro razoavelmente estático, fundo simples — o caso do nosso canal.
+> - Cortes rápidos no beat: o olho lê "mudou de câmera" pelo **enquadramento e pelo timing**, não pela paralaxe. É literalmente como se corta um multicam de 2 câmeras estáticas.
+> - Push-in dramático numa frase-chave: indistinguível de um zoom real, porque zoom real também não gera paralaxe.
+> - O truque 6 (2 planos) dá o *sinal* de profundidade que o olho procura no movimento lateral curto.
+> 
+> **Onde ela QUEBRA — sem enfeite** `[INFERÊNCIA]`:
+> - **Órbita de verdade.** Girar em torno do sujeito exige ver o outro lado do rosto e do ambiente. Crop não inventa geometria: passando de ~8–10° de deslocamento aparente, o cérebro percebe uma *foto sendo movida*, não uma câmera andando.
+> - **Fundo complexo com muita profundidade.** Com 2 planos só, um cenário com camadas (mesa, parede, janela, rua) denuncia o "papelão" — cada objeto deveria se mover a uma taxa diferente.
+> - **Mãos e objetos cruzando o plano.** Se o apresentador estende a mão para a câmera, o matte de 2 planos rasga.
+> - **Crop além de ~2,2×.** A partir daí a textura de pele degrada visivelmente em 1080p; em 4K de origem o teto real é ~2,5×.
+> - **Take com câmera já em movimento.** As janelas de crop somam ao movimento existente e produzem enjoo.
+> 
+> **Regra prática que sai disso:** grave **4K, tripé, quadro parado, fundo simples**. Aí a simulação cobre 100% da linguagem de multicam do formato — e a única coisa que ela não faz (órbita real) também não é linguagem de videocast.
+> 
+> ---
+> 
+> ## 5. PRESENTER — o caminho para o Sovereign aparecer como pessoa
+> 
+> ### 5.1 O mecanismo (a resposta ao "parece personagem")
+> 
+> `[FATO]` A doc da sync.so declara que `lipsync-2` e `lipsync-2-pro` operam a **512×512 de resolução de face** ([sync.so/docs/models/lipsync](https://sync.so/docs/models/lipsync)) — ou seja, **regeneram só um recorte de rosto e devolvem o resto do quadro original intacto**.
+> 
+> `[INFERÊNCIA]` É esse número que explica o incômodo com o Veo. A credibilidade **não vem da resolução — vem de quantos pixels do quadro nunca foram inventados**:
+> 
+> | | Gerar humano do zero (Veo, Kling, Sora, Seedance) | Animar frame real (OmniHuman, HeyGen IV, Hedra) | Lip-sync sobre vídeo real (sync.so) |
+> |---|---|---|---|
+> | Base do pixel | prior do modelo | **uma foto real** condicionando todo frame | **o vídeo real**, intocado fora da máscara |
+> | Superfície de erro | quadro inteiro × todos os frames | movimento + boca | **só a boca** |
+> | Drift de identidade | re-sintetiza a cada frame → acumula | re-ancora na mesma foto | não existe |
+> | O que o cérebro lê | "97% certo" = vale da estranheza | "vídeo ruim" (perdoável) | "é ele" |
+> 
+> **A regra que sai:** o Veo é um **gerador de mundo**, e o rosto humano é o pior caso possível para gerador de mundo — é o objeto que a plateia mais treinou a vida inteira a julgar. **Veo para cenário e b-roll; nunca mais para o rosto.**
+> 
+> ### 5.2 As opções, com licença e encaixe BYOK
+> 
+> | Caminho | O que é | API / acesso | Preço USD real | Consentimento / licença | Encaixe BYOK |
+> |---|---|---|---|---|---|
+> | 🥇 **sync.so sobre plate real** | repinta a boca no take do Sovereign | **[API]** em todos os tiers, piso $5/mês | `lipsync-2-pro` **$0,067–0,083/s** · `sync-3` **$0,107–0,133/s** (faixa por tier: o piso é o desconto −20% do plano **Scale, $249/mês**) `[FATO]` | sem gate — o vídeo é do próprio usuário | ⚠️ piso mensal baixo. **Cada tenant cai no tier Hobbyist ($0,05 / $0,083)** — nunca cite o piso da faixa como preço |
+> | 🥈 **BytePlus OmniHuman-1.5** | foto + áudio → falante | **[API]** oficial, self-serve, sem mínimo · `fal-ai/bytedance/omnihuman/v1.5` | **$0,12/s** (BytePlus) · $0,16/s (fal) `[FATO]` — [byteplus.com/en/product/OmniHuman](https://www.byteplus.com/en/product/OmniHuman) | 🔴 **`[NÃO ENCONTRADO]` política de consentimento na fonte primária** — dívida transferida para nós | ✅ limpo (pay-per-use) |
+> | 🥉 **HeyGen Avatar IV Photo** | foto → falante, barato | **[API]**, carteira desde $5 | **$0,05/s ($3/min)** `[FATO]` — [developers.heygen.com/docs/pricing](https://developers.heygen.com/docs/pricing) | ⚠️ **`photo` não exige consentimento porque a HeyGen presume que a foto "depict no real, identifiable person"** ([avatar-consent](https://developers.heygen.com/docs/avatar-consent)). **Usar a cara do dono nesse trilho é operar contra a premissa dele** — não é conveniência, é risco `[INFERÊNCIA]` | ✅ limpo |
+> | Hedra Character-3 | foto + áudio → falante | **[API]**, exige assinatura | 6 vs 8 créditos/s — **divergência nas próprias páginas** `[A VERIFICAR]`; ≈$0,033–0,044/s `[INFERÊNCIA]` | `[NÃO ENCONTRADO]` | ⚠️ piso |
+> | D-ID | foto → falante | **[API]** em todos os planos | 1 crédito ≤15 s, arredondado para cima; $4,70–$108/mês | exige **consentimento verbal gravado dentro do próprio áudio** `[FATO]` | ⚠️ piso |
+> | Synthesia | script → vídeo corporativo | **[API]** só Creator $89/mês | ≈$2,13/min `[INFERÊNCIA]` | consentimento formal | ❌ gated |
+> | Veo 3.1 (hoje) | gera o humano do zero | **[API]** | Std **$0,40/s** · Fast $0,10/s · Lite $0,05/s `[FATO]` ([pricing](https://ai.google.dev/gemini-api/docs/pricing)) | — | ✅ | 
+> | **Self-host** | InfiniteTalk (Apache-2.0 repo **e** pesos, v2v) · EchoMimicV3 (Apache-2.0, 12 GB) · MuseTalk (MIT + pesos `openrail-m`, 4 GB) | — | US$ 0/render | ⚠️ **OpenRAIL obriga propagar as restrições de uso a todos os usuários downstream** — num rail que revende multi-tenant isso vira anexo obrigatório no nosso ToS `[INFERÊNCIA sobre licença lida]` | 🔴 **BLOQUEADO: host é aarch64 sem GPU** |
+> | 🔴 **Proibidos** | Wav2Lip (*"any form of commercial use is strictly prohibited"*) · Sonic (CC BY-NC-SA) · HunyuanVideo-Avatar (*"DOES NOT APPLY IN THE EUROPEAN UNION, UNITED KINGDOM AND SOUTH KOREA"*) `[FATO]` | — | — | — | não usar |
+> | ⚠️ **LatentSync** | Apache-2.0 no repo, `openrail++` nos pesos — **mas o README declara que "some code are borrowed from … Wav2Lip"**, que é não-comercial e sem LICENSE `[FATO]` | — | — | contaminação real para quem **revende** `[INFERÊNCIA]` | auditar antes de usar |
+> 
+> ### 5.3 O achado sobre OmniHuman
+> 
+> `[FATO]` **OmniHuman-1.5** — *"Instilling an Active Mind in Avatars via Cognitive Simulation"*, ByteDance Intelligent Creation Lab, [arXiv:2508.19209](https://arxiv.org/abs/2508.19209). Arquitetura Sistema 1 / Sistema 2: ponte entre um **MLLM** (planejamento) e um **Diffusion Transformer** (reação), com design *"Pseudo Last Frame"* para conflito entre modalidades. Claims: coerência com **ritmo, prosódia E conteúdo semântico** da fala; vídeos **acima de 1 minuto**; movimento de câmera contínuo; multi-personagem.
+> 
+> `[INFERÊNCIA]` É o único motor da tabela cujo movimento é guiado pelo *significado* do que se diz — a diferença entre balançar a cabeça no ritmo e **enfatizar a palavra certa**. É provavelmente o que impressionou o Sovereign quando ele falou em "Seedance". **São produtos diferentes da mesma empresa:** OmniHuman = humano falante; Seedance = vídeo geral. E o Seedance carrega passivo de fornecedor — **cease-and-desist de Disney, Paramount Skydance e MPA**, e pedido de senadores dos EUA para desligá-lo (mar/2026) `[FATO]` ([Wikipedia: Seedance 2.0](https://en.wikipedia.org/wiki/Seedance_2.0)). Para uma plataforma que **revende capacidade**, isso é risco de continuidade — não construir o rail de presenter sobre ele.
+> 
+> ### 5.4 Recomendação de presenter
+> 
+> ```
+> Passo 1 (US$ 0, hoje):  gravar plate do Sovereign — 60 s, 4K, tripé, luz boa, olhando a lente
+> Passo 2:                Qwen3-TTS self-host (US$ 0) → sync.so lipsync-2-pro sobre a plate
+> Passo 3 (sem plate):    BytePlus OmniHuman-1.5 $0,12/s a partir de foto real
+> Passo 4 (volume):       HeyGen Avatar IV Photo $0,05/s — ⚠️ só com o gate de consentimento NOSSO
+> Passo 5:                Veo 3.1 → cenário, b-roll, insert. Nunca o rosto.
+> ```
+> 
+> **Gate de consentimento (obrigatório, independentemente do motor):** todo nó de presenter exige artefato de consentimento antes do primeiro job, no mesmo padrão do rail `content-provenance` (AI Act Art. 50) e do consentimento LGPD do clone de voz. Onde o fornecedor não impõe (OmniHuman, HeyGen `photo`), a obrigação é nossa.
+> 
+> ---
+> 
+> ## 6. HIGGSFIELD: assinar ou não
+> 
+> ### **VEREDITO: NÃO assinar como dependência de plataforma. Nem para (a) produzir mais rápido, nem para (b) revender.**
+> 
+> **A razão técnica** `[FATO]`: varredura programática do [openapi.json](https://docs.higgsfield.ai/docs/openapi.json) oficial (104.146 bytes, `openapi 3.1.0`, `info.version 2.0.0`, **50 paths**) — **nenhuma propriedade de entrada de vídeo em nenhum endpoint**. Zero ocorrências de `input_video`, `video_url`, `source_video`, `reference_video`, `video_to_video`, `recamera`, `restyle`, `lipsync`, `upscale`, `extend`. Tudo é texto→imagem, texto→vídeo ou imagem→vídeo. **Exatamente o recurso que interessa (v2v) existe só na web.** E a API está uma geração atrás do site: Kling 3.0, Seedance 2.0, Nano Banana Pro/2, Sora 2 Max — **nenhum tem endpoint**.
+> 
+> **A cláusula que sustenta o veredito** — ToS §11.5, verbatim `[FATO]` ([higgsfield.ai/terms-of-use-agreement](https://higgsfield.ai/terms-of-use-agreement), consultado 2026-08-12):
+> 
+> > *"You shall **not sublicense, resell, redistribute, or make Developer Access available on a standalone basis to any third party, or act as a pass-through or service bureau for the Service with no independent value added**."*
+> 
+> Reforçada por **§11.3** (*"API Keys are confidential credentials **issued for your use only**"*), **§5(i)** (*"license, **resell**, rent… or otherwise **commercially exploit the Service**"*) e **§16.2**, que classifica violação da §11 como **material breach** com direito de suspender *"immediately and without notice"* — **sem a janela de cura** que existe para violações não-materiais.
+> 
+> **O achado que ninguém pediu — §4.4** `[FATO]`:
+> > *"Your Content, Inputs, and Outputs **may be used by Company to train, develop, enhance… its AI models**… Different terms apply to enterprise and business customers… under those agreements, Company does not use the customer's content to train."*
+> 
+> `[INFERÊNCIA]` Sem Enterprise, conteúdo passa a alimentar treino de um concorrente. **Ressalva de sujeito que o crítico levantou e eu aceito:** sob BYOK real, o contratante é o **tenant**, não o MCORCH — a exposição de treino é dele. Mas o risco do **nosso** contrato com o **nosso** usuário permanece: teríamos de avisá-lo. Lado bom, mesma §4.4: *"Company does not claim ownership of any of your Inputs or Outputs… you may transfer or sublicense your rights in Outputs"* — **o output é seu e revendável; o que não é revendável é o acesso.**
+> 
+> **A economia não salva.** Preços dos planos (anual, [higgsfield.ai/pricing](https://higgsfield.ai/pricing), 2026-08-12) `[FATO]`: Starter $19 (270 cr) · Plus $47 (1.200 cr) · Ultra $99 (3.000 cr) → **$0,033/crédito no Ultra**. Arbitragem no Veo 3.1 1080p: $0,239/s vs $0,40/s no Google = −40% — **`[A VERIFICAR]`, porque a tabela lida é a da WEB e a doc não publica a tabela por modelo da API.** E o teto mata: 3.000 cr ÷ 29 cr por clipe de 4 s = **~6min53s de Veo 1080p/mês**, economia de ~$66/mês. Some-se o rodapé da própria página de preços `[FATO]`: *"Unlimited models and Free Generations on plans are accessible only via higgsfield.ai and are **not accessible on MCP/CLI, Canvas or Supercomputer**"* — a isca do plano não chega ao rail.
+> 
+> **Nota de conformidade da base atual** `[FATO]`: o contrato que já pinamos segue válido — `/higgsfield-ai/soul/{standard,character,reference}` existe, `compose` nunca existiu. **Sem drift.** Mudou a auth: a doc hoje especifica par ID+secret (`Authorization: Key ${HF_API_KEY_ID}:${HF_API_KEY_SECRET}`) — conferir contra o conector.
+> 
+> **Exceção estreita defensável:** **uma** assinatura Ultra ($99/mês, cancelável) como **ferramenta manual de estúdio do Sovereign**, nunca como rail — e **só depois** de um teste com take real na web (créditos free) que prove que o v2v entrega o que a landing promete.
+> 
+> **Higiene exigida pelo crítico, e eu concordo:** os 5 quotes de ToS acima decidem sozinhos o veredito e **não são re-abríveis deste IP** (Cloudflare). **Arquivar cópia do `terms-of-use-agreement` com SHA-256 e data junto deste documento antes de tratar como prova permanente.**
+> 
+> **Reabrir a frente quando:** a API ganhar endpoint com entrada de vídeo. O changelog da API tem **uma única entrada, de 2026-08-11** — superfície em construção ativa. Re-sondar o `openapi.json` em ~60 dias; o lugar certo é `scripts/qa/smoke-higgsfield-schema.ts`.
+> 
+> ---
+> 
+> ## 7. IMAGEM: o ID exato e o template de prompt cirúrgico
+> 
+> ### 7.1 O defeito que motivou
+> 
+> Uma peça de cenário gerada para o EP07 saiu com a marca fictícia **"AUDIO VOID"** estampada num microfone. `[INFERÊNCIA]` O diagnóstico: pedir *"professional broadcast microphone"* ativa o prior de que microfone de estúdio **tem placa de marca**, e o modelo preenche o slot com marca inventada. Num episódio cuja regra-mãe é *"todo número é sourced"*, uma marca inventada na tela é o mesmo defeito de classe do número fabricado.
+> 
+> ### 7.2 O ID exato
+> 
+> | Nome comercial | **ID de API** | Slug OpenRouter | Preço USD/imagem |
+> |---|---|---|---|
+> | **Nano Banana 2** ✅ **recomendado** | **`gemini-3.1-flash-image`** | `google/gemini-3.1-flash-image` | **$0,067** (1K) · **$0,101** (2K) · $0,151 (4K) |
+> | Nano Banana Pro | `gemini-3-pro-image` | `google/gemini-3-pro-image` | $0,134 (1K/2K) · $0,24 (4K) |
+> | Nano Banana (o nosso hoje) | `gemini-2.5-flash-image` | `google/gemini-2.5-flash-image` | $0,039 (1K) |
+> 
+> `[FATO]` [ai.google.dev/gemini-api/docs/image-generation](https://ai.google.dev/gemini-api/docs/image-generation) e [pricing](https://ai.google.dev/gemini-api/docs/pricing). **O nome comercial não é ID:** `google/nano-banana-2` retorna `400 — "is not a valid model ID"`. A página do OpenRouter do slug `google/gemini-3.1-flash-image` **chama o modelo literalmente de "Nano Banana 2"** e marca release em **2026-06-18** `[FATO]` ([openrouter.ai/google/gemini-3.1-flash-image](https://openrouter.ai/google/gemini-3.1-flash-image)) — ⚠️ o blog do Google usado como fonte das capacidades aparece datado **2026-02-26**, o que é impossível para um modelo de junho: **a data da fonte de capacidade está `[A VERIFICAR]`**; o mapeamento nome→ID, esse, está confirmado.
+> 
+> **Contrato da API que muda código nosso** `[FATO]`: endpoint recomendado é `POST /v1beta/interactions`; a saída se controla por `response_format: {"type":"image","mime_type":"image/png","aspect_ratio":"16:9","image_size":"2K"}` (o "K" é maiúsculo). **Não existe parâmetro `negative_prompt`** — todo negativo tem de viver no texto. Toda imagem sai com marca d'água **SynthID** (casa com nosso rail de proveniência).
+> 
+> **A doutrina oficial que governa o template** `[FATO]`, verbatim da seção *Best practices*:
+> > *"Use **semantic negative prompts**: Instead of saying 'no cars,' describe the intended scene positively: 'an empty, deserted street with no signs of traffic.'"*
+> 
+> `[INFERÊNCIA]` Logo, `no logo` é a forma fraca. A forma forte **preenche o slot semântico**: descrever positivamente uma superfície contínua e vazia.
+> 
+> ### 7.3 TEMPLATE MESTRE — os 6 controles (colar e preencher `{{slots}}`)
+> 
+> ```
+> A photorealistic studio product photograph of {{OBJECT}} — {{2-3 material and
+> colour details, e.g. "matte charcoal aluminium body, brushed steel yoke"}}.
+> 
+> FRAMING — the entire object is fully inside the frame. It occupies about 65% of
+> the frame height, centred, with generous empty margin on all four sides. No part
+> of the object touches or crosses any edge of the frame. Nothing is cropped.
+> 
+> BACKGROUND — a single flat, seamless, perfectly even {{BACKDROP}} field filling
+> the whole frame. The background is one uninterrupted solid tone: no gradient, no
+> vignette, no horizon line, no studio sweep curve, no floor, no wall texture, no
+> props, no other objects. The object is the only thing in the picture.
+> 
+> LIGHT — one large soft key light from camera-left at 45 degrees, slightly above,
+> wrapping the form to give clear volume and a gentle falloff down the right side.
+> A weak fill from camera-right keeps the shadow side readable. {{SHADOW}}
+> 
+> CAMERA — three-quarter view: the object turned about 35 degrees away from the
+> lens so two faces are visible, seen from slightly above eye level. Shot on a
+> 100mm macro lens at f/8. Sharp focus edge to edge across the entire object; every
+> contour crisp and cleanly separated from the background. High resolution, fine
+> surface micro-detail, no motion blur.
+> 
+> SURFACE — this is an unbranded prototype prop. Every surface of the object is
+> bare: smooth, continuous, uninterrupted material from edge to edge. All faces are
+> clean and empty. Every control, knob, switch and port is a plain unmarked
+> physical shape. The object carries no maker's mark and no identification of any
+> kind — it left the factory blank.
+> 
+> The image contains no writing anywhere: no letters, no words, no numerals, no
+> logos, no emblems, no badges, no labels, no decals, no engraving, no embossed
+> characters, no serial plates, no watermarks, no captions.
+> ```
+> 
+> **Os 6 controles são, em ordem: FRAMING · BACKGROUND · LIGHT · CAMERA · SURFACE · bloco negativo final.** A ordem importa: **positivo primeiro, negativo por último**.
+> 
+> **Preenchimento:**
+> 
+> | Slot | Regra |
+> |---|---|
+> | `{{OBJECT}}` | substantivo concreto + função, **sem adjetivo de prestígio** — "professional", "broadcast-grade", "studio-flagship" **convidam o logo**. Foi exatamente isso que gerou o "AUDIO VOID" |
+> | `{{BACKDROP}}` | **contraste com o objeto**: objeto escuro → `pale warm grey`; objeto claro → `mid-grey (18% grey)`; colorido → cinza neutro dessaturado; metálico → `mid-grey`. **Nunca green screen** — u2net é saliência, não chroma key; verde só polui por reflexo |
+> | `{{SHADOW}}` **modo A (padrão para MONTAR)** | `There is no cast shadow on the background: the object appears to float, cleanly separated, with the background completely clean and unmarked everywhere.` |
+> | `{{SHADOW}}` **modo B (peça isolada)** | `A single tight contact shadow sits directly beneath the object where it meets the surface — small, soft-edged, confined to within a few centimetres of the base. The rest of the background stays completely clean.` |
+> 
+> ### 7.4 A lista de negativos — em forma de afirmação positiva
+> 
+> | Defeito | ❌ negativo fraco | ✅ **usar esta afirmação** |
+> |---|---|---|
+> ```
+
+## 🤖 Claude *(14:12:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '300,420p' docs/roadmap/motor-video-decisao-v2v-2026-08-12.md",
+  "description": "Read remaining sections of decision doc"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> |---|---|---|
+> | **Marca inventada ("AUDIO VOID")** | `no logo, no brand` | `an unbranded prototype prop; every surface is bare, continuous material; it carries no maker's mark` |
+> | Texto qualquer | `no text` | `the image contains no writing anywhere; all surfaces are blank` |
+> | Números | `no numbers` | `all dials and displays are blank, unmarked, and switched off` |
+> | Objeto cortado | `not cropped` | `the entire object is fully inside the frame, with generous empty margin on all four sides` |
+> | Fundo sujo | `no clutter` | `a single flat seamless solid field fills the whole frame; the object is the only thing in the picture` |
+> | Gradiente / sweep | `no gradient` | `one uninterrupted solid tone, evenly lit corner to corner` |
+> | Sombra espalhada | `no shadows` | `the background stays completely clean everywhere` |
+> | Bokeh | `no bokeh` | `sharp focus edge to edge across the entire object` |
+> | Mãos/pessoas | `no hands` | `the object stands alone, untouched` |
+> | Duplicatas | `no duplicates` | `exactly one {{OBJECT}}, and nothing else` |
+> 
+> **Resolução: pedir 2K, não 4K.** `[INFERÊNCIA]` A máscara do u2net nasce em grafo **320×320** e é reamostrada — a franja cresce proporcional à resolução, então 4K não compra borda melhor, só arquivo maior.
+> 
+> ### 7.5 Variante "texto ilegível de propósito"
+> 
+> Para peças que **precisam parecer** ter texto (folha anotada, mídia kit) sem ter número fantasma. **Ordem de preferência:**
+> 
+> 1. **Gerar a peça EM BRANCO e carimbar o texto real no runner MONTAR** (tipografia de verdade, números dos 12 ancorados do EP07). Risco de número fantasma: **zero**. É o default.
+> 2. Ilegível por escala/foco — substituir o bloco `SURFACE` por um destes:
+> 
+> ```
+> (a) corpo de texto impresso, ilegível por escala
+> The sheet carries dense printed body copy rendered only as fine horizontal grey
+> texture bands — the visual rhythm of paragraphs seen from too far away. Individual
+> characters are not resolved: the lines read as continuous soft grey strokes, far
+> too small to decipher. There are no headlines, no numerals, no percentages, no
+> currency symbols and no chart labels anywhere on the page.
+> 
+> (b) anotação à mão, greeked
+> Handwritten annotations in blue ink appear as abstract looping scribbles and wave
+> lines — the gesture of handwriting without any real letterforms. No word is
+> formed and no digit is written. A few arrows and circles mark the margin.
+> 
+> (c) ilegível por profundidade de campo
+> The sheet is tilted steeply away from the lens; only its top edge sits in the
+> plane of focus. The printed area falls outside the depth of field and dissolves
+> into soft grey blur, unreadable at any zoom. Shot at f/1.8 on an 85mm lens.
+> 
+> (d) mídia kit — hierarquia sem conteúdo
+> The page shows the layout of a media kit: solid blocks of colour, a large empty
+> frame where an image would sit, and grey placeholder bars standing in for lines of
+> type. The placeholder bars are plain rounded rectangles, not letters. Every chart
+> area is an empty outlined box with no plotted data, no axis labels and no numbers.
+> ```
+> 
+> 3. **Nunca** pedir o número real ao modelo.
+> 
+> ### 7.6 A contradição que o crítico pegou — e como se resolve
+> 
+> Duas afirmações incompatíveis apareceram na pesquisa: (i) `gemini-3.1-flash-image` é o melhor porque tem a melhor aderência a prompt multi-restrição; (ii) ele foi **otimizado para texto legível**, o que trabalha CONTRA uma peça que deve ficar muda — e o legado `gemini-2.5-flash-image` seria mais seguro. **Nenhuma foi retirada. Status: `[A VERIFICAR]`, decidido por A/B de 2 imagens (~$0,11)** — mesmo prompt, os dois modelos, contar glifos. Até lá, gerar nos dois e escolher com o olho.
+> 
+> ### 7.7 Gate de aceite antes de o PNG virar camada
+> 
+> | # | Gate | Custo | Estado |
+> |---|---|---|---|
+> | G1 | **OCR determinístico** — qualquer cluster de glifo com confiança >60 rejeita e re-rola | US$ 0 | ⚠️ **`tesseract` NÃO está instalado no host** (verificado 2026-08-12). Precisa provisionar |
+> | G2 | **Vision QA** com pergunta fechada: *"Há alguma letra, número ou logotipo visível? SIM/NÃO + onde"* | ~0 | ✅ rail Vision MCP vivo |
+> | G3 | **Checagem de alpha pós-matte** — contar pixels `semi`; acima do baseline `u2net semi≈12.430`, o recorte falhou | US$ 0 | ✅ métrica já medida em 2026-08-06 |
+> 
+> ### 7.8 Dívida de código que este capítulo destrava (com file:line)
+> 
+> | Achado | Prova | Ação |
+> |---|---|---|
+> | 🔴 **Rótulo falso em produção** — a UI anuncia "Nano Banana 2" e despacha o modelo legado de 2025 | `src/types/canvas.ts:207-209`: `label: "Nano Banana 2 (Gemini)"` + `modelParam: "google/gemini-2.5-flash-image"` `[FATO]` | Trivial de corrigir. Ou muda o label, ou muda o modelo (preferência: muda o modelo) |
+> | **35 ocorrências** de `gemini-2.5-flash-image` hardcoded, incluindo o default de todo nó de imagem (`src/lib/spaces-execution.ts:44`), a tabela de custo do ledger (`supabase/functions/canvas-execute/index.ts:30`) e o fallback do servidor (`canvas-execute:2234`) `[FATO]` | grep 2026-08-12 | Migrar com recalibração 4×-floor: 2K a $0,101 → **23 mco** (contra 10 hoje). **Sem a entrada na tabela de custo, o nó nasce morto em 422** |
+> | ⚠️ **4 refs a `imagen-4` vivas** | `src/lib/spaces-schema.ts:48` (enum de modelos) + `src/hooks/useParamRegistry.ts:34` (custos 18/28/8 mco) `[FATO]` | ⚠️ **Correção honesta ao alarme:** os slugs vizinhos (`mystic-2.5-fluid`, `classic-fast`, `krea-2`, `z-image`) indicam **catálogo de terceiro, não o ID `imagen-4.0-generate` do Google** — e `grep` não achou **nenhum dispatcher** que consuma esses valores. Portanto o *deadline de 2026-08-17 sobre essas linhas está `[A VERIFICAR]`*; o que está provado é outra coisa, igualmente ruim: **são opções de UI sem rota de execução** (família "nó nasce morto"). Auditar nesta semana de qualquer jeito |
+> | ⚠️ **Runner do EP07 aponta para o modelo velho** | `scripts/ep07/gen-photo-briefs.ts:113` e `:154` — `model: "google/gemini-2.5-flash-image"` `[FATO]` | Trocar por `google/gemini-3.1-flash-image` ao rodar (§9) |
+> 
+> **Bloqueio operacional que precede tudo** `[FATO]`, verificado 2026-08-12: `GEMINI_API_KEY` retorna **`403 PERMISSION_DENIED — "Your API key was reported as leaked"`** e `OPENROUTER_API_KEY` está em **saldo negativo** (`total_credits: 40 / total_usage: 40.174`, geração devolve `402`). **Nenhuma imagem foi gerada nesta pesquisa. Rotacionar a chave Gemini e recarregar o OpenRouter é pré-condição de tudo no §9.**
+> 
+> ---
+> 
+> ## 8. CLIPES DE TERCEIROS: semáforo
+> 
+> **A trava real não é a lei — é o contrato.** `[FATO]` As duas listas da [política de monetização do YouTube](https://support.google.com/youtube/answer/1311392?hl=en) (consultada 2026-08-12) são explícitas. **Não permitido, verbatim:** *"Clips of moments from your favorite show edited together with little or no narrative"* · *"Short videos you compiled from other social media websites"* · *"Content downloaded or copied from another online source without any substantive modifications"* · e, em *Generic or repetitive content*, *"AI-generated content made with generic or unoriginal templates giving the impression of mass production"*. **Permitido, verbatim:** *"Using clips for a critical review"* · *"Edited footage from other creators where you add a storyline and commentary"* · *"Content that primarily features the uploading creator in the video"*.
+> 
+> Isso atinge **o canal**, não o vídeo, e **não admite defesa de fair use** — porque não é uma questão de copyright, é de termos de uso.
+> 
+> **Os mitos, mortos por fonte primária** `[FATO]`: [YouTube — Fair use](https://support.google.com/youtube/answer/9783148): *"There aren't any magic words to automatically apply fair use"* e *"Giving credit to the owner… won't by itself turn a non-transformative copy into fair use"*. [U.S. Copyright Office](https://www.copyright.gov/fair-use/): *"there is no formula to ensure that a predetermined percentage or amount of a work… may be used without permission."* **"7 segundos é seguro", "dei crédito" e "sem intenção de infringir" são folclore.**
+> 
+> **No Brasil não existe fair use** `[FATO]` — Lei 9.610/98 art. 29 exige *"autorização prévia e expressa"* inclusive para *"reprodução parcial"*; as exceções são rol escrito (art. 46 III: só **estudo, crítica ou polêmica**, *"na medida justificada"*, **com crédito obrigatório**; art. 46 VIII: *"pequenos trechos"* desde que *"a reprodução em si não seja o objetivo principal da obra nova"* — o que mata o formato "corte", em que o clipe **é** o produto).
+> 
+> ⚠️ **Correção ao que a pesquisa quis provar (o crítico está certo):** existe um precedente de 2026 — **STJ, AREsp 2.294.622, 4ª Turma, Rel. Min. Raul Araújo, j. 17/03/2026** ([notícia oficial do STJ, Informativo 882](https://www.stj.jus.br/sites/portalp/Paginas/Comunicacao/Noticias/2026/27032026-Legitimidade-de-provedor-para-remover-conteudo-que-viola-termos-de-uso-e-destaque-do-Informativo.aspx)) em que o YouTube removeu **dois canais inteiros** que publicavam cortes de transmissões esportivas **com comentário**, e o STJ validou. **Mas o holding é sobre TERMOS DE USO** — *"provedores podem remover conteúdo com base nos seus termos de uso, como expressão da atividade de compliance"* — **não sobre o mérito autoral**. Não prova que "comentário não salva" em direito autoral; prova que **o provedor pode derrubar seu canal sem discutir mérito**. Que, para o nosso risco, é pior. Inteiro teor **não lido**.
+> 
+> ### O semáforo
+> 
+> | 🟢 VERDE — fazer | Por quê |
+> |---|---|
+> | **Recriar a cena em motion próprio (MONTAR / v6)** | É a resposta. Ver quadro abaixo |
+> | **B-roll com licença comercial confirmada por item** | [Pexels](https://www.pexels.com/license/) (*"free to use"*, sem atribuição) · [Pixabay](https://pixabay.com/service/license-summary/) · [Coverr](https://coverr.co/license) (⚠️ proíbe treinar IA) · **Mixkit apenas Free** ([licença](https://mixkit.co/license/)) |
+> | **Governo dos EUA / NASA** | [nasa.gov](https://www.nasa.gov/nasa-brand-center/images-and-media/) — respeitando insígnia, pessoas identificáveis e material de terceiros marcado |
+> | **Wikimedia filtrado para CC0 / PD / CC BY** | [Commons:Licensing](https://commons.wikimedia.org/wiki/Commons:Licensing) — **excluir `-SA`** (ShareAlike contamina o episódio) e `-NC` |
+> | **B-roll próprio · captura da NOSSA UI · dados públicos redesenhados** | Risco zero e é a assinatura do canal |
+> | **Dados/números/fatos recontados com nossa fonte** | **Fato não é obra** — copyright cobre expressão, não informação |
+> | **Provenance de asset:** URL + licença + data + SHA-256 de tudo que entra no render | Prova material de boa-fé (Lei 1); estende o rail `content-provenance` de "marca" para "clipe" |
+> | **Checar claims de Content ID em ≤5 dias** | `[FATO]` [escrow](https://support.google.com/youtube/answer/7000961?hl=en): disputando em ≤5 dias, **toda** a receita fica retida; depois, só a partir da data da disputa; sem ação, *"any held revenue is released to the claimant"* |
+> 
+> | 🟡 AMARELO — só com critério | O que destrava |
+> |---|---|
+> | **Trecho curto como EVIDÊNCIA de uma tese** | **4 gates cumulativos:** (1) comentário **momento-a-momento** sobre *aquele* trecho (padrão *Hosseinzadeh v. Klein*, [resumo oficial do Copyright Office](https://www.copyright.gov/fair-use/summaries/hosseinzadeh-klein-sdny2017.pdf)) · (2) crédito on-screen + descrição, nome do autor e origem (**obrigatório no BR**) · (3) trecho é minoria absoluta e o episódio se sustenta sem ele · (4) não substitui assistir ao original. Falhou um → vermelho |
+> | **Videvo** | 🔴 até leitura primária: `videvo.net/legal/` → **301 → freepik.com/legal** (WAF 403 deste IP). Fonte secundária indica que os grátis **exigem atribuição** |
+> | **archive.org** | Item a item, com licença do uploader verificada. **Não é catálogo licenciado** — *"does not make guarantees as to the copyright status"* ([rights](https://help.archive.org/help/rights/)) |
+> | **Domínio público** | Confirmar PD **no Brasil** (art. 44: 70 anos para audiovisual/fotografia). Esperar claim de Content ID mesmo assim |
+> | **Apelar de um claim (2º degrau)** | Só com opinião jurídica: apelar converte claim (sem risco de canal) em risco de **strike**; 3 strikes em 90 dias → terminação |
+> 
+> | 🔴 VERMELHO — não fazer | Por quê |
+> |---|---|
+> | **Compilação de cortes de terceiros como formato do canal** | Bate frontalmente na lista "não permitido" da política de monetização → risco de **canal** |
+> | **"Cortes rápidos + comentário" como o produto** | Foi exatamente o formato derrubado no AREsp 2.294.622 — os canais foram removidos e o STJ validou a remoção |
+> | **Confiar em "N segundos" / "dei crédito" / "sem intenção"** | Refutado verbatim por YouTube e Copyright Office |
+> | **Invocar fair use no Brasil** | Não existe |
+> | **Trechos musicais** (mesmo 3s de fundo) | Base de referência musical do Content ID é a mais densa; nenhum inciso do art. 46 salva trilha |
+> | **Mixkit sob "Restricted License"** | A própria Mixkit: *"Cannot be used in monetized content"* — **mesmo site, duas licenças** |
+> | **Pipeline templated de alto volume, mesmo com material 100% limpo** | *"Inauthentic content"* (jul/2025) — este é o risco que o MCORCH tem **por arquitetura** |
+> | **Construir buscador/ingestão automática de clipes de terceiros no rail** | Ver ressalva abaixo |
+> 
+> **Ressalva de honestidade sobre a última linha:** a pesquisa quis sustentá-la no **art. 104 da LDA** (responsabilidade solidária de quem utiliza obra *"reproduzida com fraude"* para *"lucro direto ou indireto, para si ou para outrem"*) somado ao art. 19 §2º do Marco Civil. **Isso é inferência jurídica, não fato** — aplicar art. 104 a um SaaS que renderiza o que o usuário sobe exige qualificar a reprodução como fraudulenta e atribuir o ato à plataforma, duas premissas não verificadas. E o art. 19 foi atingido pelo julgamento do STF nos Temas 987/533 (jun/2025), cujo efeito sobre direito autoral **não foi lido**. **Mantenho a recomendação de não construir o buscador — mas pelo argumento contratual da política de monetização (esse sim, verbatim), não por solidariedade civil presumida. Parecer jurídico exigido antes de qualquer decisão de arquitetura sobre isso.**
+> 
+> ### Por que recriar ganha, e não é só por segurança
+> ```
+
+## 🤖 Claude *(14:12:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '420,535p' docs/roadmap/motor-video-decisao-v2v-2026-08-12.md",
+  "description": "Read final sections (EP07 impact + gaps)"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> | Dimensão | Clipe de terceiro | **MONTAR / motion v6** |
+> |---|---|---|
+> | Content ID | real, automático, sem aviso | **zero** |
+> | Strike / perda do YPP por *Reused content* | alto | **zero** — é obra original |
+> | Custo | US$ 0 com passivo | **US$ 0 / 0 mco** |
+> | Repetibilidade | nula | **determinística** (pixel percebido) |
+> | Escala per-user BYOK | impossível de licenciar por usuário | ✅ sem licença de terceiro |
+> | Assinatura do canal | emprestada | **própria — o motor É a marca** |
+> 
+> `[INFERÊNCIA]` **O que torna o corte viral não é o pixel alheio** — é o ritmo (corte seco no beat), o contraste (declaração ↔ dado que a contradiz) e a especificidade (número com fonte). Todos os três são reproduzíveis: em vez do clipe do CEO falando → **legenda-citação com procedência datada** (a fala é fato citável; o vídeo é obra protegida); em vez do gráfico alheio → **redesenhar o gráfico** com o dado e a fonte; em vez do print do concorrente → **camada MONTAR** sob uso nominativo de marca.
+> 
+> ---
+> 
+> ## 9. O QUE MUDA NO EP07 AGORA
+> 
+> **Pré-condição bloqueante (fazer primeiro, é de mãos do Sovereign):** rotacionar a `GEMINI_API_KEY` vazada e recarregar o saldo do OpenRouter. Sem isso, nada abaixo roda.
+> 
+> ### 9.1 As 6 peças de cenário
+> 
+> **SIM, passam a ser geradas — mas o papel delas muda de "briefing" para "peça", em 2 das 6.**
+> 
+> Hoje `scripts/ep07/gen-photo-briefs.ts` gera **imagem de referência para o Sovereign fotografar o objeto real** com `google/gemini-2.5-flash-image` (linhas 113 e 154). Mudanças:
+> 
+> | Ação | Detalhe |
+> |---|---|
+> | **Trocar o modelo** | `google/gemini-2.5-flash-image` → **`google/gemini-3.1-flash-image`**, `image_size: "2K"` (nos dois sites: `:113` e `:154`). Custo total das 6 peças a 2K: **$0,61** |
+> | **Aplicar o template do §7.3** | O `SHOOT_RULES` atual (`scripts/ep07/gen-photo-briefs.ts:32`) já pede fundo liso, margem, luz lateral — está certo e foi bem pensado. **O que falta é o bloco `SURFACE`** (o antídoto do "AUDIO VOID") e o bloco negativo final. Adicionar aos 6 prompts |
+> | **Peças com texto (`cut_pauta`, `cut_roteiro`)** | Usar as variantes (b) *greeked* e (a) *ilegível por escala* do §7.5 — **e a decisão de fundo: a prancheta e a folha são CLARAS, então `{{BACKDROP}}` = `mid-grey (18% grey)`**, nunca branco (branco-em-branco = furo no alpha) |
+> | **Sombra** | **Modo A (sem sombra projetada)** nas 6 — todas vão para o MONTAR, e a sombra vira camada com a luz da cena |
+> | **Gate antes de virar camada** | G2 (Vision QA, pergunta fechada) obrigatório nas 6. G1 (OCR) quando `tesseract` estiver provisionado |
+> | **Regra que NÃO muda** | Onde o adereço carrega **verdade** (o roteiro impresso é o roteiro do EP07 de verdade), **a peça final continua sendo a FOTO REAL** e a imagem gerada continua sendo briefing. Onde o adereço é textura genérica (caneca, microfone), **a imagem gerada vira a peça** — economiza um ciclo de mãos do Sovereign |
+> 
+> ### 9.2 Presenter do gancho e do fecho — o problema aberto se resolve HOJE, sem v2v
+> 
+> O roteiro (`docs/roadmap/ep07-roteiro-2026-08-11.md`) registra o achado do DoP: **gancho 67 sílabas ≈ 11,2 s** e **fecho 89 sílabas ≈ 14,8 s**, contra **~8 s** de teto do Veo. As três opções eram: (a) encurtar, (b) 2 clipes Veo por peça (custo dobra, ~2.848 mco), (c) Veo abre + motion continua.
+> 
+> **Recomendação: opção (c), e ela deixou de ser plano B — virou a decisão certa por dois motivos independentes.**
+> 
+> 1. `[INFERÊNCIA]` O §5 mostra que **o problema do Veo não é a duração, é o rosto**. Gastar 1.424 mco para dobrar a duração de um presenter que "parece personagem" compra mais do defeito. Cortar a exposição do rosto gerado é **melhoria de qualidade**, não concessão.
+> 2. O gate **G-VEO-1** (medir a fala no TTS self-host, US$ 0, antes de gastar mco) segue valendo e roda em minutos.
+> 
+> **Desenho concreto para o EP07:**
+> 
+> | Bloco | Antes | **Agora** |
+> |---|---|---|
+> | Gancho | Veo 8 s cobrindo 11,2 s de fala | **Veo 8 s** (16:9 nativo, tier a decidir) dizendo **só a primeira frase** — *"Essa conversa de duas horas que parece improviso?"* — e o restante (*"É uma operação de mídia com três negócios…"*) vira **narração sobre motion MONTAR**. Custo: 1 clipe |
+> | Fecho | Veo 8 s cobrindo 14,8 s | **Motion MONTAR** carregando *"transformar tempo de atenção em inventário"* + **Veo 8 s só no remate** — *"Esse vídeo que você acabou de assistir? Foi feito por bem menos."* A frase que precisa de rosto é essa; as outras não |
+> | Custo | ~1.424 mco (2 std) ou 2.848 (4 clipes) | **~1.424 mco (2 std) ou 428 (2 fast)** — sem estourar |
+> 
+> **Decisão de tier que fica com o Sovereign:** standard 1080p = 712 mco/clipe · fast = 214 mco/clipe (`src/lib/veo.ts:20`). Diferença: **996 mco** pelos dois. `[INFERÊNCIA]` Com o rosto em tela por menos tempo e em plano fechado, **fast é defensável** — mas é decisão de marca.
+> 
+> **Melhoria opcional de qualidade (US$ ~1,00, e é o teste real da tese do §5):** gravar uma plate de 30 s do Sovereign, rodar `sync.so lipsync-2-pro` a $0,083/s sobre 12 s de fala = **$1,00**, e comparar lado a lado com o take do Veo. **Se a plate ganhar — e a tese do §5 diz que ganha — o EP08 não usa mais Veo para rosto nenhum.** Este é o teste mais barato e mais decisivo desta pesquisa inteira.
+> 
+> ### 9.3 v2v entra no EP07?
+> 
+> **NÃO.** `[INFERÊNCIA]` Três razões: (1) a capacidade decisiva está `[A VERIFICAR]`, e testar num episódio em produção é jogar o roteiro no probe; (2) o EP07 não tem take real de câmera para recamerar — os 5 blocos são motion MONTAR; (3) os probes do §11 custam US$ 5,20 e rodam **em paralelo** ao episódio, sem bloqueá-lo.
+> 
+> **v2v é o assunto do EP08.** Se o probe 1 passar, ele vira feature; se falhar, o §4.3 (multicam falso) vira a feature, e ela é nossa.
+> 
+> ---
+> 
+> ## 10. LACUNAS E DECISÕES HUMANAS
+> 
+> ### 10.1 O que ficou NÃO VERIFICADO
+> 
+> | Item | Status |
+> |---|---|
+> | **`aleph2` faz recâmera / novel view?** | `[A VERIFICAR]` — a capacidade que motivou a frente inteira. Probe 1 |
+> | **Seedance `reference-to-video` preserva o take?** | `[A VERIFICAR]`, com forte evidência contrária (schema 480p/50 MB, doc diz *"guide"*). Probe 2 |
+> | **Qual ID do Omni Flash o endpoint aceita** (`gemini-omni-flash` vs `gemini-omni-flash-preview`) | `[A VERIFICAR]` — dois IDs circulando em páginas oficiais |
+> | **Aleph 2 preserva o áudio original?** | `[A VERIFICAR]` — Runway não documenta; só revendedores afirmam |
+> | **Normalização de billing da fal (16 frames = 1 "video second") vale para Lucy Edit e VACE?** | `[A VERIFICAR]` — documentada só no Wan Animate Replace. Exigir o `billing` do response |
+> | **Tabela de preço por modelo da API do Higgsfield** | `[NÃO ENCONTRADO]` — só a tabela WEB. A arbitragem de −40% no Veo é hipótese |
+> | **Data real do blog do Nano Banana 2** (fev/2026 vs release jun/2026) | `[A VERIFICAR]` — a fonte das capacidades tem data impossível |
+> | **`gemini-3.1-flash-image` × `gemini-2.5-flash-image` para peça MUDA** | `[A VERIFICAR]` — contradição interna não resolvida. A/B de $0,11 |
+> | **As 4 refs `imagen-4` no código** | `[A VERIFICAR]` se são o ID do Google (deadline 2026-08-17) ou alias de catálogo terceiro; **provado** que não têm dispatcher |
+> | **HeyGen: cláusula de ToS sobre likeness de pessoa real no trilho `photo`** | `[NÃO ENCONTRADO]` |
+> | **Política de consentimento / uso comercial do OmniHuman na BytePlus** | `[NÃO ENCONTRADO]` |
+> | **Licença do CogVideoX** (dependência do Hallo3) · **VRAM do Hallo2/3** | `[NÃO ENCONTRADO]` |
+> | **Hedra: 6 ou 8 créditos/s?** | `[A VERIFICAR]` — as duas páginas do próprio site divergem |
+> | **Licença primária da Videvo pós-Freepik** | `[NÃO ENCONTRADO]` — WAF 403 deste IP |
+> | **Rateio proporcional de receita em claim de long-form** | `[NÃO ENCONTRADO]` — a doc trata o claim no nível do vídeo |
+> | **Inteiro teor do AREsp 2.294.622** | não lido — só a notícia oficial do STJ |
+> | **Efeito dos Temas 987/533 (STF, jun/2025) sobre direito autoral** | `[NÃO ENCONTRADO]` |
+> | 🔴 **Licença dos nossos próprios modelos de matte** | `u2netp` / `u2net` / `isnet-general-use` em `/home/ubuntu/.mcorch/motion-models/` — **só digest registrado, licença NÃO** (OTD-SPACES-061). **Auditamos 12 fornecedores externos e não auditamos o motor que recorta todo alpha do rail.** Ponto cego estrutural |
+> | **Fonte/licença dos 16 assets do spike MONTAR** | `[NÃO ENCONTRADO]` — mesma OTD |
+> | **Prova em pixel do template do §7** | Bloqueada: chave Gemini vazada (403) + OpenRouter em saldo negativo (402) |
+> 
+> ### 10.2 O que exige o Sovereign (mãos, dinheiro ou assinatura)
+> 
+> | # | Decisão / ação | Custo | Por que não posso fazer sozinho |
+> |---|---|---|---|
+> | **H1** | **Rotacionar a `GEMINI_API_KEY`** (reportada como vazada) e **recarregar o OpenRouter** | — | Credencial. **Bloqueia §9 inteiro e 3 dos 4 probes** |
+> | **H2** | **Gravar a plate**: 60 s, 4K, tripé, luz lateral, olhando a lente, em silêncio e falando | US$ 0 | É o rosto dele. É o ativo mais valioso desta pesquisa |
+> | **H3** | Autorizar **probe 1 — `aleph2`** com take real de 15 s e prompt de novo ângulo | **$4,20** (+ piso $0,56) | Gasto real. **Decide se v2v existe para nós** |
+> | **H4** | Autorizar **probe 2 — Seedance 2.5** 10 s, `generate_audio:false` | **<$1,00** | Gasto real. Mede timing frame-exato para remux, drift de rosto e geometria da sala |
+> | **H5** | Autorizar **teste de presenter** — lipsync-2-pro sobre a plate, 12 s | **~$1,00** | Gasto real. **O teste mais decisivo do documento** |
+> | **H6** | Decidir **tier do Veo no EP07**: standard (712 mco/clipe) ou fast (214) | 996 mco de diferença | Decisão de marca |
+> | **H7** | Decidir se **assina 1 Higgsfield Ultra** como ferramenta manual (não rail), depois de teste web grátis | $99/mês | Recomendação: **não**, salvo o teste de v2v na web convencer |
+> | **H8** | **Parecer jurídico** sobre (a) art. 104 LDA aplicado a plataforma que renderiza upload do usuário e (b) obrigação de pass-through de OpenRAIL num rail multi-tenant | — | Não é competência de um relatório de pesquisa emitir bandeira vermelha de arquitetura sobre lei não lida |
+> | **H9** | Autorizar **auditoria de licença dos 3 `.onnx` de matte** + dos 16 assets do spike (OTD-SPACES-061) | US$ 0 | É dívida nossa, e é a mais cara se estourar |
+> | **H10** | Provisionar **`tesseract`** no host (gate G1) | US$ 0 | Mudança de host |
+> 
+> ### 10.3 Os 4 probes que substituem 5 relatórios
+> 
+> | # | Probe | Custo | Se falhar |
+> |---|---|---|---|
+> | **1** | `aleph2`, take real 15 s, prompt de novo ângulo | **$4,20** (+ piso $0,56) | **Não existe recâmera de take real por API.** O §4.3 (multicam falso) vira a estratégia oficial |
+> | **2** | `seedance-2.5/reference-to-video`, 10 s reais, `generate_audio:false` — medir timing frame-exato, drift de rosto, geometria da sala | **<$1** | O "único delta que falta" some do mapa. Seedance fica só para b-roll |
+> | **3** | A/B de 2 imagens: `gemini-3.1-flash-image` × `gemini-2.5-flash-image` com o template do §7.3 | **~$0,11** | Resolve a contradição do §7.6 e valida o antídoto do "AUDIO VOID". **Bloqueado por H1** |
+> | **4** | `grep -rn "imagen-4"` → auditar as 4 refs · corrigir `src/types/canvas.ts:207` | **$0** | Rótulo falso segue em produção; opções de UI sem rota seguem vivas |
+> 
+> ---
+> 
+> **A frase que resume:** o "próximo nível" que o Sovereign pediu tem duas metades — **a superfície do take já é comprável hoje** (lip-sync sobre plate real, US$ 1 de teste, e provavelmente resolve o "parece personagem" de uma vez), e **a geometria do take não está provada em lugar nenhum acessível por API**. Enquanto a segunda não passar num probe de US$ 4,20, a recâmera do MCORCH continua sendo a câmera do motor MONTAR — que é geometria de verdade, determinística e a US$ 0.
+> ```
+
+## 🤖 Claude *(14:12:58)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm reviewing a critical document with some urgent operational issues to flag. The Gemini API key appears to be compromised with permission errors, and OpenRouter is showing a negative balance, but I'm noticing a discrepancy here — I successfully generated multiple images through OpenRouter today, so that negative balance doesn't quite add up.…
+
+</details>
+
+
+## 🤖 Claude *(14:12:59)*
+
+Documento denso e bem sustentado. Antes de te reportar, verifico os dois achados que **contradizem o que eu mesmo vi hoje** (Lei 1 — não repasso saída de agente sem conferir):
+
+## 🤖 Claude *(14:13:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a; source .env 2>/dev/null; set +a\necho \"=== OpenRouter saldo ===\"; curl -s https://openrouter.ai/api/v1/credits -H \"Authorization: Bearer $OPENROUTER_API_KEY\" | head -c 300\necho; echo \"=== Gemini key ===\"; curl -s -o /dev/null -w '%{http_code}\\n' \"https://generativelanguage.googleapis.com/v1beta/models?key=$GEMINI_API_KEY\" 2>/dev/null || echo \"sem GEMINI_API_KEY no .env\"\necho \"=== r\u00f3tulo canvas.ts ===\"; sed -n '205,211p' src/types/canvas.ts",
+  "description": "Verify OpenRouter balance, Gemini key and label claim",
+  "timeout": 90000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === OpenRouter saldo ===
+> {"data":{"total_credits":40,"total_usage":40.244571929}}
+> === Gemini key ===
+> 403
+> === rótulo canvas.ts ===
+>     label: "Nano Banana 2 (Gemini)",
+>     provider: "openrouter",
+>     modelParam: "google/gemini-2.5-flash-image",
+>     tier: "Rápido",
+>     coinCost: 10,
+>     eta: "4–8s",
+>   },
+> ```
+
+## 🤖 Claude *(14:13:27)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Confirmei os achados: OpenRouter realmente ficou com saldo negativo depois que gerei 10 imagens hoje, estourando os 40 créditos que tinha. A chave do Gemini está mesmo revogada ou vazada, retornando 403. E o rótulo que parecia falso também se confirmou.
+
+Agora preciso decidir como corrigir o rótulo enganoso. A solução mínima e segura seria apenas atualizar o label para refletir o modelo atual, mas o ideal seria trocar para o modelo mais novo anunciado — só que isso exigiria atualizar a tabela de custos no canvas-execute e recalibrar o mco, o que tem impacto no ledger. Vou reportar com a recomendação e deixar a decisão com quem tem autoridade sobre essas mudanças de custo.
+
+Agora preciso sintetizar tudo num relatório final. Os pontos críticos são: a chave da API vazada que precisa ser rotacionada imediatamente, o saldo negativo que estourei hoje, a confirmação de que v2v não existe por API, a descoberta de que o problema do "personagem" se resolve parando de gerar o rosto e usando lipsync real, e a confirmação de que Higgsfield não é viável por causa das restrições de ToS.
+
+Nano Banana 2 é basicamente gemini-3.1-flash-image com um template específico, os clipes vermelhos são um formato válido mas a restrição é política do YouTube, e EP07 sai agora com as peças prontas — v2v fica para EP08.…
+
+</details>
+
+
+## 🤖 Claude *(14:13:28)*
+
+Os três achados **sobrevivem à verificação** — inclusive um que é culpa minha:
+
+## 🤖 Claude *(14:13:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add docs/roadmap/motor-video-decisao-v2v-2026-08-12.md && git commit -q -F - << 'EOF'\ndocs(roadmap): decis\u00e3o de motor v2v \u2014 a rec\u00e2mera por API n\u00e3o existe; o presenter se resolve sem ela\n\nPesquisa de 6 frentes + cr\u00edtico adversarial + s\u00edntese, sobre a diretiva \"vamos para\nvideo to video\". Custo reportado em USD real: capacidade e qualidade decidem, custo n\u00e3o.\n\nA CONCLUS\u00c3O CENTRAL: o \"pr\u00f3ximo n\u00edvel\" tem duas metades, e s\u00f3 uma existe hoje.\nA superf\u00edcie do take (lip-sync, restyle, troca de objeto) \u00e9 compr\u00e1vel por API agora.\nA GEOMETRIA do take \u2014 c\u00e2mera nova, paralaxe nova, mesma pessoa \u2014 n\u00e3o est\u00e1 provada em\nnenhum lugar acess\u00edvel por API. O \u00fanico modelo que documentava novel view (gen4_aleph\nda Runway) foi DESLIGADO da API em 2026-07-30; o sucessor aleph2 n\u00e3o menciona \u00e2ngulo de\nc\u00e2mera em changelog nem no an\u00fancio. A segunda hip\u00f3tese (Seedance reference-to-video) \u00e9\nenfraquecida pelo pr\u00f3prio schema: refer\u00eancia entra em 480-720p, <=50MB, e a doc diz\n\"guide\", n\u00e3o \"preserve\". Enquanto n\u00e3o passar num probe de US$ 4,20, a rec\u00e2mera do MCORCH\ncontinua sendo a c\u00e2mera do motor MONTAR \u2014 geometria de verdade, determin\u00edstica, US$ 0.\n\nO QUE RESOLVE O \"PARECE PERSONAGEM\": n\u00e3o \u00e9 trocar de gerador, \u00e9 parar de gerar o rosto.\nA credibilidade n\u00e3o vem da resolu\u00e7\u00e3o \u2014 vem de quantos pixels do quadro nunca foram\ninventados. sync.so regenera s\u00f3 um recorte de face 512x512 e devolve o resto do quadro\noriginal intacto; o \u00e1udio original \u00c9 o driver. Plate real + lipsync-2-pro custa US$ 1 de\nteste e \u00e9 o experimento mais decisivo do documento. Veo fica para cen\u00e1rio e b-roll \u2014\nrosto humano \u00e9 o pior caso poss\u00edvel para um gerador de mundo.\n\nHIGGSFIELD: n\u00e3o assinar como rail. Varredura do openapi.json oficial (50 paths) n\u00e3o achou\nNENHUMA propriedade de entrada de v\u00eddeo \u2014 o v2v que a landing vende existe s\u00f3 na web. E o\nToS \u00a711.5 pro\u00edbe pass-through/service bureau, com \u00a716.2 classificando como material breach\nsem janela de cura.\n\nKINETIC-MULTICAM auditado: 1 commit, 737 linhas, zero demo no README, zero chamada de API\n\u2014 a skill escreve prosa para a UI do app, n\u00e3o para API. A claim \"preserva \u00e1udio e lip sync\"\n\u00e9 falsa como enunciada: generate_audio default true devolve voz sint\u00e9tica clonada. ~90% do\nworkflow j\u00e1 \u00e9 nosso e com mais rigor (ASR word-level, beat na palavra, tipografia\ndetermin\u00edstica, clone de voz, matting). O delta \u00e9 um \u00fanico verbo: recamera.\n\nIMAGEM: Nano Banana 2 = gemini-3.1-flash-image (o nome comercial n\u00e3o \u00e9 ID cham\u00e1vel).\nTemplate cir\u00fargico de 6 controles, com a doutrina oficial do Google de negativo sem\u00e2ntico\n\u2014 \"no logo\" \u00e9 a forma fraca; a forte descreve positivamente uma superf\u00edcie vazia. Ant\u00eddoto\ndo \"AUDIO VOID\" que estampamos ontem.\n\nCLIPES DE TERCEIROS: vermelho como formato do canal \u2014 e a trava N\u00c3O \u00e9 a lei, \u00e9 a pol\u00edtica\nde monetiza\u00e7\u00e3o do YouTube, que lista verbatim \"clips edited together with little or no\nnarrative\" como n\u00e3o-permitido. Isso atinge o canal, n\u00e3o o v\u00eddeo, e n\u00e3o admite defesa de\nfair use porque n\u00e3o \u00e9 copyright, \u00e9 contrato. No Brasil n\u00e3o existe fair use (art. 29 exige\nautoriza\u00e7\u00e3o expressa; art. 46 \u00e9 rol fechado).\n\nD\u00cdVIDA VERIFICADA NESTA SESS\u00c3O: src/types/canvas.ts:207-209 anuncia \"Nano Banana 2 (Gemini)\"\ne despacha google/gemini-2.5-flash-image \u2014 r\u00f3tulo falso vivo em produ\u00e7\u00e3o.\n\nBLOQUEIO OPERACIONAL (m\u00e3os do Sovereign): GEMINI_API_KEY devolve 403 \"reported as leaked\"\ne o OpenRouter fechou em saldo negativo (40 comprados / 40,24 usados) \u2014 estourado pelas 10\nimagens que este trabalho gerou hoje.\nEOF\ngit log -1 --format='%h %s' | tail -1",
+  "description": "Commit the v2v decision document"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m11:13AM[0m [32mINF[0m 1 commits scanned.
+> [90m11:13AM[0m [32mINF[0m scan completed in 97.8ms
+> [90m11:13AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.16 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.14 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> d379f86 docs(roadmap): decisão de motor v2v — a recâmera por API não existe; o presenter se resolve sem ela
+> ```
+
+## 🤖 Claude *(14:14:24)*
+
+A pesquisa fechou: **6 frentes + crítico adversarial**, documento em [motor-video-decisao-v2v-2026-08-12.md](docs/roadmap/motor-video-decisao-v2v-2026-08-12.md) (535 linhas), commitado em `d379f86`.
+
+## 🔴 Primeiro, o que trava tudo — e uma parte é culpa minha
+
+Verifiquei agora, nesta sessão:
+- **`GEMINI_API_KEY` → HTTP 403** *"reported as leaked"*. Precisa rotacionar.
+- **OpenRouter → saldo negativo:** 40 comprados / **40,24 usados**. **Fui eu que estourei hoje**, com as 10 imagens (6 briefings + 4 do gauntlet). A próxima geração devolve 402.
+
+## A resposta às suas três perguntas
+
+**1. Video-to-video — a resposta honesta é desconfortável:** **não existe hoje, provado por API, um caminho para re-encenar câmera preservando o rosto.** O único modelo que documentava isso (Runway `gen4_aleph`) foi **desligado da API em 30/07**. O sucessor `aleph2` não menciona ângulo de câmera em lugar nenhum — quem afirma que herdou são revendedores. E o Seedance `reference-to-video` foi **enfraquecido pelo próprio schema**: a referência entra em **480–720p, ≤50 MB**, e a doc diz *"guide"*, não *"preserve"*. Ninguém manda o master em 480p para re-renderizar. Um probe de **US$ 4,20** decide isso definitivamente.
+
+**2. Higgsfield — não assinar como rail.** Varredura do `openapi.json` oficial: **50 endpoints, zero com entrada de vídeo**. O v2v que a landing vende existe **só na web**. E o ToS §11.5 proíbe literalmente *"act as a pass-through or service bureau"* — com §16.2 classificando como quebra material **sem janela de cura**. No máximo, uma assinatura manual sua de estúdio, depois de testar de graça na web.
+
+**3. Nano Banana 2 = `gemini-3.1-flash-image`** (o nome comercial não é ID chamável). E achei uma dívida viva: **`src/types/canvas.ts:207` anuncia "Nano Banana 2 (Gemini)" na UI e despacha o modelo de 2025.** Rótulo falso em produção — confirmei linha a linha.
+
+## A descoberta que vale mais que as três
+
+**Seu incômodo com o Veo tem explicação técnica, e a solução não é trocar de gerador — é parar de gerar o rosto.**
+
+A credibilidade não vem da resolução; vem de **quantos pixels do quadro nunca foram inventados**. O `sync.so` regenera só um recorte de face 512×512 e devolve **o resto do quadro original intacto** — e o áudio original é o *driver*, não o resultado. Por isso o HeyGen "parece real com qualidade pior": a base é real.
+
+Isso vira um teste de **US$ 1,00**: você grava 60s de plate (4K, tripé, olhando a lente), eu rodo `lipsync-2-pro` com a voz do nosso Qwen3-TTS e comparo lado a lado com o Veo. **Se a plate ganhar — e a tese diz que ganha — o EP08 não usa Veo para rosto nunca mais.** É o experimento mais barato e mais decisivo do documento inteiro.
+
+## Sobre o kinetic-multicam — auditei, e o hype está invertido
+
+O repo existe (MIT), mas tem **1 commit, zero demo no README, zero chamada de API**: a skill **escreve um texto em prosa**, quem trabalha é o Seedance — e o texto é escrito para a **UI do app**. A claim mais vendável, *"preserva o áudio e o lip sync"*, é falsa como enunciada: `generate_audio` default `true` devolve **voz sintética clonada**, não sua gravação.
+
+**~90% daquele workflow já é nosso, com mais rigor:** ASR com timestamp por palavra, beat na palavra falada, tipografia determinística no frame exato, clone de voz, matting. **Falta um único verbo: recamera.** E ele não está à venda.
+
+O documento traz o desenho do **"multicam falso de alta resolução"** — gravar em 4K e tratar o take como camada no motor MONTAR: cada "câmera" é uma janela 1080p dentro do 4K, push-in vira dolly óptico real, e o matte do apresentador dá paralaxe de 2 planos. Custo US$ 0, sem provedor. **Onde convence:** apresentador em quadro estático, cortes no beat, push-in dramático. **Onde quebra:** órbita real acima de ~8-10° — que, aliás, não é linguagem de videocast.
+
+## Clipes de terceiros — a trava não é a lei
+
+É a **política de monetização do YouTube**, que lista *verbatim* como não-permitido: *"clips of moments from your favorite show edited together with little or no narrative"*. Isso atinge **o canal**, não o vídeo, e **não admite defesa de fair use** — porque não é copyright, é contrato. No Brasil, ainda por cima, fair use não existe. Há inclusive precedente do STJ de 2026 validando a remoção de dois canais inteiros de cortes.
+
+## O que muda no EP07 (e ele sai)
+
+- **As 6 peças passam a ser geradas** com o modelo novo + template cirúrgico (**US$ 0,61** as seis). Exceção: onde o adereço carrega **verdade** — o roteiro impresso é o roteiro real do EP07 — a peça final continua sendo sua foto.
+- **Gancho/fecho resolvidos sem gastar mais:** o Veo diz **só a frase que precisa de rosto** e o motion continua. Deixou de ser plano B: com o rosto gerado em tela por menos tempo, é melhoria de qualidade.
+- **v2v fica de fora do EP07** — é assunto do EP08, e os probes rodam em paralelo sem bloquear o episódio.
+
+**As duas coisas que dependem de você agora:** rotacionar a chave Gemini + recarregar o OpenRouter (destrava tudo), e gravar a plate de 60s (US$ 0, e é o ativo mais valioso desta pesquisa).
+
+## 👤 User *(14:23:24)*
+
+Esqueci de falar que para imagens sempre usa nanobanana mas na api gemini ou google que temos disponiveis e não pelo openrouter
+
+## 🤖 Claude *(14:23:33)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Preciso usar a API do Gemini diretamente para imagens em vez do OpenRouter, mas a chave atual está marcada como vazada. Vou verificar quais credenciais Google estão disponíveis — o CLAUDE.md menciona `user_api_keys.google_api_key` para Gemini e também há a opção de usar Vertex AI com uma service account do projeto gabrielai.…
+
+</details>
+
+
+## 🤖 Claude *(14:23:35)*
+
+Diretiva registrada — **imagem sempre pela API Gemini/Google direta, nunca por OpenRouter**. Isso também resolve o saldo estourado. Vou descobrir quais chaves Google temos vivas (sem imprimir segredo):
+
+## 🤖 Claude *(14:23:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a; source .env 2>/dev/null; set +a\nfor v in GEMINI_API_KEY GOOGLE_API_KEY MESH_EMBED_GEMINI_KEY GOOGLE_GENAI_API_KEY VITE_GEMINI_API_KEY; do\n  val=\"${!v}\"\n  if [ -n \"$val\" ]; then\n    code=$(curl -s -o /dev/null -w '%{http_code}' \"https://generativelanguage.googleapis.com/v1beta/models?key=$val\")\n    echo \"$v: presente (\u2026${val: -6}) \u2192 HTTP $code\"\n  else echo \"$v: ausente\"; fi\ndone\necho \"=== outras chaves google no .env (nomes s\u00f3) ===\"; grep -oE \"^[A-Z_]*(GOOGLE|GEMINI|VERTEX|GCP)[A-Z_]*=\" .env 2>/dev/null | tr -d '='",
+  "description": "Probe all Google/Gemini keys in env",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> GEMINI_API_KEY: presente (…1Vjw-o) → HTTP 403
+> GOOGLE_API_KEY: ausente
+> MESH_EMBED_GEMINI_KEY: ausente
+> GOOGLE_GENAI_API_KEY: ausente
+> VITE_GEMINI_API_KEY: ausente
+> === outras chaves google no .env (nomes só) ===
+> GEMINI_API_KEY
+> ```
+
+## 🤖 Claude *(14:23:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a; source .env 2>/dev/null; set +a\necho \"=== chaves per-user do User 0 (decrypted view) ===\"\ncurl -s \"$VITE_SUPABASE_URL/rest/v1/decrypted_user_api_keys?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&select=*\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -c \"\nimport json,sys\ntry:\n  rows=json.load(sys.stdin)\nexcept Exception as e:\n  print('erro:', e); sys.exit()\nif not isinstance(rows,list) or not rows: print('sem linha:', rows); sys.exit()\nr=rows[0]\nfor k,v in sorted(r.items()):\n  if 'key' in k.lower() or 'token' in k.lower() or 'secret' in k.lower():\n    print(f'  {k}: {\\\"PRESENTE \u2026\\\"+str(v)[-6:] if v else \\\"vazio\\\"}')\"",
+  "description": "Check per-user Google keys for User 0",
+  "timeout": 90000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === chaves per-user do User 0 (decrypted view) ===
+>   apify_token: PRESENTE …0OjJ1V
+>   cartesia_api_key: vazio
+>   elevenlabs_api_key: PRESENTE …95879c
+>   fal_api_key: vazio
+>   firecrawl_api_key: vazio
+>   google_api_key: PRESENTE …1Vjw-o
+>   groq_api_key: PRESENTE …tu1zQJ
+>   hedra_api_key: vazio
+>   higgsfield_api_key: PRESENTE …04ef96
+>   higgsfield_api_key_secret: PRESENTE …d2b5ef
+>   nanobana_api_key: vazio
+>   openai_api_key: PRESENTE …PM7l0A
+>   openrouter_api_key: PRESENTE …07f681
+>   rapidapi_key: PRESENTE …277786
+>   replicate_api_key: PRESENTE …4gS4qt
+>   resend_api_key: vazio
+>   seedance_api_key: vazio
+> ```
+
+## 🤖 Claude *(14:24:03)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei alguns achados críticos na análise: a chave Google API do User 0 é idêntica à do arquivo .env (terminando em `1Vjw-o`), o que indica um vazamento com status 403. Além disso, descobri que existe uma coluna dedicada `nanobana_api_key` no banco de dados (atualmente vazia) e também uma `seedance_api_key`, sugerindo que a plataforma já tem slots por usuário para essas integrações. A única chave Google ativa parece ser a que foi exposta.
+
+A conclusão é clara: a diretiva de usar Gemini diretamente está correta e é o caminho a seguir, mas está bloqueada até que o Sovereign gere uma chave nova. Enquanto isso, posso preparar o código migrando os runners para a API Gemini nativa (usando o endpoint `generativelanguage.googleapis.com/v1beta/models/<id>:generateContent` com dados em base64), registrar essa diretiva na memória e verificar se o código já utiliza o slot `nanobana_api_key`. Vou estruturar o runner para Gemini com fallback documentado e reportar que a chave é o único bloqueio para implementação.…
+
+</details>
+
+
+## 🤖 Claude *(14:24:03)*
+
+Achado material que muda a prioridade:
+
+## 🤖 Claude *(14:24:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -rn \"generativelanguage.googleapis.com\" supabase/functions/ scripts/ --include=*.ts 2>/dev/null | grep -iE \"image|generateContent\" | head -8; echo \"=== contrato de imagem provado em prod? ===\"; grep -rn -A4 \"responseModalities\" supabase/functions/*/index.ts 2>/dev/null | head -20",
+  "description": "Find proven Gemini image API contract in our code"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> supabase/functions/tts-speak/index.ts:11:const TTS_URL = `https://generativelanguage.googleapis.com/v1beta/models/${TTS_MODEL}:generateContent`;
+> supabase/functions/aios-chat/index.ts:186:    `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiKey}`;
+> supabase/functions/generate-script-package/index.ts:149:        `https://generativelanguage.googleapis.com/v1beta/models/${gm}:generateContent?key=${gKey}`,
+> supabase/functions/generate-audio-script/index.ts:66:      aiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${googleKey}`;
+> supabase/functions/generate-video-script/index.ts:122:      aiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${googleKey}`;
+> supabase/functions/aios-live-proxy/index.ts:74:    const geminiUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${geminiKey}`;
+> scripts/agent-task-runner.ts:145:  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+> === contrato de imagem provado em prod? ===
+> supabase/functions/tts-speak/index.ts:95:      responseModalities: ["AUDIO"],
+> supabase/functions/tts-speak/index.ts-96-      speechConfig: {
+> supabase/functions/tts-speak/index.ts-97-        voiceConfig: { prebuiltVoiceConfig: { voiceName } },
+> supabase/functions/tts-speak/index.ts-98-      },
+> supabase/functions/tts-speak/index.ts-99-    },
+> ```
+
+## 🤖 Claude *(14:24:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -n '85,120p' supabase/functions/tts-speak/index.ts",
+  "description": "Read proven generateContent + responseModalities pattern"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>     voiceName = VALID_VOICES.has(body.voice) ? body.voice : "Kore";
+>     if (!text) return respond({ error: "text is required" }, 400);
+>     if (text.length > 4000) text = text.slice(0, 4000);
+>   } catch {
+>     return respond({ error: "Invalid JSON" }, 400);
+>   }
+> 
+>   const payload = {
+>     contents: [{ parts: [{ text }] }],
+>     generationConfig: {
+>       responseModalities: ["AUDIO"],
+>       speechConfig: {
+>         voiceConfig: { prebuiltVoiceConfig: { voiceName } },
+>       },
+>     },
+>   };
+> 
+>   const geminiRes = await fetch(`${TTS_URL}?key=${geminiKey}`, {
+>     method: "POST",
+>     headers: { "Content-Type": "application/json" },
+>     body: JSON.stringify(payload),
+>   });
+> 
+>   if (!geminiRes.ok) {
+>     const detail = await geminiRes.text();
+>     return respond({ error: `Gemini TTS error: ${geminiRes.status}`, detail }, geminiRes.status);
+>   }
+> 
+>   const json = await geminiRes.json();
+>   const b64 = json?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+> 
+>   if (!b64) return respond({ error: "No audio in response" }, 502);
+> 
+>   // base64 → PCM → WAV
+>   const binaryStr = atob(b64);
+>   const pcm = new Uint8Array(binaryStr.length);
+> ```
+
+## 🤖 Claude *(14:24:13)*
+
+Contrato provado na casa (`tts-speak` faz áudio pelo mesmo caminho). Migro os dois runners para a API Gemini direta:
+
+## 🤖 Claude *(14:24:47)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/lib/gemini-image.ts",
+  "content": "/**\n * Gera\u00e7\u00e3o de imagem pela API **Gemini/Google DIRETA** \u2014 nunca via OpenRouter.\n *\n * Diretiva Sovereign 2026-08-12: *\"para imagens sempre usa nanobanana mas na api gemini ou\n * google que temos dispon\u00edveis e n\u00e3o pelo openrouter\"*.\n *\n * Por que a diretiva existe (e por que ela est\u00e1 certa):\n *   - o intermedi\u00e1rio cobra margem e some com par\u00e2metros nativos (aspect_ratio, image_size);\n *   - a conta do OpenRouter fechou NEGATIVA em 2026-08-12 (40 comprados / 40,244 usados) \u2014\n *     estourada pelas 10 imagens do pr\u00f3prio EP07, e a pr\u00f3xima chamada devolve 402;\n *   - o rail \u00e9 BYOK per-user, e a coluna can\u00f4nica da casa \u00e9 `user_api_keys.google_api_key`\n *     (NUNCA `gemini_api_key`, que n\u00e3o existe \u2014 [[reference_byok_gemini_column]]).\n *\n * Contrato: o mesmo `:generateContent` + `responseModalities` j\u00e1 provado em produ\u00e7\u00e3o pelo\n * `supabase/functions/tts-speak/index.ts:92-115` (l\u00e1 com [\"AUDIO\"], aqui com [\"IMAGE\"]).\n * A imagem volta em `candidates[0].content.parts[].inlineData.data` como base64.\n *\n * \u26a0\ufe0f N\u00c3O VERIFICADO nesta sess\u00e3o: a chave Google que temos (`.env` e `user_api_keys` do User 0\n * \u2014 s\u00e3o a MESMA, terminada em 1Vjw-o) devolve **HTTP 403 \"reported as leaked\"**. Nenhuma\n * chamada deste m\u00f3dulo foi executada com sucesso ainda. O contrato abaixo \u00e9 o padr\u00e3o\n * documentado + o molde provado da casa, n\u00e3o uma prova de execu\u00e7\u00e3o. Rotacionar a chave \u00e9\n * pr\u00e9-condi\u00e7\u00e3o \u2014 e o primeiro `generate()` que passar \u00c9 o gate.\n */\n\n/** Modelos de imagem do Google. O nome comercial N\u00c3O \u00e9 ID cham\u00e1vel \u2014 \"Nano Banana 2\" n\u00e3o existe\n *  como identificador; o ID \u00e9 o da coluna do meio. */\nexport const GEMINI_IMAGE_MODELS = {\n  /** \"Nano Banana 2\" \u2014 recomendado pela decis\u00e3o de 2026-08-12 (melhor ader\u00eancia a prompt\n   *  multi-restri\u00e7\u00e3o). \u26a0\ufe0f contrapartida a A/B: foi otimizado para TEXTO leg\u00edvel, o que pode\n   *  trabalhar CONTRA uma pe\u00e7a que deve ficar muda. */\n  nanoBanana2: \"gemini-3.1-flash-image\",\n  /** \"Nano Banana Pro\" */\n  nanoBananaPro: \"gemini-3-pro-image\",\n  /** \"Nano Banana\" \u2014 o que o rail usa hoje em 35 pontos do c\u00f3digo. */\n  nanoBanana: \"gemini-2.5-flash-image\",\n} as const;\n\nexport type GeminiImageModel = (typeof GEMINI_IMAGE_MODELS)[keyof typeof GEMINI_IMAGE_MODELS] | string;\n\nexport type GenerateImageOptions = {\n  prompt: string;\n  model?: GeminiImageModel;\n  apiKey?: string;\n  /** \"1K\" | \"2K\" | \"4K\" \u2014 o K \u00e9 MAI\u00daSCULO. 2K \u00e9 o teto \u00fatil: a m\u00e1scara do u2net nasce em grafo\n   *  320\u00d7320, ent\u00e3o 4K n\u00e3o compra borda melhor, s\u00f3 arquivo maior. */\n  imageSize?: \"1K\" | \"2K\" | \"4K\";\n  aspectRatio?: \"1:1\" | \"16:9\" | \"9:16\" | \"4:3\" | \"3:4\";\n  timeoutMs?: number;\n};\n\nexport type GenerateImageResult = {\n  bytes: Uint8Array;\n  mimeType: string;\n  model: string;\n  /** texto que o modelo devolveu junto (\u00e0s vezes explica recusa) */\n  text?: string;\n};\n\n/** Resolve a chave na ordem da doutrina: argumento expl\u00edcito \u2192 env da casa. O caminho per-user\n *  (user_api_keys.google_api_key via auth.uid()) \u00e9 do edge function, n\u00e3o deste runner de CLI. */\nfunction resolveKey(explicit?: string): string {\n  const key = explicit ?? process.env.GOOGLE_API_KEY ?? process.env.GEMINI_API_KEY;\n  if (!key) {\n    throw new Error(\n      \"sem chave Google: defina GOOGLE_API_KEY (ou GEMINI_API_KEY) no .env \u2014 a diretiva de \" +\n        \"2026-08-12 pro\u00edbe cair no OpenRouter para imagem\",\n    );\n  }\n  return key;\n}\n\nexport async function generateImage(opts: GenerateImageOptions): Promise<GenerateImageResult> {\n  const model = opts.model ?? GEMINI_IMAGE_MODELS.nanoBanana2;\n  const key = resolveKey(opts.apiKey);\n  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;\n\n  const generationConfig: Record<string, unknown> = { responseModalities: [\"IMAGE\"] };\n  // imageConfig s\u00f3 existe nos modelos de imagem; envi\u00e1-lo a um modelo de texto \u00e9 400.\n  const imageConfig: Record<string, unknown> = {};\n  if (opts.aspectRatio) imageConfig.aspectRatio = opts.aspectRatio;\n  if (opts.imageSize) imageConfig.imageSize = opts.imageSize;\n  if (Object.keys(imageConfig).length) generationConfig.imageConfig = imageConfig;\n\n  const ctl = new AbortController();\n  const timer = setTimeout(() => ctl.abort(), opts.timeoutMs ?? 120_000);\n  let res: Response;\n  try {\n    res = await fetch(url, {\n      method: \"POST\",\n      headers: { \"Content-Type\": \"application/json\" },\n      body: JSON.stringify({ contents: [{ parts: [{ text: opts.prompt }] }], generationConfig }),\n      signal: ctl.signal,\n    });\n  } finally {\n    clearTimeout(timer);\n  }\n\n  if (!res.ok) {\n    const detail = (await res.text()).slice(0, 400);\n    // 403 \"reported as leaked\" \u00e9 o estado conhecido em 2026-08-12 \u2014 dizer o que fazer, n\u00e3o s\u00f3 falhar.\n    const hint = res.status === 403\n      ? \" \u00b7 a chave Google est\u00e1 revogada/vazada: gerar uma nova em aistudio.google.com e atualizar .env + user_api_keys.google_api_key\"\n      : res.status === 429\n        ? \" \u00b7 quota estourada: esperar a janela ou trocar de projeto\"\n        : \"\";\n    throw new Error(`Gemini ${res.status} (${model})${hint} :: ${detail}`);\n  }\n\n  const json = await res.json();\n  const parts = json?.candidates?.[0]?.content?.parts ?? [];\n  let b64 = \"\";\n  let mimeType = \"image/png\";\n  let text = \"\";\n  for (const p of parts) {\n    if (p?.inlineData?.data) {\n      b64 = p.inlineData.data;\n      mimeType = p.inlineData.mimeType ?? mimeType;\n    } else if (typeof p?.text === \"string\") {\n      text += p.text;\n    }\n  }\n  if (!b64) {\n    const reason = json?.candidates?.[0]?.finishReason ?? \"sem finishReason\";\n    const block = json?.promptFeedback?.blockReason;\n    throw new Error(\n      `Gemini (${model}) n\u00e3o devolveu imagem [${reason}${block ? ` \u00b7 block=${block}` : \"\"}]` +\n        (text ? ` \u2014 texto: ${text.slice(0, 200)}` : \"\"),\n    );\n  }\n  return { bytes: Uint8Array.from(Buffer.from(b64, \"base64\")), mimeType, model, text: text || undefined };\n}\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/lib/gemini-image.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:24:54)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Ele recarregou créditos — US$ 9,76 em saldo pay-as-you-go. Preciso identificar qual serviço: a terminologia "Pay-as-you-go balance" é característica do Google AI Studio / Gemini API, embora OpenRouter também use créditos. Como a diretiva dele é usar Gemini direto, vou verificar isso materialmente.…
+
+</details>
+
+
+## 🤖 Claude *(14:25:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "set -a; source .env 2>/dev/null; set +a\necho \"=== Gemini (.env) ===\"; curl -s -o /dev/null -w '%{http_code}\\n' \"https://generativelanguage.googleapis.com/v1beta/models?key=$GEMINI_API_KEY\"\necho \"=== OpenRouter ===\"; curl -s https://openrouter.ai/api/v1/credits -H \"Authorization: Bearer $OPENROUTER_API_KEY\" | head -c 200\necho; echo \"=== google_api_key per-user (User 0) ===\"\nK=$(curl -s \"$VITE_SUPABASE_URL/rest/v1/decrypted_user_api_keys?user_id=eq.ada39fae-67e1-4e53-af1c-5a18e1c108e8&select=google_api_key\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -c \"import json,sys; print(json.load(sys.stdin)[0]['google_api_key'] or '')\")\n[ -n \"$K\" ] && echo \"\u2026${K: -6} \u2192 HTTP $(curl -s -o /dev/null -w '%{http_code}' \"https://generativelanguage.googleapis.com/v1beta/models?key=$K\")\" || echo \"vazia\"",
+  "description": "Re-probe Gemini key and OpenRouter balance",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === Gemini (.env) ===
+> 403
+> === OpenRouter ===
+> {"data":{"total_credits":50,"total_usage":40.244571929}}
+> === google_api_key per-user (User 0) ===
+> …1Vjw-o → HTTP 403
+> ```
+
+## 🤖 Claude *(14:25:16)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O saldo de US$ 9,76 vem do OpenRouter após um recarregamento que aumentou os créditos de 40 para 50, deixando esse valor disponível. Porém, a instrução é clara: as imagens devem vir sempre da API Gemini direta, não do OpenRouter. O problema é que a chave Gemini continua retornando 403, indicando que foi comprometida, tanto na variável de ambiente quanto em outras configurações.…
+
+</details>
+
+
+## 🤖 Claude *(14:25:23)*
+
+O saldo de **US$ 9,76 é do OpenRouter** — confirmado: os créditos foram de 40 → 50, com 40,24 usados. Bate exatamente.
+
+Mas aqui está a tensão que preciso te mostrar de imediato:
+
+**O dinheiro entrou no lugar que a sua própria diretiva proíbe usar para imagem.** E a chave do Google continua morta:
+
+| Chave | Estado |
+|---|---|
+| `GEMINI_API_KEY` (.env) | **HTTP 403** — reportada como vazada |
+| `google_api_key` do User 0 (per-user) | **HTTP 403** — é a *mesma* chave (termina em `1Vjw-o`) |
+| OpenRouter | ✅ US$ 9,76 — mas proibido para imagem pela diretiva |
+
+Ou seja: **para gerar imagem pelo caminho certo, falta uma chave Gemini nova.** São dois minutos em [aistudio.google.com](https://aistudio.google.com/apikey) → *Create API key*. Quando você me passar, eu atualizo o `.env` **e** a `user_api_keys.google_api_key` do User 0 (as duas hoje são a mesma chave morta, e o rail per-user lê a segunda).
+
+O recarregamento não foi desperdício — o OpenRouter continua sendo o caminho dos **LLMs** (`aios-chat-gateway`, `openrouter-swarm`, cascata Groq→OR). Só imagem sai de lá.
+
+Enquanto isso, deixo o caminho pronto para o minuto em que a chave chegar:
+
+## 🤖 Claude *(14:25:29)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/gauntlet-piece.ts",
+  "old_string": "import { writeFileSync, mkdirSync } from \"node:fs\";\nimport { join } from \"node:path\";\nimport { execFileSync } from \"node:child_process\";\nimport { createClient } from \"@supabase/supabase-js\";\n\nconst OR_KEY = process.env.OPENROUTER_API_KEY!;\nconst SB_URL = process.env.VITE_SUPABASE_URL!;\nconst SB_KEY = process.env.SB_SECRET_KEY!;\nconst USER_ID = \"ada39fae-67e1-4e53-af1c-5a18e1c108e8\";\nconst MODEL = process.env.IMAGE_MODEL ?? \"google/gemini-2.5-flash-image\";",
+  "new_string": "import { writeFileSync, mkdirSync } from \"node:fs\";\nimport { join } from \"node:path\";\nimport { execFileSync } from \"node:child_process\";\nimport { createClient } from \"@supabase/supabase-js\";\nimport { generateImage, GEMINI_IMAGE_MODELS } from \"../lib/gemini-image\";\n\nconst SB_URL = process.env.VITE_SUPABASE_URL!;\nconst SB_KEY = process.env.SB_SECRET_KEY!;\nconst USER_ID = \"ada39fae-67e1-4e53-af1c-5a18e1c108e8\";\n// Diretiva Sovereign 2026-08-12: imagem SEMPRE pela API Gemini/Google direta, nunca por OpenRouter.\nconst MODEL = process.env.IMAGE_MODEL ?? GEMINI_IMAGE_MODELS.nanoBanana2;\nconst IMAGE_SIZE = (process.env.IMAGE_SIZE ?? \"2K\") as \"1K\" | \"2K\" | \"4K\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/gauntlet-piece.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:25:36)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/gauntlet-piece.ts",
+  "old_string": "async function generate(prompt: string, tag: string): Promise<Uint8Array> {\n  const r = await fetch(\"https://openrouter.ai/api/v1/chat/completions\", {\n    method: \"POST\",\n    headers: {\n      Authorization: `Bearer ${OR_KEY}`, \"Content-Type\": \"application/json\",\n      \"HTTP-Referer\": \"https://mcorch.com\", \"X-Title\": \"MCORCH EP07 gauntlet\",\n    },\n    body: JSON.stringify({ model: MODEL, modalities: [\"image\", \"text\"], messages: [{ role: \"user\", content: prompt }] }),\n  });\n  if (!r.ok) throw new Error(`${tag}: OR ${r.status} ${(await r.text()).slice(0, 200)}`);\n  const msg = (await r.json())?.choices?.[0]?.message;\n  let b64 = \"\";\n  if (Array.isArray(msg?.content)) {\n    for (const part of msg.content) {\n      if (part?.type === \"image_url\" && String(part?.image_url?.url ?? \"\").startsWith(\"data:image/\")) {\n        b64 = String(part.image_url.url).split(\",\", 2)[1] ?? \"\"; break;\n      }\n    }\n  }\n  if (!b64 && Array.isArray(msg?.images) && msg.images.length) {\n    const f: any = msg.images[0];\n    const u = String(typeof f === \"string\" ? f : (f?.url ?? f?.image_url?.url ?? \"\"));\n    if (u.startsWith(\"data:image/\")) b64 = u.split(\",\", 2)[1] ?? \"\";\n  }\n  if (!b64) throw new Error(`${tag}: resposta sem imagem`);\n  return Uint8Array.from(Buffer.from(b64, \"base64\"));\n}",
+  "new_string": "async function generate(prompt: string, tag: string): Promise<Uint8Array> {\n  const { bytes } = await generateImage({ prompt, model: MODEL, imageSize: IMAGE_SIZE, aspectRatio: \"1:1\" });\n  if (!bytes.length) throw new Error(`${tag}: resposta sem imagem`);\n  return bytes;\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/gauntlet-piece.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:25:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "grep -n \"OR_KEY\\|openrouter\\|p_provider\\|p_model\" scripts/ep07/gauntlet-piece.ts | head",
+  "description": "Check remaining OpenRouter refs in gauntlet"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 188:  p_is_public: false, p_mime_type: "image/png", p_provider: "openrouter", p_model: MODEL,
+> ```
+
+## 🤖 Claude *(14:25:47)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/gauntlet-piece.ts",
+  "old_string": "  p_is_public: false, p_mime_type: \"image/png\", p_provider: \"openrouter\", p_model: MODEL,",
+  "new_string": "  p_is_public: false, p_mime_type: \"image/png\", p_provider: \"google\", p_model: MODEL,"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/gauntlet-piece.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:25:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/gauntlet-piece.ts",
+  "old_string": " * Uso:\n *   bun run scripts/ep07/gauntlet-piece.ts <slug> <N>\n *   bun run scripts/ep07/gauntlet-piece.ts --list\n */",
+  "new_string": " * Uso:\n *   bun run scripts/ep07/gauntlet-piece.ts <slug> <N>\n *   bun run scripts/ep07/gauntlet-piece.ts --list\n *\n * Imagem SEMPRE pela API Gemini/Google direta (diretiva Sovereign 2026-08-12) \u2014 ver\n * scripts/lib/gemini-image.ts. Overrides: IMAGE_MODEL, IMAGE_SIZE (1K|2K|4K).\n */"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/gauntlet-piece.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:25:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "npx tsc --noEmit scripts/lib/gemini-image.ts 2>&1 | head -5; echo \"---\"; bun run scripts/ep07/gauntlet-piece.ts --list 2>&1 | head -10",
+  "description": "Type-check and smoke the migrated runner",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ---
+> peças disponíveis:
+>   microfone    Microfone de estúdio  → mic_cut (ATO 1 / gancho)
+>   caneca       Caneca lisa na mesa  → caneca_cut (ATO 1 · patrocínio)
+>   mixer        Interface / mesa de áudio  → cut_mixer (ESTRUTURA · o operador de áudio)
+>   prancheta    Prancheta com pauta rabiscada  → cut_pauta (ESTRUTURA · a pilha)
+>   roteiro      Página impressa anotada à mão  → cut_roteiro (ESTRUTURA · a pilha)
+>   midiakit     Mídia kit impresso  → cut_midiakit (ESTRUTURA · a folha que cobra)
+> ```
+
+## 🤖 Claude *(14:26:09)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+A migração foi conc…
+
+</details>
+
+
+## 🤖 Claude *(14:26:10)*
+
+Migração limpa (tsc sem erros). Atualizo a memória que agora está desatualizada — ela dizia justamente "hoje via OpenRouter":
+
+## 🤖 Claude *(14:26:10)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_image_gen_provider_cost.md"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> <system-reminder>This memory is 34 days old. Memories are point-in-time observations, not live state — claims about code behavior or file:line citations may be outdated. Verify against current code before asserting as fact.</system-reminder>
+> 1	---
+> 2	name: reference_image_gen_provider_cost
+> 3	description: "Geração de imagem = Gemini Nano Banana (gemini-2.5-flash-image); hoje via OpenRouter, direto-Google sai mais barato (sem markup) — medir no 1º batch"
+> 4	metadata: 
+> 5	  node_type: memory
+> 6	  type: reference
+> 7	  originSessionId: c97cc06a-f6ad-41b8-8082-ff819bf5029e
+> 8	---
+> 9	
+> 10	Geração de imagem do MCORCH (`generate-image` + `canvas-execute`) usa **Gemini "Nano Banana" = `google/gemini-2.5-flash-image`**. Caminho VIVO hoje: **via OpenRouter** (`openrouter.ai/api/v1/chat/completions` multimodal — o `/v1/images` está DEPRECADO 404). Ordem em `generate-image`: Replicate FLUX (se pref) → OpenRouter Nano Banana (`generate-image:100/223`) → DALL-E 3 fallback. `canvas-execute` precifica `openrouter/google/gemini-2.5-flash-image` = 10 mco (`:22`) e resolve `google_api_key` per-user (`:173`), mas roteia a imagem via OpenRouter (`:1400/1415`).
+> 11	
+> 12	**Diretiva Sovereign 2026-07-09:** pras 11 imagens do doc de vídeo (e geração em geral) o custo "vai tranquilo"; **medir OpenRouter vs Gemini Nano Banana e usar o mais barato**. Ele acredita que a **chave Google oficial direta sai mais barato** — e está estruturalmente certo: OpenRouter adiciona ~5,5% de margem BYOK sobre o preço do Google. Direct-Google (`generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent` com `google_api_key` per-user) **NÃO está cabeado hoje** — é uma adição pequena a `generate-image` (nova `generateViaGoogleDirect`). Nano Banana NÃO é grátis no OpenRouter (os free-tier do OpenRouter são TEXTO); ~US$0,039/imagem direto vs ~US$0,041 via OpenRouter → 11 imgs ≈ US$0,43. **Medir materialmente no 1º batch (Lei 1), nunca fabricar o número.**
+> 13	
+> 14	**How to apply:** no módulo Creative Studio, a skill de "geração de imagem" do agente Creative Director deve preferir o engine **Gemini direto** (adicionar `generateViaGoogleDirect`), com OpenRouter Nano Banana como fallback; medir custo real no primeiro batch e travar o mais barato.
+> 15	
+> 16	User 0 (gabrielcall@gmail.com) tem TODAS as BYOK em /dashboard/settings (IA): OpenRouter, Google/Gemini, Groq, OpenAI, Replicate, Higgsfield Platform+Secret, Apify, RapidAPI, Resend, Firecrawl, ElevenLabs, Hedra, fal.ai, Cartesia, Nano Bana, Seedance. Pref atual: "Gemini 2.5 Pro via OpenRouter" (mas p/ imagem, direct-Google é a decisão de custo). Ver [[reference_byok_gemini_column]] · [[feedback_opensource_first_zero_cost_equity]] · [[project_creative_ecosystem_program]] · [[project_video_studio]].
+> 17	
+> ```
+
+## 🤖 Claude *(14:26:16)*
+
+
+## 🤖 Claude *(14:26:17)*
+
+A memória de 34 dias já antecipava isso — você disse em julho que o Google direto sairia mais barato. Agora virou diretiva firme. Atualizo:
+
+## 🤖 Claude *(14:26:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_image_gen_provider_cost.md",
+  "old_string": "description: \"Gera\u00e7\u00e3o de imagem = Gemini Nano Banana (gemini-2.5-flash-image); hoje via OpenRouter, direto-Google sai mais barato (sem markup) \u2014 medir no 1\u00ba batch\"",
+  "new_string": "description: \"Imagem = Nano Banana pela API Gemini/Google DIRETA \u2014 diretiva firme 2026-08-12: nunca por OpenRouter. Nano Banana 2 = gemini-3.1-flash-image\""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_image_gen_provider_cost.md has been updated successfully.
+> ```
+
+## 🤖 Claude *(14:26:37)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_image_gen_provider_cost.md",
+  "old_string": "Gera\u00e7\u00e3o de imagem do MCORCH (`generate-image` + `canvas-execute`) usa **Gemini \"Nano Banana\" = `google/gemini-2.5-flash-image`**.",
+  "new_string": "## \ud83c\udfaf DIRETIVA FIRME (Sovereign 2026-08-12) \u2014 SUPERSEDE o \"medir e decidir\" abaixo\n\n> *\"para imagens sempre usa nanobanana mas na api gemini ou google que temos dispon\u00edveis e n\u00e3o pelo openrouter\"*\n\n**Imagem SEMPRE pela API Gemini/Google direta. NUNCA por OpenRouter.** O que era hip\u00f3tese de custo em\njulho virou regra em agosto \u2014 e ganhou uma segunda raz\u00e3o: em 2026-08-12 a conta do OpenRouter fechou\n**negativa** (40 comprados / 40,244 usados) estourada por 10 imagens do EP07, e a chamada seguinte\ndevolve 402. Intermedi\u00e1rio = margem + saldo compartilhado com os LLMs + perda dos par\u00e2metros nativos\n(`imageConfig.aspectRatio` / `imageSize`).\n\n**Helper can\u00f4nico:** `scripts/lib/gemini-image.ts` \u2192 `generateImage({prompt, model, imageSize, aspectRatio})`.\nContrato = `:generateContent` + `responseModalities:[\"IMAGE\"]`, o mesmo molde provado em produ\u00e7\u00e3o pelo\n`supabase/functions/tts-speak/index.ts:92-115` (l\u00e1 com `[\"AUDIO\"]`); a imagem volta em\n`candidates[0].content.parts[].inlineData.data` (base64).\n\n**IDs reais** (nome comercial N\u00c3O \u00e9 ID cham\u00e1vel \u2014 `google/nano-banana-2` d\u00e1 400):\n`gemini-3.1-flash-image` = **\"Nano Banana 2\"** (recomendado, US$ 0,067 em 1K / 0,101 em 2K) \u00b7\n`gemini-3-pro-image` = Nano Banana Pro \u00b7 `gemini-2.5-flash-image` = Nano Banana (o legado que 35\npontos do c\u00f3digo ainda usam). **2K \u00e9 o teto \u00fatil**: o matte u2net nasce em grafo 320\u00d7320, ent\u00e3o 4K n\u00e3o\ncompra borda melhor, s\u00f3 arquivo maior.\n\n\u26a0\ufe0f **BLOQUEIO ATIVO em 2026-08-12:** a chave Google (`.env` **e** `user_api_keys.google_api_key` do\nUser 0 s\u00e3o a MESMA, terminada em `1Vjw-o`) devolve **403 \"reported as leaked\"**. Rotacionar em\naistudio.google.com e atualizar OS DOIS lugares \u2014 o rail per-user l\u00ea a coluna, n\u00e3o o `.env`.\n\u26a0\ufe0f **R\u00f3tulo falso vivo:** `src/types/canvas.ts:207-209` anuncia \"Nano Banana 2 (Gemini)\" na UI e\ndespacha `google/gemini-2.5-flash-image` (verificado 2026-08-12). Migrar o modelo exige entrada na\ntabela de custo do `canvas-execute` \u2014 sem ela o n\u00f3 nasce morto em 422 [[reference_ledger_node_needs_node_run_id]].\nDoc de decis\u00e3o: `docs/roadmap/motor-video-decisao-v2v-2026-08-12.md` (traz o template de prompt cir\u00fargico).\n\n---\n\n## Hist\u00f3rico (o caminho que levou \u00e0 diretiva)\n\nGera\u00e7\u00e3o de imagem do MCORCH (`generate-image` + `canvas-execute`) usa **Gemini \"Nano Banana\" = `google/gemini-2.5-flash-image`**."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_image_gen_provider_cost.md has been updated successfully.
+> ```
+
+## 🤖 Claude *(14:26:45)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md",
+  "old_string": "- [Imagem = Gemini Nano Banana](reference_image_gen_provider_cost.md) \u2014 `gemini-2.5-flash-image`; hoje via OpenRouter.",
+  "new_string": "- [Imagem = Nano Banana pela API Google DIRETA](reference_image_gen_provider_cost.md) \u2014 diretiva 2026-08-12: nunca OpenRouter; NB2=`gemini-3.1-flash-image`; helper `scripts/lib/gemini-image.ts`."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(14:26:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add scripts/lib/gemini-image.ts scripts/ep07/gauntlet-piece.ts && git commit -q -F - << 'EOF'\nfeat(image): imagem passa a sair pela API Gemini/Google direta \u2014 nunca por OpenRouter\n\nDiretiva Sovereign 2026-08-12: \"para imagens sempre usa nanobanana mas na api gemini ou\ngoogle que temos dispon\u00edveis e n\u00e3o pelo openrouter\".\n\nA regra tem duas raz\u00f5es independentes, e a segunda apareceu no mesmo dia: o intermedi\u00e1rio\ncobra margem e some com os par\u00e2metros nativos (imageConfig.aspectRatio / imageSize); e a\nconta do OpenRouter fechou NEGATIVA (40 comprados / 40,244 usados), estourada pelas 10\nimagens que este pr\u00f3prio trabalho gerou \u2014 a chamada seguinte devolveria 402. Imagem\ndeixa de disputar saldo com os LLMs, que continuam no OpenRouter.\n\nscripts/lib/gemini-image.ts \u00e9 o helper can\u00f4nico: :generateContent com\nresponseModalities:[\"IMAGE\"], o mesmo molde j\u00e1 provado em produ\u00e7\u00e3o pelo tts-speak\n(:92-115, l\u00e1 com [\"AUDIO\"]). Os IDs reais ficam nomeados no m\u00f3dulo porque nome comercial\nn\u00e3o \u00e9 identificador cham\u00e1vel \u2014 google/nano-banana-2 devolve 400. \"Nano Banana 2\" \u00e9\ngemini-3.1-flash-image.\n\nO erro de 403 n\u00e3o falha seco: diz que a chave est\u00e1 vazada e onde rotacionar. \u00c9 o estado\natual \u2014 a chave do .env e a user_api_keys.google_api_key do User 0 s\u00e3o a MESMA (termina\nem 1Vjw-o) e as duas devolvem 403 \"reported as leaked\". Rotacionar \u00e9 pr\u00e9-condi\u00e7\u00e3o, e o\nprimeiro generate() que passar \u00e9 o gate desta migra\u00e7\u00e3o: NENHUMA chamada foi executada\ncom sucesso ainda, ent\u00e3o o contrato aqui \u00e9 o padr\u00e3o documentado + o molde da casa, n\u00e3o\nprova de execu\u00e7\u00e3o.\n\nO gauntlet migrou junto e passa a pedir 2K \u2014 teto \u00fatil, porque a m\u00e1scara do u2net nasce\nem grafo 320\u00d7320 e 4K n\u00e3o compra borda melhor, s\u00f3 arquivo maior.\nEOF\ngit log -1 --format='%h %s' | tail -1",
+  "description": "Commit Gemini-direct image migration"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m11:26AM[0m [32mINF[0m 1 commits scanned.
+> [90m11:26AM[0m [32mINF[0m scan completed in 9.16ms
+> [90m11:26AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.06 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.05 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 55de59e feat(image): imagem passa a sair pela API Gemini/Google direta — nunca por OpenRouter
+> ```
+
+## 🤖 Claude *(14:27:09)*
+
+✅ **Diretiva implementada e commitada** (`55de59e`) — imagem sai pela API Gemini/Google direta, nunca mais por OpenRouter.
+
+**O que ficou pronto:**
+- **[`scripts/lib/gemini-image.ts`](scripts/lib/gemini-image.ts)** — helper canônico usando `:generateContent` + `responseModalities:["IMAGE"]`, o mesmo contrato já provado em produção pelo nosso `tts-speak` (que faz áudio pelo mesmo caminho). Os IDs reais ficam nomeados lá, porque **nome comercial não é ID chamável**: `google/nano-banana-2` devolve 400 — o certo é `gemini-3.1-flash-image`.
+- **Gauntlet migrado** e pedindo **2K** (teto útil: o matte nasce em grafo 320×320, então 4K não compra borda melhor, só arquivo maior).
+- **Memória atualizada** — a de 34 dias dizia "hoje via OpenRouter, medir depois"; agora carrega a diretiva firme, os IDs e o bloqueio ativo.
+
+**Uma ressalva de honestidade:** ainda **não rodei uma única geração por esse caminho** — a chave devolve 403. O contrato que escrevi é o padrão documentado somado ao molde provado da casa, não prova de execução. O primeiro `generate()` que passar é o gate real desta migração, e eu te digo se passou.
+
+**O que falta é só a chave** — dois minutos em [aistudio.google.com/apikey](https://aistudio.google.com/apikey) → *Create API key*. Me passe que eu atualizo nos **dois** lugares (o `.env` e a `user_api_keys.google_api_key` do User 0 — hoje são a mesma chave morta, e o rail per-user lê a coluna, não o `.env`).
+
+No minuto seguinte eu rodo o gauntlet das 6 peças com o modelo novo e o prompt cirúrgico — **US$ 0,61 as seis** — e te entrego os contact sheets na Biblioteca para você escolher.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
