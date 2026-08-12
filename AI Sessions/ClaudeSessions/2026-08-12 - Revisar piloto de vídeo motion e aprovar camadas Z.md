@@ -6363,6 +6363,65 @@ Respondendo ao que dá para responder agora, e sendo claro sobre o que ainda est
 
 Aviso assim que o documento de decisão sair (`docs/roadmap/motor-video-imagem-decisao-2026-08-11.md`), com preços em mco e URLs em toda claim.
 
+## 👤 User *(12:57:34)*
+
+<task-notification>
+<task-id>wexhcf3wu</task-id>
+<tool-use-id>toolu_01G4hqbqJEjFtdZ1E4e91pMz</tool-use-id>
+<status>stopped</status>
+<summary>No completion record was found for background workflow "ep07-motor-decisions-research" from the previous session. It may have been stopped (via the UI or TaskStop — these leave no transcript marker), or it may have been running when the previous Claude Code process exited. To pick up where it left off, relaunch with Workflow({scriptPath, resumeFromRunId: "wf_40c5dd21-6a6"}) — completed agent() calls return cached.</summary>
+</task-notification>
+
+## 👤 User *(12:57:34)*
+
+Não se preocupe com os mco por enquanto eu coloquei inflado assim para lembrar que pago pela API BYOK mas agora já podemos ir para os próximos níveis. video to video. Esbarramos em u mproblema com o SSH
+
+## 🤖 Claude *(12:57:52)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+A sessão SSH caiu e o workflow de pesquisa não terminou, então preciso relançar usando resumeFromRunId. O Sovereign esclareceu que os custos da API BYOK não são a preocupação principal agora — ele quer focar em video-to-video. Vou relançar o workflow com essa direção.…
+
+</details>
+
+
+## 🤖 Claude *(12:57:53)*
+
+A sessão caiu junto com o SSH — o workflow de pesquisa ficou órfão. Verifico a saúde do host e relanço do cache:
+
+## 🤖 Claude *(12:57:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "TZ=America/Sao_Paulo date '+%H:%M %Z'; uptime; echo \"=== containers ===\"; docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\" 2>/dev/null; echo \"=== pontes systemd ===\"; systemctl --user list-units --type=service --state=running 2>/dev/null | grep -cE \"bridge|studio\" ; echo \"=== git ===\"; git status --short | head -12",
+  "description": "Host health after SSH drop"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 09:57 -03
+>  09:57:55 up 5 days, 18:22,  4 users,  load average: 3.92, 11.72, 13.52
+> === containers ===
+> mcorch_vision_mcp: Up 5 days (healthy)
+> mcorch_claude_mem: Up 5 days (healthy)
+> mcorch_chroma: Up 5 days (healthy)
+> === pontes systemd ===
+> 10
+> === git ===
+>  M docs/bok/spaces-evolution/43-amendment-motion-montar-camadas.md
+>  M docs/roadmap/ep07-roteiro-2026-08-11.md
+> ?? docs/roadmap/ep07-partituras/
+> ?? scripts/ep07/gen-photo-briefs.ts
+> ?? scripts/ep07/pilot-adsense-montar.ts
+> ?? scripts/ep07/render-scenes-montar.ts
+> ?? scripts/motion/montar-template-v2.mjs
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
