@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3577
-> * **Sessões do Claude**: 3524
+> * **Total de Sessões Registradas**: 3580
+> * **Sessões do Claude**: 3527
 > * **Sessões do Gemini**: 53
 
 ---
@@ -75,7 +75,10 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-08-14 - agent-aeafc0257fa3cf46d]]` - *2026-08-14*
+*   `[[2026-08-14 - agent-ab29a6f26f61fa204]]` - *2026-08-14*
 *   `[[2026-08-14 - Revisar piloto de vídeo motion e aprovar camadas Z]]` - *2026-08-14*
+*   `[[2026-08-14 - Resolver alertas e melhorar next steps dos projetos]]` - *2026-08-14*
 *   `[[2026-08-12 - agent-aeade303039331f28]]` - *2026-08-12*
 *   `[[2026-08-12 - agent-ac8bbf042c6726ff5]]` - *2026-08-12*
 *   `[[2026-08-12 - agent-ac7484c56a0030235]]` - *2026-08-12*
@@ -84,10 +87,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-08-12 - agent-a97a2e9d03e2532f8]]` - *2026-08-12*
 *   `[[2026-08-12 - agent-a9625f8797ef6ea98]]` - *2026-08-12*
 *   `[[2026-08-12 - agent-a9375e5af1da779ad]]` - *2026-08-12*
-*   `[[2026-08-12 - agent-a7dc6f8cdbc061cdb]]` - *2026-08-12*
-*   `[[2026-08-12 - agent-a67d2f8e53ba598ff]]` - *2026-08-12*
-*   `[[2026-08-12 - agent-a20a550388a93df3f]]` - *2026-08-12*
-*   *... e mais 3519 sessões nessa categoria.*
+*   *... e mais 3522 sessões nessa categoria.*
 
 ---
 
@@ -3314,7 +3314,10 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-01 - Configurar loop autônomo e definir fila soberana]]` (ClaudeSessions)
 
 ### Agosto 2026
+*   `[[2026-08-14 - agent-aeafc0257fa3cf46d]]` (ClaudeSessions)
+*   `[[2026-08-14 - agent-ab29a6f26f61fa204]]` (ClaudeSessions)
 *   `[[2026-08-14 - Revisar piloto de vídeo motion e aprovar camadas Z]]` (ClaudeSessions)
+*   `[[2026-08-14 - Resolver alertas e melhorar next steps dos projetos]]` (ClaudeSessions)
 *   `[[2026-08-12 - agent-aeade303039331f28]]` (ClaudeSessions)
 *   `[[2026-08-12 - agent-ac8bbf042c6726ff5]]` (ClaudeSessions)
 *   `[[2026-08-12 - agent-ac7484c56a0030235]]` (ClaudeSessions)
