@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3576
-> * **Sessões do Claude**: 3523
+> * **Total de Sessões Registradas**: 3577
+> * **Sessões do Claude**: 3524
 > * **Sessões do Gemini**: 53
 
 ---
@@ -75,6 +75,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-08-14 - Revisar piloto de vídeo motion e aprovar camadas Z]]` - *2026-08-14*
 *   `[[2026-08-12 - agent-aeade303039331f28]]` - *2026-08-12*
 *   `[[2026-08-12 - agent-ac8bbf042c6726ff5]]` - *2026-08-12*
 *   `[[2026-08-12 - agent-ac7484c56a0030235]]` - *2026-08-12*
@@ -86,8 +87,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-08-12 - agent-a7dc6f8cdbc061cdb]]` - *2026-08-12*
 *   `[[2026-08-12 - agent-a67d2f8e53ba598ff]]` - *2026-08-12*
 *   `[[2026-08-12 - agent-a20a550388a93df3f]]` - *2026-08-12*
-*   `[[2026-08-12 - agent-a0b7e8d5b2c59f818]]` - *2026-08-12*
-*   *... e mais 3518 sessões nessa categoria.*
+*   *... e mais 3519 sessões nessa categoria.*
 
 ---
 
@@ -3314,6 +3314,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-01 - Configurar loop autônomo e definir fila soberana]]` (ClaudeSessions)
 
 ### Agosto 2026
+*   `[[2026-08-14 - Revisar piloto de vídeo motion e aprovar camadas Z]]` (ClaudeSessions)
 *   `[[2026-08-12 - agent-aeade303039331f28]]` (ClaudeSessions)
 *   `[[2026-08-12 - agent-ac8bbf042c6726ff5]]` (ClaudeSessions)
 *   `[[2026-08-12 - agent-ac7484c56a0030235]]` (ClaudeSessions)
