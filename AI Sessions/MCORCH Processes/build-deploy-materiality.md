@@ -88,6 +88,49 @@ aconteceu — todo obstáculo novo vira processo (ver CLAUDE.md "Obstacle → Sy
 
 ---
 
+## Anexo — `pgrep -f` casa com o PRÓPRIO comando (laço de espera que nunca sai)
+
+**Achado em 2026-08-14, duas vezes na mesma sessão.** Um monitor de render ficou **43 minutos**
+girando sobre um arquivo que já estava pronto:
+
+```bash
+# ERRADO — nunca sai
+until [ -f "$F" ] && ! pgrep -f "pilha-alinhada" >/dev/null; do sleep 45; done
+```
+
+A string `pilha-alinhada` está **dentro da linha de comando do próprio `bash -c`** que roda o laço.
+`pgrep -f` varre a cmdline inteira de todo processo, encontra a si mesmo, devolve 0, e a negação
+`!` nunca é verdadeira. O arquivo existe, o render acabou, e o laço continua para sempre — sem
+erro, sem log, consumindo um slot de tarefa em segundo plano.
+
+É a mesma família do falso-sucesso silencioso que esta SOP inteira combate: **o gate não falha,
+ele simplesmente nunca conclui.**
+
+### Como escrever certo
+
+```bash
+# 1. melhor: espere o ARTEFATO ficar estável, não a ausência de processo
+until [ -s "$F" ] && [ "$(stat -c %s "$F")" = "$(sleep 3; stat -c %s "$F")" ]; do sleep 10; done
+
+# 2. quando precisar mesmo do processo: exclua o próprio PID e o shell pai
+until ! pgrep -f "[p]ilha-alinhada" | grep -qv "^$$\$"; do sleep 45; done
+#            ↑ o colchete impede o padrão de casar a si mesmo (truque clássico do ps|grep)
+
+# 3. mais robusto: guarde o PID no disparo e espere ELE
+echo $! > /tmp/render.pid; while kill -0 "$(cat /tmp/render.pid)" 2>/dev/null; do sleep 20; done
+```
+
+### Regra
+
+**Todo laço de espera precisa de um teto.** Um `until` sem limite de iterações é um processo
+imortal esperando para acontecer:
+
+```bash
+for _ in $(seq 1 120); do <condição> && break; sleep 30; done   # teto de 1h, explícito
+```
+
+---
+
 %% --- PROJECT METADATA START --- %%
 > [!meta] Informações do Projeto
 > * **Projeto**: [[MCORCH]]
