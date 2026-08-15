@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 118
-> * **Total de Sessões**: 3636
+> * **Total de Processos**: 119
+> * **Total de Sessões**: 3651
 
 ---
 
@@ -61,6 +61,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[edge-jwt-identity-verification]]` - *Processo*
 *   `[[engineer-spaces-node-authoring]]` - *Processo*
 *   `[[external-video-ingest]]` - *Processo*
+*   `[[gauntlet-de-peca]]` - *Processo*
 *   `[[gerar-pelo-no-nao-pelo-cli]]` - *Processo*
 *   `[[great-reset-sovereign]]` - *Processo*
 *   `[[handoff-material-proof-audit]]` - *Processo*
@@ -141,6 +142,21 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-08-15 - agent-af4aa7284fcf7ec81]]` (ClaudeSessions) - *2026-08-15*
+*   `[[2026-08-15 - agent-ad3637b5ee6785ecd]]` (ClaudeSessions) - *2026-08-15*
+*   `[[2026-08-15 - agent-ace6c7d7d80d9be4d]]` (ClaudeSessions) - *2026-08-15*
+*   `[[2026-08-15 - agent-ac0667271e60eff47]]` (ClaudeSessions) - *2026-08-15*
+*   `[[2026-08-15 - agent-ab52a04e72c21adc2]]` (ClaudeSessions) - *2026-08-15*
+*   `[[2026-08-15 - agent-a9cd14892f76b24fc]]` (ClaudeSessions) - *2026-08-15*
+*   `[[2026-08-15 - agent-a7ddee90a2be20316]]` (ClaudeSessions) - *2026-08-15*
+*   `[[2026-08-15 - agent-a7a17b377fb11becd]]` (ClaudeSessions) - *2026-08-15*
+*   `[[2026-08-15 - agent-a6faa9e4b8f0edf02]]` (ClaudeSessions) - *2026-08-15*
+*   `[[2026-08-15 - agent-a67ba66ace3da9345]]` (ClaudeSessions) - *2026-08-15*
+*   `[[2026-08-15 - agent-a624038631962e0a7]]` (ClaudeSessions) - *2026-08-15*
+*   `[[2026-08-15 - agent-a56d0a7c7732366d1]]` (ClaudeSessions) - *2026-08-15*
+*   `[[2026-08-15 - agent-a44528382881a4208]]` (ClaudeSessions) - *2026-08-15*
+*   `[[2026-08-15 - agent-a1d47b9ab3010818f]]` (ClaudeSessions) - *2026-08-15*
+*   `[[2026-08-15 - Analisar ataque em N10 e N8]]` (ClaudeSessions) - *2026-08-15*
 *   `[[2026-08-15 - 28e92cf3-4e23-4f6d-be1d-57e40bd6ca08]]` (ClaudeSessions) - *2026-08-15*
 *   `[[2026-08-14 - agent-af3a3382862255f83]]` (ClaudeSessions) - *2026-08-14*
 *   `[[2026-08-14 - agent-af30eee0e5f8b9ee9]]` (ClaudeSessions) - *2026-08-14*
