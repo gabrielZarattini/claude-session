@@ -5090,6 +5090,1872 @@ O risco honesto: se a perícia disser que o conserto é grande, postar hoje aper
 
 Aviso quando a perícia fechar com o veredito e o patch.
 
+## 👤 User *(18:57:35)*
+
+<task-notification>
+<task-id>wpl80hmnv</task-id>
+<tool-use-id>toolu_012WURwFExneUc4qVxYWEYgx</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/tasks/wpl80hmnv.output</output-file>
+<status>completed</status>
+<summary>Dynamic workflow "Pericia enxuta para render do EP07 hoje: o que o caminho por spec perde do runner campeao, o defeito de blur, e a gramatica das referencias" completed</summary>
+<result>{"plano":{"arquivo":"/home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/ep07-plano-de-entrega-2026-08-16.md (427 linhas · 29.045 bytes · ls -la em 2026-08-16 15:55)","veredito_spec_vs_runner":"SIM — o caminho por spec perde capacidade do runner campeão, e perde em SILÊNCIO. Três provas que reconferi neste turno, não citadas de terceiros: (1) o encode do runner genérico em scripts/ep07/render-scenes-montar.ts:88-89 é execFileSync(\"ffmpeg\", [...,\"-c:v\",\"libx264\",\"-pix_fmt\",\"yuv420p\",\"-crf\",\"16\",\"-preset\",\"medium\",mp4]) — SEM \"-vf\", enquanto o campeão encoda com \"-vf\", GRADE_VF (pilot-adsense-montar.ts:174); e grade.ts:66 marca montarScene como PRE_GRADED, então assemble-graph.ts:93 não gradua depois: as 7 cenas nascem e morrem cruas. (2) grep -n perspective scripts/ep07/scenes/*.spec.json devolve saída VAZIA — as 7 caem no default const PERSP = spec.camera?.perspective ?? 1300 (montar-template-v2.mjs:59); e como as 7 são 2.39:1 = 1720x720 (canvas-size.mjs:37), esse 1300 é uma lente de 71,29° de diagonal, contra os 46,99° do campeão (1689 em 1280x720) — colar 1689 daria 57,80°, o valor correto é 2144 (aritmética minha, verificada). (3) &lt;div id=\"scrim\"&gt;&lt;/div&gt; (:384) e &lt;div id=\"rule\" style=\"width:0px\"&gt; (:386) são emitidos FORA de qualquer condicional, enquanto kick/title/cap/end são condicionais; e case \"cutout\" (:166) renderiza width:${w}px;height:auto com w = num(l.w, 300) (:148) — h NUNCA é lido. POR QUE ELE ACERTA UMA E ERRA TRÊS: o campeão é o único artefato onde alguém preencheu à mão as 9 capacidades; no caminho por spec nenhuma das 9 tem default seguro — 5 degradam para um NÚMERO errado (300px · 1300 · 50/50 · from=1.0 · blur do primeiro plano), 2 para NO-OP (grade ausente, iconPath ausente) e 2 para ARTEFATO (scrim e rule órfãos). Nada lança erro, nada fica vermelho. O silêncio é o produto.","leis":["L1 — A CÂMERA FREIA: acelera para ENTRAR, desacelera monotonicamente para ARGUMENTAR. Campeão 136 → 522 → 325 → 129 → 59 px/s; 57% do curso de Z gasto nos primeiros 37,5% do tempo; o dado chega com a câmera a 59 px/s.","L2 — O QUADRO ESVAZIA: pico de 6 camadas vivas em t≈0,29·D…0,42·D e 1 única camada viva em ~55% da duração. Um dado por vez, sem competição.","L3 — PROFUNDIDADE EM UM SÓ INSTANTE: 8 planos em 2850 px de Z com k=150/maxBlur=11 dão 6 níveis DISTINTOS de blur no mesmo frame (0,5·2,5·3,0·6,0·8,0·9,5 px em t=3,6 s); o gate Gd pede 3. Gap mínimo útil entre planos = 300 px (100 px valem 0,67 px de blur = mesmo plano aos olhos).","L4 — DESFOQUE É CONTAGEM REGRESSIVA, NUNCA ESTADO: as 5 camadas de informação do campeão chegam a 0,00 px; na ref WhatsApp o payload borrado resolve em ≤2,2 s (ilegível 20,6 s → nítido 22,8 s) e há 0 instâncias de conteúdo reconhecível borrado até o fim do plano em 20 frames; na ref longa o trecho mole mais longo dura 1,0 s e soma 3,9% de 77,5 s.","L5 — UM TEXTO LEGÍVEL POR QUADRO: ≥4,5:1 no portador e ≤2,6:1 nos demais. Medido na mesma frase de uma ref: 8,24:1 na linha da frente vs 2,54:1 na última linha do parágrafo em fuga.","L6 — A LENTE É ESCOLHIDA POR CENA, E SE COPIA O ÂNGULO, NÃO O NÚMERO: campeão perspective 1689 em 1280x720 = 46,99° de diagonal; em 2.39:1 (1720x720) o default 1300 vira 71,29° e o 1689 colado vira 57,80° — o valor que reproduz os 47° é 2144.","L7 — NADA FRONTAL, NADA INTEIRO: 12 de 14 refs de imagem não têm um único card cabendo no quadro. Campeão: laje com rotY base ±26…28°, wobble 1,5…1,6° a 0,45–0,50 Hz e approach 300.","L8 — RITMO DE DUAS VELOCIDADES + RÉGUA DE DENSIDADE: ref longa hook 0,63 s/plano vs corpo 3,83 s/plano (6×), evento a cada 2,50 s; ref WhatsApp 1,02 s/evento e plano mais longo 3,93 s. Régua da casa: 1,33 s/evt campeão · 1,80 piso aprovado · 3,50 REPROVADO.","L9 — GRADE E VINHETA NÃO SÃO ACABAMENTO: GRADE_VF = curves 0/0.02 0.5/0.52 1/0.98 + eq contrast=1.06:saturation=1.10:gamma=0.98 + colorbalance + unsharp=5:5:0.35 + vignette=PI/5. Refs: queda centro→canto mediana +43 L (pico +130), e campo escuro LIMPO — desvio-padrão de luminância 0,00 em 11 de 14 refs (grão overlay AFASTA da referência).","L10 — UM ACENTO CROMÁTICO SÓ, MARCA REAL SEMPRE EM PLATE: pixels saturados de 0,11% a 10,09% (mediana ~3%) nos 11 refs do anunciante-alvo — teto operacional 6%; o único ref acima de 19% é de outro anunciante e é o que parece anúncio barato. Logo em quadrado branco/plate, nunca com alpha direto no campo escuro, nunca recolorido."],"patch_minimo":["BANDA A · P1 — GRADUAÇÃO (1 import + 1 linha · scripts/ep07/render-scenes-montar.ts:88-89 · afeta as 7 cenas): + import { GRADE_VF } from \"../motion/grade\"; e acrescentar \"-vf\", GRADE_VF e \"-threads\",\"2\" no execFileSync do ffmpeg. Sem isto não há segunda chance: grade.ts:66 marca montarScene como PRE_GRADED e assemble-graph.ts:93 não gradua no export. Maior alavanca por linha escrita do dia.","BANDA A · P2 — SCRIM/RULE ÓRFÃOS (2 linhas · scripts/motion/montar-template-v2.mjs:384 e :386 · corrige 6 das 7): trocar &lt;div id=\"scrim\"&gt;&lt;/div&gt; por ${(HUD.kick||HUD.title1||HUD.title2||HUD.caption||HUD.end) ? `&lt;div id=\"scrim\"&gt;&lt;/div&gt;` : \"\"} e o mesmo para #rule com (HUD.kick||HUD.title1||HUD.title2). Hoje toda cena sem HUD abre com cortina preta sobre 64% da largura (scrimOp=0.95, scrimCss=1100.8px medidos em t=1,0 s do ato2) e traço ciano de 205,1 px sobre nada por ~3,8 s — e a entrada do primeiro personagem acontece DEBAIXO dela.","BANDA A · P3 — ESCALA DO CUTOUT (3 linhas · montar-template-v2.mjs:163-166 · ressuscita 6 camadas em 5 cenas): const sizeCss = l.w != null ? `width:${num(l.w,300)}px;height:auto` : l.h != null ? `height:${num(l.h,200)}px;width:auto` : `width:300px;height:auto`; e usar ${sizeCss} no &lt;img&gt;. Consertar no motor é 1/5 do trabalho de converter h→w em 5 specs e vacina toda cena futura. Hoje macro/gente h=540, fecho/massa h=560, hedge/folha h=520, ato3/mixer h=420 e ato1 caneca/mic/kit h=330/460/300 renderizam TODOS a 300 px — em ato1 os três props estão em Z distintos (−2400/−2150/−1950) e saem do mesmo tamanho.","BANDA A · P4 — A LENTE (7 linhas, 1 por spec): \"camera\": { \"perspective\": 2144, ... }. 2144 dá 46,99° de diagonal em 1720x720 = a MESMA lente do campeão (1689 em 1280x720). Colar 1689 daria 57,80°; o default 1300 num quadro 2.39:1 é 71,29°. Mudar o default do motor (:59) NÃO serve: o valor correto depende do aspecto.","BANDA B · P5 — SPLITBAR 50/50 SOB RÓTULO 45%/55% (4 linhas · 2 arquivos · maior severidade): acrescentar \"value\": 45 / \"value\": 55 e \"splitAt\": [in[1], in[1]+1.2] em ep07-ato2-adsense.spec.json:174-181 e ep07-estrutura-hedge.spec.json:124-131. Sem value o motor cai em lv=50/rv=50 e at=[1.0,2.2] (:245); medido no DOM em 6 instantes: 'splitbar larguras: L=50% R=50%'. O gráfico do número-tese contradiz o próprio rótulo, e a animação roda antes de a camada existir (in [5.65,6.55]).","BANDA B · P6 — DOIS CHIPS VAZIOS EM FOCO (4 linhas · ep07-estrutura-hedge.spec.json:148-153 e :169-174): trocar series:[{label,sub}] por t1/t2 planos. O motor lê l.t1/l.t2 no kind chip (:170); series só existe no kind data (:175). DOM literal: &lt;div class=\"chip\" data-leaf=\"2\" ...&gt;&lt;div&gt;&lt;/div&gt;&lt;/div&gt;. E as focus stations de 20,94 s e 26,52 s puxam foco para as duas pílulas vazias — 11,2 s dos 42,2 s da cena focados em nada.","BANDA B · P7 — 8 STAMPS ILEGÍVEIS NO ATO2 (9 linhas · mecânico, sai do próprio spec): acrescentar em focus.stations [3.86,\"selo\"] [14.57,\"selo\"] [19.52,\"selo\"] [21.44,\"selo\"] [39.92,\"selo\"] [45.83,\"selo\"] [51.04,\"marca\"] [53.34,\"marca\"] [59.82,\"marca\"]. Medido no DOM: t=59.1 leaf 17 blur=10px op=0.49 [stamp] 'é por isso que ninguém corta' — a frase de fecho é uma mancha enquanto o cutout do homem ao lado está em 0 px.","BANDA B · P8 — O EPISÓDIO ACABA EM QUADRO VAZIO (1 camada · ep07-fecho): o onset b7_inscreve@42,29 s ('se inscreve') não tem camada nenhuma e o último stamp sai em 40,5–42,9 s; os últimos ~1,0 s do EP07, onde vive a conversão, são preto. Cri
+... (truncated 75051 chars, full result in /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/tasks/wpl80hmnv.output)</result>
+<diagnostics>Per-agent results: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/subagents/workflows/wf_92e69ad2-8d7/journal.jsonl — one {"type":"result",...} line per completed agent with its full return value.
+If the result above is empty or unexpected, Read this file BEFORE diagnosing — do not assume agents returned non-empty results.
+To re-run with edited post-processing: Workflow({scriptPath: '/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/wf-ep07-hoje.js', resumeFromRunId: 'wf_92e69ad2-8d7'}) — agents whose (prompt, opts) are unchanged replay from cache.</diagnostics>
+<usage><agent_count>7</agent_count><agents_done>7</agents_done><agents_error>0</agents_error><agents_skipped>0</agents_skipped><agents_empty_result>0</agents_empty_result><subagent_tokens>1058787</subagent_tokens><tool_uses>233</tool_uses><duration_ms>2295186</duration_ms></usage>
+</task-notification>
+
+## 🤖 Claude *(18:57:58)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The perícia results show a critical finding: the spec path is silently losing capability because it encodes without the grade video filter that the champion version includes, and the montarScene is marked as pre-graded which prevents the filter from being applied downstream.
+
+Beyond that, there are three major issues cascading through the 7 scenes: missing perspective values default to a 71° lens instead of the correct 47°, the scrim and rule divs render unconditionally outside any HUD check so they appear as a black curtain and cyan line for 3.8 seconds on every scene, and the cutout function only reads width and ignores height, causing 6 layers across 5 scenes to render at a fixed 300px.
+
+The perícia identifies 9 capabilities with no safe defaults—5 degrade to wrong numbers, 2 become no-ops, and 2 create visual artifacts—and proposes a series of patches: fixing the grade import and application, removing the orphaned scrim/rule divs, correcting the cutout scaling, and setting the proper perspective value across all 7 specs, plus several secondary fixes for the splitbar ratio, empty chip focus time, illegible stamps with excessive blur, and the episode ending state.
+
+The most critical issues are the splitbar contradicting its own label and the closing line blur making text unreadable—exactly what the Sovereign flagged—so I need to read the rest of the output file to understand the render order and pilot scene, then apply the Band A patches quickly and tackle the critical Band B fixes before rendering.
+
+</details>
+
+
+## 🤖 Claude *(18:57:59)*
+
+A perícia voltou com veredito e ele é demolidor. Lendo o resto do plano:
+
+## 🤖 Claude *(18:58:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "F=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/tasks/wpl80hmnv.output\npython3 - <<'PY'\nimport json,sys\nraw=open('/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/tasks/wpl80hmnv.output').read()\ntry:\n    d=json.loads(raw)\nexcept Exception:\n    i=raw.find('{'); d=json.loads(raw[i:])\np=d.get('plano',{})\nfor k in ['cena_piloto','ordem_de_render','nao_fazer_hoje','gate']:\n    v=p.get(k)\n    print('\\n\u2550\u2550\u2550\u2550\u2550\u2550',k.upper(),'\u2550\u2550\u2550\u2550\u2550\u2550')\n    if isinstance(v,list):\n        for x in v: print(' \u2022',x)\n    else: print(v)\nPY",
+  "description": "Ler piloto, ordem de render e gate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ══════ CENA_PILOTO ══════
+> None
+> 
+> ══════ ORDEM_DE_RENDER ══════
+> None
+> 
+> ══════ NAO_FAZER_HOJE ══════
+> None
+> 
+> ══════ GATE ══════
+> None
+> ```
+
+## 🤖 Claude *(18:58:06)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The JSON got truncated in the notification, so I should check the actual file instead. There's a plan document the agent wrote at `docs/roadmap/ep07-plano-de-entrega-2026-08-16.md` with 427 lines that contains the real deliverable—let me verify it exists and pull the relevant sections from there.
+
+</details>
+
+
+## 🤖 Claude *(18:58:06)*
+
+O arquivo da notificação veio truncado. O plano real foi escrito em disco — indo direto na fonte:
+
+## 🤖 Claude *(18:58:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nls -la docs/roadmap/ep07-plano-de-entrega-2026-08-16.md 2>/dev/null && wc -l docs/roadmap/ep07-plano-de-entrega-2026-08-16.md\necho \"=== \u00cdNDICE DO PLANO ===\"\ngrep -nE \"^#{1,3} \" docs/roadmap/ep07-plano-de-entrega-2026-08-16.md 2>/dev/null | head -30",
+  "description": "Localizar o plano escrito em disco"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> -rw-rw-r-- 1 ubuntu ubuntu 29045 Aug 16 15:55 docs/roadmap/ep07-plano-de-entrega-2026-08-16.md
+> 427 docs/roadmap/ep07-plano-de-entrega-2026-08-16.md
+> === ÍNDICE DO PLANO ===
+> 1:# EP07 — Plano de entrega de HOJE (2026-08-16)
+> 13:## 1. VEREDITO (5 linhas)
+> 38:## 2. A RÉGUA — 10 leis, cada uma com o número que a sustenta
+> 55:## 3. PATCH MÍNIMO PARA HOJE — ordenado por IMPACTO / ESFORÇO
+> 61:### BANDA A — motor e runner (8 linhas, 7 cenas de uma vez)
+> 129:### BANDA B — verdade em quadro (spec a spec)
+> 215:## 4. GATE G-LEGIBILIDADE — travar a camada ilegível ANTES de gastar CPU
+> 304:## 5. ORDEM DE RENDER — **SERIAL, `nice`, uma cena por invocação. NUNCA em paralelo.**
+> 357:## 6. PILOTO PRIMEIRO — **`ep07-gancho`**
+> 381:## 7. O GATE DO DIA (a decisão que não é minha)
+> 397:## 8. O QUE **NÃO** FAZER HOJE
+> ```
+
+## 🤖 Claude *(18:58:12)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/ep07-plano-de-entrega-2026-08-16.md",
+  "offset": 304,
+  "limit": 124
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 304	## 5. ORDEM DE RENDER — **SERIAL, `nice`, uma cena por invocação. NUNCA em paralelo.**
+> 305	
+> 306	Host: **4 núcleos**, load 1,02/1,15/1,00 às 15:48, **já caiu hoje**. Um chromium por vez (boot
+> 307	medido: **262 ms** — o custo de reabrir por cena é desprezível e libera memória entre cenas, que é
+> 308	o que importa depois do incidente de OOM).
+> 309	
+> 310	```bash
+> 311	OUT=/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2
+> 312	nice -n 10 ionice -c3 bun run scripts/ep07/render-scenes-montar.ts "$OUT" --only=<cena>
+> 313	```
+> 314	
+> 315	> ⚠️ O `OUT_DIR` **default** do runner (`render-scenes-montar.ts:26-28`) aponta para o scratchpad de
+> 316	> **outra sessão** (`9b9cb2fa-…`), que **não existe em disco**. Passar o `$OUT` acima é obrigatório —
+> 317	> e ele já é durável, ao lado de `narracao-v02/` (lei da colheita: nada vive só em `/tmp`).
+> 318	
+> 319	**Custo de CPU — base MEDIDA: 591 ms/frame** (15 frames em 8.868 ms, 2580×1080, dScale 1.5, na
+> 320	`estrutura-hedge`, que tem **5 camadas**). **É PISO, não estimativa:** o ato2 tem 19 camadas.
+> 321	Encode x264 crf16 preset medium + contact sheet por cena: **NÃO MEDIDO**.
+> 322	
+> 323	| ordem | cena | duração | frames | CPU @591 ms/f | por que nesta posição |
+> 324	|---|---|---|---|---|---|
+> 325	| **1** | **ep07-gancho** *(PILOTO)* | 41,13 s | 1234 | **12min09** | ver §6 |
+> 326	| 2 | ep07-macro | 72,80 s | 2184 | **21min30** | a MAIS LONGA e nunca renderizada — se o fix do chromium não aguentar 2.184 frames, descobrimos às ~18h com margem, não às 20h |
+> 327	| 3 | ep07-ato1-patrocinio | 67,70 s | 2031 | **20min00** | risco decrescente = custo decrescente |
+> 328	| 4 | ep07-ato2-adsense | 66,56 s | 1997 | **19min40** | 19 camadas, a mais pesada por frame; entra depois de o P7 ser conferido no gate G-LEG |
+> 329	| 5 | ep07-ato3-audio | 62,57 s | 1877 | **18min29** | |
+> 330	| 6 | ep07-fecho | 43,30 s | 1299 | **12min47** | |
+> 331	| 7 | ep07-estrutura-hedge | 42,20 s | 1266 | **12min28** | a mais barata fecha a fila |
+> 332	| | **TOTAL** | **396,16 s** | **11.888** | **1h57min** | **1h44min depois do piloto** |
+> 333	
+> 334	**Linha do tempo, a partir do relógio material (15:48):**
+> 335	
+> 336	| bloco | conteúdo | duração | fim previsto |
+> 337	|---|---|---|---|
+> 338	| B1 | Patch P1–P11 + dry-run do G-LEG nas 7 specs | ~75 min | **≈ 17:05** |
+> 339	| B2 | Piloto `ep07-gancho` + encode + contact sheet | 12min09 + encode NÃO MEDIDO | **≈ 17:25** |
+> 340	| B3 | **GATE — parecer ocular do Sovereign** | mão do Sovereign | — |
+> 341	| B4 | 6 cenas em série | **1h44min** + encodes | **≈ 19:15** (se o GO sair 17:30) |
+> 342	| B5 | Casamento MP4+MP3 → concat → master (passo **a escrever**, §7) | ~30 min + encode NÃO MEDIDO | **≈ 20:00** |
+> 343	| B6 | Publicação | — | **≈ 20:30** |
+> 344	
+> 345	**Passo B5, o que falta escrever** (`scripts/ep07/assemble-ep07.ts`, ~40 linhas): o runner gera MP4
+> 346	**mudo** (`:88-89`, sem `-i` de áudio) e **nada em `scripts/ep07/` importa `assemble-graph`**
+> 347	(importadores conferidos: `motion-bridge.ts:221`, `master-export.test.ts:7`,
+> 348	`smoke-assemble-graph.ts:22`). Caminho barato, sem re-encode de vídeo:
+> 349	`ffmpeg -i <cena>.mp4 -i narracao-v02/<narr>.mp3 -c:v copy -c:a aac -threads 1` por cena →
+> 350	concat demuxer `-c copy` → uma passada final de loudnorm só no áudio (`-c:v copy -af loudnorm=...`),
+> 351	com o alvo lido de `MIX_TARGETS` em `src/lib/cinematic-grammar.ts` — **não inventar o número**.
+> 352	As 7 narrações estão em disco e conferidas:
+> 353	`repurpose-inbox/ada39fae-…/ep07-kit/narracao-v02/{gancho,estrutura2,ato1,ato2,ato3,macro,fecho}.mp3`.
+> 354	
+> 355	---
+> 356	
+> 357	## 6. PILOTO PRIMEIRO — **`ep07-gancho`**
+> 358	
+> 359	**Quatro razões, todas com número:**
+> 360	
+> 361	1. **É a mais barata: 1234 frames = 12min09** — o menor bilhete possível para comprar o parecer
+> 362	   ocular. Errar aqui custa 12 minutos; errar depois de renderizar tudo custa 1h57.
+> 363	2. **É o único regressivo do crash.** O chromium morria **sempre no frame 566 de 1233** — e 1233 é
+> 364	   exatamente o gancho. O fix (`--disable-dev-shm-usage`, `render-scenes-montar.ts:47`) foi escrito
+> 365	   ontem e **nunca rodou numa cena longa**; o `OUT_DIR` do runner nem existe em disco (nenhuma cena
+> 366	   do EP07 jamais foi renderizada). O piloto atravessa o frame 566 antes de qualquer outra coisa.
+> 367	3. **É a única cena já saneada** (`w` correto, chips corretos, counter plano — corrigida em
+> 368	   2026-08-15). Por isso ela **isola o patch de FOTOGRAFIA**: o que o Sovereign vai julgar é
+> 369	   exatamente o efeito de P1 (grade), P2 (scrim) e P4 (lente 47°), sem ruído de defeito de spec.
+> 370	   Se o parecer for NO-GO, o problema é a régua — não um chip vazio.
+> 371	4. **É o HOOK.** Se os primeiros 41 s não seguram, os outros 355 s não são vistos. A ref longa gasta
+> 372	   **0,63 s por plano** no hook contra 3,83 s no corpo (6×): é o trecho onde a régua aperta mais.
+> 373	
+> 374	**O que pedir no parecer (3 perguntas fechadas, para não gastar a janela do Sovereign):**
+> 375	(a) a FOTOGRAFIA bate no campeão — preto com lift, vinheta, lente comprimindo? (b) o quadro
+> 376	2.39:1 está ocupado ou continua com campo lateral vazio? (c) **4,11 s/evt de densidade é postável
+> 377	hoje**, sabendo que campeão = 1,33 e piso aprovado = 1,80?
+> 378	
+> 379	---
+> 380	
+> 381	## 7. O GATE DO DIA (a decisão que não é minha)
+> 382	
+> 383	**As 7 cenas estão na faixa REPROVADA da régua da casa.** A melhor (ato2, 3,50 s/evt) **empata
+> 384	exatamente** com o ATO2 v2 que já foi rejeitado; as outras 6 são de 1,3× a 4,0× piores. Depois de
+> 385	todo o patch de hoje, incluindo os 21 órfãos grátis, o episódio fica em **4,83 s/evt**.
+> 386	
+> 387	> **Decisão do Sovereign, ANTES das 19h:**
+> 388	> **(A)** postar hoje com a FOTOGRAFIA do campeão (grade + lente 47° + scrim limpo + escala viva +
+> 389	> texto legível) e a densidade em 4,83 s/evt, aceitando conscientemente estar abaixo da régua; **ou**
+> 390	> **(B)** não postar hoje e gastar a próxima janela re-extraindo âncoras nas 6 cenas para alcançar
+> 391	> as **113 camadas** (empate com 3,50) ou **220** (piso aprovado 1,80).
+> 392	
+> 393	Não existe (C). O teto de âncoras é aritmético: **70 onsets / 396,16 s = 1 a cada 5,66 s**.
+> 394	
+> 395	---
+> 396	
+> 397	## 8. O QUE **NÃO** FAZER HOJE
+> 398	
+> 399	1. **Não re-extrair âncoras das 6 cenas** para densificar até 1,80 s/evt. São +164 camadas sobre o
+> 400	   estado atual — reescrever o episódio. Custo de whisper.cpp sobre 396 s de áudio em 4 núcleos:
+> 401	   **NÃO MEDIDO**. Isto é a opção (B) do gate, não uma tarefa da tarde.
+> 402	2. **Não ligar `focus.motivated:true`.** Exige reescrever `camera.keyframes` de **cada** cena: na
+> 403	   cena da pilha k=110 saturava **49%** dos pares (t,plano) no teto, e no AdSense o fator chega a
+> 404	   **36** porque o dolly atravessa o plano do HUD — nem k=5 salva (`pilot-adsense-montar.ts:51-56`).
+> 405	3. **Não portar G1 (perspectiva ≥1,05) e Gd (≥3 blurs) para o runner genérico hoje.** As 7 cenas
+> 406	   **reprovariam em G1**, porque nenhuma usa `slab` com `rotY` objeto — o gate viraria bloqueio de
+> 407	   postagem em vez de proteção. Agendar para depois de postar.
+> 408	4. **Não converter cutout em `slab` com `rotY{base,open,openWin,wobble}` + `approach`** (a
+> 409	   perspectiva REAL do campeão, `:499-503`). É reescrita de encenação de 7 cenas, não patch.
+> 410	5. **Não consertar a cegueira do `spec-contract.mjs:60-65` hoje.** `camposComuns()` varre o arquivo
+> 411	   com os `case` removidos e promoveu `series` a campo válido de QUALQUER kind — por isso o gate
+> 412	   deu `✓ pat chip · ✓ aud chip · 0 campo(s) morto(s)` sobre camada vazia. É **anticorpo**, não
+> 413	   bloqueador: o P6 já corrige o sintoma. Agendar junto do item 3.
+> 414	6. **Não gerar asset novo** para substituir o `microfone-v1-cut.png` reprovado pelo Sovereign em
+> 415	   2026-08-15. Há **microfone-v2/v3/v4 já em disco** (e mais 15 assets prontos sem uso). Trocar o
+> 416	   `src` ou remover a camada — imagem nova custa dinheiro e janela.
+> 417	7. **Não mexer no `assemble-graph.ts`, nem no loudnorm de dois passes.** O B5 é `-c:v copy` +
+> 418	   concat + uma passada de áudio. Motor de montagem é assunto de outra sessão.
+> 419	8. **Não paralelizar render, não rodar duas cenas ao mesmo tempo, não rodar sem `nice -n 10
+> 420	   ionice -c3`, não deixar o ffmpeg sem `-threads`.** 4 núcleos, o host já caiu hoje, e o render é
+> 421	   o caminho crítico inteiro da postagem.
+> 422	9. **Não confiar nos gates mecânicos** `Gb` (bitrate ≥ 800k) e `Gf` (≥95% frames únicos): eles
+> 423	   passaram **verdes** com chip vazio, cutout a 300 px e texto a 10 px de blur — precedente
+> 424	   registrado no `_nota` do gancho (bitrate 964k, 100% únicos, metade da cena vazia). Um borrão em
+> 425	   movimento tem bitrate alto. **Só o olho e o G-LEG pegam.**
+> 426	10. **Não postar sem o parecer ocular do piloto.** É o único gate humano do dia, e ele custa
+> 427	    12 minutos de CPU.
+> ```
+
+## 🤖 Claude *(18:58:27)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Looking at the timeline and what the plan reveals: the B1 patch takes about 75 minutes with a 12-minute pilot, but there's a critical issue surfacing—all seven scenes fall within the reproved density band, meaning the episode would end up at 4.83 seconds per event after patches, which is well above both the champion benchmark of 1.33 and the approved floor of 1.80. This is the hard constraint I'm grappling with.
+
+Rather than just flagging this problem and stalling, I should apply the Band A patches plus the highest-priority Band B fixes now—they're small and correct regardless—render the pilot, and present the Sovereign with the actual choice backed by a real frame. But I'm realizing something important: the plan calculates density as pure arithmetic (70 onsets / 396.16s), yet the champion's 9 layers in 12 seconds weren't all onset-anchored—some were photographic events like camera moves, focus pulls, and entrances. If I can raise density through non-narration events rather than just onsets, the constraint might be less rigid than the plan assumes.
+
+Let me be pragmatic though: apply Band A (4 patches, ~13 lines) plus the critical Band B fixes—the splitbar lying and illegible stamps that are literally the Sovereign's complaint, plus the black ending. Render it, show it, let them decide. I need to start applying these patches now.
+
+</details>
+
+
+## 🤖 Claude *(18:58:27)*
+
+O plano está completo e o veredito é claro. **SIM — o caminho por spec perde capacidade do campeão, e perde em silêncio.** Vou aplicar os patches agora; o tempo é o recurso escasso.
+
+## 🤖 Claude *(18:58:28)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/render-scenes-montar.ts",
+  "offset": 18,
+  "limit": 80
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 18	import { execFileSync } from "node:child_process";
+> 19	import { fileURLToPath } from "node:url";
+> 20	// @ts-expect-error — módulo .mjs sem tipos; é o SSOT do tamanho de quadro por formato
+> 21	import { canvasFor } from "../motion/canvas-size.mjs";
+> 22	
+> 23	const REPO = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
+> 24	const SCENES_DIR = join(REPO, "scripts/ep07/scenes");
+> 25	const OUT_DIR = process.argv[2] && !process.argv[2].startsWith("--")
+> 26	  ? process.argv[2]
+> 27	  : "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/9b9cb2fa-663b-4f25-98b8-c32877cbffb1/scratchpad/ep07-scenes";
+> 28	const only = process.argv.find((a) => a.startsWith("--only="))?.slice(7).split(",") ?? null;
+> 29	const CHROME = process.env.PLAYWRIGHT_CHROMIUM
+> 30	  ?? "/home/ubuntu/.cache/ms-playwright/chromium-1226/chrome-linux/chrome";
+> 31	const FPS = 30, SCALE = 1.5;
+> 32	
+> 33	if (!existsSync(SCENES_DIR)) { console.error(`sem specs: ${SCENES_DIR} nao existe`); process.exit(2); }
+> 34	const specFiles = readdirSync(SCENES_DIR).filter((f) => f.endsWith(".spec.json"))
+> 35	  .filter((f) => !only || only.includes(basename(f, ".spec.json"))).sort();
+> 36	if (!specFiles.length) { console.error("nenhum spec casou com o filtro"); process.exit(2); }
+> 37	console.log(`${specFiles.length} cena(s): ${specFiles.map((f) => basename(f, ".spec.json")).join(" · ")}`);
+> 38	
+> 39	const { chromium } = await import("playwright");
+> 40	// ⚠️ Os dois args NÃO são cosméticos (achado de 2026-08-15): sem `--disable-dev-shm-usage` o
+> 41	// chromium usa /dev/shm para compositing e MORRE no meio da sessão de screenshots — aqui, sempre
+> 42	// no frame 566 de 1233, com `TargetClosedError`, independente do conteúdo da cena. O runner que
+> 43	// produziu a cena aprovada (scene-estrutura-referencial.ts:441) já passava ambos; o de PRODUÇÃO
+> 44	// não, e por isso nenhuma cena longa jamais terminou por ele.
+> 45	const browser = await chromium.launch({
+> 46	  headless: true, executablePath: CHROME,
+> 47	  args: ["--no-sandbox", "--disable-dev-shm-usage"],
+> 48	});
+> 49	const failures: string[] = [];
+> 50	const rendered: string[] = [];
+> 51	try {
+> 52	
+> 53	  for (const sf of specFiles) {
+> 54	    const name = basename(sf, ".spec.json");
+> 55	    const spec = JSON.parse(readFileSync(join(SCENES_DIR, sf), "utf8"));
+> 56	    const dur = Number(spec.duration);
+> 57	    if (!Number.isFinite(dur) || dur <= 0) { failures.push(`${name}: duration invalida (${spec.duration}) — o t dos beats vem do ffprobe da narracao, nunca de estimativa`); continue; }
+> 58	    // O viewport sai do ASPECT DO SPEC. Antes era 1280x720 fixo: uma cena marcada `2.39:1`
+> 59	    // renderizava em 16:9 e ninguém via, porque o spec não era conferido contra o quadro.
+> 60	    const canvas = canvasFor(spec.aspect ?? "16:9");
+> 61	    const ctx = await browser.newContext({ viewport: { width: canvas.w, height: canvas.h }, deviceScaleFactor: SCALE });
+> 62	    const dir = join(OUT_DIR, name);
+> 63	    // Frames de uma execução anterior NÃO podem sobrar: se a nova cena tem menos frames, ou se um
+> 64	    // segundo processo escreve aqui em paralelo, o ffmpeg monta um MP4 costurando DOIS specs sem
+> 65	    // reclamar de nada. É o mesmo defeito híbrido que o gauntlet tinha — e aconteceu aqui hoje,
+> 66	    // com dois renders do mesmo nome escrevendo no mesmo diretório ao mesmo tempo.
+> 67	    rmSync(join(dir, "frames"), { recursive: true, force: true });
+> 68	    mkdirSync(join(dir, "frames"), { recursive: true });
+> 69	    const htmlPath = join(dir, "scene.html");
+> 70	    execFileSync("node", [join(REPO, "scripts/motion/montar-template-v2.mjs"), join(SCENES_DIR, sf), htmlPath], { stdio: "inherit" });
+> 71	
+> 72	    const page = await ctx.newPage();
+> 73	    try {
+> 74	      await page.goto(`file://${htmlPath}`, { waitUntil: "load", timeout: 30_000 });
+> 75	      await page.waitForFunction(() => (window as any).__ready || (window as any).__fatal, null, { timeout: 30_000 });
+> 76	      const fatal = await page.evaluate(() => (window as any).__fatal ?? null);
+> 77	      if (fatal) { failures.push(`${name}: G5 FATAL — ${fatal}`); await page.close(); continue; }
+> 78	      const n = Math.round(FPS * dur);
+> 79	      const t0 = Date.now();
+> 80	      for (let i = 0; i < n; i++) {
+> 81	        await page.evaluate((t) => (window as any).__seek(t), i / FPS);
+> 82	        await page.screenshot({ path: join(dir, "frames", `f${String(i).padStart(4, "0")}.png`) });
+> 83	      }
+> 84	      console.log(`${name}: ${n} frames em ${((Date.now() - t0) / 1000).toFixed(1)}s (${((Date.now() - t0) / n).toFixed(0)} ms/f)`);
+> 85	    } finally { await page.close(); await ctx.close(); }
+> 86	
+> 87	    const mp4 = join(dir, `${name}.mp4`);
+> 88	    execFileSync("ffmpeg", ["-y", "-framerate", String(FPS), "-i", join(dir, "frames", "f%04d.png"),
+> 89	      "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "16", "-preset", "medium", mp4], { stdio: "inherit" });
+> 90	
+> 91	    const probe = JSON.parse(execFileSync("ffprobe", ["-v", "quiet", "-print_format", "json", "-show_format", mp4]).toString());
+> 92	    const bitRate = Number(probe.format?.bit_rate ?? 0);
+> 93	    if (bitRate < 800_000) failures.push(`${name}: Gb bit_rate ${bitRate} < 800.000`);
+> 94	
+> 95	    const md5out = execFileSync("ffmpeg", ["-v", "quiet", "-i", mp4, "-f", "framemd5", "-"]).toString();
+> 96	    const md5s = md5out.split("\n").filter((l) => l && !l.startsWith("#")).map((l) => l.trim().split(",").pop()!.trim());
+> 97	    const pct = (new Set(md5s).size / Math.max(md5s.length, 1)) * 100;
+> ```
+
+## 🤖 Claude *(18:58:34)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm working through several patches to apply. First, I need to add the GRADE_VF import from the motion module and update the ffmpeg command with the video filter and thread settings. Let me check that GRADE_VF is actually defined in grade.ts before proceeding. I also need to handle the perspective adjustment in the specs and then address the conditional logic for the scrim/rule in the template file.
+
+Now I'm looking at the cutout height values in the template around lines 163-166, and I'll verify both the grade.ts export and those specific template lines to make sure everything lines up correctly.
+
+</details>
+
+
+## 🤖 Claude *(18:58:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== GRADE_VF existe? ===\"; grep -n \"export const GRADE_VF\\|GRADE_VF *=\" scripts/motion/grade.ts | head -3\ngrep -n \"PRE_GRADED\" scripts/motion/grade.ts | head -3\necho; echo \"=== template: scrim/rule (383-388) ===\"; sed -n '383,388p' scripts/motion/montar-template-v2.mjs\necho; echo \"=== template: cutout (160-172) ===\"; sed -n '160,172p' scripts/motion/montar-template-v2.mjs\necho; echo \"=== template: PERSP (57-61) ===\"; sed -n '57,61p' scripts/motion/montar-template-v2.mjs",
+  "description": "Localizar os pontos exatos dos patches"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === GRADE_VF existe? ===
+> 28:export const GRADE_VF = [
+> 55:const PRE_GRADED_ENGINES = new Set([
+> 69:const PRE_GRADED_KEY_SEGMENTS = ["/motion/", "/masters/", "/repurpose/"];
+> 86:  if (input.engine && PRE_GRADED_ENGINES.has(input.engine)) return "scene";
+> 
+> === template: scrim/rule (383-388) ===
+> <div id="hud">
+>   <div id="scrim"></div>
+>   ${HUD.kick ? `<div id="kick">${HUD.kick}</div>` : ""}
+>   <div id="rule" style="width:0px"></div>
+>   ${(HUD.title1 || HUD.title2) ? `<div id="title">${HUD.title1 ? `<div class="l1">${esc(HUD.title1)}</div>` : ""}${HUD.title2 ? `<div class="l2">${esc(HUD.title2)}</div>` : ""}</div>` : ""}
+>   ${HUD.caption ? `<div id="cap">${HUD.caption}</div>` : ""}
+> 
+> === template: cutout (160-172) ===
+>         ${media}${plain ? "" : `<div class="sheen"></div><div class="rim"></div>`}
+>         ${l.tag ? `<div class="tag">${esc(l.tag)}</div>` : ""}</div>`;
+>     }
+>     case "cutout":
+>       // `glow:false` desliga o halo ciano — marca de terceiro nunca pode receber pigmento da casa.
+>       return `<div class="cutwrap${l.glow === false ? " noglow" : ""}" data-leaf="${i}" style="left:${x}px;top:${y}px">
+>         <img src="${esc(srcUrl(l.src))}" alt="" style="width:${w}px;height:auto"></div>`;
+>     case "chip":
+>       return `<div class="chip" data-leaf="${i}" style="left:${x}px;top:${y}px">
+>         ${l.iconPath ? `<div class="mk"><svg viewBox="0 0 24 24" fill="none" stroke="#06121f" stroke-width="2.5"><path d="${esc(l.iconPath)}"/></svg></div>` : ""}
+>         <div>${l.t1 ? `<div class="t1"${styleAttr(l.style)}>${esc(l.t1)}</div>` : ""}${l.t2 ? `<div class="t2">${esc(l.t2)}</div>` : ""}</div></div>`;
+>     case "badge":
+>       return `<div class="badge" data-leaf="${i}" style="left:${x}px;top:${y}px">
+> 
+> === template: PERSP (57-61) ===
+> const { w: W, h: H } = canvasFor(spec.aspect);
+> const D = Number(spec.duration ?? 8.0);
+> const PERSP = spec.camera?.perspective ?? 1300;
+> const ORIGIN = spec.camera?.origin ?? "50% 47%";
+> ```
+
+## 🤖 Claude *(18:58:42)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Alright, I've got all the patches confirmed. I'm going to work through them systematically using Edit—starting with P1, which involves adding an import statement and configuring the grade filter with threading options, then moving on to the scrim conditional, the cutout height handling, and finally the perspective adjustment across the seven specs.
+
+</details>
+
+
+## 🤖 Claude *(18:58:42)*
+
+Todos os pontos confirmados. Aplicando a **Banda A** — 4 patches que valem para as 7 cenas de uma vez:
+
+## 🤖 Claude *(18:58:49)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/render-scenes-montar.ts",
+  "old_string": "    const mp4 = join(dir, `${name}.mp4`);\n    execFileSync(\"ffmpeg\", [\"-y\", \"-framerate\", String(FPS), \"-i\", join(dir, \"frames\", \"f%04d.png\"),\n      \"-c:v\", \"libx264\", \"-pix_fmt\", \"yuv420p\", \"-crf\", \"16\", \"-preset\", \"medium\", mp4], { stdio: \"inherit\" });",
+  "new_string": "    const mp4 = join(dir, `${name}.mp4`);\n    // \u26a0\ufe0f P1 (2026-08-16) \u2014 A GRADUA\u00c7\u00c3O N\u00c3O TEM SEGUNDA CHANCE. Este encode sa\u00eda SEM `-vf`, enquanto\n    // o runner que produziu a cena APROVADA passa GRADE_VF (pilot-adsense-montar.ts:174). E como\n    // grade.ts:55 marca `montarScene` em PRE_GRADED_ENGINES, o assemble-graph N\u00c3O gradua depois:\n    // toda cena sa\u00edda daqui nascia e morria CRUA \u2014 sem lift no preto, sem vinheta, sem unsharp.\n    // Era a diferen\u00e7a de fotografia entre o campe\u00e3o e as cenas reprovadas, em uma linha de c\u00f3digo.\n    // `-threads 2` porque o host tem 4 n\u00facleos e j\u00e1 caiu por carga hoje.\n    execFileSync(\"ffmpeg\", [\"-y\", \"-framerate\", String(FPS), \"-i\", join(dir, \"frames\", \"f%04d.png\"),\n      \"-vf\", GRADE_VF, \"-threads\", \"2\",\n      \"-c:v\", \"libx264\", \"-pix_fmt\", \"yuv420p\", \"-crf\", \"16\", \"-preset\", \"medium\", mp4], { stdio: \"inherit\" });"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/render-scenes-montar.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:58:56)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/render-scenes-montar.ts",
+  "old_string": "// @ts-expect-error \u2014 m\u00f3dulo .mjs sem tipos; \u00e9 o SSOT do tamanho de quadro por formato\nimport { canvasFor } from \"../motion/canvas-size.mjs\";",
+  "new_string": "// @ts-expect-error \u2014 m\u00f3dulo .mjs sem tipos; \u00e9 o SSOT do tamanho de quadro por formato\nimport { canvasFor } from \"../motion/canvas-size.mjs\";\n// A cadeia de cor da casa (curves + eq + colorbalance + unsharp + vignette). Ver P1 no encode.\nimport { GRADE_VF } from \"../motion/grade\";"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/render-scenes-montar.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:59:07)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/motion/montar-template-v2.mjs",
+  "old_string": "    case \"cutout\":\n      // `glow:false` desliga o halo ciano \u2014 marca de terceiro nunca pode receber pigmento da casa.\n      return `<div class=\"cutwrap${l.glow === false ? \" noglow\" : \"\"}\" data-leaf=\"${i}\" style=\"left:${x}px;top:${y}px\">\n        <img src=\"${esc(srcUrl(l.src))}\" alt=\"\" style=\"width:${w}px;height:auto\"></div>`;",
+  "new_string": "    case \"cutout\": {\n      // `glow:false` desliga o halo ciano \u2014 marca de terceiro nunca pode receber pigmento da casa.\n      //\n      // \u26a0\ufe0f P3 (2026-08-16) \u2014 O `cutout` S\u00d3 HONRAVA `w`. Quem declarava altura (`h`) ca\u00eda no default\n      // de 300 px e TODOS os recortes sa\u00edam do mesmo tamanho \u2014 o defeito que o Sovereign chamou de\n      // \"adesivo colado\". Medido: macro/gente h=540, fecho/massa h=560, hedge/folha h=520,\n      // ato3/mixer h=420, ato1 caneca/mic/kit h=330/460/300 \u2014 6 camadas em 5 cenas, todas a 300 px.\n      // Em ato1 os tr\u00eas props est\u00e3o em Z distintos (\u22122400/\u22122150/\u22121950) e sa\u00edam do MESMO tamanho,\n      // matando a profundidade que o motor tinha acabado de construir.\n      // Consertar no motor vacina toda cena futura; converter h\u2192w nos specs consertaria s\u00f3 hoje.\n      const sizeCss = l.w != null ? `width:${num(l.w, 300)}px;height:auto`\n        : l.h != null ? `height:${num(l.h, 200)}px;width:auto`\n        : `width:300px;height:auto`;\n      return `<div class=\"cutwrap${l.glow === false ? \" noglow\" : \"\"}\" data-leaf=\"${i}\" style=\"left:${x}px;top:${y}px\">\n        <img src=\"${esc(srcUrl(l.src))}\" alt=\"\" style=\"${sizeCss}\"></div>`;\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/motion/montar-template-v2.mjs has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:59:14)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/motion/montar-template-v2.mjs",
+  "old_string": "<div id=\"hud\">\n  <div id=\"scrim\"></div>\n  ${HUD.kick ? `<div id=\"kick\">${HUD.kick}</div>` : \"\"}\n  <div id=\"rule\" style=\"width:0px\"></div>",
+  "new_string": "<div id=\"hud\">\n  ${(HUD.kick || HUD.title1 || HUD.title2 || HUD.caption || HUD.end) ? `<div id=\"scrim\"></div>` : \"\"}\n  ${HUD.kick ? `<div id=\"kick\">${HUD.kick}</div>` : \"\"}\n  ${(HUD.kick || HUD.title1 || HUD.title2) ? `<div id=\"rule\" style=\"width:0px\"></div>` : \"\"}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/motion/montar-template-v2.mjs has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:59:29)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to add a `perspective: 2144` field to the camera object in each of the 7 specs, but first I should check if all specs actually have a camera field since some might be missing it. I'll write a script to handle this carefully, adding the perspective value to existing camera objects or creating the camera object if needed, while trying to preserve the original formatting as much as possible.
+
+Actually, there's a better approach — instead of manually editing each spec's JSON, I could have the motor compute the perspective value dynamically based on the aspect ratio, since the correct perspective depends on the canvas dimensions. The champion spec uses perspective 1689 at 1280x720, which gives a diagonal FOV of about 47°, and I can derive a formula to maintain that same viewing angle across different aspect ratios by calculating the diagonal distance and using the arctangent relationship between perspective, distance, and field of view.
+
+</details>
+
+
+## 🤖 Claude *(18:59:31)*
+
+Para o P4 vou um passo além do plano — e por um motivo que a própria régua ditou: **copie o ângulo, não o número.** Em vez de colar `2144` em 7 specs, faço o motor derivar a perspectiva do aspecto para preservar a lente de 47° do campeão em qualquer quadro:
+
+## 🤖 Claude *(18:59:40)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/motion/montar-template-v2.mjs",
+  "old_string": "const { w: W, h: H } = canvasFor(spec.aspect);\nconst D = Number(spec.duration ?? 8.0);\nconst PERSP = spec.camera?.perspective ?? 1300;",
+  "new_string": "const { w: W, h: H } = canvasFor(spec.aspect);\nconst D = Number(spec.duration ?? 8.0);\n\n// \u26a0\ufe0f P4 (2026-08-16) \u2014 A LENTE DA CASA \u00c9 UM \u00c2NGULO, N\u00c3O UM N\u00daMERO.\n// `perspective` em CSS \u00e9 uma dist\u00e2ncia em px: o mesmo valor produz \u00e2ngulos DIFERENTES em quadros de\n// tamanhos diferentes. O default fixo de 1300 vinha de um quadro 16:9; num 2.39:1 (1720x720) ele\n// abre para 71,3\u00b0 de diagonal \u2014 grande-angular de c\u00e2mera de seguran\u00e7a, que estica os planos das\n// bordas e achata a profundidade. A cena APROVADA pelo Sovereign usa 1689 em 1280x720 = 46,99\u00b0.\n// Colar 1689 aqui daria 57,8\u00b0; o valor que reproduz 47\u00b0 em 2.39:1 \u00e9 2144.\n// Ent\u00e3o derivamos a DIST\u00c2NCIA a partir do \u00c2NGULO, e a lente fica constante em qualquer formato.\nconst HOUSE_FOV_DEG = 46.99;           // a lente do campe\u00e3o 56af51b9 (pilot-adsense-montar.ts)\nconst _diagHalf = Math.hypot(W, H) / 2;\nconst PERSP_BY_ANGLE = Math.round(_diagHalf / Math.tan((HOUSE_FOV_DEG / 2) * Math.PI / 180));\nconst PERSP = spec.camera?.perspective ?? PERSP_BY_ANGLE;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/motion/montar-template-v2.mjs has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(18:59:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== a lente deriva certo? (prova aritm\u00e9tica contra o campe\u00e3o) ===\"\nnode -e '\nconst f=(W,H)=>Math.round(Math.hypot(W,H)/2/Math.tan((46.99/2)*Math.PI/180));\nconst ang=(W,H,p)=>(2*Math.atan(Math.hypot(W,H)/2/p)*180/Math.PI).toFixed(2);\nconsole.log(\"campeao  1280x720 perspective 1689  ->\", ang(1280,720,1689)+\"deg  (a referencia)\");\nconsole.log(\"derivado 1280x720                   ->\", f(1280,720), \"=\", ang(1280,720,f(1280,720))+\"deg\");\nconsole.log(\"derivado 1720x720 (2.39:1)          ->\", f(1720,720), \"=\", ang(1720,720,f(1720,720))+\"deg\");\nconsole.log(\"default ANTIGO 1300 em 1720x720     ->\", ang(1720,720,1300)+\"deg  <- a grande-angular que achatava tudo\");\n'\necho; echo \"=== sintaxe dos 2 arquivos tocados ===\"\nnode --check scripts/motion/montar-template-v2.mjs && echo \"montar-template-v2.mjs OK \u2705\"\nnpx tsc -p tsconfig.app.json --noEmit 2>&1 | head -5; echo \"tsc-app: sem sa\u00edda acima = 0 erros \u2705\"",
+  "description": "Provar a deriva\u00e7\u00e3o da lente e a sintaxe",
+  "timeout": 240000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === a lente deriva certo? (prova aritmética contra o campeão) ===
+> campeao  1280x720 perspective 1689  -> 46.99deg  (a referencia)
+> derivado 1280x720                   -> 1689 = 46.99deg
+> derivado 1720x720 (2.39:1)          -> 2145 = 46.98deg
+> default ANTIGO 1300 em 1720x720     -> 71.29deg  <- a grande-angular que achatava tudo
+> 
+> === sintaxe dos 2 arquivos tocados ===
+> montar-template-v2.mjs OK ✅
+> tsc-app: sem saída acima = 0 erros ✅
+> ```
+
+## 🤖 Claude *(19:00:35)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The derivation matches the champion's result at 1280x720 and comes within a rounding error at 1720x720. Now I'm rendering the pilot episode with over 1200 frames, but I need to make sure the output directory is properly set since the default points to an invalid location. Band B also patches something in P5 that I need to account for.
+
+I'm kicking off the pilot render in the background with nice priority while I apply the Band B patches in parallel. Let me launch the render command using the full path to bun and run it as a background process.
+
+</details>
+
+
+## 🤖 Claude *(19:00:37)*
+
+Lente derivada bate **exatamente** com o campeão (1689 → 46,99°) e corrige o 2.39:1 de 71,29° para 46,98°. O default antigo era uma grande-angular de câmera de segurança.
+
+Disparando o **piloto** (`ep07-gancho`, 1.234 frames) em background enquanto aplico a Banda B:
+
+## 🤖 Claude *(19:00:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nOUT=/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2\nmkdir -p \"$OUT\"\nexport PATH=\"/home/ubuntu/.bun/bin:$PATH\"\necho \"bun: $(command -v bun || echo AUSENTE)\"\nnice -n 10 ionice -c3 bun run scripts/ep07/render-scenes-montar.ts \"$OUT\" --only=ep07-gancho 2>&1 | tail -25",
+  "description": "Renderizar a cena piloto",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: b88juehj2. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/tasks/b88juehj2.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> Session cwd remains /home/gcrUX/htdocs/constellation-orchestra; directory changes made by the backgrounded command do not apply to subsequent commands.
+> ```
+
+## 🤖 Claude *(19:00:46)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm running the pilot render and applying Band B to it. Looking at the spec files, I found several issues: P5 shows a critical mismatch where the splitbar is 50/50 but the label says 45/55, P7 has eight illegible stamps that need focus stations added, P8 ends with an empty frame, and P6 has two empty chips in the hedge data. Let me examine the relevant spec sections to understand what needs fixing.
+
+</details>
+
+
+## 🤖 Claude *(19:00:46)*
+
+Piloto renderizando. Aplicando a **Banda B** — começando pelo defeito mais grave, um gráfico que contradiz o próprio rótulo:
+
+## 🤖 Claude *(19:00:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== ato2: splitbar (contexto) ===\"; python3 -c \"\nimport json\nd=json.load(open('scripts/ep07/scenes/ep07-ato2-adsense.spec.json'))\nfor i,l in enumerate(d.get('layers',[])):\n    if l.get('kind')=='splitbar': print(i, json.dumps(l,ensure_ascii=False))\n\"\necho; echo \"=== hedge: splitbar ===\"; python3 -c \"\nimport json\nd=json.load(open('scripts/ep07/scenes/ep07-estrutura-hedge.spec.json'))\nfor i,l in enumerate(d.get('layers',[])):\n    if l.get('kind')=='splitbar': print(i, json.dumps(l,ensure_ascii=False))\n\"\necho; echo \"=== como o motor l\u00ea splitbar ===\"; grep -n \"splitbar\" -A 12 scripts/motion/montar-template-v2.mjs | grep -E \"lv|rv|splitAt|value|case \\\"splitbar\\\"\" | head -10",
+  "description": "Inspecionar o splitbar que mente"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ato2: splitbar (contexto) ===
+> 2 {"id": "split", "kind": "splitbar", "plane": "forma", "x": 0, "y": -60, "in": [5.65, 6.55], "out": [18.65, 19.75], "w": 1180, "barH": 92, "title": "cada real de anúncio que o vídeo gera", "left": {"label": "45%", "name": "fica no YouTube"}, "right": {"label": "55%", "name": "chega ao canal"}, "caption": "support.google.com/youtube/answer/72902"}
+> 
+> === hedge: splitbar ===
+> 1 {"id": "split", "kind": "splitbar", "plane": "split", "x": 0, "y": -60, "w": 980, "barH": 78, "title": "do que entra por anúncio", "left": {"label": "45%", "name": "fica no YouTube"}, "right": {"label": "55%", "name": "chega ao canal"}, "caption": "support.google.com/youtube/answer/72902", "in": [11.34, 12.4], "out": [19.6, 20.8]}
+> 
+> === como o motor lê splitbar ===
+> 209:    case "splitbar":
+> 268:    split: l.kind === "splitbar" ? { lv: num(l.left?.value, 50), rv: num(l.right?.value, 50), at: l.splitAt ?? [1.0, 2.2] } : null,
+> ```
+
+## 🤖 Claude *(19:01:00)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm seeing a mismatch in the spec — the labels declare 45%/55% split but the motor defaults to a 50/50 value when none is provided, so the visual bar contradicts what the labels claim. There's also a timing issue where the animation runs at 1.0-2.2 seconds but the layer doesn't enter until later.
+
+The fix is straightforward: add explicit `value` fields matching the percentages and adjust the `splitAt` timing to align with when each layer actually enters — for ato2 that's [6.55, 7.75] after its entry window, and for hedge it's [12.4, 13.6]. I'm going to write a script to update the JSON while being careful about preserving the file's formatting, so I'll check the raw structure first before deciding whether to use a full JSON dump or targeted string replacements.
+
+</details>
+
+
+## 🤖 Claude *(19:01:00)*
+
+Confirmado, e é pior do que parece: o motor lê `left.value` com **default 50** (`:268`), então a barra desenha **50/50** enquanto o rótulo diz **45%/55%**. E a animação roda em `t=1,0–2,2 s`, mas a camada só entra em `5,65 s` — anima antes de existir. Vendo o formato bruto para corrigir sem reformatar o arquivo:
+
+## 🤖 Claude *(19:01:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n '\"left\"\\|\"right\"\\|\"kind\": \"splitbar\"\\|\"splitAt\"' scripts/ep07/scenes/ep07-ato2-adsense.spec.json scripts/ep07/scenes/ep07-estrutura-hedge.spec.json",
+  "description": "Formato bruto das linhas do splitbar"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> scripts/ep07/scenes/ep07-estrutura-hedge.spec.json:117:      "kind": "splitbar",
+> scripts/ep07/scenes/ep07-estrutura-hedge.spec.json:124:      "left": {
+> scripts/ep07/scenes/ep07-estrutura-hedge.spec.json:128:      "right": {
+> scripts/ep07/scenes/ep07-ato2-adsense.spec.json:159:      "kind": "splitbar",
+> scripts/ep07/scenes/ep07-ato2-adsense.spec.json:174:      "left": {
+> scripts/ep07/scenes/ep07-ato2-adsense.spec.json:178:      "right": {
+> ```
+
+## 🤖 Claude *(19:01:04)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/scenes/ep07-ato2-adsense.spec.json",
+  "offset": 170,
+  "limit": 16
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 170	      ],
+> 171	      "w": 1180,
+> 172	      "barH": 92,
+> 173	      "title": "cada real de anúncio que o vídeo gera",
+> 174	      "left": {
+> 175	        "label": "45%",
+> 176	        "name": "fica no YouTube"
+> 177	      },
+> 178	      "right": {
+> 179	        "label": "55%",
+> 180	        "name": "chega ao canal"
+> 181	      },
+> 182	      "caption": "support.google.com/youtube/answer/72902"
+> 183	    },
+> 184	    {
+> 185	      "id": "s_prod",
+> ```
+
+## 🤖 Claude *(19:01:12)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/scenes/ep07-ato2-adsense.spec.json",
+  "old_string": "      \"left\": {\n        \"label\": \"45%\",\n        \"name\": \"fica no YouTube\"\n      },\n      \"right\": {\n        \"label\": \"55%\",\n        \"name\": \"chega ao canal\"\n      },\n      \"caption\": \"support.google.com/youtube/answer/72902\"",
+  "new_string": "      \"left\": {\n        \"label\": \"45%\",\n        \"value\": 45,\n        \"name\": \"fica no YouTube\"\n      },\n      \"right\": {\n        \"label\": \"55%\",\n        \"value\": 55,\n        \"name\": \"chega ao canal\"\n      },\n      \"splitAt\": [6.55, 7.75],\n      \"caption\": \"support.google.com/youtube/answer/72902\""
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/scenes/ep07-ato2-adsense.spec.json has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:01:15)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/scenes/ep07-estrutura-hedge.spec.json",
+  "offset": 120,
+  "limit": 16
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 120	      "y": -60,
+> 121	      "w": 980,
+> 122	      "barH": 78,
+> 123	      "title": "do que entra por anúncio",
+> 124	      "left": {
+> 125	        "label": "45%",
+> 126	        "name": "fica no YouTube"
+> 127	      },
+> 128	      "right": {
+> 129	        "label": "55%",
+> 130	        "name": "chega ao canal"
+> 131	      },
+> 132	      "caption": "support.google.com/youtube/answer/72902",
+> 133	      "in": [
+> 134	        11.34,
+> 135	        12.4
+> ```
+
+## 🤖 Claude *(19:01:20)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/scenes/ep07-estrutura-hedge.spec.json",
+  "old_string": "      \"left\": {\n        \"label\": \"45%\",\n        \"name\": \"fica no YouTube\"\n      },\n      \"right\": {\n        \"label\": \"55%\",\n        \"name\": \"chega ao canal\"\n      },\n      \"caption\": \"support.google.com/youtube/answer/72902\",",
+  "new_string": "      \"left\": {\n        \"label\": \"45%\",\n        \"value\": 45,\n        \"name\": \"fica no YouTube\"\n      },\n      \"right\": {\n        \"label\": \"55%\",\n        \"value\": 55,\n        \"name\": \"chega ao canal\"\n      },\n      \"splitAt\": [12.4, 13.6],\n      \"caption\": \"support.google.com/youtube/answer/72902\","
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/scenes/ep07-estrutura-hedge.spec.json has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:01:31)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The real issue with `splitbar` defaulting to 50/50 when no value is provided goes deeper than just fixing the spec — it's about the motor refusing to render a splitbar without explicit values declared, because a chart that fabricates its own data undermines everything this channel should deliver.
+
+I should add a fatal guard that triggers before the first frame if `left.value` and `right.value` aren't explicitly set, using the same `__fatal` mechanism that already handles broken assets. That's a clean, low-cost safeguard. I could also validate that percentage labels match their values, but that might be over-engineering — the core requirement is that values must be declared.
+
+Let me check how the `__fatal` mechanism works and implement the guard, keeping an eye on the pilot render time.
+
+</details>
+
+
+## 🤖 Claude *(19:01:32)*
+
+O `splitbar` inventar 50/50 quando falta o dado é da mesma família do `2800000,0 tri` do EP06: **default silencioso que vira mentira em quadro**. Patch de spec conserta hoje; vou vacinar o motor:
+
+## 🤖 Claude *(19:01:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== mecanismo __fatal (o que j\u00e1 mata antes do frame 1) ===\"; grep -n \"__fatal\" scripts/motion/montar-template-v2.mjs | head -8\necho; echo \"=== progresso do piloto ===\"\ntail -6 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/tasks/b88juehj2.output 2>/dev/null || echo \"(sem sa\u00edda ainda)\"\necho; echo \"load: $(cut -d' ' -f1-3 /proc/loadavg)\"",
+  "description": "Mecanismo fatal e progresso do piloto"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === mecanismo __fatal (o que já mata antes do frame 1) ===
+> 606:  // G5 (A43 §18): asset quebrado NUNCA vira frame com buraco — vira __fatal antes do frame 1.
+> 607:  // O runner espera (__ready || __fatal) e aborta com a lista dos assets mortos.
+> 623:    if(bad.length){ window.__fatal='assets nao carregaram: '+bad.join(' , '); return; }
+> 
+> === progresso do piloto ===
+> bun: /home/ubuntu/.bun/bin/bun
+> 
+> load: 2.20 1.55 1.21
+> ```
+
+## 🤖 Claude *(19:01:41)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Pilot's running smoothly with a load of 2.20. I need to add a build-time validation for the splitbar honesty guard in the motor — checking that any splitbar layer has both left.value and right.value defined, and erroring out if not. I'll add this check alongside the existing focus.stations validation around line 103.
+
+</details>
+
+
+## 🤖 Claude *(19:01:41)*
+
+Piloto rodando, load 2,20 (bem abaixo do limiar 8). Adicionando o guard de honestidade no motor:
+
+## 🤖 Claude *(19:01:42)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/motion/montar-template-v2.mjs",
+  "offset": 104,
+  "limit": 18
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 104	  // motivado k e um ganho adimensional, tipicamente 40-120. Ligar sem re-tunar k reprova no
+> 105	  // gate de ">=3 planos de desfoque distintos" — e reprovar em silencio e o defeito que a
+> 106	  // linhagem toda combate.
+> 107	  motivated: spec.focus?.motivated === true,
+> 108	};
+> 109	if (FOCUS.motivated && spec.focus?.k == null) {
+> 110	  console.error("focus.motivated exige focus.k explicito — o k do modo antigo nao transfere (unidade diferente).");
+> 111	  process.exit(2);
+> 112	}
+> 113	for (const [, pid] of FOCUS.stations) {
+> 114	  if (!(pid in PLANES)) { console.error(`focus.stations aponta plano inexistente: ${pid}`); process.exit(2); }
+> 115	}
+> 116	
+> 117	const LAYERS = spec.layers ?? [];
+> 118	for (const l of LAYERS) {
+> 119	  if (!(l.plane in PLANES)) { console.error(`layer ${l.id ?? "?"} aponta plano inexistente: ${l.plane}`); process.exit(2); }
+> 120	}
+> 121	const HUD = spec.hud ?? {};
+> ```
+
+## 🤖 Claude *(19:01:55)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/motion/montar-template-v2.mjs",
+  "old_string": "const LAYERS = spec.layers ?? [];\nfor (const l of LAYERS) {\n  if (!(l.plane in PLANES)) { console.error(`layer ${l.id ?? \"?\"} aponta plano inexistente: ${l.plane}`); process.exit(2); }\n}",
+  "new_string": "const LAYERS = spec.layers ?? [];\nfor (const l of LAYERS) {\n  if (!(l.plane in PLANES)) { console.error(`layer ${l.id ?? \"?\"} aponta plano inexistente: ${l.plane}`); process.exit(2); }\n}\n\n// \u2500\u2500 G-HONESTIDADE (2026-08-16) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// Um gr\u00e1fico NUNCA pode inventar o pr\u00f3prio dado. O `splitbar` lia `left.value`/`right.value` com\n// DEFAULT 50 (ver :268): spec sem `value` desenhava uma barra 50/50 embaixo de um r\u00f3tulo que dizia\n// \"45%\" e \"55%\". O quadro contradizia a pr\u00f3pria legenda, e nenhum gate acusava \u2014 mesma fam\u00edlia do\n// \"2800000,0 tri\" que o EP06 imprimiu. Dado ausente agora \u00e9 ERRO, n\u00e3o \u00e9 meio-a-meio.\n// Quando o r\u00f3tulo \u00e9 percentual, ele TEM que bater com o valor: r\u00f3tulo \u00e9 promessa, valor \u00e9 desenho.\nfor (const l of LAYERS) {\n  if (l.kind !== \"splitbar\") continue;\n  const id = l.id ?? \"?\";\n  for (const lado of [\"left\", \"right\"]) {\n    const v = l[lado]?.value;\n    if (v == null || !Number.isFinite(Number(v))) {\n      console.error(`splitbar ${id}: ${lado}.value ausente \u2014 grafico nao inventa dado. Declare o numero que a barra desenha (o rotulo \"${l[lado]?.label ?? \"\"}\" NAO e o dado).`);\n      process.exit(2);\n    }\n    const rotulo = String(l[lado]?.label ?? \"\").match(/^\\s*(\\d+(?:[.,]\\d+)?)\\s*%\\s*$/);\n    if (rotulo) {\n      const pct = Number(rotulo[1].replace(\",\", \".\"));\n      if (Math.abs(pct - Number(v)) > 0.01) {\n        console.error(`splitbar ${id}: ${lado}.label diz \"${l[lado].label}\" mas ${lado}.value desenha ${v} \u2014 o quadro contradiria a legenda.`);\n        process.exit(2);\n      }\n    }\n  }\n}"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/motion/montar-template-v2.mjs has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:02:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnode --check scripts/motion/montar-template-v2.mjs && echo \"sintaxe OK \u2705\"\necho; echo \"=== o guard funciona nos DOIS sentidos? ===\"\nT=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/guardtest\nmkdir -p $T\n# 1) spec CORRIGIDA deve PASSAR\nnode scripts/motion/montar-template-v2.mjs scripts/ep07/scenes/ep07-ato2-adsense.spec.json $T/ok.html >/dev/null 2>$T/e1; echo \"ato2 corrigida -> exit $? $(head -1 $T/e1)\"\n# 2) spec SEM value deve FALHAR\npython3 -c \"\nimport json\nd=json.load(open('scripts/ep07/scenes/ep07-ato2-adsense.spec.json'))\nfor l in d['layers']:\n    if l.get('kind')=='splitbar': l['left'].pop('value',None)\njson.dump(d,open('$T/sem-value.spec.json','w'),ensure_ascii=False)\n\"\nnode scripts/motion/montar-template-v2.mjs $T/sem-value.spec.json $T/bad.html >/dev/null 2>$T/e2; echo \"sem value      -> exit $? | $(head -1 $T/e2)\"\n# 3) r\u00f3tulo MENTINDO deve FALHAR\npython3 -c \"\nimport json\nd=json.load(open('scripts/ep07/scenes/ep07-ato2-adsense.spec.json'))\nfor l in d['layers']:\n    if l.get('kind')=='splitbar': l['left']['value']=70\njson.dump(d,open('$T/mente.spec.json','w'),ensure_ascii=False)\n\"\nnode scripts/motion/montar-template-v2.mjs $T/mente.spec.json $T/bad2.html >/dev/null 2>$T/e3; echo \"rotulo mentindo-> exit $? | $(head -1 $T/e3)\"",
+  "description": "Provar o guard de honestidade nos dois sentidos"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> sintaxe OK ✅
+> 
+> === o guard funciona nos DOIS sentidos? ===
+> ato2 corrigida -> exit 0 
+> sem value      -> exit 2 | splitbar split: left.value ausente — grafico nao inventa dado. Declare o numero que a barra desenha (o rotulo "45%" NAO e o dado).
+> rotulo mentindo-> exit 2 | splitbar split: left.label diz "45%" mas left.value desenha 70 — o quadro contradiria a legenda.
+> ```
+
+## 🤖 Claude *(19:02:12)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The bidirectional guard is working as intended. Let me check how the pilot render is progressing, then I'll apply P7 since that addresses the Sovereign's specific concern about the permanent blur effect. First, I need to see what the render output shows.
+
+</details>
+
+
+## 🤖 Claude *(19:02:12)*
+
+Guard provado nos três sentidos: spec correta passa, spec sem dado morre, rótulo mentindo morre. Vendo o piloto:
+
+## 🤖 Claude *(19:02:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/tasks/b88juehj2.output 2>/dev/null | tail -15\necho \"--- frames j\u00e1 escritos ---\"\nls repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-gancho/frames/ 2>/dev/null | wc -l\necho \"load: $(cut -d' ' -f1-3 /proc/loadavg)\"",
+  "description": "Progresso do render piloto"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> bun: /home/ubuntu/.bun/bin/bun
+> --- frames já escritos ---
+> 110
+> load: 2.16 1.62 1.25
+> ```
+
+## 🤖 Claude *(19:02:27)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The render is progressing at about 591 ms per frame, so the full sequence should take around 12 minutes. While that's running, I'm looking into P7 and whether adding 9 focus stations to the stamp layers is actually the right approach, or if there's a better solution to the illegibility issue in ato2.
+
+The core problem is that the text stamps sit on a plane that never comes into focus, so they blur at 10px and become unreadable. Focus stations would pull focus to them at the right moments, which aligns with the reference grammar principle that information-bearing layers must reach focus. The plan has exact timings for these stations, so I'll apply them now since it's a straightforward fix and the pilot render is the priority anyway.
+
+</details>
+
+
+## 🤖 Claude *(19:02:27)*
+
+110/1234 frames, load 2,16 — saudável. Aplicando o **P7**, que é literalmente a sua queixa: 8 selos que nunca ficam legíveis no ATO 2:
+
+## 🤖 Claude *(19:02:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 -c \"\nimport json\nd=json.load(open('scripts/ep07/scenes/ep07-ato2-adsense.spec.json'))\nprint('focus atual:', json.dumps(d.get('focus',{}),ensure_ascii=False))\nprint()\nprint('planos:', json.dumps(d.get('planes',{}),ensure_ascii=False))\nprint()\nprint('camadas kind=stamp e seus planos:')\nfor i,l in enumerate(d.get('layers',[])):\n    if l.get('kind')=='stamp':\n        print(' ',i,l.get('id'),'plane=',l.get('plane'),'in=',l.get('in'),'txt=',(l.get('t1') or l.get('text') or '')[:40])\n\"",
+  "description": "Estado do foco e dos selos no ATO 2"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> focus atual: {"stations": [[0, "fundo"], [1.36, "gente"], [5.65, "forma"], [23.02, "marca"], [24.81, "forma"], [46.48, "selo"], [55.39, "gente"], [65.76, "marca"]], "k": 95, "maxBlur": 10}
+> 
+> planos: {"grid": -4200, "fundo": -3200, "gente": -2600, "forma": -1800, "selo": -1350, "marca": -1000}
+> 
+> camadas kind=stamp e seus planos:
+>   1 s_vende plane= selo in= [2.96, 3.86] txt= o YouTube vende por você
+>   3 s_prod plane= selo in= [13.67, 14.57] txt= a proporção desenha o produto
+>   4 s_preco plane= selo in= [18.62, 19.52] txt= não briga por preço
+>   5 s_qtd plane= selo in= [20.54, 21.44] txt= briga por quantidade
+>   6 s_tempo plane= marca in= [23.02, 23.92] txt= e quantidade é TEMPO
+>   9 s_estoque plane= selo in= [39.02, 39.92] txt= o estoque não expira
+>   10 s_meses plane= selo in= [44.93, 45.83] txt= servido meses depois
+>   14 s_trab plane= marca in= [50.14, 51.04] txt= o trabalho acontece uma vez
+>   15 s_venda plane= marca in= [52.44, 53.34] txt= a venda se repete
+>   17 s_corta plane= marca in= [58.92, 59.82] txt= é por isso que ninguém corta
+>   18 s_fim plane= marca in= [65.76, 66.66] txt= o formato longo é o produto
+> ```
+
+## 🤖 Claude *(19:02:46)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm working through the depth-of-field calculations for each stamp by verifying the focus plane data. I have the plane depths, the focus stations with their corresponding z-values, and I'm setting up the blur function to compute how much each stamp should be blurred based on its distance from the focal plane.
+
+For the selo stamps specifically, I'm interpolating the focus depth at each stamp's on-screen position and calculating the resulting blur. The first stamp (s_vende) comes out heavily blurred at 8.25px, confirming the perícia's claim, but s_prod is actually readable at only 0.41px blur. Rather than blindly applying fixes to all nine stations, I should compute the actual blur for each stamp and only correct the ones that genuinely fall below legibility thresholds—that's the more disciplined approach.
+
+I'm going to write a reusable gate script that reads the spec, builds the focus depth curve from stations, and then evaluates every information-bearing layer (stamps, chips, data, splitbars, counters, titles) to find which ones never reach readable focus across their visible window. This becomes the legibility gate that directly serves the principle of not trusting mechanical gates blindly.
+
+Writing the gate script...
+
+</details>
+
+
+## 🤖 Claude *(19:02:47)*
+
+Antes de aplicar 9 estações de foco cegamente, vou **calcular** quais selos estão realmente ilegíveis — a própria perícia prega não consertar o que não está quebrado. Preciso replicar o `focusZ(t)` do motor com exatidão:
+
+## 🤖 Claude *(19:02:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"function focusZ\" -A 14 scripts/motion/montar-template-v2.mjs\necho \"--- dof ---\"; grep -n \"function dof\" -A 8 scripts/motion/montar-template-v2.mjs",
+  "description": "Replicar focusZ e dof com exatid\u00e3o"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 466:  function focusZ(t){
+> 467-    var S=C.focus.stations;
+> 468-    var f=C.planes[S[0][1]];
+> 469-    for(var i=1;i<S.length;i++){
+> 470-      var a=S[i][0], b=a+0.8;
+> 471-      f += (C.planes[S[i][1]]-f)*smooth(seg(t,a,b));
+> 472-    }
+> 473-    return f;
+> 474-  }
+> 475-
+> 476-  var cam=document.getElementById('cam');
+> 477-  var weaveEl=document.getElementById('weave');
+> 478-  var planeEls={};
+> 479-  [].slice.call(document.querySelectorAll('[data-plane]')).forEach(function(el){ planeEls[el.getAttribute('data-plane')]=el; });
+> 480-  var leafEls={};
+> --- dof ---
+> 531:    function dof(z){
+> 532-      if(!C.focus.motivated) return clamp(Math.abs(z-fz)/C.focus.k,0,C.focus.maxBlur);
+> 533-      var dz=P-(cz+z), df=P-(cz+fz);
+> 534-      if(dz<=1||df<=1) return C.focus.maxBlur;
+> 535-      return clamp(C.focus.k*Math.abs(1/df-1/dz)*P,0,C.focus.maxBlur);
+> 536-    }
+> 537-
+> 538-    var gIn=smooth(seg(t,0,C.fades.in)), gOut=smooth(seg(t,D-C.fades.out,D));
+> 539-    var G=gIn*(1-gOut);
+> ```
+
+## 🤖 Claude *(19:02:55)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I see now that focusZ isn't a simple linear interpolation—it's a cumulative smooth blend where each station contributes an eased transition over 0.8 seconds, applied sequentially on top of the previous value. I need to find the `smooth` and `seg` functions, then write a gate script that replicates this exact behavior.
+
+</details>
+
+
+## 🤖 Claude *(19:02:56)*
+
+O `focusZ` não é interpolação linear — é uma **mistura cumulativa** com transições suavizadas de 0,8 s. Replicar isso à mão erraria. Pegando as funções exatas para o gate:
+
+## 🤖 Claude *(19:03:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"function smooth\\|function seg\\|function clamp\\|function num\" -A 3 scripts/motion/montar-template-v2.mjs | head -24\necho \"=== progresso piloto ===\"; ls repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-gancho/frames/ 2>/dev/null | wc -l; echo \"de 1234 \u00b7 load $(cut -d' ' -f1 /proc/loadavg)\"",
+  "description": "Fun\u00e7\u00f5es de easing do motor"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 446:  function smooth(x){ return x<=0?0:x>=1?1:x*x*(3-2*x); }
+> 447-  function spring(x){ return x<=0?0:x>=1?1:1-Math.exp(-6*x)*Math.cos(9*x); }
+> 448:  function clamp(v,a,b){ return v<a?a:v>b?b:v; }
+> 449:  function seg(t,a,b){ return clamp((t-a)/(b-a),0,1); }
+> 450-  function win(t,a,b,c,d){ return ease(seg(t,a,b))*(1-smooth(seg(t,c,d))); }
+> 451-
+> 452-  // A trilha e [t,x,y,z] em toda parte (o parser normaliza o legado [t,z] para x=0,y=0).
+> === progresso piloto ===
+> 150
+> de 1234 · load 2.75
+> ```
+
+## 🤖 Claude *(19:03:41)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/gate-legibilidade.mjs",
+  "content": "#!/usr/bin/env node\n// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// MCORCH \u2014 GATE G-LEGIBILIDADE (anticorpo do parecer Sovereign de 2026-08-16)\n//\n// O PARECER QUE GEROU ISTO, textual:\n//   \"o \u00faltimo ainda n\u00e3o ficou bom, voc\u00ea acabou parecendo cansado pois n\u00e3o surpreendeu e teve\n//    v\u00e1rios erros de BLUR PERMANENTES QUE N\u00c3O D\u00c1 LEITURA NUNCA do que surgiu na tela\"\n//\n// O DEFEITO: o motor MONTAR desfoca cada camada por dof(z)=clamp(|z-fz|/k, 0, maxBlur), onde fz \u00e9 o\n// Z do plano em foco no instante t. Uma camada cujo plano NUNCA vira esta\u00e7\u00e3o de foco nasce borrada\n// e morre borrada. Se ela carrega texto ou n\u00famero, o espectador nunca l\u00ea \u2014 e NENHUM gate mec\u00e2nico\n// existente acusa: bitrate fica alto (borr\u00e3o em movimento tem bitrate alto), frames \u00fanicos ficam em\n// 100%, dura\u00e7\u00e3o fica certa. Os gates mediam a grandeza errada; s\u00f3 o olho pegava.\n//\n// O QUE ESTE GATE MEDE: para cada camada PORTADORA DE INFORMA\u00c7\u00c3O, o desfoque M\u00cdNIMO que ela atinge\n// durante sua janela em cena. Se ela nunca desce do limiar, o render falha ANTES de gastar CPU.\n//\n// Replica focusZ(t) do motor EXATAMENTE (montar-template-v2.mjs:466-474) \u2014 que n\u00e3o \u00e9 interpola\u00e7\u00e3o\n// linear entre esta\u00e7\u00f5es, e sim uma mistura CUMULATIVA com transi\u00e7\u00f5es suavizadas de 0,8 s. Calcular\n// \"na m\u00e3o\" com interpola\u00e7\u00e3o linear d\u00e1 respostas erradas; foi por isso que virou c\u00f3digo.\n//\n// Uso:\n//   node scripts/qa/gate-legibilidade.mjs <spec.json> [--limiar=2.0] [--json]\n//   node scripts/qa/gate-legibilidade.mjs scripts/ep07/scenes/*.spec.json\n// Sa\u00edda: exit 0 = todas leg\u00edveis \u00b7 exit 1 = h\u00e1 camada que nunca fica leg\u00edvel \u00b7 exit 2 = erro de uso\n// \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nimport { readFileSync } from \"node:fs\";\n\nconst args = process.argv.slice(2);\nconst files = args.filter((a) => !a.startsWith(\"--\"));\nconst LIMIAR = Number(args.find((a) => a.startsWith(\"--limiar=\"))?.slice(9) ?? 2.0);\nconst JSON_OUT = args.includes(\"--json\");\nif (!files.length) { console.error(\"uso: gate-legibilidade.mjs <spec.json...> [--limiar=2.0]\"); process.exit(2); }\n\n// Kinds que CARREGAM INFORMA\u00c7\u00c3O \u2014 se sa\u00edrem borrados o espectador perde conte\u00fado, n\u00e3o est\u00e9tica.\nconst PORTADORES = new Set([\"stamp\", \"chip\", \"data\", \"splitbar\", \"counter\", \"quote\", \"title\", \"label\", \"list\", \"table\"]);\n// Kinds decorativos: desfoque neles \u00e9 correto e desej\u00e1vel (\u00e9 o que constr\u00f3i profundidade).\nconst DECORATIVOS = new Set([\"cutout\", \"slab\", \"sheet\", \"grid\", \"nebula\", \"glowdot\", \"particles\", \"rule\"]);\n\n// \u2500\u2500 replica\u00e7\u00e3o exata do motor \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst clamp = (v, a, b) => (v < a ? a : v > b ? b : v);\nconst seg = (t, a, b) => clamp((t - a) / (b - a), 0, 1);\nconst smooth = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));\n\nfunction focusZAt(t, stations, planes) {\n  let f = planes[stations[0][1]];\n  for (let i = 1; i < stations.length; i++) {\n    const a = stations[i][0], b = a + 0.8;           // :470 \u2014 a transi\u00e7\u00e3o dura 0,8 s\n    f += (planes[stations[i][1]] - f) * smooth(seg(t, a, b));   // :471 \u2014 cumulativa, n\u00e3o linear\n  }\n  return f;\n}\n\nlet houveFalha = false;\nconst relatorio = [];\n\nfor (const file of files) {\n  let spec;\n  try { spec = JSON.parse(readFileSync(file, \"utf8\")); }\n  catch (e) { console.error(`${file}: JSON invalido \u2014 ${e.message}`); process.exit(2); }\n\n  const planes = spec.planes ?? {};\n  const stations = spec.focus?.stations ?? [[0, Object.keys(planes)[0]]];\n  const k = Number(spec.focus?.k ?? 80);\n  const maxBlur = Number(spec.focus?.maxBlur ?? 11);\n  const D = Number(spec.duration ?? 0);\n  const layers = spec.layers ?? [];\n\n  const achados = [];\n  for (const l of layers) {\n    const kind = l.kind ?? \"?\";\n    if (!PORTADORES.has(kind)) continue;\n    const z = planes[l.plane];\n    if (z == null) continue;\n\n    // Janela em que a camada est\u00e1 de fato em cena. `in`/`out` s\u00e3o [inicio, fim] das transi\u00e7\u00f5es;\n    // a janela PLENAMENTE vis\u00edvel vai do fim da entrada ao in\u00edcio da sa\u00edda \u2014 \u00e9 ali que o\n    // espectador tem chance real de ler.\n    const inicio = Array.isArray(l.in) ? Number(l.in[1]) : 0;\n    const fim = Array.isArray(l.out) ? Number(l.out[0]) : D;\n    if (!(fim > inicio)) continue;\n\n    let minBlur = Infinity, tMin = inicio;\n    for (let t = inicio; t <= fim; t += 1 / 30) {          // amostra por frame a 30 fps\n      const b = clamp(Math.abs(z - focusZAt(t, stations, planes)) / k, 0, maxBlur);\n      if (b < minBlur) { minBlur = b; tMin = t; }\n    }\n\n    const veredito = minBlur <= LIMIAR ? \"LEGIVEL\" : minBlur <= LIMIAR * 2 ? \"MARGINAL\" : \"NUNCA LEGIVEL\";\n    if (veredito !== \"LEGIVEL\") {\n      achados.push({\n        id: l.id ?? \"?\", kind, plane: l.plane, z,\n        janela: `${inicio.toFixed(2)}-${fim.toFixed(2)}s`,\n        blur_min_px: Number(minBlur.toFixed(2)),\n        em_t: Number(tMin.toFixed(2)),\n        veredito,\n        texto: String(l.t1 ?? l.text ?? l.title ?? \"\").slice(0, 46),\n      });\n    }\n  }\n\n  const nunca = achados.filter((a) => a.veredito === \"NUNCA LEGIVEL\");\n  if (nunca.length) houveFalha = true;\n  relatorio.push({ cena: file.split(\"/\").pop(), total_portadores: layers.filter((l) => PORTADORES.has(l.kind)).length, achados });\n\n  if (!JSON_OUT) {\n    const nome = file.split(\"/\").pop();\n    if (!achados.length) {\n      console.log(`\u2705 ${nome} \u2014 todas as camadas portadoras de informacao atingem foco (<= ${LIMIAR}px)`);\n    } else {\n      console.log(`${nunca.length ? \"\u274c\" : \"\u26a0\ufe0f \"} ${nome} \u2014 ${nunca.length} NUNCA LEGIVEL, ${achados.length - nunca.length} marginal (limiar ${LIMIAR}px, maxBlur ${maxBlur}, k ${k})`);\n      for (const a of achados) {\n        const icone = a.veredito === \"NUNCA LEGIVEL\" ? \"  \u274c\" : \"  \u26a0\ufe0f \";\n        console.log(`${icone} ${a.id.padEnd(12)} ${a.kind.padEnd(9)} plano ${a.plane.padEnd(7)} z=${String(a.z).padStart(6)} \u00b7 em cena ${a.janela.padEnd(16)} \u00b7 melhor foco ${String(a.blur_min_px).padStart(6)}px em t=${a.em_t}s`);\n        if (a.texto) console.log(`      \"${a.texto}\"`);\n      }\n      if (nunca.length) {\n        const planosEmFoco = [...new Set(stations.map((s) => s[1]))];\n        const planosOrfaos = [...new Set(nunca.map((a) => a.plane))].filter((p) => !planosEmFoco.includes(p));\n        console.log(`      \u2192 planos que NUNCA entram em foco: ${planosOrfaos.length ? planosOrfaos.join(\", \") : \"(nenhum \u2014 o problema e o TEMPO das estacoes, nao a ausencia delas)\"}`);\n        console.log(`      \u2192 conserto: acrescente [t, \"<plano>\"] em focus.stations no instante em que a camada precisa ser lida`);\n      }\n    }\n  }\n}\n\nif (JSON_OUT) console.log(JSON.stringify(relatorio, null, 2));\nprocess.exit(houveFalha ? 1 : 0);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/gate-legibilidade.mjs (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:03:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nchmod +x scripts/qa/gate-legibilidade.mjs\nnode scripts/qa/gate-legibilidade.mjs scripts/ep07/scenes/*.spec.json 2>&1\necho \"\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 exit=$? (1 = h\u00e1 camada ileg\u00edvel) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\"",
+  "description": "Rodar o gate de legibilidade nas 7 cenas"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ ep07-ato1-patrocinio.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ❌ ep07-ato2-adsense.spec.json — 5 NUNCA LEGIVEL, 2 marginal (limiar 2px, maxBlur 10, k 95)
+>   ❌ s_vende      stamp     plano selo    z= -1350 · em cena 3.86-7.46s       · melhor foco   4.74px em t=6.46s
+>       "o YouTube vende por você"
+>   ❌ s_prod       stamp     plano selo    z= -1350 · em cena 14.57-18.17s     · melhor foco   4.74px em t=14.57s
+>       "a proporção desenha o produto"
+>   ❌ s_preco      stamp     plano selo    z= -1350 · em cena 19.52-22.62s     · melhor foco   4.74px em t=19.52s
+>       "não briga por preço"
+>   ❌ s_estoque    stamp     plano selo    z= -1350 · em cena 39.92-43.52s     · melhor foco   4.74px em t=39.92s
+>       "o estoque não expira"
+>   ⚠️  s_trab       stamp     plano marca   z= -1000 · em cena 51.04-54.14s     · melhor foco   3.68px em t=51.04s
+>       "o trabalho acontece uma vez"
+>   ⚠️  s_venda      stamp     plano marca   z= -1000 · em cena 53.34-56.94s     · melhor foco   3.68px em t=53.34s
+>       "a venda se repete"
+>   ❌ s_corta      stamp     plano marca   z= -1000 · em cena 59.82-62.92s     · melhor foco     10px em t=59.82s
+>       "é por isso que ninguém corta"
+>       → planos que NUNCA entram em foco: (nenhum — o problema e o TEMPO das estacoes, nao a ausencia delas)
+>       → conserto: acrescente [t, "<plano>"] em focus.stations no instante em que a camada precisa ser lida
+> ✅ ep07-ato3-audio.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ✅ ep07-estrutura-hedge.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ✅ ep07-fecho.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ✅ ep07-gancho.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ✅ ep07-macro.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ─────────── exit=1 (1 = há camada ilegível) ───────────
+> ```
+
+## 🤖 Claude *(19:04:19)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The gate filter is working well and revealing much more detail than the perícia's assessment suggested. Most scenes are clean, with only one problematic file, and in the ato2 section I'm seeing 5 completely illegible stamps plus 2 marginal ones rather than the 8-9 claimed. The worst case is `s_corta` where the blur reaches its maximum threshold, making the text essentially unreadable.
+
+What's becoming clearer is that the real issue isn't missing focus planes—they do enter focus—but rather the timing of when those focus stations activate. The pilot scene is clean, which means the photography effect will work as intended there. Now I need to adjust the focus station timing for ato2 so each stamp gets its moment of clarity during its window, adding stations strategically around the times when `s_vende`, `s_prod`, `s_preco`, `s_estoque`, `s_corta`, and the other marginal stamps appear.
+
+The tradeoff is real though: adding focus stations reshapes the entire focus choreography, and each transition takes 0.8 seconds. But the rule holds—one legible element per frame, the frame empties—so I need to interleave the stations carefully, bringing `selo` into focus when those stamps need reading, then shifting to `forma` or `marca` as the argument moves forward.
+
+The problem emerges around 55.39 where `gente` would pull focus but `s_venda` is still running until 56.94, creating a conflict between what should be readable and what's actually on screen.
+
+I need to verify this timing against the gate logic — that's the reliable way to check rather than eyeballing the numbers. Let me apply the updated stations list and run through the validation again. So the pattern is to start pulling focus about 0.8 seconds before each layer becomes fully visible, ensuring it's sharp by the time it enters. I'm mapping this out for all the elements—vende, prod, estoque, trab, corta, and the splitbar—then building the complete animation sequence. Now I'm checking the timing window for that readable segment and then verifying everything with the gate before moving on to check the pilot's progress.
+
+</details>
+
+
+## 🤖 Claude *(19:04:21)*
+
+O gate deu um diagnóstico **mais preciso que a perícia**: não são 8 selos, são **5 ilegíveis + 2 marginais, todos numa única cena** — e as outras 6 estão limpas. Melhor ainda, refinou a causa: os planos *entram* em foco; o defeito é o **tempo** das estações.
+
+O pior é exatamente a frase de fecho do ato: *"é por isso que ninguém corta"* a **10px de blur** — o teto máximo, borrão puro. Corrigindo por medição, não por chute:
+
+## 🤖 Claude *(19:04:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 - <<'PY'\nimport json,re\np='scripts/ep07/scenes/ep07-ato2-adsense.spec.json'\ns=open(p).read()\nd=json.loads(s)\nantigo=d['focus']['stations']\n# Cada estacao entra ~0.8s ANTES da camada estar plenamente em cena, para que ela ja nasca nitida\n# (a transicao de foco do motor dura 0.8s \u2014 montar-template-v2.mjs:470).\nnovo=[[0,\"fundo\"],[1.36,\"gente\"],\n      [3.06,\"selo\"],    # s_vende  \"o YouTube vende por voce\"\n      [5.75,\"forma\"],   # splitbar 45/55 \u2014 o argumento do ato\n      [13.77,\"selo\"],   # s_prod / s_preco / s_qtd (mesmo plano, o foco permanece)\n      [23.02,\"marca\"],  # s_tempo (ja existia)\n      [24.81,\"forma\"],  # volta pra forma (ja existia)\n      [39.12,\"selo\"],   # s_estoque / s_meses\n      [50.24,\"marca\"],  # s_trab / s_venda\n      [55.39,\"gente\"],  # respiro no personagem (ja existia)\n      [59.02,\"marca\"],  # s_corta \"e por isso que ninguem corta\"  <- estava a 10px, o teto\n      [65.76,\"marca\"]]  # s_fim (ja existia)\nd['focus']['stations']=novo\nprint(\"estacoes:\",len(antigo),\"->\",len(novo))\nopen(p,'w').write(json.dumps(d,ensure_ascii=False,indent=2)+\"\\n\")\nPY\necho; node scripts/qa/gate-legibilidade.mjs scripts/ep07/scenes/ep07-ato2-adsense.spec.json; echo \"exit=$?\"",
+  "description": "Corrigir o tempo das esta\u00e7\u00f5es de foco do ATO 2"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> estacoes: 8 -> 12
+> 
+> ✅ ep07-ato2-adsense.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> exit=0
+> ```
+
+## 🤖 Claude *(19:04:35)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The ATO 2 is clean now. I need to check the pilot render progress, then integrate the gate into the pipeline as a pre-flight check so it can't be skipped. The file got reformatted with expanded arrays, which is noisy in the diff but functionally fine. Let me verify the pilot first.
+
+</details>
+
+
+## 🤖 Claude *(19:04:36)*
+
+ATO 2 limpo. Verificando o piloto e depois ligando o gate no runner para que ele não possa ser pulado:
+
+## 🤖 Claude *(19:04:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== piloto ===\"; tail -8 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/tasks/b88juehj2.output 2>/dev/null\nD=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-gancho\necho \"frames: $(ls $D/frames 2>/dev/null | wc -l) / 1234 \u00b7 load $(cut -d' ' -f1 /proc/loadavg)\"\nls -la $D/*.mp4 2>/dev/null || echo \"(mp4 ainda n\u00e3o)\"",
+  "description": "Progresso do piloto"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === piloto ===
+> bun: /home/ubuntu/.bun/bin/bun
+> frames: 239 / 1234 · load 2.68
+> (mp4 ainda não)
+> ```
+
+## 🤖 Claude *(19:04:49)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+We're at frame 239 out of 1234, still working toward the critical frame 566 where Chromium previously crashed. I'm going to integrate the legibility gate into the render pipeline as a pre-flight check per scene—if it fails, skip rendering and log the failure rather than wasting CPU time on unreadable content. Now I need to update the render-scenes-montar.ts file to wire this in.
+
+I'll call the gate script using execFileSync to check its exit code, running it right after the spec loads and duration validation passes.
+
+</details>
+
+
+## 🤖 Claude *(19:04:50)*
+
+239/1234 — ainda não cruzou o frame 566, que é onde o chromium morria. Enquanto isso, ligando o gate no runner para que ninguém queime 20 min de CPU numa cena ilegível:
+
+## 🤖 Claude *(19:04:58)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/render-scenes-montar.ts",
+  "old_string": "    if (!Number.isFinite(dur) || dur <= 0) { failures.push(`${name}: duration invalida (${spec.duration}) \u2014 o t dos beats vem do ffprobe da narracao, nunca de estimativa`); continue; }",
+  "new_string": "    if (!Number.isFinite(dur) || dur <= 0) { failures.push(`${name}: duration invalida (${spec.duration}) \u2014 o t dos beats vem do ffprobe da narracao, nunca de estimativa`); continue; }\n\n    // \u2500\u2500 G-LEGIBILIDADE (2026-08-16) \u2014 ANTES de gastar CPU, n\u00e3o depois \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n    // O parecer do Sovereign: \"v\u00e1rios erros de blur permanentes que n\u00e3o d\u00e1 leitura NUNCA do que\n    // surgiu na tela\". Camada portadora de informa\u00e7\u00e3o cujo plano nunca entra em foco no tempo certo\n    // nasce e morre borrada \u2014 e Gb (bitrate) e Gf (frames \u00fanicos) passam VERDES por cima disso,\n    // porque borr\u00e3o em movimento tem bitrate alto. Renderizar 20 minutos para descobrir no olho \u00e9\n    // o desperd\u00edcio que este gate existe para matar.\n    try {\n      execFileSync(\"node\", [join(REPO, \"scripts/qa/gate-legibilidade.mjs\"), join(SCENES_DIR, sf)], { stdio: \"inherit\" });\n    } catch {\n      failures.push(`${name}: G-LEGIBILIDADE \u2014 ha camada com informacao que NUNCA fica legivel. Ajuste focus.stations e rode de novo (nenhum frame foi gasto).`);\n      continue;\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/render-scenes-montar.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(19:05:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nnpx tsc -p tsconfig.app.json --noEmit 2>&1 | head -5; echo \"tsc-app \u2705 (sem sa\u00edda = 0 erros)\"\necho; echo \"=== piloto ===\"\nD=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-gancho\necho \"frames: $(ls $D/frames 2>/dev/null | wc -l) / 1234\"\ntail -3 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/tasks/b88juehj2.output 2>/dev/null\necho \"load $(cut -d' ' -f1-3 /proc/loadavg) \u00b7 sentinela: $(wc -l < /home/ubuntu/logs/mcorch-load-sentinel.log 2>/dev/null || echo 0) linhas (0 = nunca disparou)\"",
+  "description": "Validar tipos e acompanhar o piloto",
+  "timeout": 240000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> tsc-app ✅ (sem saída = 0 erros)
+> 
+> === piloto ===
+> frames: 297 / 1234
+> bun: /home/ubuntu/.bun/bin/bun
+> load 3.37 2.39 1.63 · sentinela: 0 linhas (0 = nunca disparou)
+> ```
+
+## 🤖 Claude *(19:06:16)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm seeing 297 frames rendering smoothly with a manageable load of 3.37, well below the threshold. Let me calculate the actual frame rate from the timestamps and then provide the Sovereign with a status update on the progress made so far, including the Band A patches that have been applied.
+
+The critical issue is that all 7 scenes are currently in the REPROVED density band—after the patches, we're at 4.83 seconds per event versus the champion's 1.33 and the approved floor of 1.80. This is the decision point that needs to surface now rather than waiting until 19h, since it determines whether we can post today.
+
+I'm reconsidering how density should be calculated though. The plan treats it arithmetically based on onsets, but density really encompasses all layer events—births, exits, focus pulls, camera beats. If each layer generates multiple events, the actual density picture might be different from what the plan assumes.
+
+Let me measure density consistently across both definitions: births only versus births plus exits. For ato2 with 19 layers, if we count exits too, that's 38 events across 66.56 seconds, landing at 1.75 s/evt—right at the approved floor. The champion stays roughly 2.6× denser either way, so the comparison holds regardless of which definition we use.
+
+The real situation is that after all the fixes, we're still at 4.83 s/evt against the 1.80 floor—below target. But the two reproved scenes had issues beyond just density: the photography and blur defects. We've now addressed those with better grading, lens work, and legibility. The Sovereign's feedback focused on motion and design quality, not density alone. The pilot will show empirically whether the photography improvements change the verdict, so I shouldn't prejudge the outcome. Time to report status and let the pilot run its course.
+
+I need to check how long the pilot will take to finish—let me estimate the frame rate from file timestamps to get a completion time.
+
+</details>
+
+
+## 🤖 Claude *(19:06:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nD=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-gancho/frames\nN1=$(ls $D | wc -l); sleep 20; N2=$(ls $D | wc -l)\nRATE=$(echo \"scale=2; ($N2-$N1)/20\" | bc)\nREST=$(echo \"scale=0; (1234-$N2)/$RATE/60\" | bc 2>/dev/null)\necho \"frames $N1 \u2192 $N2 em 20s = $RATE f/s\"\necho \"faltam $((1234-N2)) frames \u2248 ${REST} min\"\necho \"cruzou o frame 566 (onde o chromium morria)? $([ $N2 -gt 566 ] && echo 'SIM \u2705' || echo 'ainda n\u00e3o')\"",
+  "description": "Medir a taxa real de render"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> frames 318 → 333 em 20s = .75 f/s
+> faltam 901 frames ≈ 20 min
+> cruzou o frame 566 (onde o chromium morria)? ainda não
+> ```
+
+## 🤖 Claude *(19:07:09)*
+
+Piloto em 333/1234 a 0,75 f/s — **faltam ~20 min**, e o teste crítico (frame 566, onde o chromium morria) vem em ~5 min. Load 3,4, sentinela nunca disparou. Status do que já mudou:
+
+## O veredito da perícia: **SIM, o caminho por spec perdia capacidade — em silêncio**
+
+Nove capacidades do motor sem default seguro. Cinco degradavam para um **número errado**, duas para **no-op**, duas para **artefato em quadro**. Nada lançava erro. Nas palavras do relatório: *"o silêncio é o produto"*. É a explicação inteira do "acerta uma e erra três".
+
+**Banda A — aplicada, vale para as 7 cenas:**
+
+| Patch | O que estava acontecendo |
+|---|---|
+| **Graduação** | O encode saía **sem `-vf GRADE_VF`**, e como `grade.ts:55` marca `montarScene` como pré-graduado, o montador não graduava depois. **Toda cena nascia e morria crua** — sem lift no preto, sem vinheta, sem unsharp. A diferença de fotografia entre o campeão e os reprovados era uma linha de código. |
+| **Lente** | Nenhuma spec declarava `perspective` → default 1300 num quadro 2.39:1 = **71,29° de diagonal**, grande-angular de câmera de segurança que achata a profundidade. Fiz o motor **derivar a distância do ângulo**: agora reproduz os 46,99° do campeão em qualquer formato (confere: 1280×720 → 1689, o valor exato dele). |
+| **Cortina órfã** | `#scrim` e `#rule` eram emitidos **fora de qualquer condicional** — toda cena sem HUD abria com cortina preta sobre 64% da largura e um traço ciano sobre nada por ~3,8 s, com o primeiro personagem entrando **debaixo** dela. |
+| **Escala do recorte** | `cutout` só honrava `w`. Quem declarava altura caía em 300 px — **6 camadas em 5 cenas**, todas do mesmo tamanho. No ato1 os três props estão em Z diferentes e saíam idênticos, matando a profundidade que o motor tinha acabado de construir. Consertei no motor, não nos specs: vacina toda cena futura. |
+
+## Dois gates novos, porque os antigos mediam a grandeza errada
+
+**G-HONESTIDADE** — o `splitbar` lia `left.value` com **default 50**. As specs declaravam rótulo "45%" e "55%" mas nenhum valor: a barra desenhava **50/50 embaixo de uma legenda que dizia 45/55**. O quadro contradizia a própria fonte citada. Agora dado ausente é erro fatal, e rótulo percentual que não bate com o valor também. Provado nos três sentidos.
+
+**G-LEGIBILIDADE** — mede o blur **mínimo** que cada camada portadora de informação atinge na sua janela. Ele foi mais preciso que a perícia: não eram 8 selos, eram **5 ilegíveis + 2 marginais, numa única cena** — as outras 6 estavam limpas. E refinou a causa: os planos *entram* em foco, o defeito era o **tempo** das estações. O pior era a frase de fecho do ato — *"é por isso que ninguém corta"* — a **10 px**, o teto máximo de desfoque, borrão puro. Corrigi por medição: 8 → 12 estações, gate agora verde. Está ligado dentro do runner: cena ilegível não gasta um frame de CPU.
+
+## A decisão que vai ser sua, e prefiro te dar agora que às 19h
+
+A perícia mediu a densidade das 7 cenas contra a régua da casa. Mesmo com todos os patches, o episódio fecha em **4,83 s por evento** — contra **1,33 do campeão** e **1,80 do piso que você aprovou**. A melhor cena empata exatamente com o ATO 2 que você já rejeitou.
+
+Traduzindo sem rodeio: **consertei a fotografia e a legibilidade; não consertei o ritmo.** Densificar até 1,80 exigiria +164 camadas — reescrever o episódio, não é tarefa de tarde.
+
+O piloto existe justamente para responder empiricamente se a fotografia corrigida muda o seu veredito, já que sobre o campeão você disse "em questão de **motion e design** ficou muito bom". Te mostro em ~20 min e aí você decide entre postar hoje com a fotografia do campeão e o ritmo abaixo da régua, ou segurar para densificar. Não vou tomar essa decisão no seu lugar.
+
+## 👤 User *(19:23:15)*
+
+<task-notification>
+<task-id>b88juehj2</task-id>
+<tool-use-id>toolu_01KuZNv624tiUUhHWGARkgCw</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/tasks/b88juehj2.output</output-file>
+<status>completed</status>
+<summary>Background command "Renderizar a cena piloto" completed (exit code 0)</summary>
+</task-notification>
+
+## 🤖 Claude *(19:23:23)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The pilot render finished successfully, so I'm checking the output file and verifying the MP4 is valid. I'll extract some frames and visually inspect them to make sure everything looks right before delivering the final result.
+
+</details>
+
+
+## 🤖 Claude *(19:23:23)*
+
+Piloto terminou com exit 0. Verificando materialmente antes de dizer qualquer coisa:
+
+## 🤖 Claude *(19:23:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/tasks/b88juehj2.output 2>/dev/null | tail -20\necho \"\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\"\nD=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-gancho\nls -la $D/*.mp4 2>/dev/null\necho \"--- ffprobe ---\"\nffprobe -v error -select_streams v:0 -show_entries stream=width,height,r_frame_rate,nb_frames,bit_rate -show_entries format=duration,size -of default=nw=1 \"$D/ep07-gancho.mp4\" 2>/dev/null\necho \"--- frames escritos ---\"; ls $D/frames 2>/dev/null | wc -l",
+  "description": "Verificar o MP4 do piloto"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   Metadata:
+>     major_brand     : isom
+>     minor_version   : 512
+>     compatible_brands: isomiso2avc1mp41
+>     encoder         : Lavf60.16.100
+>   Stream #0:0(und): Video: png, rgb24(pc, gbr/unknown/unknown, progressive), 1152x483, q=2-31, 200 kb/s, 3.33 fps, 3.33 tbn (default)
+>     Metadata:
+>       handler_name    : VideoHandler
+>       vendor_id       : [0][0][0][0]
+>       encoder         : Lavc60.31.102 png
+> [image2 @ 0xb25483654090] The specified filename '/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-gancho/contact.png' does not contain an image sequence pattern or a pattern is invalid.
+> [image2 @ 0xb25483654090] Use a pattern such as %03d for an image sequence or use the -update option (with -frames:v 1 if needed) to write a single image.
+> frame=    0 fps=0.0 q=-0.0 size=       0kB time=00:00:00.00 bitrate=N/A speed=   0x    
+[out#0/image2 @ 0xb254835b3ba0] video:291kB audio:0kB subtitle:0kB other streams:0kB global headers:0kB muxing overhead: unknown
+> frame=    1 fps=0.3 q=-0.0 Lsize=N/A time=00:00:00.00 bitrate=N/A speed=   0x    
+> ep07-gancho: bit_rate=3282830 · unicos=100.0% · /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-gancho/ep07-gancho.mp4
+> 
+> 1/1 cenas renderizadas → /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2
+> ✅ gates mecanicos verdes em todas as cenas — falta o gate OCULAR (contact sheets).
+> 
+> [exited with code 0]
+> ═══════════════════
+> -rw-rw-r-- 1 ubuntu gcrUX 16865543 Aug 16 16:22 repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-gancho/ep07-gancho.mp4
+> --- ffprobe ---
+> width=2580
+> height=1080
+> r_frame_rate=30/1
+> bit_rate=3279906
+> nb_frames=1233
+> duration=41.100000
+> size=16865543
+> --- frames escritos ---
+> 1233
+> ```
+
+## 🤖 Claude *(19:23:37)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The pilot rendered all 1233 frames successfully, breaking through the previous crash point at frame 566, with correct aspect ratio and a bitrate of 3.28 Mbps—about 3.4 times higher than expected, which aligns with the grade being applied. Now I need to visually inspect the output to verify quality, following the principle of always doing vision QA on renders and creative assets rather than relying solely on technical metrics.
+
+I'll extract a sample of frames spread across the 41-second duration at reduced resolution to examine them. I also noticed a bug in the contact sheet generation—the ffmpeg call failed because it couldn't find an image sequence pattern—so that artifact won't be available for review, which is worth documenting and fixing.
+
+</details>
+
+
+## 🤖 Claude *(19:23:39)*
+
+Piloto **completo e íntegro**:
+
+- **1.233 frames** — cruzou o frame 566, onde o chromium morria sempre. O fix de ontem nunca tinha rodado numa cena longa; agora rodou.
+- **2580×1080** (2.39:1 correto, não mais descartado para 16:9)
+- **bitrate 3.279.906** contra os 964k da versão anterior — 3,4× mais, consistente com a graduação sendo aplicada de fato
+- 100% de frames únicos · 41,10 s
+
+Mas gate mecânico verde já mentiu antes. Vou **olhar**:
+
+## 🤖 Claude *(19:23:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nD=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-gancho\nS=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/qa-piloto\nmkdir -p $S\n# 8 instantes espalhados pelos 41,1s\nfor t in 2 6 11 16 21 26 33 39; do\n  nice -n 10 ionice -c3 ffmpeg -threads 1 -v error -ss $t -i \"$D/ep07-gancho.mp4\" -frames:v 1 -vf \"scale=1100:-1\" -q:v 3 \"$S/t${t}s.jpg\" -y 2>/dev/null\ndone\nls -la $S/*.jpg | awk '{printf \"%s %.0f KB\\n\",$9,$5/1024}'\necho \"--- compara\u00e7\u00e3o: mesmo instante no CAMPE\u00c3O aprovado ---\"\nnice -n 10 ionice -c3 ffmpeg -threads 1 -v error -ss 6 -i \"repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas/ep07-adsense-16_9.mp4\" -frames:v 1 -vf \"scale=1100:-1\" -q:v 3 \"$S/CAMPEAO-t6s.jpg\" -y 2>/dev/null\nls -la $S/CAMPEAO-t6s.jpg 2>/dev/null | awk '{printf \"%s %.0f KB\\n\",$9,$5/1024}'",
+  "description": "Extrair frames do piloto e do campe\u00e3o para QA ocular"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/qa-piloto/t11s.jpg 18 KB
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/qa-piloto/t16s.jpg 15 KB
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/qa-piloto/t21s.jpg 22 KB
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/qa-piloto/t26s.jpg 23 KB
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/qa-piloto/t2s.jpg 8 KB
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/qa-piloto/t33s.jpg 10 KB
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/qa-piloto/t39s.jpg 11 KB
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/qa-piloto/t6s.jpg 20 KB
+> --- comparação: mesmo instante no CAMPEÃO aprovado ---
+> /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/qa-piloto/CAMPEAO-t6s.jpg 11 KB
+> ```
+
+## 🤖 Claude *(19:23:56)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/qa-piloto/t6s.jpg"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> [{'type': 'image', 'source': {'type': 'base64', 'data': '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', 'media_type': 'image/jpeg'}}]
+> ```
+
+## 🤖 Claude *(19:24:03)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Looking at the frame at t=6s, I see two cutout figures against a dark background with nebulae, and the photography has decent depth with contact shadows. The main issue is that the 2.39:1 frame has a lot of empty space on the right side — exactly the kind of lateral emptiness the plan flagged as something to evaluate. The figures have the white stroke outline that was approved, and there's no text overlay at this point. Let me check more frames to get a fuller sense of the composition.
+
+</details>
+
+
+## 🤖 Claude *(19:24:04)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/qa-piloto/CAMPEAO-t6s.jpg"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> [{'type': 'image', 'source': {'type': 'base64', 'data': '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', 'media_type': 'image/jpeg'}}]
+> ```
+
+## 🤖 Claude *(19:24:04)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/qa-piloto/t21s.jpg"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> [{'type': 'image', 'source': {'type': 'base64', 'data': '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', 'media_type': 'image/jpeg'}}]
+> ```
+
+## 🤖 Claude *(19:24:21)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Looking at the champion frame at 6 seconds, I can see it's densely packed with information—a dark background with a purple split bar showing "45% YOUTUBE," the title "CADA ANÚNCIO, REPARTIDO," and on the right side a column of decorative numbers (3.3×, 10.5M, 77%, 92.40%) that add visual depth even though they're blurred. The whole composition feels rich and occupied, with content angled along the right edge.
+
+The pilot's stronger moment comes at 21 seconds with a clean, bold "R$ 100.000.000" figure, a source pill crediting "Exame, 2026," and the subtitle about Podpah's revenue target—it's legible and honest. But at 6 seconds, the pilot just has two cutout figures standing in empty space against nebulae, which feels sparse by comparison.
+
+The real distinction is that the champion fills the frame with layered background content creating depth, while the pilot's weaker moments leave too much void. I should look at more pilot frames to make a fair overall assessment.
+
+</details>
+
+
+## 🤖 Claude *(19:24:22)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/qa-piloto/t2s.jpg"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> [{'type': 'image', 'source': {'type': 'base64', 'data': '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', 'media_type': 'image/jpeg'}}]
+> ```
+
+## 🤖 Claude *(19:24:22)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/qa-piloto/t33s.jpg"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> [{'type': 'image', 'source': {'type': 'base64', 'data': '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', 'media_type': 'image/jpeg'}}]
+> ```
+
+## 🤖 Claude *(19:24:46)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm analyzing the visual composition at different timestamps in the episode. At the 2-second mark, there's a single small figure on the left with three nebula shapes and mostly empty space—it's a sparse, intentional opening. By 33 seconds, two floating text chips appear in the left-center area describing ad and sponsorship details, with significant empty space on the right and bottom, creating a clean but honest layout.
+
+The photography itself is solid—deep blacks with lift, glowing nebulae, vignette, clean typography, and proper contact strokes on cutouts. Everything reads clearly and the source is declared. But the core issue is that the frame sits mostly empty; at 2.39:1 aspect ratio, the composition only occupies about 40% of the canvas, clustering elements left-of-center while leaving vast dead space. This is exactly what the feedback meant by "didn't surprise"—it's not a blur problem, it's a density problem. The champion design fills the frame with a background column of data in depth, whereas this one leaves too much unused space. The metrics predicted this (4.83 seconds per event), and visually it confirms what the viewer will notice.
+
+I could propose a concrete fix: adding an angled background slab with content bleeding off the right edge, similar to what the champion uses. This would fill the frame, add depth, and increase perceived density without introducing new narrative elements. The perícia warned against converting cutouts into slabs, but adding a single atmospheric background layer per scene is different—it's enhancement, not restructuring. I should present these frames to the Sovereign with an honest assessment and let them decide, along with this one concrete improvement option.
+
+But I need to remember that file attachments don't reach the Sovereign directly. The right approach is to publish the pilot to the Biblioteca using the existing publish script and then report back with my read. Let me do that and also generate a contact sheet, though the runner hit an ffmpeg pattern error on the last attempt.
+
+</details>
+
+
+## 🤖 Claude *(19:24:46)*
+
+Agora tenho um retrato honesto. Publicando na Biblioteca para você assistir (anexo de chat não te chega):
+
+## 🤖 Claude *(19:24:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nhead -30 scripts/ep07/publish-cena.ts | grep -E \"^//|argv|uso|Uso\" | head -12",
+  "description": "Uso do publicador de cena"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  * Uso: bun run scripts/ep07/publish-cena.ts <arquivo.mp4> "<título>" [--publico]
+> const MP4 = process.argv[2];
+> const TITULO = process.argv[3];
+>   console.error('uso: publish-cena.ts <arquivo.mp4> "<título>"');
+> ```
+
+## 🤖 Claude *(19:24:54)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.bun/bin:$PATH\"\nD=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-gancho\nnice -n 10 bun run scripts/ep07/publish-cena.ts \"$D/ep07-gancho.mp4\" \"EP07 GANCHO v3 \u00b7 PILOTO p\u00f3s-patch (grade + lente 47\u00b0 + scrim + G-LEG)\" 2>&1 | tail -8",
+  "description": "Publicar o piloto na Biblioteca",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ep07-gancho.mp4 · 16.87 MB · 41.1s · 2580×1080 · 3.28 Mbps
+> ✅ Biblioteca: b5cf5780-3ba2-477a-b53c-5aa86e3972d6
+>    "EP07 GANCHO v3 · PILOTO pós-patch (grade + lente 47° + scrim + G-LEG)"
+> ```
+
+## 🤖 Claude *(19:25:14)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The asset published successfully. Looking at the pilot render, it crossed frame 566 for the first time with photography and legibility issues resolved, but I'm noticing the frame sits mostly empty—about 60-75% dead space across the samples I checked. The champion version fills that space with a layered background of data, so I need to weigh my recommendation against what they should actually do here.
+
+There's also a contact-sheet bug with the ffmpeg call I found. The concrete fix is straightforward: add a background slab or data column bleeding off-frame like the champion has, which increases occupancy without needing new narration anchors. Given the time pressure (it's late afternoon and they want to post today) and their earlier message about needing help with the full episode, I'm deciding whether to just run the slab test myself in about 25 minutes or report the findings first and let them decide—but they've already signaled they want me to push forward, so I should probably test it directly rather than wait for approval.
+
+Before I commit to rendering more scenes though, I need to quickly verify whether the empty frames at t=2 and t=6 are a genuine density problem or just a composition issue—let me count the layers in the gancho spec and check its actual occupancy to sharpen my report.
+
+</details>
+
+
+## 🤖 Claude *(19:25:14)*
+
+Publicado: asset **`b5cf5780`** — *"EP07 GANCHO v3 · PILOTO pós-patch"*. Antes de te dar minha leitura, um número que decide o diagnóstico:
+
+## 🤖 Claude *(19:25:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 -c \"\nimport json\nd=json.load(open('scripts/ep07/scenes/ep07-gancho.spec.json'))\nL=d['layers']; D=d['duration']\nprint(f'gancho: {len(L)} camadas em {D}s = 1 evento a cada {D/len(L):.2f}s')\nprint(f'campeao: 9 camadas em 12s = 1 evento a cada 1.33s')\nprint()\nprint('ocupacao ao longo do tempo (quantas camadas VIVAS por instante):')\nfor t in [2,6,11,16,21,26,33,39]:\n    viv=[l for l in L if (l.get('in',[0,0])[1] if isinstance(l.get('in'),list) else 0) <= t <= (l.get('out',[D,D])[0] if isinstance(l.get('out'),list) else D)]\n    print(f'  t={t:>2}s: {len(viv)} camada(s)  ->  ' + ', '.join(f\\\"{l.get('id')}({l.get('kind')})\\\" for l in viv))\n\"",
+  "description": "Ocupa\u00e7\u00e3o real do quadro ao longo do gancho"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> gancho: 9 camadas em 41.1s = 1 evento a cada 4.57s
+> campeao: 9 camadas em 12s = 1 evento a cada 1.33s
+> 
+> ocupacao ao longo do tempo (quantas camadas VIVAS por instante):
+>   t= 2s: 0 camada(s)  ->  
+>   t= 6s: 3 camada(s)  ->  host(cutout), operador(cutout), caneca(cutout)
+>   t=11s: 4 camada(s)  ->  host(cutout), host2(cutout), operador(cutout), caneca(cutout)
+>   t=16s: 0 camada(s)  ->  
+>   t=21s: 2 camada(s)  ->  cifra(counter), cifra_src(stamp)
+>   t=26s: 2 camada(s)  ->  cifra(counter), cifra_src(stamp)
+>   t=33s: 2 camada(s)  ->  chip1(chip), chip2(chip)
+>   t=39s: 3 camada(s)  ->  chip1(chip), chip2(chip), chip3(chip)
+> ```
+
+## 🤖 Claude *(19:25:33)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+So the gancho's real problem is the pacing—it has the same number of layers as the champion but stretches them across 3.4 times longer, creating a much sparser density of 4.57 seconds per event versus 1.33. What's worse, there are dead moments at t=2s and t=16s where nothing's on screen except the nebulae backdrop, which is exactly why it feels underwhelming at the episode's opening.
+
+The fix is concrete: fill those empty gaps with layers timed to the narration cues that already exist there, add background elements to maintain visual occupancy, and tighten the holds so elements don't linger as long.
+
+</details>
+
+
+## 🤖 Claude *(19:25:36)*
+
+**Achei o "não surpreendeu", e não é a fotografia.**
+
+O gancho usa **as mesmas 9 camadas do campeão — mas espalhadas por 41,1 s em vez de 12 s.** Densidade 4,57 s/evento contra 1,33. E pior: **em t=2 s e t=16 s o quadro tem ZERO camadas vivas** — só as nebulosas. Num gancho de 41 segundos existem momentos com nada na tela. É literalmente a definição de "cansado".
+
+Vendo quanta densidade está disponível de graça nas âncoras que já foram colhidas:
+
+## 🤖 Claude *(19:25:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nK=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/narracao-v02\necho \"=== \u00e2ncoras dispon\u00edveis no GANCHO (palavras j\u00e1 casadas com o \u00e1udio) ===\"\npython3 -c \"\nimport json,glob\na=json.load(open('$K/gancho.anc.json'))\nprint(json.dumps(a,ensure_ascii=False)[:900])\n\"\necho; echo \"=== onsets (batidas detectadas) ===\"\npython3 -c \"\nimport json\no=json.load(open('$K/gancho.mp3.onsets.json'))\nprint(type(o).__name__, len(o) if hasattr(o,'__len__') else '')\nprint(json.dumps(o,ensure_ascii=False)[:400])\n\"\necho; echo \"=== texto da locu\u00e7\u00e3o do gancho ===\"; head -c 700 $K/gancho.txt",
+  "description": "\u00c2ncoras e onsets dispon\u00edveis no gancho"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === âncoras disponíveis no GANCHO (palavras já casadas com o áudio) ===
+> {"b1_simples": "simples", "b2_mesa": "mesa", "b3_tres": "três", "b4_podpah": "Podpah", "b5_primeiro": "primeiro", "b6_segundo": "segundo", "b7_terceiro": "terceiro"}
+> 
+> === onsets (batidas detectadas) ===
+> dict 2
+> {"duration": 41.116735, "onsets": {"b1_simples": 1.77, "b2_mesa": 9.65, "b3_tres": 12.23, "b4_podpah": 15.34, "b5_primeiro": 27.1, "b6_segundo": 30.03, "b7_terceiro": 33.06}}
+> 
+> === texto da locução do gancho ===
+> [confident] O formato foi desenhado para parecer simples. Dois amigos, dois microfones, uma conversa que podia estar acontecendo em qualquer cozinha do país. [short pause] Por trás dessa mesa não existe um negócio. [excited] Existem três, com contabilidades separadas. [impressed] O Grupo Podpah mira cem milhões de reais de faturamento em dois mil e vinte e seis. Não se chega lá vendendo conversa. Chega vendendo três produtos diferentes, empacotados no mesmo episódio. [confident] O primeiro é a audiência que a plataforma paga. O segundo é a audiência que o anunciante compra. O terceiro é o único que o criador controla de ponta a ponta. [short pause] Neste episódio, a conta de
+> ```
+
+## 🤖 Claude *(19:26:09)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm seeing there are 7 anchor points defined for the gancho across different timestamps, and with 9 layers in the spec, most anchors are being utilized. However, there's a timing mismatch—the layer timing doesn't account for when certain anchors should activate, like the simples anchor at 1.77 seconds and the podpah anchor at 15.34 seconds, which suggests I need to create layers at those specific points.
+
+The real insight is that the narration already exists at these anchor points—"O Grupo Podpah mira cem milhões" at 15.34 is exactly where the R$100.000.000 counter should begin—so the fix is straightforward: realign the existing layers to fire at the anchors that are already there, and add new layers at the unused anchors without needing any new narration or assets. There's also potential to add visual elements like chips at the "três" anchor (12.23) where the narration mentions "três, com contabilidades separadas," creating density at no additional cost.
+
+I need to be precise in my report to the Sovereign: this is a re-timing job using existing anchors, which is allowed and cheap, not the kind of anchor extraction that was explicitly off-limits. So I'll present the evidence—the pilot is published, photography is fixed, the dead frames are measured at t=2 and t=16, and the solution is to re-time the gancho to existing anchors and re-render in about 12 minutes, which is the fastest path to a surprising frame.
+
+I'm also noting that this same re-timing likely applies to the other 6 scenes, and the time pressure is real—it's 16:35, so a full re-render of all scenes would take roughly 1h45, making today's posting tight but possible. Since the re-timing to anchors is doctrine-aligned, objectively correct, cheap, and reversible, I'll proceed with it immediately and report what I've done rather than asking permission first. That's the right call when you have enough information and they asked for delivery today. The re-render will take about 27 minutes at the current frame rate, so I'll start that process and check the gancho spec's layer timing against the anchors to make sure the re-timing is accurate before committing to changes.
+
+</details>
+
+
+## 🤖 Claude *(19:26:13)*
+
+As âncoras estavam lá o tempo todo — **e não estão sendo usadas nos pontos mortos**:
+
+| Âncora | t | O que a narração diz | Camada nascendo ali? |
+|---|---|---|---|
+| `b1_simples` | **1,77 s** | "desenhado para parecer **simples**" | ❌ quadro vazio |
+| `b3_tres` | 12,23 s | "existem **três**, com contabilidades separadas" | ❌ |
+| `b4_podpah` | **15,34 s** | "O Grupo **Podpah** mira cem milhões" | ❌ — a cifra só entra ~19 s |
+
+O contador de R$ 100.000.000 aparece **quatro segundos depois** da palavra que o nomeia. Isso é o oposto da doutrina da casa (o beat cai na palavra falada) e é densidade grátis jogada fora. Vendo a cronologia atual para re-cravar:
+
+## 🤖 Claude *(19:26:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 -c \"\nimport json\nd=json.load(open('scripts/ep07/scenes/ep07-gancho.spec.json'))\no=json.load(open('repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/narracao-v02/gancho.mp3.onsets.json'))['onsets']\nprint('ONSETS:', ' \u00b7 '.join(f'{k}={v}' for k,v in o.items()))\nprint()\nprint(f'{\\\"id\\\":<10} {\\\"kind\\\":<9} {\\\"plano\\\":<8} in            out           vida')\nfor l in d['layers']:\n    i=l.get('in',[0,0]); ou=l.get('out',[d['duration']]*2)\n    print(f\\\"{l.get('id','?'):<10} {l.get('kind','?'):<9} {l.get('plane','?'):<8} {str(i):<13} {str(ou):<13} {ou[0]-i[1]:.1f}s\\\")\nprint()\nprint('duracao', d['duration'], '\u00b7 planos:', json.dumps(d.get('planes',{})))\n\"",
+  "description": "Cronologia atual do gancho contra os onsets"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ONSETS: b1_simples=1.77 · b2_mesa=9.65 · b3_tres=12.23 · b4_podpah=15.34 · b5_primeiro=27.1 · b6_segundo=30.03 · b7_terceiro=33.06
+> 
+> id         kind      plano    in            out           vida
+> host       cutout    host     [1.77, 2.95]  [13.1, 14.4]  10.1s
+> host2      cutout    host2    [9.65, 10.9]  [13.8, 15.1]  2.9s
+> operador   cutout    operador [2.6, 3.8]    [13.4, 14.7]  9.6s
+> caneca     cutout    caneca   [3.3, 4.4]    [13.6, 14.9]  9.2s
+> chip1      chip      chip1    [30.03, 31]   [40.2, 41.1]  9.2s
+> chip2      chip      chip2    [27.1, 28.1]  [40.2, 41.1]  12.1s
+> chip3      chip      chip3    [33.06, 34]   [40.2, 41.1]  6.2s
+> cifra      counter   cifra    [15.34, 16.6] [27.6, 29]    11.0s
+> cifra_src  stamp     cifra    [16.24, 17.8] [27.6, 29]    9.8s
+> 
+> duracao 41.1 · planos: {"grid": -4200, "fundo": -3600, "host2": -3150, "host": -2500, "caneca": -1900, "chip2": -1360, "chip1": -1300, "chip3": -1240, "cifra": -820, "operador": -2050}
+> ```
+
+## 🤖 Claude *(19:26:44)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I was wrong about the anchoring — looking back at the actual timing data, all the layers are correctly anchored to their respective blocks. The host, host2, and cifra entries all line up with their target blocks, and the chip entries are positioned exactly where they should be.
+
+My earlier claim that the counter appeared 4 seconds after the word was also incorrect — cifra enters at 15.34, right on "Podpah." When I sampled at t=16, the counter was mid-entrance, not absent. I made an error by using the "fully in" boundary as my definition and then calling it a dead frame.
+
+The real issue is that the density is genuinely low — 9 layers over 41 seconds gives 4.57 seconds per event versus the champion's 1.33 — and the layers have very long lifespans, which is what's actually creating the sparse feel. Now I'm thinking through the fixes: shortening those long holds so elements exit and get replaced, adding the champion's data column as background occupancy to fill the frame without needing more anchors, and actually using that b3_tres anchor at 12.23 when "três" is spoken. The core constraint is fitting 7 spoken anchors across a 41-second hook, which is inherently sparse.
+
+But there's a middle path I'd dismissed earlier — non-anchored events. The champion's density came from layers that didn't require narration, like that background number column. I can add atmospheric and background layers to raise the perceived richness and occupancy without inventing new spoken moments. That's a legitimate option to present.
+
+Time to write the report with the corrected diagnosis and lay out the actual choices.
+
+</details>
+
+
+## 🤖 Claude *(19:27:03)*
+
+Preciso corrigir o que acabei de dizer, porque errei a medição e isso muda o diagnóstico.
+
+**As âncoras estão certas.** O contador entra em `15,34 s`, exatamente na palavra "Podpah". O que eu chamei de "quadro vazio em t=2 e t=16" era artefato do meu próprio critério — eu contei só camadas *plenamente* entradas, e nesses dois instantes elas estavam no meio da transição de entrada. O beat cai na palavra, como a doutrina manda.
+
+O defeito real é outro, e é mais simples:
+
+| Camada | Tempo em cena |
+|---|---|
+| `chip2` | **12,1 s** |
+| `cifra` | **11,0 s** |
+| `host` | **10,1 s** |
+| `operador` / `caneca` / `chip1` | ~9,2 s cada |
+
+**Os elementos ficam 9 a 12 segundos em cena.** O campeão nasce, cumpre a função e sai. Aqui eles entram e *moram*. Com 9 camadas em 41,1 s, o quadro tem 2 a 4 objetos parados num canvas 2.39:1 — foi isso que eu vi nos frames, e é isso que a palavra "cansado" descreve com precisão.
+
+Uma âncora está mesmo ociosa: `b3_tres` em **12,23 s**, quando a narração diz *"existem **três**, com contabilidades separadas"* — e nada marca. Os três chips só aparecem aos 27-33 s, quando ela os enumera.
+
+## O que está pronto para o seu olho
+
+**`b5cf5780`** na Biblioteca — *"EP07 GANCHO v3 · PILOTO pós-patch"*. 41,1 s, 2580×1080, 1.233 frames (cruzou o frame 566 pela primeira vez).
+
+O que eu vi nos frames, com honestidade:
+- ✅ **A fotografia mudou de verdade.** Preto com lift, nebulosas, vinheta, tipografia limpa, contorno de contato nos recortes. O frame dos R$ 100.000.000 com a fonte "Exame, 2026" na pílula está bom.
+- ✅ **Zero blur permanente.** Tudo legível.
+- ❌ **O quadro está vazio.** Comparado lado a lado com o campeão no mesmo instante, ele tem uma coluna de dados ao fundo sangrando pela borda que ocupa o quadro e cria profundidade. O nosso tem duas pessoas num vazio.
+
+## A decisão, e ela é sua
+
+A perícia já tinha previsto isso em número (4,83 s/evento no episódio) e o olho confirmou. **Consertei fotografia, legibilidade e honestidade de gráfico. Não consertei o ritmo** — e o ritmo é o que separa "bom" de "campeão".
+
+Três caminhos, com custo real:
+
+1. **Postar hoje assim** — fotografia do campeão, ritmo abaixo da régua. ~2h de render restante.
+2. **Encurtar as permanências + usar a âncora ociosa** — corte cirúrgico, sem narração nova, sem asset novo. Custa ~20 min de spec + re-render do gancho (27 min) para você julgar de novo. É o melhor retorno por minuto que eu vejo.
+3. **Camadas de fundo sem âncora** (a coluna de dados do campeão) — sobem a ocupação e a profundidade sem inventar evento narrativo. É o que o campeão faz e nós não.
+
+Assista o `b5cf5780` e me diga. Se você concordar, eu já emendo o 2 com o 3 no gancho e te devolvo um segundo piloto antes de queimar CPU nas outras seis — porque renderizar seis cenas num look que você ainda não aprovou é exatamente o erro que nos custou os dois últimos episódios.
+
 ---
 
 %% --- PROJECT METADATA START --- %%

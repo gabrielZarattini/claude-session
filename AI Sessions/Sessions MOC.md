@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3686
-> * **Sessões do Claude**: 3633
+> * **Total de Sessões Registradas**: 3689
+> * **Sessões do Claude**: 3636
 > * **Sessões do Gemini**: 53
 
 ---
@@ -79,15 +79,15 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-08-16 - agent-aaecd18f644623e27]]` - *2026-08-16*
 *   `[[2026-08-16 - agent-a889d906dea25f70f]]` - *2026-08-16*
 *   `[[2026-08-16 - agent-a839600c21493a48a]]` - *2026-08-16*
+*   `[[2026-08-16 - agent-a79484061f2d6e2cd]]` - *2026-08-16*
 *   `[[2026-08-16 - agent-a6dc3192d0d7c0350]]` - *2026-08-16*
+*   `[[2026-08-16 - agent-a6baeb946f231a623]]` - *2026-08-16*
+*   `[[2026-08-16 - agent-a5ca605c6d418e96a]]` - *2026-08-16*
 *   `[[2026-08-16 - agent-a29d80649c03a35bd]]` - *2026-08-16*
 *   `[[2026-08-16 - agent-a28bcc9c545f6e5d5]]` - *2026-08-16*
 *   `[[2026-08-16 - agent-a16650614febe9b89]]` - *2026-08-16*
 *   `[[2026-08-16 - Analisar referências e corrigir renders com motion design]]` - *2026-08-16*
-*   `[[2026-08-16 - Analisar ataque em N10 e N8]]` - *2026-08-16*
-*   `[[2026-08-15 - agent-afd469895d3a324b0]]` - *2026-08-15*
-*   `[[2026-08-15 - agent-afbba987f2c36e7dc]]` - *2026-08-15*
-*   *... e mais 3628 sessões nessa categoria.*
+*   *... e mais 3631 sessões nessa categoria.*
 
 ---
 
@@ -3318,7 +3318,10 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-08-16 - agent-aaecd18f644623e27]]` (ClaudeSessions)
 *   `[[2026-08-16 - agent-a889d906dea25f70f]]` (ClaudeSessions)
 *   `[[2026-08-16 - agent-a839600c21493a48a]]` (ClaudeSessions)
+*   `[[2026-08-16 - agent-a79484061f2d6e2cd]]` (ClaudeSessions)
 *   `[[2026-08-16 - agent-a6dc3192d0d7c0350]]` (ClaudeSessions)
+*   `[[2026-08-16 - agent-a6baeb946f231a623]]` (ClaudeSessions)
+*   `[[2026-08-16 - agent-a5ca605c6d418e96a]]` (ClaudeSessions)
 *   `[[2026-08-16 - agent-a29d80649c03a35bd]]` (ClaudeSessions)
 *   `[[2026-08-16 - agent-a28bcc9c545f6e5d5]]` (ClaudeSessions)
 *   `[[2026-08-16 - agent-a16650614febe9b89]]` (ClaudeSessions)
