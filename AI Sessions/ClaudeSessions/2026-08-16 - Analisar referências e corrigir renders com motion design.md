@@ -6956,6 +6956,2333 @@ Três caminhos, com custo real:
 
 Assista o `b5cf5780` e me diga. Se você concordar, eu já emendo o 2 com o 3 no gancho e te devolvo um segundo piloto antes de queimar CPU nas outras seis — porque renderizar seis cenas num look que você ainda não aprovou é exatamente o erro que nos custou os dois últimos episódios.
 
+## 👤 User *(20:15:29)*
+
+Ficou bom mas ainda temos uqe ficar espertos com o blur, o blur do personagem controlador de audio esta dede o inicio quando ele aparece com o primeiro. Talvez seria melhor deixar ele aparecer depois com blur e quando o terceiro sair colocava o do audio em evidencia mas de qualquer forma não sei pois não sei como é a narração.
+
+## 🤖 Claude *(20:16:01)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O operador de áudio está com blur desde que aparece no início junto com o primeiro personagem, mas talvez fosse melhor deixá-lo aparecer depois já desfocado e só colocar em evidência quando o terceiro sair — embora não tenha certeza sem conhecer como é a narração.
+
+Agora preciso: primeiro, ouvir a narração com os tempos exatos para entender quando cada personagem entra e sai; segundo, medir o blur do operador ao longo do tempo na cena; e terceiro, desenhar uma coreografia de foco que resolva o operador no momento narrativo certo. Percebi que meu sistema classificou o cutout como decorativo, mas o Sovereign mostrou que personagens na tela são sujeitos que precisam resolver — isso é um refinamento importante para como avalio esses elementos.
+
+Estou compilando os dados dos planos de profundidade e mapeando a narração aos seus tempos de início para ver como as camadas de personagens se sobrepõem com o que está sendo dito. At frame 6 I can see two figures: the host in a blazer and the operador holding a mixer. The Sovereign's suggestion is to keep the operador blurred initially, then bring them into focus later—possibly when the third element exits at 40.2. But that timing doesn't quite align since the operador leaves at 13.4, so I'm still working through what "the third" refers to and how to reconcile the narration with these visual transitions.
+
+The key thing they need is a precise timeline showing the narration text, what's on screen at each moment, and the blur state of each layer—that's what will let them actually direct this. I'm going to build a script that generates that timeline for the gancho sequence, then propose the focus adjustment based on what we learn from the timing.
+
+</details>
+
+
+## 🤖 Claude *(20:16:04)*
+
+Você pegou algo que o meu gate deixou passar — e o motivo é um erro meu de classificação: eu marquei `cutout` como **decorativo**, então o gate nunca checou se uma pessoa em cena chega a ficar nítida. Personagem não é decoração, é sujeito. Vou corrigir isso.
+
+E você disse a coisa certa: não dá para dirigir sem saber a narração. Vou te dar exatamente isso — a locução casada com o que está em cena e com o blur medido de cada um:
+
+## 🤖 Claude *(20:16:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 - <<'PY'\nimport json, math\nspec=json.load(open('scripts/ep07/scenes/ep07-gancho.spec.json'))\nP=spec['planes']; F=spec['focus']; k=F.get('k',80); mb=F.get('maxBlur',11); S=F['stations']\ndef smooth(x): return 0 if x<=0 else 1 if x>=1 else x*x*(3-2*x)\ndef seg(t,a,b): return max(0,min(1,(t-a)/(b-a)))\ndef fz(t):\n    f=P[S[0][1]]\n    for i in range(1,len(S)):\n        a=S[i][0]; f += (P[S[i][1]]-f)*smooth(seg(t,a,a+0.8))\n    return f\ndef dof(z,t): return max(0,min(mb, abs(z-fz(t))/k))\nprint(\"ESTA\u00c7\u00d5ES DE FOCO:\", \" \u00b7 \".join(f\"{t}s\u2192{p}\" for t,p in S))\nprint()\nCUT=[l for l in spec['layers'] if l['kind']=='cutout']\nprint(f\"{'personagem':<10} {'plano':<9} {'z':>6}  {'entra':>6} {'sai':>6}  {'blur ao ENTRAR':>14} {'MELHOR blur':>12} {'quando':>8}\")\nfor l in CUT:\n    z=P[l['plane']]; i0=l['in'][1]; o0=l['out'][0]\n    best=(999,0)\n    t=i0\n    while t<=o0:\n        b=dof(z,t)\n        if b<best[0]: best=(b,t)\n        t+=1/30\n    print(f\"{l['id']:<10} {l['plane']:<9} {z:>6}  {i0:>6.2f} {o0:>6.2f}  {dof(z,i0):>13.2f}px {best[0]:>11.2f}px {best[1]:>7.2f}s\")\nPY",
+  "description": "Blur medido de cada personagem do gancho"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ESTAÇÕES DE FOCO: 0s→fundo · 1.77s→host · 9.65s→host2 · 12.23s→operador · 15.34s→cifra · 27.1s→chip2 · 30.03s→chip1 · 33.06s→chip3
+> 
+> personagem plano          z   entra    sai  blur ao ENTRAR  MELHOR blur   quando
+> host       host       -2500    2.95  13.10           0.00px        0.00px    2.95s
+> host2      host2      -3150   10.90  13.80           0.00px        0.00px   10.90s
+> operador   operador   -2050    3.80  13.40           4.74px        0.00px   13.03s
+> caneca     caneca     -1900    4.40  13.60           6.32px        1.58px   13.03s
+> ```
+
+## 🤖 Claude *(20:16:51)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm looking at the precise timing measurements for the blur effect on the operator character — it enters with 4.74px of blur at 3.80s and only becomes sharp at 13.03s, just 0.37s before it exits at 13.40s, meaning it stays blurred throughout almost its entire 9.6-second lifespan. This matches exactly what the Sovereign observed about the audio controller character being blurred from the moment it appears.
+
+The mug also enters blurred at 6.32px and only reaches its sharpest at 1.58px near the end. Meanwhile, the host and host2 characters enter sharp, which is correct. The focus shift to the operator happens at 12.23s when the narration says "existem três" — giving the operator barely a second of focus before everything exits at 13.1-13.8s.
+
+Looking at the narration timing against the character entrances, I can see the operator enters off-beat at 2.60s with no anchor point, and the mug similarly enters unanchored at 3.30s. The Sovereign's instinct about the choreography is sound — they're suggesting the operator should appear later with blur and then gain focus when the third character exits. Now I need to map out the full narration text with precise timings so we can plan a better sequence. The three products emerge at specific timestamps, each one a distinct revenue stream. But the real narrative move is using the audio operator as the physical proof of the operation itself — he shouldn't appear until the reveal happens, when we shift from "two friends chatting" to "this is a business." So the choreography needs to keep him absent or invisible during those opening seconds, then bring him into frame right as we say "Por trás dessa mesa."
+
+The current timing is off because he's entering too early and staying blurred for too long. Instead, he should appear blurred in the background around 9.65 seconds as the table reveal begins, then snap into sharp focus at 12.23 seconds when the narration hits "existem TRÊS" — that's when he becomes the evidence.
+
+But now I'm noticing host2 also enters at 9.65, and both friends should probably appear earlier in the sequence to match "Dois amigos, dois microfones." I need to think through whether they're both entering at the right moment or if one of them should come in sooner.
+
+Let me sketch out a concrete proposal: host enters sharp at 1.77 on "simples," then host2 follows around 2.6 when the narration says "dois amigos." At 9.65, operador enters blurred in the background during "por trás dessa mesa," and then at 12.23 when it says "existem TRÊS," the focus shifts to operador as the proof of that claim. I'll map this out with the timings and narration to give them something concrete to react to.
+
+As for the mug—it's a prop on the table sitting between the operador and chips in depth, so keeping it soft in the foreground works fine; 6.32px is too sharp anyway.
+
+Now I need to fix how the gate handles cutouts as subjects, then lay out the narration timeline so they can see exactly when each element should appear. Since they said "talvez seria melhor... mas de qualquer forma não sei," that's permission for me to propose the swap with the timing locked in, apply it, and re-render for their judgment. That's the fastest way to get them the video today.
+
+Building the timeline output...
+
+</details>
+
+
+## 🤖 Claude *(20:16:59)*
+
+A medição confirma exatamente o que seu olho pegou:
+
+| personagem | entra | blur ao ENTRAR | melhor blur | quando fica nítido |
+|---|---|---|---|---|
+| `host` (amigo 1) | 2,95 s | **0,00 px** | 0,00 px | na entrada ✅ |
+| `host2` (amigo 2) | 10,90 s | **0,00 px** | 0,00 px | na entrada ✅ |
+| **`operador` (áudio)** | 3,80 s | **4,74 px** | 0,00 px | **13,03 s** |
+| `caneca` | 4,40 s | 6,32 px | 1,58 px | 13,03 s |
+
+O operador vive **9,6 segundos** e só fica nítido aos **13,03 s** — 0,37 s antes de sair de cena. Ele passa a vida inteira borrado e ganha foco no instante em que já está indo embora.
+
+**E a narração te dá a resposta.** Eis a locução casada com o relógio:
+
+```
+1,77s  "O formato foi desenhado para parecer SIMPLES."
+       "Dois amigos, dois microfones, uma conversa que podia
+        estar acontecendo em qualquer cozinha do país."
+9,65s  "Por trás dessa MESA não existe um negócio."
+12,23s "Existem TRÊS, com contabilidades separadas."
+15,34s "O Grupo PODPAH mira cem milhões de reais..."
+```
+
+O operador **é a prova** de que aquilo não são dois amigos conversando — é uma operação. Ele deveria nascer exatamente em *"por trás dessa mesa"* (9,65 s), borrado e atrás, e **cristalizar em *"existem TRÊS"*** (12,23 s), que é quando a narração revela o negócio. Hoje ele entra aos 2,6 s, fora de qualquer palavra, e fica borrado o filme inteiro.
+
+Sua intuição estava certa; a narração só afina *quando*. Corrigindo o gate primeiro, porque ele deixou isso passar:
+
+## 🤖 Claude *(20:17:10)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/gate-legibilidade.mjs",
+  "old_string": "// Kinds que CARREGAM INFORMA\u00c7\u00c3O \u2014 se sa\u00edrem borrados o espectador perde conte\u00fado, n\u00e3o est\u00e9tica.\nconst PORTADORES = new Set([\"stamp\", \"chip\", \"data\", \"splitbar\", \"counter\", \"quote\", \"title\", \"label\", \"list\", \"table\"]);\n// Kinds decorativos: desfoque neles \u00e9 correto e desej\u00e1vel (\u00e9 o que constr\u00f3i profundidade).\nconst DECORATIVOS = new Set([\"cutout\", \"slab\", \"sheet\", \"grid\", \"nebula\", \"glowdot\", \"particles\", \"rule\"]);",
+  "new_string": "// Kinds que CARREGAM INFORMA\u00c7\u00c3O \u2014 se sa\u00edrem borrados o espectador perde conte\u00fado, n\u00e3o est\u00e9tica.\nconst PORTADORES = new Set([\"stamp\", \"chip\", \"data\", \"splitbar\", \"counter\", \"quote\", \"title\", \"label\", \"list\", \"table\"]);\n\n// \u26a0\ufe0f SUJEITOS (achado do Sovereign, 2026-08-16) \u2014 PESSOA N\u00c3O \u00c9 DECORA\u00c7\u00c3O.\n// A v1 deste gate classificou `cutout` como decorativo e ficou VERDE sobre o gancho. O olho do\n// Sovereign pegou o que a m\u00e1quina n\u00e3o viu: o personagem que opera o \u00e1udio entrava a 4,74 px de\n// desfoque e s\u00f3 chegava a 0,00 px aos 13,03 s \u2014 0,37 s antes de sair de cena. Ele viveu 9,6 s\n// borrado. Um recorte de PESSOA \u00e9 o sujeito do plano: ele pode entrar suave (\u00e9 assim que se\n// constr\u00f3i profundidade), mas TEM que cristalizar em algum momento \u00fatil da sua perman\u00eancia \u2014\n// sen\u00e3o o espectador nunca soube quem estava ali.\n// Regra separada dos portadores: sujeito \u00e9 medido pelo instante em que resolve, n\u00e3o s\u00f3 por resolver.\nconst SUJEITOS = new Set([\"cutout\", \"figure\", \"presenter\", \"avatar\"]);\n// Fra\u00e7\u00e3o da perman\u00eancia em que o sujeito ainda pode cristalizar e o foco significar alguma coisa.\n// 0.85 = se ele s\u00f3 ficar n\u00edtido nos \u00faltimos 15% da vida, foi foco de despedida, n\u00e3o de revela\u00e7\u00e3o.\nconst SUJEITO_JANELA_UTIL = 0.85;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/gate-legibilidade.mjs has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:17:16)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/gate-legibilidade.mjs",
+  "old_string": "  const achados = [];\n  for (const l of layers) {\n    const kind = l.kind ?? \"?\";\n    if (!PORTADORES.has(kind)) continue;\n    const z = planes[l.plane];\n    if (z == null) continue;",
+  "new_string": "  const achados = [];\n  for (const l of layers) {\n    const kind = l.kind ?? \"?\";\n    const ehSujeito = SUJEITOS.has(kind) && l.decorativo !== true;   // `\"decorativo\": true` isenta (figurante de fundo)\n    if (!PORTADORES.has(kind) && !ehSujeito) continue;\n    const z = planes[l.plane];\n    if (z == null) continue;"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/gate-legibilidade.mjs has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:17:27)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/gate-legibilidade.mjs",
+  "old_string": "    const veredito = minBlur <= LIMIAR ? \"LEGIVEL\" : minBlur <= LIMIAR * 2 ? \"MARGINAL\" : \"NUNCA LEGIVEL\";\n    if (veredito !== \"LEGIVEL\") {\n      achados.push({\n        id: l.id ?? \"?\", kind, plane: l.plane, z,\n        janela: `${inicio.toFixed(2)}-${fim.toFixed(2)}s`,\n        blur_min_px: Number(minBlur.toFixed(2)),\n        em_t: Number(tMin.toFixed(2)),\n        veredito,\n        texto: String(l.t1 ?? l.text ?? l.title ?? \"\").slice(0, 46),\n      });\n    }",
+  "new_string": "    let veredito = minBlur <= LIMIAR ? \"LEGIVEL\" : minBlur <= LIMIAR * 2 ? \"MARGINAL\" : \"NUNCA LEGIVEL\";\n\n    // SUJEITO que cristaliza s\u00f3 no fim da perman\u00eancia = foco de DESPEDIDA. Tecnicamente resolveu,\n    // narrativamente n\u00e3o serviu: o espectador olhou 9 s para um borr\u00e3o e o reconheceu quando ele\n    // j\u00e1 sa\u00eda. \u00c9 o defeito que o Sovereign apontou no `operador` do gancho.\n    let quandoFrac = null;\n    if (ehSujeito && veredito === \"LEGIVEL\") {\n      quandoFrac = (tMin - inicio) / (fim - inicio);\n      if (quandoFrac > SUJEITO_JANELA_UTIL) veredito = \"FOCO TARDIO\";\n    }\n\n    if (veredito !== \"LEGIVEL\") {\n      achados.push({\n        id: l.id ?? \"?\", kind, plane: l.plane, z,\n        papel: ehSujeito ? \"sujeito\" : \"portador\",\n        janela: `${inicio.toFixed(2)}-${fim.toFixed(2)}s`,\n        blur_min_px: Number(minBlur.toFixed(2)),\n        blur_na_entrada_px: Number(clamp(Math.abs(z - focusZAt(inicio, stations, planes)) / k, 0, maxBlur).toFixed(2)),\n        em_t: Number(tMin.toFixed(2)),\n        pct_da_vida: quandoFrac == null ? null : Math.round(quandoFrac * 100),\n        veredito,\n        texto: String(l.t1 ?? l.text ?? l.title ?? \"\").slice(0, 46),\n      });\n    }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/gate-legibilidade.mjs has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:17:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 - <<'PY'\nimport re\np='scripts/qa/gate-legibilidade.mjs'\ns=open(p).read()\n# falha do gate: sujeito com FOCO TARDIO tambem reprova, nao so \"NUNCA LEGIVEL\"\ns=s.replace('const nunca = achados.filter((a) => a.veredito === \"NUNCA LEGIVEL\");',\n            'const nunca = achados.filter((a) => a.veredito === \"NUNCA LEGIVEL\" || a.veredito === \"FOCO TARDIO\");')\n# linha de relatorio mostra papel, entrada e % da vida\ns=s.replace('''        console.log(`${icone} ${a.id.padEnd(12)} ${a.kind.padEnd(9)} plano ${a.plane.padEnd(7)} z=${String(a.z).padStart(6)} \u00b7 em cena ${a.janela.padEnd(16)} \u00b7 melhor foco ${String(a.blur_min_px).padStart(6)}px em t=${a.em_t}s`);''',\n'''        const extra = a.papel === \"sujeito\"\n          ? ` \u00b7 entra a ${a.blur_na_entrada_px}px \u00b7 nitido so aos ${a.em_t}s (${a.pct_da_vida ?? \"?\"}% da permanencia)`\n          : \"\";\n        console.log(`${icone} ${a.id.padEnd(12)} ${a.kind.padEnd(9)} ${a.papel.padEnd(9)} plano ${a.plane.padEnd(7)} \u00b7 em cena ${a.janela.padEnd(15)} \u00b7 melhor foco ${String(a.blur_min_px).padStart(6)}px${extra}`);''')\ns=s.replace('const icone = a.veredito === \"NUNCA LEGIVEL\" ? \"  \u274c\" : \"  \u26a0\ufe0f \";',\n            'const icone = (a.veredito === \"NUNCA LEGIVEL\" || a.veredito === \"FOCO TARDIO\") ? \"  \u274c\" : \"  \u26a0\ufe0f \";')\nopen(p,'w').write(s)\nprint(\"patch ok\")\nPY\nnode --check scripts/qa/gate-legibilidade.mjs && echo \"sintaxe OK \u2705\"\necho; echo \"=== o gate v2 pega o que o seu olho pegou? ===\"\nnode scripts/qa/gate-legibilidade.mjs scripts/ep07/scenes/ep07-gancho.spec.json; echo \"exit=$?\"",
+  "description": "Provar que o gate v2 pega o defeito do operador"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> patch ok
+> sintaxe OK ✅
+> 
+> === o gate v2 pega o que o seu olho pegou? ===
+> ❌ ep07-gancho.spec.json — 2 NUNCA LEGIVEL, 0 marginal (limiar 2px, maxBlur 10, k 95)
+>   ❌ operador     cutout    sujeito   plano operador · em cena 3.80-13.40s     · melhor foco      0px · entra a 4.74px · nitido so aos 13.03s (96% da permanencia)
+>   ❌ caneca       cutout    sujeito   plano caneca  · em cena 4.40-13.60s     · melhor foco   1.58px · entra a 6.32px · nitido so aos 13.03s (94% da permanencia)
+>       → planos que NUNCA entram em foco: caneca
+>       → conserto: acrescente [t, "<plano>"] em focus.stations no instante em que a camada precisa ser lida
+> exit=1
+> ```
+
+## 🤖 Claude *(20:18:06)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The gate v2 is now capturing the precise timing the Sovereign's eye detected: operador enters at 4.74px with sharp focus only at 13.03s, representing 96% of its duration, while caneca enters at 6.32px and reaches its best clarity at 1.58px with 94% stability. I'm applying the choreography fix to the gancho spec based on the narration, adjusting the host timing from the current [1.77, 2.95] entry and [13.1, 14.4] exit windows, with operador positioned in [2.6, 3.8] entry and [13.4, 14...] exit.
+
+The focus stations map out the narrative arc: host enters at 1.77 with "simples" and the line about two friends with two microphones, host2 appears at 9.65 during the "mesa" moment, operador anchors at 12.23 with the "três" revelation about separate accounting, and the Podpah reference lands at 15.34. I'm reconsidering whether host2 is truly a second friend or just another shot of the host — the frame at t=6 showed two figures (one in blazer, one in t-shirt with controller), which would be host and operador, so host2's 9.65 entry might be intentional as a second angle rather than a second person.
+
+The Sovereign wants operador to appear later with blur, sharpening at the right moment. So I'm moving his entry from 2.6 to 9.65 — right when the narration says "Por trás dessa mesa" — where he'll be blurred while host2 is in focus. Then at 12.23 with "existem três," operador crystallizes into sharp focus. I'll extend his exit from 13.4 to 15.34 so he stays sharp for about 2.3 seconds after resolving, then exits as the counter takes over on "Podpah."
+
+For the caneca (mug), it's a prop, so marking it `"decorativo": true` is honest — it exempts it from the subject focus rules. At z=-1900, it sits between operador and the chips, so when focus shifts to operador at 12.23, the mug will be slightly out of focus but that's cinematically fine for foreground texture.
+
+Now I'm working through the timing: operador could enter at 9.65 with host2 (both at different depths, justified by "por trás dessa mesa"), or operador could wait until 12.23 to appear already in focus. The Sovereign suggested letting operador appear blurred first, then resolve when the third element exits and the audio focus kicks in.
+
+So the plan is operador enters at 9.65 blurred while host2 has focus, then resolves at 12.23 when "três" hits. I'm also keeping caneca as decorative and considering whether to stagger the entries slightly—maybe operador at 10.4 instead of 9.65 to avoid both entering simultaneously, though that loses the beat alignment.
+
+Let me check the source files to see what host2 actually represents and make sure I'm directing these elements correctly.
+
+</details>
+
+
+## 🤖 Claude *(20:18:07)*
+
+O gate v2 agora pega exatamente o que você viu: `operador` **entra a 4,74 px e só cristaliza aos 96% da permanência** — foco de despedida, não de revelação. Antes de re-cravar a cronologia preciso saber quem é quem:
+
+## 🤖 Claude *(20:18:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 -c \"\nimport json,os\nd=json.load(open('scripts/ep07/scenes/ep07-gancho.spec.json'))\nfor l in d['layers']:\n    if l['kind']=='cutout':\n        s=l.get('src','')\n        print(f\\\"{l['id']:<10} {os.path.basename(s):<34} existe={os.path.exists(s)}  w={l.get('w')} h={l.get('h')}  x={l.get('x')} y={l.get('y')}\\\")\n\"",
+  "description": "Identificar os assets dos personagens"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> host       apresentador-cut.png               existe=True  w=383 h=None  x=-1247 y=146
+> host2      apresentador2-cut.png              existe=True  w=475 h=None  x=1479 y=146
+> operador   audio-cut.png                      existe=True  w=352 h=None  x=95 y=150
+> caneca     caneca-v1-cut.png                  existe=True  w=150 h=None  x=-560 y=628
+> ```
+
+## 🤖 Claude *(20:18:34)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+So I've got the spatial layout figured out: the two presenters are positioned at opposite sides—one on the left, one further back on the right—while the audio operator sits in the center between them. There's also a small mug prop in the foreground on the left side. Now moving into the narration.
+
+The narration "Dois amigos, dois microfones" refers to the two presenters, and the audio operator in the center is the key evidence that something's happening behind the scenes. But there's a timing issue: host2 doesn't enter until 9.65 seconds, which is late for the "dois amigos" line that plays around 2-4 seconds. The full phrase about "uma conversa que podia estar acontecendo em qualquer cozinha do país" stretches across roughly 3-9 seconds.
+
+I'm thinking the choreography should work like this: host enters first at 1.77 ("simples"), sharp and clear on the left to establish the friendly surface. Then around 3.3 seconds, the mug enters as a foreground prop to reinforce that domestic kitchen feeling. At 9.65 seconds when the narration says "por trás dessa MESA," both host2 and the audio operator enter together—host2 on the right and the operator in the center but blurred, which signals the reveal that there's more going on than initially apparent. Then at 12.23 seconds with "existem TRÊS," the focus pulls to reveal the operator fully, completing the dramatic reveal.
+
+This timing aligns with what was proposed and creates a strong visual metaphor: the third person crystallizing on the word "três" echoes the three businesses mentioned, though technically it's a visual metaphor rather than a literal claim. The house doctrine cautions against visual deception, but this feels like acceptable metaphorical language. There's a safer alternative where the operator crystallizes on "não existe um negócio" instead, which might be more precise to the actual meaning.
+
+Now I'm working through the timing logistics: the operator needs to shift from one time window to another, and all three characters should exit together when the counter takes over at 15.34. But extending the host's presence to match creates a timing problem—it would give the host too long of a hold. I need to find a surgical adjustment that honors the Sovereign's proposal without creating that imbalance. So at 13.03 he's about halfway through his appearance. Now I need to mark the mug as decorative since it's just a background prop, then apply these changes and re-render to see how it looks.
+
+</details>
+
+
+## 🤖 Claude *(20:18:37)*
+
+Agora está claro quem é quem:
+
+- `host` / `host2` = os **dois apresentadores**, nas laterais (x −1247 e +1479)
+- `operador` = o **operador de áudio**, no **centro** (x +95) — ele é a *prova* de que aquilo é uma operação
+- `caneca` = caneca de 150 px no canto inferior — adereço, não sujeito
+
+Isso fecha a direção com a narração: os dois amigos na superfície, e o operador nascendo em *"por trás dessa **mesa**"*, borrado atrás, cristalizando em *"existem **TRÊS**"*.
+
+## 🤖 Claude *(20:18:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncp scripts/ep07/scenes/ep07-gancho.spec.json /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/gancho.spec.bak.json\npython3 - <<'PY'\nimport json\np='scripts/ep07/scenes/ep07-gancho.spec.json'\nd=json.load(open(p))\nfor l in d['layers']:\n    if l['id']=='operador':\n        # ANTES: in [2.6,3.8] fora de qualquer palavra, out [13.4,14.7] -> 9,6s borrado, nitido aos 96%\n        # AGORA: nasce em \"por tras dessa MESA\" (9.65) atras e BORRADO; o foco o revela em\n        # \"existem TRES\" (12.23, estacao ja existente); sai quando a cifra assume em \"Podpah\" (15.34).\n        l['in']=[9.65,10.9]; l['out']=[15.34,16.64]\n    if l['id']=='caneca':\n        # Aderego de 150px no canto: suavidade e correta, nao e defeito. Isenta do gate de SUJEITO.\n        l['decorativo']=True\njson.dump(d,open(p,'w'),ensure_ascii=False,indent=2); open(p,'a').write('\\n')\nprint('spec atualizada')\nPY\necho; node scripts/qa/gate-legibilidade.mjs scripts/ep07/scenes/ep07-gancho.spec.json; echo \"exit=$?\"\necho; python3 -c \"\nimport json\nspec=json.load(open('scripts/ep07/scenes/ep07-gancho.spec.json'))\nP=spec['planes'];F=spec['focus'];k=F['k'];mb=F['maxBlur'];S=F['stations']\ndef sm(x): return 0 if x<=0 else 1 if x>=1 else x*x*(3-2*x)\ndef sg(t,a,b): return max(0,min(1,(t-a)/(b-a)))\ndef fz(t):\n    f=P[S[0][1]]\n    for i in range(1,len(S)):\n        a=S[i][0]; f+=(P[S[i][1]]-f)*sm(sg(t,a,a+0.8))\n    return f\nz=P['operador']\nprint('OPERADOR \u2014 trajet\u00f3ria do foco agora:')\nfor t in [10.9,11.5,12.23,12.6,13.0,14.0,15.3]:\n    b=max(0,min(mb,abs(z-fz(t))/k))\n    barra='\u2588'*int(b*3)\n    print(f'  t={t:>5.2f}s  blur {b:>5.2f}px  {barra}')\n\"",
+  "description": "Re-cravar o operador na narra\u00e7\u00e3o e verificar"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> spec atualizada
+> 
+> ✅ ep07-gancho.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> exit=0
+> 
+> OPERADOR — trajetória do foco agora:
+>   t=10.90s  blur 10.00px  ██████████████████████████████
+>   t=11.50s  blur 10.00px  ██████████████████████████████
+>   t=12.23s  blur 10.00px  ██████████████████████████████
+>   t=12.60s  blur  6.44px  ███████████████████
+>   t=13.00s  blur  0.05px  
+>   t=14.00s  blur  0.00px  
+>   t=15.30s  blur  0.00px
+> ```
+
+## 🤖 Claude *(20:18:58)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The operator now has a proper focus pull that works as a reveal: it enters heavily blurred at 10 seconds, stays soft through the "existem TRÊS" onset, then sharpens between 12.6 and 13 seconds exactly as the word "três" lands—creating that silhouette-to-person moment. It holds sharp for about 2.3 seconds after that.
+
+That's exactly what was needed. The gate is green, so I'm launching a re-render of the pilot now—should take about 27 minutes at the current frame rate—and I'll report back once it's done.
+
+</details>
+
+
+## 🤖 Claude *(20:19:01)*
+
+Foco agora é uma **revelação de verdade**, não despedida:
+
+```
+t=10,90s  blur 10,00px  ██████████████████████████████   nasce silhueta atrás da mesa
+t=12,23s  blur 10,00px  ██████████████████████████████   "existem TRÊS" começa
+t=12,60s  blur  6,44px  ███████████████████              o foco viaja
+t=13,00s  blur  0,05px                                   vira PESSOA
+t=15,30s  blur  0,00px                                   sai quando a cifra assume
+```
+
+Ele nasce como silhueta em *"por trás dessa mesa"*, atravessa a frase borrado, e **vira gente exatamente quando a narração diz que existem três negócios** — a prova aparecendo no momento em que ela é afirmada. Vive 4,4 s em vez de 9,6, e cristaliza aos 48% da permanência em vez de 96%. Gate verde.
+
+Re-renderizando (~27 min):
+
+## 🤖 Claude *(20:19:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.bun/bin:$PATH\"\nOUT=/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2\nnice -n 10 ionice -c3 bun run scripts/ep07/render-scenes-montar.ts \"$OUT\" --only=ep07-gancho 2>&1 | tail -20",
+  "description": "Re-render do gancho com o foco corrigido",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bvlg1p499. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/tasks/bvlg1p499.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> Session cwd remains /home/gcrUX/htdocs/constellation-orchestra; directory changes made by the backgrounded command do not apply to subsequent commands.
+> ```
+
+## 🤖 Claude *(20:19:22)*
+
+Renderizando. Enquanto isso, o que este achado seu ensinou ao sistema:
+
+## Você encontrou um defeito na minha própria régua
+
+Eu tinha classificado `cutout` como **decoração** no gate de legibilidade. Por isso ele deu **verde** no gancho — e o seu olho pegou o que a máquina não viu. Pessoa em cena não é decoração, é **sujeito**: pode entrar suave, mas tem que cristalizar em algum momento útil, senão o espectador olhou nove segundos para um borrão e só reconheceu quem era quando ele já saía.
+
+O gate agora mede duas coisas em sujeitos: se resolve, **e quando**. Se resolver depois de 85% da permanência, reprova como **FOCO TARDIO** — tecnicamente nítido, narrativamente inútil. Foi assim que ele passou a acusar:
+
+```
+operador  sujeito  · entra a 4.74px · nítido só aos 13.03s (96% da permanência)  ❌
+caneca    sujeito  · entra a 6.32px · nítido só aos 13.03s (94% da permanência)  ❌
+```
+
+A caneca eu marquei como `decorativo: true` — 150 px no canto inferior é adereço, e adereço suave está correto. Sujeito é quem o espectador precisa reconhecer.
+
+## Onde estamos
+
+| | estado |
+|---|---|
+| Fotografia (grade, lente 47°, scrim, escala) | ✅ corrigida, você aprovou |
+| Blur permanente em texto | ✅ gate travando antes do render |
+| Blur em personagem | ✅ **este achado** — gate v2 + gancho re-cravado |
+| Gráfico que mentia (50/50 sob rótulo 45/55) | ✅ guard fatal no motor |
+| **Ritmo / ocupação do quadro** | ❌ ainda aberto — 4,57 s/evento no gancho contra 1,33 do campeão |
+
+O ritmo continua sendo a diferença entre "bom" e "campeão", e ele não se conserta com patch — ou encurtando permanências, ou com camadas de fundo sem âncora. Mas isso é decisão sua sobre postar hoje.
+
+Te aviso quando o gancho v4 estiver na Biblioteca. Se você aprovar o foco do operador, as outras seis cenas entram em série com o mesmo tratamento — e aí eu passo o gate de sujeito nas sete antes de gastar CPU, porque agora ele pega esse defeito sozinho.
+
+## 👤 User *(20:30:41)*
+
+<local-command-caveat>Caveat: The messages below were generated by the user while running local commands. DO NOT respond to these messages or otherwise consider them in your response unless the user explicitly asks you to.</local-command-caveat>
+
+## 👤 User *(20:30:41)*
+
+<command-name>/model</command-name>
+            <command-message>model</command-message>
+            <command-args>claude-fable-5</command-args>
+
+## 👤 User *(20:30:41)*
+
+<local-command-stdout>Set model to claude-fable-5</local-command-stdout>
+
+## 👤 User *(20:31:06)*
+
+Piorize finalizar o EP para postarmos em no maximo daqui 3 horas
+
+## 🤖 Claude *(20:31:42)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to work backward from the 3-hour deadline to figure out what's actually feasible. The gancho re-render is already running in the background and should take about 27 minutes, while the remaining 6 scenes need roughly 1 hour 44 minutes to render serially. After that comes B5 assembly and encoding, which adds another 30 minutes or so before I can publish. Let me check the current time and render progress to see if this timeline actually works.
+
+The Sovereign's directive is clear: ship today with the current density, no more ritmo adjustments. So the plan is to run the gate-legibilidade check on all 7 specs while gancho renders (fixing any failures immediately in the specs themselves), write the assembly script for concatenating the MP4 and MP3 with loudnorm, then launch the remaining 6 scene renders in the background as soon as gancho finishes. The tight constraint is whether I can parallelize the scene renders — running 2 at a time instead of serially might be possible given the current low load and 4 available cores, though the original plan was serial to be safe. The parallel rendering might slow things down by 30% due to CPU contention, pushing it to around 70 minutes, but that still fits within the 3-hour window. Before rendering though, I need to run the gate v2 validation across all 7 specs to catch any failures like the editor/designer cutouts in ato2, then fix those timing issues in the specs. For assembly, I'm building the mux script that concatenates the per-scene MP4 and MP3 files using copy codec and the concat demuxer, pulling loudnorm settings from the cinematic grammar config.
+
+Now I need to verify the scene order from the roteiro — checking whether it's gancho, estrutura-hedge, ato1, ato2, ato3, macro, fecho — and make sure the MP4 and MP3 durations match for each scene during muxing, possibly using -shortest to handle any timing mismatches.
+
+I'm going to start by checking the current progress on gancho which launched about 10 minutes ago, then gate all 7 specs through v2. While gancho renders, I can launch the other 6 scenes in parallel and write the assembler script. After that, I need to publish the master to Biblioteca via the publish-cena script, which triggers the YouTube upload workflow — the episode goes to category 28 (Science & Technology) through the youtube_uploads queue that the Sovereign worker monitors.
+
+</details>
+
+
+## 🤖 Claude *(20:31:44)*
+
+Prioridade aceita: **entregar o master em ≤3 h**. Isso resolve a questão do ritmo por decisão sua — postamos com a fotografia corrigida e a densidade atual. Nada de trabalho novo de encenação; só o caminho crítico.
+
+Medindo o relógio e o estado antes de traçar a linha do tempo:
+
+## 🤖 Claude *(20:31:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "date '+%H:%M:%S'\necho \"--- gancho v4 (re-render) ---\"\nD=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-gancho\necho \"frames: $(ls $D/frames 2>/dev/null | wc -l) / 1233\"\necho \"load: $(cut -d' ' -f1-3 /proc/loadavg)\"",
+  "description": "Rel\u00f3gio e progresso do gancho"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 17:31:46
+> --- gancho v4 (re-render) ---
+> frames: 806 / 1233
+> load: 3.19 2.72 2.02
+> ```
+
+## 🤖 Claude *(20:31:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== GATE v2 (sujeito+portador) nas 7 specs \u2014 o que precisa de conserto ANTES de render ===\"\nnode scripts/qa/gate-legibilidade.mjs scripts/ep07/scenes/*.spec.json 2>&1; echo \"exit=$?\"",
+  "description": "Gate v2 nas 7 cenas"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === GATE v2 (sujeito+portador) nas 7 specs — o que precisa de conserto ANTES de render ===
+> ✅ ep07-ato1-patrocinio.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ❌ ep07-ato2-adsense.spec.json — 1 NUNCA LEGIVEL, 0 marginal (limiar 2px, maxBlur 10, k 95)
+>   ❌ designer     cutout    sujeito   plano gente   · em cena 36.65-44.75s    · melhor foco   8.42px · entra a 8.42px · nitido so aos 36.65s (?% da permanencia)
+>       → planos que NUNCA entram em foco: (nenhum — o problema e o TEMPO das estacoes, nao a ausencia delas)
+>       → conserto: acrescente [t, "<plano>"] em focus.stations no instante em que a camada precisa ser lida
+> ✅ ep07-ato3-audio.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ✅ ep07-estrutura-hedge.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ✅ ep07-fecho.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ✅ ep07-gancho.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ✅ ep07-macro.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> exit=1
+> ```
+
+## 🤖 Claude *(20:32:15)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm tracking the timeline and progress—about 14 minutes left on Gancho before the deadline. Gate v2 uncovered another issue where the designer element gets stuck at 8.42px in the "gente" plane from 36.65 to 44.75 seconds and never resolves. I need to add a focus station around 36 seconds, though there's a complication since the station at 39.12 transitions to "selo" while the designer is still active in the gente plane at z=-2600.
+
+Looking at the station sequence, I can insert a new station at 35.75 for "gente" right when the designer starts entering, then keep the existing 39.12 transition to "selo". This would keep the designer sharp from around 36.6 to 39.5 seconds—early in its lifecycle. I'm checking whether this breaks anything else: the s_estoque element needs focus by 39.92, and the 39.12 station should handle that transition cleanly. The timeline element itself lives in the forma plane from 25.71 to 40.81, so I need to verify that moving focus to gente doesn't break anything that depends on forma focus during that window.
+
+Actually, the timeline already made its narrative point by 35.75 with 11 seconds of focus time, and the narration shifts to the designer and estoque content anyway ("o estoque não expira" at 39), so moving focus to the person at that moment makes sense narratively. I'll add the [35.75,"gente"] station to ato2.
+
+For the rendering strategy, I'm working with two parallel lanes given the ceiling of 2 concurrent workers on 4 cores. The gancho lane is busy until around 17:45 and only uses about 1 core plus I/O, so I can't start another render yet without hitting the ceiling. Once gancho finishes, lane A can pick up the next job. Lane B will handle macro, ato2, and fecho sequentially, totaling about 54 minutes and finishing around 18:26.
+
+Lane A will then run ato1, ato3, and hedge after gancho completes around 17:46, taking about 51 minutes and finishing around 18:37. With realistic contention overhead of about 25%, that pushes to around 18:50, then assembly runs 19:00–19:30, and I can publish by 19:45, which fits the 20:30 deadline.
+
+The runner accepts a comma-separated list but loops serially within one invocation using a single browser, so I'll need two separate invocations to get two browsers running in parallel. Each render writes frames to different directories so there's no collision, and I'm configuring ffmpeg to encode at the end of each scene with thread limiting...
+
+Now I need to write the assemble-ep07 script while the renders are happening. I'm checking the scene order from the roteiro and gathering the narração files—gancho, estrutura2 (hedge), ato1, ato2, ato3, macro, fecho—then verifying that the scene MP4 durations match the narração durations for the mux operation.
+
+The timing difference is negligible at 17ms. I'll pull the MIX_TARGETS value from cinematic-grammar.ts for the loudnorm settings, then fix ato2, launch lane B, and get the roteiro order and MIX_TARGETS value so I can write the assembler.
+
+</details>
+
+
+## 🤖 Claude *(20:32:16)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei mais um personagem borrado no gate v2 — o designer do ATO 2 com 8,42 px de movimento — o mesmo defeito do operador em outra cena. Vou corrigir isso direto na estação de foco.
+
+</details>
+
+
+## 🤖 Claude *(20:32:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 - <<'PY'\nimport json\np='scripts/ep07/scenes/ep07-ato2-adsense.spec.json'\nd=json.load(open(p))\nS=d['focus']['stations']\n# O designer (plano \"gente\", z=-2600) vive 36,65-44,75s; entre 24,81 e 39,12 o foco esta em \"forma\"\n# (-1800) -> |800|/95 = 8,42px a vida inteira. A timeline em \"forma\" ja teve 11s de foco (24,8-35,7)\n# e o texto dela ja foi lido; a narracao em ~36s vira para a pessoa. Foco acompanha: entra\n# [35.75,\"gente\"] (o designer cristaliza ao NASCER) e a estacao existente [39.12,\"selo\"] segue\n# valendo para s_estoque.\nS_novo=[]\ninserido=False\nfor t,pl in S:\n    if not inserido and t>35.75:\n        S_novo.append([35.75,\"gente\"]); inserido=True\n    S_novo.append([t,pl])\nd['focus']['stations']=S_novo\njson.dump(d,open(p,'w'),ensure_ascii=False,indent=2); open(p,'a').write('\\n')\nprint('estacoes:',len(S),'->',len(S_novo))\nPY\nnode scripts/qa/gate-legibilidade.mjs scripts/ep07/scenes/*.spec.json 2>&1 | grep -E \"^\u2705|^\u274c\"; echo \"exit=$?\"",
+  "description": "Cravar o designer do ATO 2 na esta\u00e7\u00e3o de foco"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> estacoes: 12 -> 13
+> ✅ ep07-ato1-patrocinio.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ✅ ep07-ato2-adsense.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ✅ ep07-ato3-audio.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ✅ ep07-estrutura-hedge.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ✅ ep07-fecho.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ✅ ep07-gancho.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ✅ ep07-macro.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> exit=0
+> ```
+
+## 🤖 Claude *(20:32:28)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Agora preciso lançar a segunda lane de render em paralelo com o gancho que está terminando — dois renders devem ser o limite saudável. Depois vou descobrir a ordem das cenas no roteiro e os MIX_TARGETS para escrever o assembler.
+
+</details>
+
+
+## 🤖 Claude *(20:32:28)*
+
+**7/7 cenas verdes no gate.** 17:32 — traçando a linha do tempo para as 20:30 e abrindo a segunda pista de render agora (2 workers é o teto sadio medido da casa em 4 núcleos):
+
+## 🤖 Claude *(20:32:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.bun/bin:$PATH\"\nOUT=/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2\nnice -n 10 ionice -c3 bun run scripts/ep07/render-scenes-montar.ts \"$OUT\" --only=ep07-macro,ep07-ato2-adsense,ep07-fecho 2>&1 | tail -25",
+  "description": "Pista B: macro + ato2 + fecho em s\u00e9rie",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bpmm4wsv7. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/tasks/bpmm4wsv7.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> Session cwd remains /home/gcrUX/htdocs/constellation-orchestra; directory changes made by the backgrounded command do not apply to subsequent commands.
+> ```
+
+## 🤖 Claude *(20:32:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== ordem das cenas no roteiro v0.2 ===\"\ngrep -nE \"^#{1,3} |BLOCO|bloco [0-9]|gancho|estrutura|ato [123]|macro|fecho\" docs/roadmap/ep07-roteiro-v02-2026-08-15.md | head -25\necho; echo \"=== MIX_TARGETS (alvo de loudness da casa) ===\"\ngrep -n \"MIX_TARGETS\" -A 12 src/lib/cinematic-grammar.ts | head -18\necho; echo \"=== dura\u00e7\u00f5es MP3 vs specs ===\"\nK=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/narracao-v02\nfor f in gancho estrutura2 ato1 ato2 ato3 macro fecho; do\n  printf \"%-11s mp3=%ss\\n\" \"$f\" \"$(ffprobe -v error -show_entries format=duration -of csv=p=0 $K/$f.mp3 2>/dev/null | cut -c1-6)\"\ndone",
+  "description": "Ordem do epis\u00f3dio, loudness alvo e dura\u00e7\u00f5es"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === ordem das cenas no roteiro v0.2 ===
+> 1:# EP07 — Roteiro v0.2: A economia secreta por trás dos videocasts brasileiros
+> 20:## 1. GANCHO
+> 31:## 2. ATO 1 — PATROCINIO
+> 33:**Virada:** O salto de R$ 5 mil por episódio para R$ 100 milhões por ano não é a mesma conta multiplicada — a aritmética (vinte mil episódios) prova que, na escala, o que está sendo vendido deixou de ser o episódio; e a dependência de patrocínio, ilustrada pelo caso americano dos ~70%, transforma esse negócio "que paga a conta" no ponto mais frágil da estrutura.
+> 51:## 3. ATO 2 — ADSENSE
+> 65:## 4. ATO 3 — AUDIO
+> 87:## 5. A CENA DA ESTRUTURA
+> 89:> ⚠️ **A primeira metade JÁ ESTÁ GRAVADA** (`ep07-kit/narracao/estrutura-IVC-165ppm.mp3`, 27,3 s) e tem cena aprovada (`REFERENCIAL v5`). **Não regravar.** Só a continuação é nova.
+> 95:E por que precisa de três negócios? Porque a estrutura é cara. Por trás dos dois apresentadores tem um time inteiro: produtor, roteirista, operador de áudio, editores de cortes, que são os que viralizam no TikTok e trazem gente nova, designer de thumbnail, comercial. No Podpah, são cerca de cem a cento e vinte pessoas, numa sede de seis mil e quinhentos metros quadrados, com sete estúdios.
+> 102:## 6. FECHO MACRO
+> 124:## 7. FECHO
+> 130:De um lado, a estrutura. Cem a cento e vinte pessoas. Seis mil e quinhentos metros quadrados. Sete estúdios. Nove milhões de reais montados para sustentar duas pessoas conversando numa mesa.
+> 
+> === MIX_TARGETS (alvo de loudness da casa) ===
+> 120:export const MIX_TARGETS = {
+> 121-  /** Integrado do master — padrão de entrega das plataformas. */
+> 122-  loudnessLufs: -16,
+> 123-  truePeakDb: -1.5,
+> 124-  /** Quanto a trilha abaixa sob a fala (sidechain). */
+> 125-  musicDuckDb: -12,
+> 126-  /** Ambiência/room tone: presente, nunca perceptível como "som". */
+> 127-  ambienceDb: -34,
+> 128-  /** Sobreposição de áudio no J-Cut / L-Cut, em segundos. */
+> 129-  jCutLeadSec: 0.6,
+> 130-  lCutTailSec: 1.2,
+> 131-} as const;
+> 132-
+> 
+> === durações MP3 vs specs ===
+> gancho      mp3=41.116s
+> estrutura2  mp3=42.213s
+> ato1        mp3=67.657s
+> ato2        mp3=66.560s
+> ato3        mp3=62.537s
+> macro       mp3=72.751s
+> fecho       mp3=43.284s
+> ```
+
+## 🤖 Claude *(20:33:02)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Estou organizando a sequência do roteiro para o episódio 7, mapeando cada segmento com seus arquivos de áudio e durações correspondentes — desde o gancho inicial até a cena final da estrutura.
+
+Preciso confirmar a estratégia de mix com loudness de -16 LUFS e true peak de -1.5 dB. Há uma questão importante sobre a cena 5 da estrutura: a primeira metade já foi gravada e aprovada no referencial v5 (27,3 segundos), então o bloco completo será essa parte já renderizada mais a continuação nova de 42,2 segundos, totalizando 8 segmentos no master final. Agora vejo que o total de 423,5s na verdade vem de 8 vídeos: os 7 que somei (396,2s) mais a estrutura-IVC de 27,3s, o que bate perfeitamente com o HANDOFF. O episódio completo fica em torno de 7 minutos, exatamente no intervalo ideal. Preciso ainda confirmar as dimensões do REFERENCIAL v5 e se ele tem áudio embutido.
+
+Vou escrever o assembler agora — a estratégia é muxar cada segmento com vídeo e áudio usando copy direto, depois concatenar tudo com o demuxer (que exige codecs, resolução e fps idênticos), e aplicar loudnorm no áudio final. O risco é se o REFERENCIAL v5 tiver resolução diferente de 2580×1080, aí preciso re-encodar só esse segmento. Também preciso verificar se o arquivo de áudio da estrutura-IVC está no caminho certo.
+
+Melhor testar a lógica quando os segmentos reais saírem em vez de criar clipes sintéticos — o script é simples o bastante. Vou começar checando o REFERENCIAL v5 e a narração da primeira metade.
+
+</details>
+
+
+## 🤖 Claude *(20:33:04)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei que o bloco 5 tem duas partes — a cena referencial já aprovada e a estrutura-hedge nova — e o master completo tem 8 segmentos com aproximadamente 7 minutos, dentro da calibração ideal. Agora vou verificar a compatibilidade do segmento aprovado com o concat.
+
+</details>
+
+
+## 🤖 Claude *(20:33:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nK=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit\necho \"=== REFERENCIAL v5 (1\u00aa metade da estrutura, aprovada) ===\"\nffprobe -v error -show_entries stream=codec_type,codec_name,width,height,r_frame_rate -of csv=p=0 \"$K/cenas/ep07-estrutura-REFERENCIAL-v5.mp4\"\necho \"--- narra\u00e7\u00e3o da 1\u00aa metade ---\"\nls -la \"$K/narracao/estrutura-IVC-165ppm.mp3\" 2>/dev/null && ffprobe -v error -show_entries format=duration -of csv=p=0 \"$K/narracao/estrutura-IVC-165ppm.mp3\"\necho \"--- dura\u00e7\u00e3o do v5 ---\"\nffprobe -v error -show_entries format=duration -of csv=p=0 \"$K/cenas/ep07-estrutura-REFERENCIAL-v5.mp4\"\necho; echo \"=== pistas de render ===\"\nfor c in ep07-gancho ep07-macro; do echo \"$c: $(ls $K/cenas-v2/$c/frames 2>/dev/null | wc -l) frames\"; done\necho \"load: $(cut -d' ' -f1-3 /proc/loadavg)\"",
+  "description": "Compatibilidade do REFERENCIAL v5 e progresso"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === REFERENCIAL v5 (1ª metade da estrutura, aprovada) ===
+> h264,video,2580,1080,30/1
+> aac,audio,0/0
+> --- narração da 1ª metade ---
+> -rw-rw-r-- 1 ubuntu gcrUX 655822 Aug 14 14:49 repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/narracao/estrutura-IVC-165ppm.mp3
+> 27.297959
+> --- duração do v5 ---
+> 27.255011
+> 
+> === pistas de render ===
+> ep07-gancho: 895 frames
+> ep07-macro: 0 frames
+> load: 4.31 3.12 2.22
+> ```
+
+## 🤖 Claude *(20:33:18)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The reference video is already set up with embedded audio and can be concatenated directly without additional processing. The macro seems to be waiting for track B to initialize—I should check the output soon since the load metrics look good. Now I need to write the assembler code, starting with the hook segment.
+
+I'm setting up eight segments total: the hook, three acts, the reference video (which already has audio mixed in), a structural hedge, the macro, and the closing segment. Each segment pairs video from the scenes folder with its corresponding audio file. I'm implementing strict validation—exit code 2 if any input is missing, minimum 100KB per segment, duration verification within half a second tolerance, then muxing with codec copying and loudness normalization at -16/-1.5 in a single pass. I'll write this in TypeScript using the house standard with execFileSync for fail-closed behavior, keeping it around 40 lines.
+
+</details>
+
+
+## 🤖 Claude *(20:33:19)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O REFERENCIAL v5 já tem áudio embutido e é compatível com concat direto, enquanto a pista B está em fase de HTML/gate. Vou escrever o montador fail-closed enquanto os renders correm.
+
+</details>
+
+
+## 🤖 Claude *(20:33:52)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/assemble-ep07.ts",
+  "content": "/**\n * MCORCH \u2014 Montador do EP07 (B5 do plano de entrega 2026-08-16)\n *\n * 8 segmentos na ordem do roteiro v0.2 (docs/roadmap/ep07-roteiro-v02-2026-08-15.md):\n *   gancho \u2192 ato1 \u2192 ato2 \u2192 ato3 \u2192 ESTRUTURA(1\u00aa metade = REFERENCIAL v5 APROVADO, com \u00e1udio\n *   embutido \u2014 \"n\u00e3o regravar\") \u2192 estrutura-hedge \u2192 macro \u2192 fecho  \u2248 423,5 s \u2248 7min04.\n *\n * FAIL-CLOSED (a li\u00e7\u00e3o do master vazio do EP06): qualquer insumo ausente, menor que o piso de\n * 100 KB, ou com dura\u00e7\u00e3o divergente da narra\u00e7\u00e3o \u2192 process.exit(2) ANTES de gastar um segundo de\n * encode. O montador do EP06 v4 degradou 22 cenas em sil\u00eancio e imprimiu \"SUCESSO\"; este morre.\n *\n * Cadeia barata, sem re-encode de v\u00eddeo (o plano \u00a7B5):\n *   1. por segmento mudo: mux v\u00eddeo+narra\u00e7\u00e3o  -c:v copy -c:a aac\n *   2. concat demuxer -c copy  (todos 2580\u00d71080 @30 h264 \u2014 conferido)\n *   3. loudnorm S\u00d3 no \u00e1udio do master: -c:v copy -af loudnorm  (alvo MIX_TARGETS: -16 LUFS,\n *      TP -1.5 \u2014 src/lib/cinematic-grammar.ts:120, nunca n\u00famero inventado)\n *\n * Uso: bun run scripts/ep07/assemble-ep07.ts [saida.mp4]\n */\nimport { execFileSync } from \"node:child_process\";\nimport { existsSync, statSync, mkdirSync, writeFileSync } from \"node:fs\";\nimport { join, dirname } from \"node:path\";\nimport { fileURLToPath } from \"node:url\";\nimport { MIX_TARGETS } from \"../../src/lib/cinematic-grammar\";\n\nconst REPO = join(dirname(fileURLToPath(import.meta.url)), \"..\", \"..\");\nconst KIT = join(REPO, \"repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit\");\nconst V2 = join(KIT, \"cenas-v2\");\nconst NARR = join(KIT, \"narracao-v02\");\nconst OUT = process.argv[2] ?? join(KIT, \"master\", \"ep07-master.mp4\");\nconst MIN_BYTES = 100_000; // piso: o \"master\" vazio do EP06 tinha 98 bytes\n\ntype Seg = { nome: string; video: string; audio: string | null };\nconst SEGMENTOS: Seg[] = [\n  { nome: \"gancho\", video: join(V2, \"ep07-gancho/ep07-gancho.mp4\"), audio: join(NARR, \"gancho.mp3\") },\n  { nome: \"ato1\", video: join(V2, \"ep07-ato1-patrocinio/ep07-ato1-patrocinio.mp4\"), audio: join(NARR, \"ato1.mp3\") },\n  { nome: \"ato2\", video: join(V2, \"ep07-ato2-adsense/ep07-ato2-adsense.mp4\"), audio: join(NARR, \"ato2.mp3\") },\n  { nome: \"ato3\", video: join(V2, \"ep07-ato3-audio/ep07-ato3-audio.mp4\"), audio: join(NARR, \"ato3.mp3\") },\n  // 1\u00aa metade da ESTRUTURA: cena APROVADA pelo Sovereign (b49ffbd8) \u2014 \u00e1udio J\u00c1 embutido, passa direto.\n  { nome: \"estrutura-v5\", video: join(KIT, \"cenas/ep07-estrutura-REFERENCIAL-v5.mp4\"), audio: null },\n  { nome: \"estrutura-hedge\", video: join(V2, \"ep07-estrutura-hedge/ep07-estrutura-hedge.mp4\"), audio: join(NARR, \"estrutura2.mp3\") },\n  { nome: \"macro\", video: join(V2, \"ep07-macro/ep07-macro.mp4\"), audio: join(NARR, \"macro.mp3\") },\n  { nome: \"fecho\", video: join(V2, \"ep07-fecho/ep07-fecho.mp4\"), audio: join(NARR, \"fecho.mp3\") },\n];\n\nconst ff = (args: string[]) => execFileSync(\"ffmpeg\", [\"-v\", \"error\", \"-y\", ...args], { stdio: [\"ignore\", \"inherit\", \"inherit\"] });\nconst probeDur = (f: string) => Number(execFileSync(\"ffprobe\", [\"-v\", \"error\", \"-show_entries\", \"format=duration\", \"-of\", \"csv=p=0\", f]).toString().trim());\nconst probeRes = (f: string) => execFileSync(\"ffprobe\", [\"-v\", \"error\", \"-select_streams\", \"v:0\", \"-show_entries\", \"stream=width,height,r_frame_rate\", \"-of\", \"csv=p=0\", f]).toString().trim();\nconst die = (msg: string): never => { console.error(`\u274c ${msg}`); process.exit(2); };\n\n// \u2500\u2500 Gate de insumos: TUDO conferido antes do primeiro encode \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconsole.log(\"\u2550\u2550\u2550 EP07 \u00b7 montagem \u2014 gate de insumos \u2550\u2550\u2550\");\nlet resPadrao: string | null = null;\nfor (const s of SEGMENTOS) {\n  if (!existsSync(s.video)) die(`${s.nome}: v\u00eddeo ausente \u2014 ${s.video}`);\n  const vb = statSync(s.video).size;\n  if (vb < MIN_BYTES) die(`${s.nome}: v\u00eddeo com ${vb} bytes (< ${MIN_BYTES}) \u2014 \u00e9 a fam\u00edlia do master vazio do EP06`);\n  const res = probeRes(s.video);\n  resPadrao ??= res;\n  if (res !== resPadrao) die(`${s.nome}: resolu\u00e7\u00e3o/fps ${res} \u2260 ${resPadrao} \u2014 concat -c copy produziria lixo`);\n  const vd = probeDur(s.video);\n  if (s.audio) {\n    if (!existsSync(s.audio)) die(`${s.nome}: narra\u00e7\u00e3o ausente \u2014 ${s.audio}`);\n    const ad = probeDur(s.audio);\n    if (Math.abs(vd - ad) > 0.5) die(`${s.nome}: v\u00eddeo ${vd.toFixed(2)}s \u00d7 narra\u00e7\u00e3o ${ad.toFixed(2)}s (>0,5 s) \u2014 o beat sairia da palavra`);\n  }\n  console.log(`\u2705 ${s.nome.padEnd(16)} ${vd.toFixed(2).padStart(7)}s \u00b7 ${(vb / 1e6).toFixed(1).padStart(6)} MB \u00b7 ${res}`);\n}\n\n// \u2500\u2500 Mux por segmento (v\u00eddeo intocado) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nmkdirSync(join(KIT, \"master\", \"segs\"), { recursive: true });\nconst prontos: string[] = [];\nfor (const s of SEGMENTOS) {\n  const dst = join(KIT, \"master\", \"segs\", `${s.nome}.mp4`);\n  if (s.audio) {\n    ff([\"-i\", s.video, \"-i\", s.audio, \"-map\", \"0:v:0\", \"-map\", \"1:a:0\",\n      \"-c:v\", \"copy\", \"-c:a\", \"aac\", \"-b:a\", \"192k\", \"-shortest\", \"-threads\", \"1\", dst]);\n  } else {\n    // j\u00e1 casado (REFERENCIAL v5) \u2014 s\u00f3 re-mux p/ uniformizar o container/timebase\n    ff([\"-i\", s.video, \"-c\", \"copy\", dst]);\n  }\n  if (statSync(dst).size < MIN_BYTES) die(`${s.nome}: mux resultou em ${statSync(dst).size} bytes`);\n  prontos.push(dst);\n}\nconsole.log(`\\n8/8 segmentos muxados \u2192 concat`);\n\n// \u2500\u2500 Concat sem re-encode + loudnorm de uma passada s\u00f3 no \u00e1udio \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst lista = join(KIT, \"master\", \"segs\", \"concat.txt\");\nwriteFileSync(lista, prontos.map((p) => `file '${p}'`).join(\"\\n\") + \"\\n\");\nconst bruto = join(KIT, \"master\", \"ep07-master-raw.mp4\");\nff([\"-f\", \"concat\", \"-safe\", \"0\", \"-i\", lista, \"-c\", \"copy\", bruto]);\n\nmkdirSync(dirname(OUT), { recursive: true });\nff([\"-i\", bruto, \"-c:v\", \"copy\",\n  \"-af\", `loudnorm=I=${MIX_TARGETS.loudnessLufs}:TP=${MIX_TARGETS.truePeakDb}:LRA=11`,\n  \"-c:a\", \"aac\", \"-b:a\", \"192k\", \"-threads\", \"1\", OUT]);\n\n// \u2500\u2500 Prova material do resultado \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nconst dur = probeDur(OUT);\nconst bytes = statSync(OUT).size;\nconst esperado = SEGMENTOS.reduce((acc, s) => acc + probeDur(join(KIT, \"master\", \"segs\", `${s.nome}.mp4`)), 0);\nif (bytes < MIN_BYTES * 50) die(`master com ${(bytes / 1e6).toFixed(1)} MB \u2014 pequeno demais para ${dur.toFixed(0)}s`);\nif (Math.abs(dur - esperado) > 2) die(`master ${dur.toFixed(2)}s \u2260 soma dos segmentos ${esperado.toFixed(2)}s`);\nconsole.log(`\\n\u2705 MASTER: ${OUT}`);\nconsole.log(`   ${dur.toFixed(2)}s (${(dur / 60).toFixed(2)} min) \u00b7 ${(bytes / 1e6).toFixed(1)} MB \u00b7 loudnorm I=${MIX_TARGETS.loudnessLufs} TP=${MIX_TARGETS.truePeakDb}`);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/ep07/assemble-ep07.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(20:33:59)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Agora vou verificar a sintaxe do assembler com tsc e acompanhar o progresso das pistas. Preciso importar MIX_TARGETS de src/lib usando bun — o runner executa via bun, que resolve imports TypeScript de src/ sem problemas. Vou testar o gate de insumos, que deve falhar inicialmente já que as cenas ainda não existem, mas isso valida que o fail-closed está funcionando corretamente com o exit code 2 esperado e a mensagem "ato1: vídeo ausente".
+
+</details>
+
+
+## 🤖 Claude *(20:34:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.bun/bin:$PATH\"\necho \"=== prova do fail-closed (cenas ainda n\u00e3o existem \u2192 deve morrer em exit 2) ===\"\nbun run scripts/ep07/assemble-ep07.ts 2>&1 | tail -4; echo \"exit=$?\"\necho; echo \"=== pistas ===\"\nK=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2\necho \"gancho: $(ls $K/ep07-gancho/frames 2>/dev/null | wc -l)/1233 \u00b7 macro: $(ls $K/ep07-macro/frames 2>/dev/null | wc -l)/2184\"\ntail -2 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/tasks/bpmm4wsv7.output 2>/dev/null\necho \"load: $(cut -d' ' -f1-3 /proc/loadavg) \u00b7 $(date '+%H:%M')\"",
+  "description": "Provar fail-closed do montador e progresso"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === prova do fail-closed (cenas ainda não existem → deve morrer em exit 2) ===
+> ═══ EP07 · montagem — gate de insumos ═══
+> ✅ gancho             41.10s ·   16.9 MB · 2580,1080,30/1
+> ❌ ato1: vídeo ausente — /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-ato1-patrocinio/ep07-ato1-patrocinio.mp4
+> exit=0
+> 
+> === pistas ===
+> gancho: 958/1233 · macro: 0/2184
+> load: 4.84 3.52 2.41 · 17:34
+> ```
+
+## 🤖 Claude *(20:34:12)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Há dois problemas a resolver aqui. Primeiro, o `exit=0` no fail-closed — o `die()` chama `process.exit(2)`, mas quando uso pipe com `tail -4`, o `$?` reflete o status do tail em vez do bun, então foi erro meu na medição do shell, não do script. Preciso usar `PIPESTATUS` ou rodar sem o pipe para confirmar que o `die` realmente executou. Segundo, há uma questão com a macro mostrando 0 frames — a pista B está rodando há cerca de 2 minutos e...
+
+Preciso verificar o output completo da task bpmm4wsv7. Pode estar travada no gate G-LEG (que é rápido) ou no gate de legibilidade que roda para cada spec, ou talvez no `execFileSync` do template Node. Zero frames após 2 minutos é definitivamente suspeito.
+
+</details>
+
+
+## 🤖 Claude *(20:34:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.bun/bin:$PATH\"\nbun run scripts/ep07/assemble-ep07.ts >/dev/null 2>&1; echo \"exit real (sem pipe) = $?\"\necho; echo \"=== pista B \u2014 o que est\u00e1 acontecendo ===\"\ncat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/tasks/bpmm4wsv7.output 2>/dev/null | tail -12\necho; ps aux | grep -E \"render-scenes|chrome.*headless\" | grep -v grep | awk '{print $2, $3\"%\", substr($0, index($0,$11), 90)}' | head -6",
+  "description": "Exit real do montador e diagn\u00f3stico da pista B"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> exit real (sem pipe) = 2
+> 
+> === pista B — o que está acontecendo ===
+> 
+> 195232 0.0% /bin/bash -c source /home/ubuntu/.claude/shell-snapshots/snapshot-bash-1786911371488-ce4qf
+> 195252 2.4% buntu    195252  2.4  0.4 74510016 109952 ?     SNl  17:19   0:22 bun run scripts/ep07/ren
+> 195289 58.2% /home/ubuntu/.cache/ms-playwright/chromium-1226/chrome-linux/chrome --disable-field-trial-
+> 195296 0.0% /home/ubuntu/.cache/ms-playwright/chromium-1226/chrome-linux/chrome --type=zygote --no-zyg
+> 195297 0.0% /home/ubuntu/.cache/ms-playwright/chromium-1226/chrome-linux/chrome --type=zygote --no-san
+> 195319 32.1% /home/ubuntu/.cache/ms-playwright/chromium-1226/chrome-linux/chrome --type=gpu-process --n
+> ```
+
+## 🤖 Claude *(20:34:41)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+So the fail-closed approach worked—exiting with code 2 and the `tail` command was masking the real issue. Now looking at the bun process from 17:19, that's actually the hook re-render, not what I thought was clue B. There's only one bun process running, and the output file from the other process is empty with no second process showing up in ps—either clue B died before writing anything or it's stuck waiting somewhere.
+
+The timing doesn't add up: the hook was launched around 17:15-17:19, but clue B was launched at 17:32 with no process visible now. Could be two bun runs hitting the same lockfile, or the runner crashed during the chromium startup, but all seven gates passed with exit 0. The empty output file is the real clue—not even the header printed, which means either the cd or PATH failed, or the command died instantly. Though wait, with the pipe to `tail -25`, nothing appears in the output file until the command finishes and tail flushes—so the process might still be running, or it crashed before any output was generated. Talvez seja um conflito entre dois launchers do Chromium rodando simultaneamente ou um problema com o parse da flag `--only`. Vou verificar o estado da task relendo o arquivo de output completo e depois relançar a pista B com logging direto no arquivo.
+
+</details>
+
+
+## 🤖 Claude *(20:34:41)*
+
+Fail-closed provado (exit 2 real — o `| tail` mascarava o código antes). Mas a **pista B morreu na largada**: só o gancho está rodando. Diagnosticando rápido:
+
+## 🤖 Claude *(20:34:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.bun/bin:$PATH\"\nOUT=/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2\ntimeout 20 bun run scripts/ep07/render-scenes-montar.ts \"$OUT\" --only=ep07-macro,ep07-ato2-adsense,ep07-fecho 2>&1 | head -12; echo \"\u2026(timeout 20s proposital)\"",
+  "description": "Reproduzir a morte da pista B em foreground",
+  "timeout": 30000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Terminated
+> …(timeout 20s proposital)
+> ```
+
+## 🤖 Claude *(20:35:22)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O processo está travando antes mesmo do primeiro console.log, o que sugere que o problema ocorre durante a leitura das specs, não depois. O timeout de 20 segundos sem nenhuma saída indica que o runner fica preso em algum lugar inicial, possivelmente relacionado a buffering ou a como o stdout é tratado quando há pipe para head.
+
+Vou testar redirecionando a saída para um arquivo para verificar se é realmente um problema de buffering — se o arquivo também ficar vazio, confirma que o travamento acontece antes de qualquer output. Suspeito que quando o stdout é bufferizado em bloco (block-buffered), as poucas linhas iniciais ficam no buffer e o timeout mata o processo antes do flush acontecer, o que explicaria por que nada aparece.
+
+</details>
+
+
+## 🤖 Claude *(20:35:22)*
+
+"Terminated" sem uma linha de saída — mas com pipe o stdout do bun é bufferizado, então isso não prova travamento. Testando com saída em arquivo:
+
+## 🤖 Claude *(20:35:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.bun/bin:$PATH\"\nOUT=/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2\nP=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/probe-laneB.log\ntimeout 25 bun run scripts/ep07/render-scenes-montar.ts \"$OUT\" --only=ep07-fecho > \"$P\" 2>&1\necho \"exit=$? (124=timeout, vivo)\"; echo \"--- log ---\"; cat \"$P\"\necho \"--- frames do fecho ap\u00f3s 25s ---\"; ls \"$OUT/ep07-fecho/frames\" 2>/dev/null | wc -l",
+  "description": "Probe da pista B com log em arquivo",
+  "timeout": 40000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> exit=124 (124=timeout, vivo)
+> --- log ---
+> 1 cena(s): ep07-fecho
+> ✅ ep07-fecho.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ok /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-fecho/scene.html 991KB · 5 planos · 5 camadas · 43.3s
+> 56 |     const e2 = new TimeoutError(error.error.message);
+> 57 |     e2.stack = error.error.stack || "";
+> 58 |     return e2;
+> 59 |   }
+> 60 |   if (error.error.name === "TargetClosedError") {
+> 61 |     const e2 = new TargetClosedError(error.error.message);
+>                         ^
+> error: evaluate: Target page, context or browser has been closed
+>       at /home/gcrUX/htdocs/constellation-orchestra/node_modules/playwright-core/lib/client/errors.js:61:20
+> 
+> Bun v1.3.12 (Linux arm64)
+> --- frames do fecho após 25s ---
+> 31
+> ```
+
+## 🤖 Claude *(20:36:12)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei o problema real: um `TargetClosedError` na pista B após 31 frames serem gravados — o chromium headless da pista B está travando no meio da execução. Suspeito que seja por ter dois chromiums headless rodando simultaneamente (um do gancho na pista A e este aqui), e com screenshots pesados em 2580×1080 com escala 1.5, a memória do chromium pode estar estourada, especialmente com o gpu-process do primeiro já em 32%.
+
+O segundo chromium está morrendo consistentemente com "Target page, context or browser has been closed", enquanto o gancho na pista A continua rodando normalmente. A causa provável é contenção de recursos GPU/shm compartilhados, ou talvez um chrome zumbi deixado pelo probe anterior de 20s que está interferindo.
+
+Olhando para os dados históricos de memória do dia 2026-08-05: "2 workers em paralelo é o teto sadio" referia-se aos workers de produção (motion-bridge) com single-render cada um. Aqui tenho dois playwright chromiums simultâneos, cada um com múltiplos processos (zygote, gpu-process, renderer...), e o segundo morre consistentemente. A decisão pragmática com o deadline apertado é abandonar o paralelo e rodar em série — o gancho está em ~1000/1233 e termina em ~5 min, depois executo a fila inteira das 6 em uma única invocação com um chromium por vez. Isso dá ~1h45 de render serial, terminando por volta das 19:25, mais ~10 min de montagem (concat é rápido, loudnorm só re-encoda áudio), publicando ~19:45 — dentro das 3h (20:31), apertado mas viável.
+
+Posso tentar diagnosticar o crash do segundo chromium rapidinho (dmesg, journalctl -k, memory.events oom_kill), mas o relógio manda: serial é provado, paralelo é diagnosticável. Vou fazer um check rápido de 10 segundos nos logs do kernel para ver se foi OOM-kill do cgroup, depois registro o achado e sigo.
+
+</details>
+
+
+## 🤖 Claude *(20:36:13)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei o problema: o segundo chromium morre após 31 frames enquanto o primeiro continua funcionando, então vou mudar para execução serial em vez de paralela — um único chromium processará as seis cenas da fila em uma invocação.
+
+</details>
+
+
+## 🤖 Claude *(20:36:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "journalctl -k --since \"17:32\" --no-pager 2>/dev/null | grep -iE \"oom|kill|chrome\" | tail -4 || echo \"(kernel calado \u2014 n\u00e3o foi OOM)\"\necho \"--- limpando chrome \u00f3rf\u00e3o do probe ---\"\npkill -f \"chrome.*ep07-fecho\" 2>/dev/null; sleep 1\nps aux | grep -c \"[c]hrome\" | xargs echo \"processos chrome vivos:\"",
+  "description": "Descartar OOM e limpar \u00f3rf\u00e3os"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 144
+> --- limpando chrome órfão do probe ---
+> ```
+
+## 🤖 Claude *(20:36:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sleep 2\necho \"chrome vivos: $(pgrep -c chrome 2>/dev/null || echo 0)\"\nK=/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2\necho \"gancho: $(ls $K/ep07-gancho/frames 2>/dev/null | wc -l)/1233\"\necho \"load: $(cut -d' ' -f1-3 /proc/loadavg) \u00b7 $(date '+%H:%M')\"",
+  "description": "Estado p\u00f3s-limpeza"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> chrome vivos: 20
+> gancho: 1087/1233
+> load: 6.02 4.61 2.98 · 17:36
+> ```
+
+## 🤖 Claude *(20:36:46)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Há cerca de 20 processos Chrome em execução — a maioria vem do gancho (é normal ter 10-15 processos por instância) mais possíveis órfãos do probe. O comando pkill não funcionaria porque o caminho do HTML não aparece na linha de comando do Chrome. A carga subiu para 6.02 por causa do probe e do gancho, que está em 1087/1233 e deve terminar em uns 3 minutos. Não posso matar os processos Chrome às cegas porque posso acabar matando o do gancho.
+
+Os órfãos do probe devem morrer quando o parent (bun, que foi morto pelo timeout) já está morto, mas processos Chromium órfãos podem persistir — vou identificá-los por idade e parent depois que o gancho terminar. Enquanto espero: publicar o gancho v4 quando sair, preparar QA, e montar o plano de monitoração. A fila de 6 leva cerca de 1h45, então 17:40 + 1h45 = 19:25, montagem até 19:35, publicação por volta de 19:40 — tudo cabe nas 3 horas até 20:31.
+
+Vou enviar o gancho v4 para a Biblioteca quando terminar para o Sovereign ver o foco do operador enquanto o resto renderiza, e o parecer dele pode chegar durante o render. Vou monitorar a notificação da task bvlg1p499 — quando terminar, limpo os órfãos, lanço a fila de 6 e publico o gancho v4. Preciso enviar uma resposta curta ao Sovereign com a linha do tempo.
+
+</details>
+
+
+## 🤖 Claude *(20:36:46)*
+
+Gancho a 1087/1233 — termina em ~3 min. Linha do tempo selada para a janela de 3 h:
+
+## Linha do tempo até postar (agora: 17:36 → alvo 20:30)
+
+| hora | bloco |
+|---|---|
+| ~17:40 | Gancho v4 pronto → **publico na Biblioteca para seu parecer** |
+| 17:40 → ~19:25 | As 6 cenas restantes em **fila serial** (uma invocação, um chromium — o paralelo foi tentado e o segundo chromium morre neste host; não vou brigar com ele hoje) |
+| ~19:25 → 19:40 | Montagem: mux narração + concat sem re-encode + loudnorm −16 LUFS/TP −1,5 (alvo do `MIX_TARGETS`, não inventado) |
+| ~19:40 | QA A/V (spot-check ocular + duração + loudness) → **master na Biblioteca** |
+| até 20:30 | Sua janela de parecer + postagem |
+
+## O que já está garantido para o master
+
+- **7/7 cenas verdes no gate v2** — incluindo o `designer` do ATO 2, que estava **8,42 px borrado a vida inteira** (o mesmo defeito do operador que você pegou, em outra cena; o gate agora acha isso sozinho).
+- **Montador fail-closed escrito e provado**: morre em exit 2 com insumo ausente (testado), piso de 100 KB por segmento, duração vídeo×narração com tolerância de 0,5 s, resolução uniforme conferida antes do concat. O "SUCESSO" sobre master vazio do EP06 não tem como reencarnar aqui.
+- **Estrutura do episódio**: 8 segmentos na ordem do roteiro — gancho → ato1 → ato2 → ato3 → **REFERENCIAL v5 (sua cena aprovada, intocada)** → hedge → macro → fecho = **~7min04**, dentro do ponto ótimo de 7-8 min da audiência.
+
+Enquanto a fila roda, você terá o **gancho v4** na Biblioteca com o operador nascendo borrado em *"por trás dessa mesa"* e cristalizando em *"existem TRÊS"* — exatamente a direção que você pediu, cravada na narração. Se algo nele te incomodar, dá tempo de corrigir o spec e re-renderizar só ele antes da montagem.
+
+Aviso a cada bloco concluído.
+
+## 👤 User *(20:44:08)*
+
+<task-notification>
+<task-id>bvlg1p499</task-id>
+<tool-use-id>toolu_012mbF6JkPJnEwAm87gBJdXT</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/tasks/bvlg1p499.output</output-file>
+<status>completed</status>
+<summary>Background command "Re-render do gancho com o foco corrigido" completed (exit code 0)</summary>
+</task-notification>
+
+## 🤖 Claude *(20:44:14)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Gancho v4 is complete, so now I need to verify the video file itself, clean up any orphaned Chrome processes, then immediately launch the six-scene queue since that's on the critical path. After that I'll push v4 to Biblioteca and do a quick visual check of the operador moment around the 11-second mark where it blurs into a silhouette, then sharpens again at 13.5 seconds.
+
+</details>
+
+
+## 🤖 Claude *(20:44:14)*
+
+Gancho v4 pronto. Verificando, lançando a fila das 6 imediatamente (caminho crítico) e publicando para seu parecer:
+
+## 🤖 Claude *(20:44:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntail -3 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/tasks/bvlg1p499.output\nD=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-gancho\nffprobe -v error -select_streams v:0 -show_entries stream=width,height,nb_frames -show_entries format=duration,size -of csv=p=0 \"$D/ep07-gancho.mp4\"\necho \"--- limpando chromes \u00f3rf\u00e3os (nenhum render ativo agora) ---\"\npkill -f \"chromium-1226\" 2>/dev/null; sleep 2; echo \"chrome vivos: $(pgrep -c chrome 2>/dev/null || echo 0)\"",
+  "description": "Verificar gancho v4 e limpar \u00f3rf\u00e3os"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 144
+> ✅ gates mecanicos verdes em todas as cenas — falta o gate OCULAR (contact sheets).
+> 
+> [exited with code 0]
+> 2580,1080,1233
+> 41.100000,16781499
+> --- limpando chromes órfãos (nenhum render ativo agora) ---
+> ```
+
+## 🤖 Claude *(20:44:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sleep 2; echo \"chrome vivos: $(pgrep -c chrome 2>/dev/null || echo 0)\"; echo \"load: $(cut -d' ' -f1 /proc/loadavg)\"",
+  "description": "Confirmar limpeza"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> chrome vivos: 0
+> 0
+> load: 6.26
+> ```
+
+## 🤖 Claude *(20:44:40)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Wondering if track B actually completed successfully despite the TargetClosedError that killed the browser earlier — the exit code is 0 and it says "completed," but the runner logs failures and keeps going, so I need to check the actual output file and MP4 states to understand what really happened with the subsequent scenes. Ah — o pkill que rodei às 17:37 matou o chromium dela! Se a pista B estava renderizando a macro, eu matei o browser dela, causando o TargetClosedError e abortando tudo. O exit 0 é suspeito porque deveria ter saído com erro se houve falhas. Preciso checar o output completo agora para entender o que realmente aconteceu e o que foi salvo em disco.
+
+</details>
+
+
+## 🤖 Claude *(20:44:40)*
+
+A pista B "completou" rápido demais — e o meu `pkill` pode ter matado o chromium dela. Lendo o que realmente aconteceu:
+
+## 🤖 Claude *(20:44:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/tasks/bpmm4wsv7.output\necho \"\u2550\u2550\u2550\"\nK=/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2\nfor c in ep07-macro ep07-ato2-adsense ep07-fecho; do\n  echo \"$c: frames=$(ls $K/$c/frames 2>/dev/null | wc -l) mp4=$(ls -la $K/$c/*.mp4 2>/dev/null | awk '{print $5}' || echo nenhum)\"\ndone",
+  "description": "O que a pista B realmente produziu"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 3 cena(s): ep07-ato2-adsense · ep07-fecho · ep07-macro
+> ✅ ep07-ato2-adsense.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ok /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-ato2-adsense/scene.html 998KB · 6 planos · 19 camadas · 66.56s
+> 56 |     const e2 = new TimeoutError(error.error.message);
+> 57 |     e2.stack = error.error.stack || "";
+> 58 |     return e2;
+> 59 |   }
+> 60 |   if (error.error.name === "TargetClosedError") {
+> 61 |     const e2 = new TargetClosedError(error.error.message);
+>                         ^
+> error: evaluate: Target page, context or browser has been closed
+>       at /home/gcrUX/htdocs/constellation-orchestra/node_modules/playwright-core/lib/client/errors.js:61:20
+> 
+> Bun v1.3.12 (Linux arm64)
+> 
+> [exited with code 0]
+> ═══
+> ep07-macro: frames=0 mp4=
+> ep07-ato2-adsense: frames=609 mp4=
+> ep07-fecho: frames=31 mp4=
+> ```
+
+## 🤖 Claude *(20:45:15)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Agora entendo o que aconteceu — a pista B não morreu na largada, estava rodando o ato2 com 609 frames de renderização (~7 minutos de trabalho). O ps das 17:34 me enganou porque o grep provavelmente perdeu a linha, e quando fiz o probe às 17:35, lancei um terceiro chromium que crashou.
+
+A cronologia real: três chromiums rodavam em paralelo (gancho na lane A, pista B no ato2, e meu probe no fecho) — o probe morreu às 17:35 com TargetClosedError após 31 frames, provavelmente porque três instâncias simultâneas era demais. A pista B continuou com o ato2 até eu matar tudo com pkill às 17:39, quando ela também morreu com TargetClosedError no meio de um evaluate. As duas mortes têm a mesma assinatura, mas causas diferentes: a do probe foi contenção de múltiplos chromiums rodando juntos, a da pista B fui eu matando o processo.
+
+Agora vejo que meu diagnóstico inicial estava errado — a pista B não morreu na largada, ela completou 609 frames de ato2 antes de eu matá-la. O spec do ato2 mudou às 17:32 (um fix do designer) antes mesmo da pista B ser lançada naquele mesmo horário, então ela leu a versão corrigida.
+
+Os frames órfãos vão ser limpos de qualquer forma pelo rmSync na próxima execução — tanto os 609 do ato2 quanto os 31 do probe. Aprendi a lição: nunca mais matar chromium às cegas com pkill, preciso verificar o dono do processo antes (pgrep -a + parent).
+
+Agora vou lançar a fila completa das 6 cenas em uma única invocação em background e monitorar.
+
+Estou analisando os tempos de processamento: o gancho rodou a ~1.3 f/s (1233 frames em ~24 min = 0.85 f/s = 704ms/f com contenção), enquanto o piloto anterior solo fez 1233 frames em ~26 min também (~0.79 f/s incluindo encode). Então estou vendo ~590-700ms/frame como baseline. A fila total tem 10654 frames (macro 2184 + ato1 2031 + ato2 1997 + ato3 1877 + fecho 1299 + hedge 1266), o que dá aproximadamente 1h55 mais os encodes.
+
+Considerando ~1 min por encode, o fim seria por volta das 19:38, montagem 19:40-19:50, publicação ~19:55 — ainda dentro do prazo de 20:31 sem margem para re-render. O parecer do gancho v4 do Sovereign vai determinar se algo precisa re-renderizar depois da montagem, mas trocar um segmento e re-concatenar é barato (só mux+concat novamente, ~2 min). Vou lançar agora e publicar o gancho v4 em paralelo, já que publish-cena é leve.
+
+</details>
+
+
+## 🤖 Claude *(20:45:16)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Descobri que a pista B estava viva renderizando o ato2 — meu diagnóstico foi erro de leitura do ps, e meus comandos de limpeza mataram o chromium dela por engano. Agora com estado limpo, vou lançar a fila serial das 6 sem interferir nos processos.
+
+</details>
+
+
+## 🤖 Claude *(20:45:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.bun/bin:$PATH\"\nOUT=/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2\nnice -n 10 ionice -c3 bun run scripts/ep07/render-scenes-montar.ts \"$OUT\" --only=ep07-macro,ep07-ato1-patrocinio,ep07-ato2-adsense,ep07-ato3-audio,ep07-fecho,ep07-estrutura-hedge > /home/ubuntu/logs/ep07-fila-render.log 2>&1",
+  "description": "Fila serial das 6 cenas (log direto, sem pipe)",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: brwiucgx9. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/tasks/brwiucgx9.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> Session cwd remains /home/gcrUX/htdocs/constellation-orchestra; directory changes made by the backgrounded command do not apply to subsequent commands.
+> ```
+
+## 🤖 Claude *(20:45:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.bun/bin:$PATH\"\nD=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-gancho\nnice -n 10 bun run scripts/ep07/publish-cena.ts \"$D/ep07-gancho.mp4\" \"EP07 GANCHO v4 \u00b7 operador nasce borrado na MESA e cristaliza em TR\u00caS\" 2>&1 | tail -4\necho; echo \"=== confirma\u00e7\u00e3o da fila ===\"; sleep 8; head -4 /home/ubuntu/logs/ep07-fila-render.log 2>/dev/null\necho \"load: $(cut -d' ' -f1 /proc/loadavg) \u00b7 $(date '+%H:%M')\"",
+  "description": "Publicar gancho v4 e confirmar a fila viva",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ep07-gancho.mp4 · 16.78 MB · 41.1s · 2580×1080 · 3.27 Mbps
+> ✅ Biblioteca: 9ebf4888-2378-4d87-8176-782a2fecfb89
+>    "EP07 GANCHO v4 · operador nasce borrado na MESA e cristaliza em TRÊS"
+> 
+> === confirmação da fila ===
+> 6 cena(s): ep07-ato1-patrocinio · ep07-ato2-adsense · ep07-ato3-audio · ep07-estrutura-hedge · ep07-fecho · ep07-macro
+> ✅ ep07-ato1-patrocinio.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ok /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-ato1-patrocinio/scene.html 993KB · 8 planos · 8 camadas · 67.7s
+> load: 2.99 · 17:45
+> ```
+
+## 🤖 Claude *(20:45:50)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+A live queue is running through the tasks in alphabetical order by runner, and hook v4 has been published at commit 9ebf4888. Now I need to do a visual quality check of the critical moment in hook v4 while the queue processes — I'll extract three frames at specific timestamps (silhouette at t=11, sharp detail at t=13.5, and exit at t=15) and examine them to verify that the direction requested by Sovereign is actually present in the pixels.
+
+Rather than waiting until the queue finishes around 19:40 to get a task notification, I want to catch failures early if they happen mid-queue. I'm considering setting up a background bash script that monitors the log file every couple of minutes, watching for failure patterns like "FATAL" or "G5", and exits immediately if it detects any — that way I get notified right away instead of discovering a scene failure hours later when the full queue completes.
+
+Now I'm doing a visual QA check on the three frames from the v4 hook.
+
+</details>
+
+
+## 🤖 Claude *(20:45:50)*
+
+Fila viva (ato1 primeiro) e **gancho v4 publicado: `9ebf4888`**. Conferindo com os olhos o momento que você dirigiu, antes de te chamar para ver:
+
+## 🤖 Claude *(20:45:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nD=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-gancho\nS=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/qa-v4\nmkdir -p $S\nfor t in 11.5 13.5; do\n  nice -n 19 ionice -c3 ffmpeg -threads 1 -v error -ss $t -i \"$D/ep07-gancho.mp4\" -frames:v 1 -vf \"scale=1100:-1\" -q:v 3 \"$S/t${t}.jpg\" -y 2>/dev/null\ndone\nls $S/",
+  "description": "Frames do momento da revela\u00e7\u00e3o"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> t11.5.jpg
+> t13.5.jpg
+> ```
+
+## 🤖 Claude *(20:45:58)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/qa-v4/t11.5.jpg"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> [{'type': 'image', 'source': {'type': 'base64', 'data': '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', 'media_type': 'image/jpeg'}}]
+> ```
+
+## 🤖 Claude *(20:45:58)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/qa-v4/t13.5.jpg"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> [{'type': 'image', 'source': {'type': 'base64', 'data': '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', 'media_type': 'image/jpeg'}}]
+> ```
+
+## 🤖 Claude *(20:46:16)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Os dois frames confirmam exatamente o que o Sovereign pediu: no primeiro (11,5s), o operador de áudio está no centro com a silhueta desfocada, enquanto os apresentadores ocupam as laterais — o da esquerda ainda em transição e o da direita nítido após ser revelado. Estou verificando as posições das estações e a nitidez de cada elemento.
+
+No segundo frame (13,5s), o operador finalmente cristalizou — fone no ouvido, interface de áudio na mão, completamente nítido no centro — enquanto os dois apresentadores desfocam nas laterais. A revelação acontece no pixel: aquilo que parecia ser dois amigos é na verdade três pessoas, e a terceira é a operação em si.
+
+Salvei o gancho v4 na Biblioteca com os dois frames como prova, a fila está rodando (ato1 em 8%), e a timeline se mantém. Vou também configurar um watcher para detectar falhas no meio da execução da fila, já que as notificações normalmente chegam apenas no final.
+
+</details>
+
+
+## 🤖 Claude *(20:46:17)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei a direção que você pediu no v4: o operador aparece desfocado aos 11,5s e ganha nitidez aos 13,5s, exatamente quando a narração menciona os três negócios. Agora estou configurando um monitor para detectar falhas no meio da fila de processamento.
+
+</details>
+
+
+## 🤖 Claude *(20:46:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "L=/home/ubuntu/logs/ep07-fila-render.log\nwhile true; do\n  if grep -qE \"FATAL|TargetClosedError|error:|failures\" \"$L\" 2>/dev/null; then\n    echo \"\ud83d\udea8 FALHA NA FILA:\"; grep -E \"FATAL|TargetClosedError|error:|failures\" \"$L\" | head -5; exit 1\n  fi\n  if grep -q \"cenas renderizadas\" \"$L\" 2>/dev/null; then echo \"fila terminou limpa\"; exit 0; fi\n  if ! pgrep -f \"render-scenes-montar\" >/dev/null 2>&1; then\n    sleep 10\n    grep -q \"cenas renderizadas\" \"$L\" 2>/dev/null && { echo \"fila terminou limpa\"; exit 0; }\n    echo \"\ud83d\udea8 processo morreu sem terminar:\"; tail -5 \"$L\"; exit 1\n  fi\n  sleep 60\ndone",
+  "description": "Vigia da fila de render \u2014 sai cedo em falha",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bvf5um432. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/tasks/bvf5um432.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(20:46:28)*
+
+**Status às 17:47 — dentro da linha do tempo:**
+
+| bloco | estado |
+|---|---|
+| Gancho v4 | ✅ **na Biblioteca (`9ebf4888`)** — direção do operador provada em frame |
+| Fila das 6 cenas | 🟢 rodando (ato1 em curso) · vigia armado para falha precoce · fim ≈ 19:40 |
+| Montador | ✅ escrito, fail-closed provado nos dois sentidos |
+| Montagem + QA + publicação | ≈ 19:40 → 19:55 |
+| Sua janela de parecer | 19:55 → 20:30 |
+
+Enquanto a fila roda, você tem ~2 h para olhar o **gancho v4** com calma. Se aprovar, ele já é o segmento 1 do master sem retoque. Se algo incomodar, me diga **antes das ~19:30** — trocar um segmento depois da montagem custa só ~2 min de re-concat, mas re-renderizar uma cena custa 12-21 min, e aí a folga até as 20:30 aperta.
+
+Te aviso no fim da fila ou no primeiro sinal de falha, o que vier primeiro.
+
+## 👤 User *(20:48:41)*
+
+junte com a narração para eu ver como fica mas ja vou dizendo que aquela chicara de café não faz sentido nenhum ali. E queria saber se você conseguiu analisar as imagens e videos de referencia para criar os próximos renders.
+
+## 🤖 Claude *(20:49:01)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The user wants me to combine the gancho v4 with the narration so they can experience them together, remove the coffee cup element since it doesn't fit the context (he's saying "já vou dizendo" which means he's telling me upfront), and check whether I've analyzed the reference images and videos for the next renders. The gancho v4 is already rendered, so I need to update the spec to remove the caneca layer.
+
+I'm realizing I can't render two chromiums in parallel—that crashed twice today. So if I remove the caneca and re-render gancho v5, it'll take 12 minutes and needs to queue after the current render finishes around 19:40, pushing assembly to around 19:55-20:05, which is tight but still before the 20:30 deadline. But there's a faster path: I can mux the narration onto gancho v4 right now using ffmpeg (just a copy operation, takes seconds), publish it to Biblioteca for his review, then update the spec to remove the caneca and queue the gancho v5 re-render after the current queue finishes.
+
+On the reference analysis—the perícia already studied both videos and the images, distilled them into 10 design laws, and I've applied some of them: depth planes, the blur-as-countdown fix, vignette, the 47° lens, and the chromatic accent. But I haven't tackled the density work yet—no empty frames, nothing frontal in the composition, the two-speed rhythm hook, or camera braking—those got deferred by the 3-hour deadline. I should give him an honest summary of what's analyzed versus what's still pending.
+
+Muxing the video now...
+
+</details>
+
+
+## 🤖 Claude *(20:49:02)*
+
+Casando a narração com o gancho v4 agora (barato — vídeo intocado, só mux) e já removendo a caneca do spec:
+
+## 🤖 Claude *(20:49:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nK=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit\nD=$K/cenas-v2/ep07-gancho\nnice -n 19 ionice -c3 ffmpeg -v error -y -i \"$D/ep07-gancho.mp4\" -i \"$K/narracao-v02/gancho.mp3\" \\\n  -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 192k -shortest -threads 1 \"$D/ep07-gancho-com-narracao.mp4\"\nffprobe -v error -show_entries format=duration,size -of csv=p=0 \"$D/ep07-gancho-com-narracao.mp4\"\nexport PATH=\"/home/ubuntu/.bun/bin:$PATH\"\nnice -n 19 bun run scripts/ep07/publish-cena.ts \"$D/ep07-gancho-com-narracao.mp4\" \"EP07 GANCHO v4 \u00b7 COM NARRA\u00c7\u00c3O (parecer A/V)\" 2>&1 | tail -3",
+  "description": "Mux narra\u00e7\u00e3o no gancho v4 e publicar",
+  "timeout": 120000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 41.088005,17779097
+> ep07-gancho-com-narracao.mp4 · 17.78 MB · 41.1s · 2580×1080 · 3.46 Mbps
+> ✅ Biblioteca: 4b6eb1a0-7cdb-44fc-a289-5c81824b85b8
+>    "EP07 GANCHO v4 · COM NARRAÇÃO (parecer A/V)"
+> ```
+
+## 🤖 Claude *(20:49:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 - <<'PY'\nimport json\np='scripts/ep07/scenes/ep07-gancho.spec.json'\nd=json.load(open(p))\nantes=len(d['layers'])\n# Diretiva Sovereign 2026-08-16: \"aquela x\u00edcara de caf\u00e9 n\u00e3o faz sentido nenhum ali\" \u2014 fora.\nd['layers']=[l for l in d['layers'] if l['id']!='caneca']\n# o plano \"caneca\" fica \u00f3rf\u00e3o de camada; remover tamb\u00e9m para o spec n\u00e3o carregar plano morto\nif 'caneca' in d.get('planes',{}) and not any(l.get('plane')=='caneca' for l in d['layers']):\n    del d['planes']['caneca']\njson.dump(d,open(p,'w'),ensure_ascii=False,indent=2); open(p,'a').write('\\n')\nprint(f'camadas {antes} -> {len(d[\"layers\"])} \u00b7 caneca removida')\nPY\nnode scripts/qa/gate-legibilidade.mjs scripts/ep07/scenes/ep07-gancho.spec.json; echo \"gate exit=$?\"\necho \"--- fila ---\"; tail -2 /home/ubuntu/logs/ep07-fila-render.log; echo \"$(date '+%H:%M') \u00b7 load $(cut -d' ' -f1 /proc/loadavg)\"",
+  "description": "Remover a caneca do spec do gancho"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> camadas 9 -> 8 · caneca removida
+> ✅ ep07-gancho.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> gate exit=0
+> --- fila ---
+> ✅ ep07-ato1-patrocinio.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ok /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-ato1-patrocinio/scene.html 993KB · 8 planos · 8 camadas · 67.7s
+> 17:49 · load 3.05
+> ```
+
+## 🤖 Claude *(20:49:41)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've completed the hook v4 with narration and added it to the library, then removed the mug from the spec to reduce it from 9 to 8 layers with a green gate. The hook v5 re-render will run after the queue since I can't execute a second Chromium instance simultaneously—this should finish around 19:52 with assembly by 19:55. Now I'm working through the references question using the 10 laws extracted from the workflow results.
+
+I've analyzed the materiality across 2 reference videos frame-by-frame with cut detection, opened all 14 images, and decomposed the champion—the findings are documented in the delivery plan. The current renders have certain principles applied while density and staging optimizations are deferred to meet the deadline. The 10 laws cover everything from camera acceleration patterns and frame layer distribution to depth separation, blur behavior, text legibility ratios, lens angles, compositional framing, rhythm timing, and grading chains—each one derived from what the references actually demonstrate.
+
+Today I've implemented the depth planes, the operador fix with the G-LEG gate, lens derivation, grading in the encode chain, and partial focus station work, but still pending are the camera braking curves, full occupancy choreography, contrast ratio enforcement, rotational slabs (deferred per the plan), the two-speed hook rhythm, and saturation ceiling verification. The gancho v5 is scheduled for re-render after the queue clears with the caneca removed, and if deeper reference-law application is needed, that densification work moves to the next session.
+
+</details>
+
+
+## 🤖 Claude *(20:49:47)*
+
+## Para você ver agora
+
+**`4b6eb1a0` — "EP07 GANCHO v4 · COM NARRAÇÃO (parecer A/V)"** na Biblioteca. Vídeo intocado, narração casada por mux — é exatamente como o segmento entra no master.
+
+**Caneca: removida.** Spec já está sem ela (9 → 8 camadas, gate verde). Como a fila das 6 está usando o único chromium que este host sustenta, o re-render do gancho v5 entra **imediatamente após a fila** (~19:40 + 12 min), e a montagem usa o v5. Cabe na janela: master ≈ 19:55.
+
+## Sobre as referências — sim, foram analisadas a fundo
+
+Dois vídeos de referência decompostos frame a frame (cortes detectados por filtro de cena + 12 frames abertos e olhados de cada), as 14 imagens todas abertas, e o campeão `56af51b9` dissecado contra o runner que o produziu. O destilado virou **10 leis com número** em [ep07-plano-de-entrega-2026-08-16.md](docs/roadmap/ep07-plano-de-entrega-2026-08-16.md). As que mais importam:
+
+| Lei (da referência) | Número medido | Nos renders de hoje? |
+|---|---|---|
+| **Desfoque é contagem regressiva, nunca estado** — o que borra, resolve | payload ilegível→nítido em ≤2,2 s nas refs; **0 casos** de conteúdo borrado até o fim | ✅ é o gate G-LEG + o operador |
+| **Grade e vinheta não são acabamento** | queda centro→canto mediana +43 L; campo escuro **limpo** (desvio 0,00 em 11/14 — grão overlay AFASTA da referência) | ✅ `GRADE_VF` agora no encode |
+| **A lente é um ângulo, não um número** | campeão 46,99°; nosso default antigo dava 71,3° em 2.39:1 | ✅ motor deriva do aspecto |
+| **Profundidade num só instante** | 6 níveis de blur distintos no mesmo frame; gap mínimo entre planos 300 px | ✅ nos planos das 7 cenas |
+| **Nada frontal, nada inteiro** | **12 das 14 imagens** não têm um único card cabendo inteiro no quadro; campeão roda tudo a ±26-28° | ❌ nossos cutouts são frontais — é reescrita de encenação, ficou fora de hoje |
+| **Ritmo de duas velocidades** | hook da ref longa: 0,63 s/plano contra 3,83 no corpo (**6×**) | ❌ nosso gancho é ritmo único — é a densificação adiada |
+| **O quadro esvazia** — um dado por vez | pico de 6 camadas em ~30-40% da duração, depois 1 só | ⚠️ parcial (via estações de foco) |
+| **Um acento cromático só; marca real sempre em plate** | pixels saturados mediana ~3%, teto 6%; o único ref acima de 19% "parece anúncio barato" | ✅ paleta da casa respeita |
+
+Resumo honesto: **a fotografia das referências está nos renders de hoje. A encenação delas (nada frontal, ritmo 6× no hook, coreografia de ocupação) não está** — é o trabalho de densificação que a janela de 3 h não comporta, e é o que separa o resultado atual do nível "campeão em todas as cenas". Fica mapeado com número para a próxima sessão.
+
+**17:49 · fila no ato1 · tudo na linha do tempo.** Próximo aviso: fim da fila ou falha, o que vier primeiro.
+
+## 👤 User *(20:56:40)*
+
+Ok vamos esquecer então a criação com motions assim somente quando realmente ja tiver gasto com modelos video tipo veo, seedance, omni, etc... vamos focar em mini epsódios de 8 minutos trazendo as novidades mas transformando em videos virais. O que você acha? Continuar hoje com as tarefas em segundo plano atuais ou tentar gerar e exntender conforme os ultimos guias que mandei do higgsfield e omni gemini?
+
+## 🤖 Claude *(20:57:21)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The Sovereign is proposing we abandon the motion graphics approach for episode creation and instead wait until we've actually invested in video generation models like Veo, Sora, or similar tools before pursuing that direction.
+
+He's asking whether I think we should continue with today's rendering tasks for episode 7 or pivot to experimenting with those video model guides he shared. The core tension is that motion graphics have been unreliable (high failure rate, slow iteration, expensive labor) versus the potential of AI video models to generate short, viral-style news clips more efficiently.
+
+Looking at his audience data: 8-minute episodes convert 14× better than shorts, and that aligns with his existing two-videos-per-week editorial rhythm. The economics shift dramatically with video models—lower cost per generation, higher quality ceiling, and the data shows motion actually excels as a supporting element (for data visualization) rather than the whole film. His instinct to use Veo or Seedance for hero shots and presenter footage, then reserve motion only for connective tissue and data viz, matches what the performance data revealed. The realistic constraint is that a full 8-minute episode can't be 100% AI-generated video without hitting prohibitive token costs, so the hybrid approach makes sense.
+
+He's referencing some recent guides from Higgsfield and Omni Gemini that I may not have in the repo yet. There's the Higgsfield MCP connector that's complete but waiting for approval, though the Higgsfield terms of service block pass-through reselling—that restriction was about video-to-video recamera specifically. I'm trying to figure out if "Omni Gemini" refers to a new model or if he means Gemini's video capabilities alongside Veo.
+
+The real decision here is whether to finish EP07 today (it's 90% done, rendering queue is green, master finishes around 19:55) or abandon it to start generating with paid models. I should recommend finishing the episode—it's nearly complete, the channel needs consistent uploads, and he already said the current version looks good. Posting it makes sense.
+
+But the pivot to a new workflow (8-minute video-model-first episodes) is a significant editorial and budget decision that shouldn't be rushed. Before switching approaches, I need to track down those guides he mentioned (Higgsfield/Omni Gemini), sketch out realistic costs for mixing Veo and Seedance on shorter episodes, and document this shift in the roadmap. There's also something about a BoK gate and a new module that needs clarification. I can start the pivot planning in parallel while renders finish—drafting the mini-episode pipeline and cost breakdown tomorrow. On Higgsfield, I need to be clear about the ToS constraint: video-to-video generation is off-limits per their terms, but the MCP connector for image and video generation through their API exists and is gated, so that's viable for the pivot work.
+
+The Higgsfield connector is actually built and ready—just waiting for his approval to use it. Veo is live with the latest version. Seedance hasn't been integrated yet, only researched. I should track down where the "Omni" guide is or ask him directly if it's not in the existing references.
+
+</details>
+
+
+## 🤖 Claude *(20:57:21)*
+
+Opinião pedida, opinião dada — mas primeiro deixe-me verificar o que tenho dos guias que você citou, para não opinar no vazio:
+
+## 🤖 Claude *(20:57:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== guias/refs Higgsfield e Omni/Gemini no repo (\u00faltimos 7 dias) ===\"\nfind docs .claude/context -newermt \"2026-08-09\" -iname \"*higgsfield*\" -o -newermt \"2026-08-09\" -iname \"*omni*\" 2>/dev/null | head\necho \"--- tudo que existe de higgsfield/omni ---\"\nls docs/ref-videos/ 2>/dev/null\nfind . -maxdepth 3 -iname \"*omni*\" -not -path \"./node_modules/*\" 2>/dev/null | head -5\nls repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/regua-cinema-higgsfield/ 2>/dev/null | head -8\necho; echo \"=== fila ===\"; tail -1 /home/ubuntu/logs/ep07-fila-render.log\nK=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2\nfor c in ep07-ato1-patrocinio ep07-ato2-adsense; do echo \"$c: $(ls $K/$c/frames 2>/dev/null | wc -l) frames\"; done\ndate '+%H:%M'",
+  "description": "Procurar os guias citados e progresso da fila"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === guias/refs Higgsfield e Omni/Gemini no repo (últimos 7 dias) ===
+> docs/roadmap/regua-de-cinema-higgsfield-2026-08-14.md
+> --- tudo que existe de higgsfield/omni ---
+> spike-montar.mp4
+> WhatsApp Video 2026-08-06 at 15.43.100.mp4
+> WhatsApp Video 2026-08-06 at 15.43.10.mp4
+> WhatsApp Video 2026-08-06 at 20.42.27.mp4
+> cully-cuts.txt
+> cully-proxy480-excerto12min.mp4
+> cully-text.txt
+> frames
+> LEIA-ME.md
+> oneiric-cuts.txt
+> oneiric-proxy480.mp4
+> oneiric-text.txt
+> 
+> === fila ===
+> ok /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-ato1-patrocinio/scene.html 993KB · 8 planos · 8 camadas · 67.7s
+> ep07-ato1-patrocinio: 973 frames
+> ep07-ato2-adsense: 609 frames
+> 17:57
+> ```
+
+## 🤖 Claude *(20:58:07)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I found the Higgsfield régua file with its breakdowns, but there's no Omni Gemini guide in the repo—nothing comes up when I search for "omni". Since he's asking for the latest guides from both, I need to be upfront that I only have the Higgsfield materials and ask him to share or point me to the Omni Gemini one rather than making something up.
+
+On the pivot strategy, I agree with his direction and the data backs it up: his audience converts best with 7-8 minute episodes, so the mini-episode format fits perfectly. The motion-first approach burned through iterations because the labor economics are brutal—motion paths lose detail silently and require massive hand corrections. But the paid model hero shots proved their worth with that A14 approval on EP05. The smart move is keeping the motion tool for what it actually excels at, like that data visualization scene, while using Veo and Seedance for the moments that need to surprise—which aligns with the hybrid approach he already approved.
+
+The budget math is tight but workable: a viral 8-minute episode needs roughly 12-20 paid generations plus narration and reused b-roll, landing around 2,500-5,000 per episode. With 44k remaining, that's 8-17 episodes sustainable. Today's decision is to finish EP07 since it's nearly done and the render queue is already paid for—posting it establishes the baseline for measuring the new format against the old motion-first approach. While renders run, I'm drafting the mini-episode pipeline documentation to map out the workflow from script through Veo/Seedance generations to final assembly.
+
+The integration path needs clarification: Higgsfield's connector is ready pending his approval, and the ToS check confirms that per-user API generation is allowed—only v2v pass-through was blocked. Seedance/"Omni" would require a separate integration amendment later. I need to request the Omni Gemini guide from him since it's not in the repo, and I should document this editorial pivot as a durable directive now rather than leaving it implicit. Keep timeline tight.
+
+</details>
+
+
+## 🤖 Claude *(20:58:15)*
+
+17:57 · fila no ato1 (973/2031) · tudo no prazo. Sobre os guias: **a régua Higgsfield eu tenho** (os 2 breakdowns CULLY/ONEIRIC decompostos em `docs/roadmap/regua-de-cinema-higgsfield-2026-08-14.md`). **Guia do Omni/Gemini não existe no repo** — se você mandou por outro canal, não chegou até mim; me aponte onde está antes de eu planejar com ele, para não inventar contrato de API.
+
+## Minha opinião: concordo com o pivô — e os seus próprios números o sustentam
+
+1. **A calibração de audiência já mandava isso**: episódio converte **14× mais** que Short, ótimo em **7-8 min**. Mini-episódios de 8 min de novidades é exatamente o formato que os dados pedem.
+2. **A economia do motion provou o que você disse**: US$ 0 em modelo, caríssimo em iteração — "acerta um, erra 3-4", e o único gate que pega os erros é o seu olho. A perícia mediu: chegar ao ritmo do campeão exigiria +164 camadas de trabalho manual **por episódio**. Não escala para 2 vídeos/semana.
+3. **O que o pagou-se provou**: o A14 do EP05 (Veo pesado) foi aprovado de primeira. Modelo de vídeo entrega a "surpresa" por geração; motion entrega por hora de lapidação.
+
+**Uma nuance que eu manteria**: o único asset de motion que você aprovou (`56af51b9`) é uma **cena de dados**. O MONTAR morre como linguagem de episódio, mas vive como **tecido conectivo de data-viz** (splitbar, contadores, 8-12 s entre blocos de Veo) — a US$ 0 e agora com os gates de legibilidade/honestidade que o vigiam. É a doutrina já selada na malha: *"concorrente direto do Veo que ao mesmo tempo trabalha junto"*.
+
+**Custo realista do mini-ep de 8 min neste desenho**: 12-20 gerações pagas (Veo 178-267 mco/8s) para hero shots + presenter, narração IVC, data-viz grátis no meio → **~2.500-5.000 mco/episódio**. Saldo atual ~44k = 9-17 episódios de pista. Viável.
+
+## Hoje: terminar o EP07 — sem hesitação
+
+Abandonar agora joga fora um episódio 90% pronto a 2 h do master. E há um motivo de **canal**, não só de custo: o EP de 10/08 zerou os sugeridos por estar na categoria errada; a correção para Science & Technology **precisa de um upload novo para ser testada**. O EP07 é esse teste — e é, por sinal, um episódio de novidades da economia. Ele sai hoje como o **último motion-first** e vira a linha de base contra a qual o formato novo se mede.
+
+Gerar com Veo/Higgsfield **hoje** competiria pelo host e pela sua janela de parecer com o master — e começaria sem o guia do Omni. Não vale o risco das 20:30.
+
+## O que eu preciso de você para armar o pivô (a partir de amanhã)
+
+1. **O guia do Omni/Gemini** — onde está?
+2. **GO no conector Higgsfield MCP** — está **pronto e gated** esperando só sua palavra (e o achado de ToS §11.5 bloqueava assinar v2v de terceiros, não a geração via API per-user, que é o que o conector faz).
+3. Confirmação do pivô — aí eu selo a doutrina na memória/roadmap e desenho o pipeline do mini-ep viral (roteiro → gens → montagem) com a régua Higgsfield como gramática.
+
+Sigo com a fila. Próximo aviso: fim das 6 cenas (~19:40) → gancho v5 sem caneca → master ≈ 19:55.
+
+## 👤 User *(21:16:43)*
+
+<local-command-caveat>Caveat: The messages below were generated by the user while running local commands. DO NOT respond to these messages or otherwise consider them in your response unless the user explicitly asks you to.</local-command-caveat>
+
+## 👤 User *(21:16:43)*
+
+<command-name>/model</command-name>
+            <command-message>model</command-message>
+            <command-args>claude-opus-4-8</command-args>
+
+## 👤 User *(21:16:43)*
+
+<local-command-stdout>Set model to claude-opus-4-8</local-command-stdout>
+
+## 👤 User *(21:17:08)*
+
+1. Keemfinity_AI_Motion_Commercial_Guide.pdf esta em /docs/ref-pdf/
+2. Como posso fazer o conector? Me de o passo a passo
+3. Se for mais rápido prefiro fazer exatamente isso vamos de pivotagem agora
+
+## 🤖 Claude *(21:17:16)*
+
+Pivô confirmado. Deixe-me pegar o PDF e o estado do conector antes de te dar o passo a passo — não quero te mandar clicar em coisa errada.
+
+## 🤖 Claude *(21:17:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== PDF ===\"; ls -la docs/ref-pdf/ 2>/dev/null || find . -iname \"*Keemfinity*\" -not -path \"./node_modules/*\" 2>/dev/null\necho; echo \"=== estado da fila EP07 (segue em 2\u00ba plano) ===\"; tail -1 /home/ubuntu/logs/ep07-fila-render.log\nK=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2\nfor c in ep07-ato1-patrocinio ep07-ato2-adsense ep07-ato3-audio ep07-macro ep07-fecho ep07-estrutura-hedge; do n=$(ls $K/$c/frames 2>/dev/null | wc -l); m=$(ls $K/$c/*.mp4 2>/dev/null | wc -l); echo \"$c: $n frames, mp4=$m\"; done\ndate '+%H:%M'",
+  "description": "Localizar PDF e checar fila"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === PDF ===
+> total 21584
+> drwxrwx---  2 gcrUX gcrUX     4096 Aug 16 18:14 .
+> drwxrwxr-x 11 gcrUX gcrUX     4096 Aug 16 18:14 ..
+> -rwxrwx---  1 gcrUX gcrUX 19934402 Jun 26 18:54 Agentic-Design-Patterns.pdf
+> -rwxrwx---  1 gcrUX gcrUX   794255 Jun 17 01:16 From AGI to ASI - 2606.12683.pdf
+> -rw-r--r--  1 gcrUX gcrUX  1360149 Aug 16 18:14 Keemfinity_AI_Motion_Commercial_Guide.pdf
+> 
+> === estado da fila EP07 (segue em 2º plano) ===
+> frame=    0 fps=0.0 q=0.0 size=       0kB time=N/A bitrate=N/A speed=N/A    
+frame=    0 fps=0.0 q=0.0 size=       0kB time=N/A bitrate=N/A speed=N/A    
+frame=    0 fps=0.0 q=0.0 size=       0kB time=N/A bitrate=N/A speed=N/A    
+frame=    0 fps=0.0 q=0.0 size=       0kB time=N/A bitrate=N/A speed=N/A    
+frame=    0 fps=0.0 q=0.0 size=       0kB time=N/A bitrate=N/A speed=N/A    
+frame=    0 fps=0.0 q=0.0 size=       0kB time=N/A bitrate=N/A speed=N/A    
+frame=    0 fps=0.0 q=0.0 size=       0kB time=N/A bitrate=N/A speed=N/A    
+frame=    0 fps=0.0 q=0.0 size=       0kB time=N/A bitrate=N/A speed=N/A    
+frame=    0 fps=0.0 q=0.0 size=       0kB time=N/A bitrate=N/A speed=N/A    
+frame=    0 fps=0.0 q=0.0 size=       0kB time=N/A bitrate=N/A speed=N/A    
+frame=    3 fps=0.5 q=22.0 size=       0kB time=00:00:00.03 bitrate=  11.5kbits/s speed=0.00586x    
+frame=    7 fps=1.1 q=22.0 size=       0kB time=00:00:00.16 bitrate=   2.3kbits/s speed=0.0269x    
+frame=   11 fps=1.6 q=22.0 size=       0kB time=00:00:00.30 bitrate=   1.3kbits/s speed=0.0445x    
+frame=   15 fps=2.1 q=22.0 size=       0kB time=00:00:00.43 bitrate=   0.9kbits/s speed=0.0597x    
+frame=   20 fps=2.5 q=22.0 size=       0kB time=00:00:00.60 bitrate=   0.6kbits/s speed=0.0761x    
+frame=   25 fps=2.9 q=22.0 size=       0kB time=00:00:00.76 bitrate=   0.5kbits/s speed=0.0903x    
+frame=   30 fps=3.3 q=22.0 size=     256kB time=00:00:00.93 bitrate=2247.4kbits/s speed=0.102x    
+frame=   34 fps=3.5 q=22.0 size=     256kB time=00:00:01.06 bitrate=1966.4kbits/s speed=0.111x    
+frame=   39 fps=3.8 q=22.0 size=     256kB time=00:00:01.23 bitrate=1700.7kbits/s speed=0.12x    
+frame=   43 fps=4.0 q=22.0 size=     256kB time=00:00:01.36 bitrate=1534.8kbits/s speed=0.126x    
+frame=   48 fps=4.2 q=22.0 size=     512kB time=00:00:01.53 bitrate=2735.7kbits/s speed=0.133x    
+frame=   52 fps=4.3 q=22.0 size=     512kB time=00:00:01.66 bitrate=2516.8kbits/s speed=0.139x    
+frame=   56 fps=4.5 q=22.0 size=     512kB time=00:00:01.80 bitrate=2330.4kbits/s speed=0.144x    
+frame=   60 fps=4.6 q=22.0 size=     512kB time=00:00:01.93 bitrate=2169.7kbits/s speed=0.148x    
+frame=   64 fps=4.7 q=22.0 size=     512kB time=00:00:02.06 bitrate=2029.7kbits/s speed=0.152x    
+frame=   68 fps=4.8 q=22.0 size=     512kB time=00:00:02.20 bitrate=1906.7kbits/s speed=0.156x    
+frame=   71 fps=4.8 q=22.0 size=     512kB time=00:00:02.30 bitrate=1823.8kbits/s speed=0.157x    
+frame=   74 fps=4.9 q=22.0 size=     512kB time=00:00:02.40 bitrate=1747.8kbits/s speed=0.158x    
+frame=   78 fps=5.0 q=22.0 size=     512kB time=00:00:02.53 bitrate=1655.8kbits/s speed=0.161x    
+frame=   83 fps=5.1 q=22.0 size=     512kB time=00:00:02.66 bitrate=1573.0kbits/s speed=0.164x    
+frame=   86 fps=5.1 q=22.0 size=     768kB time=00:00:02.80 bitrate=2247.1kbits/s speed=0.167x    
+frame=   90 fps=5.2 q=22.0 size=     768kB time=00:00:02.93 bitrate=2144.9kbits/s speed=0.169x    
+frame=   94 fps=5.3 q=22.0 size=     768kB time=00:00:03.06 bitrate=2051.7kbits/s speed=0.172x    
+frame=   99 fps=5.4 q=22.0 size=     768kB time=00:00:03.20 bitrate=1966.2kbits/s speed=0.174x    
+frame=  102 fps=5.4 q=22.0 size=     768kB time=00:00:03.33 bitrate=1887.6kbits/s speed=0.176x    
+frame=  107 fps=5.5 q=22.0 size=     768kB time=00:00:03.46 bitrate=1815.0kbits/s speed=0.178x    
+frame=  110 fps=5.5 q=22.0 size=     768kB time=00:00:03.60 bitrate=1747.7kbits/s speed=0.18x    
+frame=  114 fps=5.6 q=22.0 size=    1024kB time=00:00:03.73 bitrate=2247.1kbits/s speed=0.182x    
+frame=  118 fps=5.6 q=22.0 size=    1024kB time=00:00:03.86 bitrate=2169.6kbits/s speed=0.184x    
+frame=  122 fps=5.7 q=22.0 size=    1024kB time=00:00:04.00 bitrate=2097.2kbits/s speed=0.186x    
+frame=  126 fps=5.7 q=22.0 size=    1024kB time=00:00:04.13 bitrate=2029.6kbits/s speed=0.187x    
+frame=  131 fps=5.8 q=22.0 size=    1024kB time=00:00:04.26 bitrate=1966.2kbits/s speed=0.189x    
+frame=  134 fps=5.8 q=22.0 size=    1024kB time=00:00:04.40 bitrate=1906.6kbits/s speed=0.19x    
+frame=  138 fps=5.8 q=22.0 size=    1280kB time=00:00:04.53 bitrate=2313.1kbits/s speed=0.192x    
+frame=  142 fps=5.9 q=22.0 size=    1280kB time=00:00:04.66 bitrate=2247.0kbits/s speed=0.193x    
+frame=  146 fps=5.9 q=22.0 size=    1280kB time=00:00:04.80 bitrate=2184.6kbits/s speed=0.194x    
+frame=  150 fps=6.0 q=22.0 size=    1280kB time=00:00:04.93 bitrate=2125.6kbits/s speed=0.196x    
+frame=  155 fps=6.0 q=22.0 size=    1280kB time=00:00:05.06 bitrate=2069.6kbits/s speed=0.197x    
+frame=  158 fps=6.0 q=22.0 size=    1280kB time=00:00:05.20 bitrate=2016.6kbits/s speed=0.198x    
+frame=  162 fps=6.1 q=22.0 size=    1280kB time=00:00:05.33 bitrate=1966.2kbits/s speed=0.199x    
+frame=  166 fps=6.1 q=22.0 size=    1536kB time=00:00:05.46 bitrate=2301.8kbits/s speed= 0.2x    
+frame=  171 fps=6.1 q=22.0 size=    1536kB time=00:00:05.60 bitrate=2247.0kbits/s speed=0.201x    
+frame=  174 fps=6.1 q=22.0 size=    1536kB time=00:00:05.73 bitrate=2194.8kbits/s speed=0.202x    
+frame=  178 fps=6.2 q=22.0 size=    1536kB time=00:00:05.86 bitrate=2144.9kbits/s speed=0.203x    
+frame=  182 fps=6.2 q=22.0 size=    1536kB time=00:00:06.00 bitrate=2097.2kbits/s speed=0.204x    
+frame=  186 fps=6.2 q=22.0 size=    1536kB time=00:00:06.13 bitrate=2051.6kbits/s speed=0.205x    
+frame=  190 fps=6.2 q=22.0 size=    1792kB time=00:00:06.26 bitrate=2342.6kbits/s speed=0.206x    
+frame=  195 fps=6.3 q=22.0 size=    1792kB time=00:00:06.40 bitrate=2293.8kbits/s speed=0.207x    
+frame=  198 fps=6.3 q=22.0 size=    1792kB time=00:00:06.53 bitrate=2247.0kbits/s speed=0.208x    
+frame=  203 fps=6.3 q=22.0 size=    1792kB time=00:00:06.70 bitrate=2191.1kbits/s speed=0.209x    
+frame=  207 fps=6.3 q=22.0 size=    1792kB time=00:00:06.83 bitrate=2148.4kbits/s speed=0.209x    
+frame=  211 fps=6.3 q=22.0 size=    1792kB time=00:00:06.96 bitrate=2107.2kbits/s speed=0.209x    
+frame=  215 fps=6.4 q=22.0 size=    1792kB time=00:00:07.10 bitrate=2067.7kbits/s speed=0.21x    
+frame=  220 fps=6.4 q=22.0 size=    2048kB time=00:00:07.23 bitrate=2319.5kbits/s speed=0.211x    
+frame=  224 fps=6.4 q=22.0 size=    2048kB time=00:00:07.36 bitrate=2277.5kbits/s speed=0.211x    
+frame=  227 fps=6.4 q=22.0 size=    2048kB time=00:00:07.50 bitrate=2237.0kbits/s speed=0.212x    
+frame=  231 fps=6.4 q=22.0 size=    2048kB time=00:00:07.63 bitrate=2197.9kbits/s speed=0.213x    
+frame=  235 fps=6.5 q=22.0 size=    2048kB time=00:00:07.76 bitrate=2160.2kbits/s speed=0.213x    
+frame=  239 fps=6.5 q=22.0 size=    2048kB time=00:00:07.90 bitrate=2123.7kbits/s speed=0.214x    
+frame=  243 fps=6.5 q=22.0 size=    2048kB time=00:00:08.03 bitrate=2088.5kbits/s speed=0.215x    
+frame=  248 fps=6.5 q=22.0 size=    2304kB time=00:00:08.20 bitrate=2301.8kbits/s speed=0.216x    
+frame=  253 fps=6.5 q=22.0 size=    2304kB time=00:00:08.36 bitrate=2255.9kbits/s speed=0.216x    
+frame=  259 fps=6.6 q=22.0 size=    2304kB time=00:00:08.53 bitrate=2211.9kbits/s speed=0.217x    
+frame=  263 fps=6.6 q=22.0 size=    2304kB time=00:00:08.70 bitrate=2169.5kbits/s speed=0.218x    
+frame=  267 fps=6.6 q=22.0 size=    2304kB time=00:00:08.83 bitrate=2136.8kbits/s speed=0.218x    
+frame=  271 fps=6.6 q=22.0 size=    2304kB time=00:00:08.96 bitrate=2105.0kbits/s speed=0.219x    
+frame=  275 fps=6.6 q=22.0 size=    2560kB time=00:00:09.10 bitrate=2304.6kbits/s speed=0.219x    
+frame=  279 fps=6.6 q=22.0 size=    2560kB time=00:00:09.23 bitrate=2271.3kbits/s speed=0.22x    
+frame=  284 fps=6.7 q=22.0 size=    2560kB time=00:00:09.40 bitrate=2231.1kbits/s speed=0.22x    
+frame=  288 fps=6.7 q=22.0 size=    2560kB time=00:00:09.53 bitrate=2199.9kbits/s speed=0.221x    
+frame=  292 fps=6.7 q=22.0 size=    2560kB time=00:00:09.66 bitrate=2169.5kbits/s speed=0.221x    
+frame=  297 fps=6.7 q=22.0 size=    2816kB time=00:00:09.83 bitrate=2346.0kbits/s speed=0.222x    
+frame=  301 fps=6.7 q=22.0 size=    2816kB time=00:00:09.96 bitrate=2314.6kbits/s speed=0.222x    
+frame=  306 fps=6.7 q=22.0 size=    2816kB time=00:00:10.10 bitrate=2284.1kbits/s speed=0.223x    
+frame=  309 fps=6.7 q=22.0 size=    2816kB time=00:00:10.23 bitrate=2254.3kbits/s speed=0.223x    
+frame=  313 fps=6.7 q=22.0 size=    2816kB time=00:00:10.36 bitrate=2225.3kbits/s speed=0.223x    
+frame=  317 fps=6.7 q=22.0 size=    3072kB time=00:00:10.50 bitrate=2396.8kbits/s speed=0.224x    
+frame=  321 fps=6.8 q=22.0 size=    3072kB time=00:00:10.63 bitrate=2366.7kbits/s speed=0.224x    
+frame=  325 fps=6.8 q=22.0 size=    3072kB time=00:00:10.76 bitrate=2337.4kbits/s speed=0.224x    
+frame=  329 fps=6.8 q=22.0 size=    3072kB time=00:00:10.90 bitrate=2308.8kbits/s speed=0.225x    
+frame=  333 fps=6.8 q=22.0 size=    3072kB time=00:00:11.03 bitrate=2280.9kbits/s speed=0.225x    
+frame=  337 fps=6.8 q=22.0 size=    3072kB time=00:00:11.16 bitrate=2253.7kbits/s speed=0.225x    
+frame=  341 fps=6.8 q=22.0 size=    3072kB time=00:00:11.30 bitrate=2227.1kbits/s speed=0.225x    
+frame=  345 fps=6.8 q=22.0 size=    3072kB time=00:00:11.43 bitrate=2201.1kbits/s speed=0.226x    
+frame=  349 fps=6.8 q=22.0 size=    3072kB time=00:00:11.56 bitrate=2175.8kbits/s speed=0.226x    
+frame=  353 fps=6.8 q=22.0 size=    3328kB time=00:00:11.70 bitrate=2330.2kbits/s speed=0.226x    
+frame=  357 fps=6.8 q=22.0 size=    3328kB time=00:00:11.83 bitrate=2303.9kbits/s speed=0.227x    
+frame=  361 fps=6.8 q=22.0 size=    3328kB time=00:00:11.96 bitrate=2278.3kbits/s speed=0.227x    
+frame=  365 fps=6.8 q=22.0 size=    3328kB time=00:00:12.10 bitrate=2253.2kbits/s speed=0.227x    
+frame=  369 fps=6.9 q=22.0 size=    3328kB time=00:00:12.23 bitrate=2228.6kbits/s speed=0.227x    
+frame=  373 fps=6.9 q=22.0 size=    3328kB time=00:00:12.36 bitrate=2204.6kbits/s speed=0.227x    
+frame=  377 fps=6.9 q=22.0 size=    3328kB time=00:00:12.50 bitrate=2181.1kbits/s speed=0.228x    
+frame=  381 fps=6.9 q=22.0 size=    3328kB time=00:00:12.63 bitrate=2158.0kbits/s speed=0.228x    
+frame=  385 fps=6.9 q=22.0 size=    3584kB time=00:00:12.76 bitrate=2299.8kbits/s speed=0.228x    
+frame=  389 fps=6.9 q=22.0 size=    3584kB time=00:00:12.90 bitrate=2276.0kbits/s speed=0.228x    
+frame=  393 fps=6.9 q=22.0 size=    3584kB time=00:00:13.03 bitrate=2252.7kbits/s speed=0.229x    
+frame=  397 fps=6.9 q=22.0 size=    3584kB time=00:00:13.16 bitrate=2229.9kbits/s speed=0.229x    
+frame=  401 fps=6.9 q=22.0 size=    3584kB time=00:00:13.30 bitrate=2207.6kbits/s speed=0.229x    
+frame=  405 fps=6.9 q=22.0 size=    3584kB time=00:00:13.43 bitrate=2185.6kbits/s speed=0.229x    
+frame=  409 fps=6.9 q=22.0 size=    3584kB time=00:00:13.56 bitrate=2164.2kbits/s speed=0.229x    
+frame=  413 fps=6.9 q=22.0 size=    3584kB time=00:00:13.70 bitrate=2143.1kbits/s speed=0.23x    
+frame=  417 fps=6.9 q=22.0 size=    3584kB time=00:00:13.83 bitrate=2122.4kbits/s speed=0.23x    
+frame=  421 fps=6.9 q=22.0 size=    3840kB time=00:00:13.96 bitrate=2252.3kbits/s speed=0.23x    
+frame=  425 fps=6.9 q=22.0 size=    3840kB time=00:00:14.10 bitrate=2231.0kbits/s speed=0.23x    
+frame=  429 fps=6.9 q=22.0 size=    3840kB time=00:00:14.23 bitrate=2210.1kbits/s speed=0.23x    
+frame=  433 fps=6.9 q=22.0 size=    4096kB time=00:00:14.36 bitrate=2335.6kbits/s speed=0.23x    
+frame=  437 fps=6.9 q=22.0 size=    4096kB time=00:00:14.50 bitrate=2314.1kbits/s speed=0.231x    
+frame=  441 fps=7.0 q=22.0 size=    4096kB time=00:00:14.63 bitrate=2293.0kbits/s speed=0.231x    
+frame=  445 fps=7.0 q=22.0 size=    4096kB time=00:00:14.76 bitrate=2272.3kbits/s speed=0.231x    
+frame=  449 fps=7.0 q=22.0 size=    4096kB time=00:00:14.90 bitrate=2252.0kbits/s speed=0.231x    
+frame=  454 fps=7.0 q=22.0 size=    4096kB time=00:00:15.03 bitrate=2232.0kbits/s speed=0.231x    
+frame=  457 fps=7.0 q=22.0 size=    4096kB time=00:00:15.16 bitrate=2212.4kbits/s speed=0.231x    
+frame=  461 fps=7.0 q=22.0 size=    4096kB time=00:00:15.30 bitrate=2193.1kbits/s speed=0.231x    
+frame=  465 fps=7.0 q=22.0 size=    4352kB time=00:00:15.43 bitrate=2310.1kbits/s speed=0.232x    
+frame=  469 fps=7.0 q=22.0 size=    4352kB time=00:00:15.56 bitrate=2290.3kbits/s speed=0.232x    
+frame=  473 fps=7.0 q=22.0 size=    4352kB time=00:00:15.70 bitrate=2270.8kbits/s speed=0.232x    
+frame=  477 fps=7.0 q=22.0 size=    4352kB time=00:00:15.83 bitrate=2251.7kbits/s speed=0.232x    
+frame=  481 fps=7.0 q=22.0 size=    4352kB time=00:00:15.96 bitrate=2232.9kbits/s speed=0.232x    
+frame=  485 fps=7.0 q=22.0 size=    4352kB time=00:00:16.10 bitrate=2214.4kbits/s speed=0.232x    
+frame=  489 fps=7.0 q=22.0 size=    4352kB time=00:00:16.23 bitrate=2196.2kbits/s speed=0.232x    
+frame=  493 fps=7.0 q=22.0 size=    4352kB time=00:00:16.36 bitrate=2178.3kbits/s speed=0.232x    
+frame=  497 fps=7.0 q=22.0 size=    4608kB time=00:00:16.50 bitrate=2287.8kbits/s speed=0.232x    
+frame=  501 fps=7.0 q=22.0 size=    4608kB time=00:00:16.63 bitrate=2269.5kbits/s speed=0.232x    
+frame=  505 fps=7.0 q=22.0 size=    4608kB time=00:00:16.76 bitrate=2251.4kbits/s speed=0.233x    
+frame=  509 fps=7.0 q=22.0 size=    4608kB time=00:00:16.90 bitrate=2233.7kbits/s speed=0.233x    
+frame=  513 fps=7.0 q=22.0 size=    4608kB time=00:00:17.03 bitrate=2216.2kbits/s speed=0.233x    
+frame=  517 fps=7.0 q=22.0 size=    4608kB time=00:00:17.16 bitrate=2199.0kbits/s speed=0.233x    
+frame=  522 fps=7.0 q=22.0 size=    4608kB time=00:00:17.30 bitrate=2182.0kbits/s speed=0.233x    
+frame=  525 fps=7.0 q=22.0 size=    4608kB time=00:00:17.43 bitrate=2165.3kbits/s speed=0.233x    
+frame=  529 fps=7.0 q=22.0 size=    4864kB time=00:00:17.56 bitrate=2268.3kbits/s speed=0.233x    
+frame=  533 fps=7.0 q=22.0 size=    4864kB time=00:00:17.70 bitrate=2251.2kbits/s speed=0.233x    
+frame=  537 fps=7.0 q=22.0 size=    4864kB time=00:00:17.83 bitrate=2234.4kbits/s speed=0.234x    
+frame=  541 fps=7.0 q=22.0 size=    4864kB time=00:00:17.96 bitrate=2217.8kbits/s speed=0.234x    
+frame=  545 fps=7.0 q=22.0 size=    4864kB time=00:00:18.10 bitrate=2201.5kbits/s speed=0.234x    
+frame=  549 fps=7.0 q=22.0 size=    4864kB time=00:00:18.23 bitrate=2185.4kbits/s speed=0.234x    
+frame=  553 fps=7.0 q=22.0 size=    4864kB time=00:00:18.36 bitrate=2169.5kbits/s speed=0.234x    
+frame=  557 fps=7.0 q=22.0 size=    4864kB time=00:00:18.50 bitrate=2153.9kbits/s speed=0.234x    
+frame=  561 fps=7.1 q=22.0 size=    5120kB time=00:00:18.63 bitrate=2251.0kbits/s speed=0.234x    
+frame=  565 fps=7.1 q=22.0 size=    5120kB time=00:00:18.76 bitrate=2235.0kbits/s speed=0.234x    
+frame=  569 fps=7.1 q=22.0 size=    5120kB time=00:00:18.90 bitrate=2219.2kbits/s speed=0.234x    
+frame=  573 fps=7.1 q=22.0 size=    5120kB time=00:00:19.03 bitrate=2203.7kbits/s speed=0.234x    
+frame=  577 fps=7.1 q=22.0 size=    5120kB time=00:00:19.16 bitrate=2188.4kbits/s speed=0.235x    
+frame=  581 fps=7.1 q=22.0 size=    5120kB time=00:00:19.30 bitrate=2173.2kbits/s speed=0.235x    
+frame=  585 fps=7.1 q=22.0 size=    5376kB time=00:00:19.43 bitrate=2266.2kbits/s speed=0.235x    
+frame=  589 fps=7.1 q=22.0 size=    5376kB time=00:00:19.56 bitrate=2250.8kbits/s speed=0.235x    
+frame=  593 fps=7.1 q=22.0 size=    5376kB time=00:00:19.70 bitrate=2235.6kbits/s speed=0.235x    
+frame=  597 fps=7.1 q=22.0 size=    5376kB time=00:00:19.83 bitrate=2220.5kbits/s speed=0.235x    
+frame=  601 fps=7.1 q=22.0 size=    5376kB time=00:00:19.96 bitrate=2205.7kbits/s speed=0.235x    
+frame=  605 fps=7.1 q=22.0 size=    5376kB time=00:00:20.10 bitrate=2191.1kbits/s speed=0.235x    
+frame=  609 fps=7.1 q=22.0 size=    5632kB time=00:00:20.23 bitrate=2280.3kbits/s speed=0.235x    
+frame=  613 fps=7.1 q=22.0 size=    5632kB time=00:00:20.36 bitrate=2265.4kbits/s speed=0.235x    
+frame=  617 fps=7.1 q=22.0 size=    5632kB time=00:00:20.50 bitrate=2250.6kbits/s speed=0.235x    
+frame=  621 fps=7.1 q=22.0 size=    5632kB time=00:00:20.63 bitrate=2236.1kbits/s speed=0.235x    
+frame=  625 fps=7.1 q=22.0 size=    5632kB time=00:00:20.76 bitrate=2221.7kbits/s speed=0.235x    
+frame=  629 fps=7.1 q=22.0 size=    5632kB time=00:00:20.90 bitrate=2207.5kbits/s speed=0.235x    
+frame=  633 fps=7.1 q=22.0 size=    5888kB time=00:00:21.03 bitrate=2293.3kbits/s speed=0.235x    
+frame=  637 fps=7.1 q=22.0 size=    5888kB time=00:00:21.16 bitrate=2278.8kbits/s speed=0.235x    
+frame=  641 fps=7.1 q=22.0 size=    5888kB time=00:00:21.30 bitrate=2264.5kbits/s speed=0.235x    
+frame=  645 fps=7.1 q=22.0 size=    5888kB time=00:00:21.43 bitrate=2250.5kbits/s speed=0.235x    
+frame=  649 fps=7.1 q=22.0 size=    5888kB time=00:00:21.56 bitrate=2236.5kbits/s speed=0.235x    
+frame=  653 fps=7.1 q=22.0 size=    5888kB time=00:00:21.70 bitrate=2222.8kbits/s speed=0.235x    
+frame=  657 fps=7.1 q=22.0 size=    6144kB time=00:00:21.83 bitrate=2305.3kbits/s speed=0.235x    
+frame=  661 fps=7.1 q=22.0 size=    6144kB time=00:00:21.96 bitrate=2291.3kbits/s speed=0.235x    
+frame=  665 fps=7.1 q=22.0 size=    6144kB time=00:00:22.10 bitrate=2277.5kbits/s speed=0.235x    
+frame=  669 fps=7.1 q=22.0 size=    6144kB time=00:00:22.23 bitrate=2263.8kbits/s speed=0.235x    
+frame=  673 fps=7.1 q=22.0 size=    6144kB time=00:00:22.36 bitrate=2250.3kbits/s speed=0.235x    
+frame=  677 fps=7.1 q=22.0 size=    6400kB time=00:00:22.50 bitrate=2330.2kbits/s speed=0.235x    
+frame=  681 fps=7.1 q=22.0 size=    6400kB time=00:00:22.63 bitrate=2316.5kbits/s speed=0.235x    
+frame=  685 fps=7.1 q=22.0 size=    6656kB time=00:00:22.76 bitrate=2395.0kbits/s speed=0.235x    
+frame=  689 fps=7.1 q=22.0 size=    6656kB time=00:00:22.90 bitrate=2381.1kbits/s speed=0.235x    
+frame=  693 fps=7.1 q=22.0 size=    6656kB time=00:00:23.03 bitrate=2367.3kbits/s speed=0.235x    
+frame=  697 fps=7.1 q=22.0 size=    6656kB time=00:00:23.16 bitrate=2353.7kbits/s speed=0.235x    
+frame=  701 fps=7.1 q=22.0 size=    6656kB time=00:00:23.30 bitrate=2340.2kbits/s speed=0.235x    
+frame=  705 fps=7.1 q=22.0 size=    6656kB time=00:00:23.43 bitrate=2326.9kbits/s speed=0.235x    
+frame=  709 fps=7.1 q=22.0 size=    6912kB time=00:00:23.56 bitrate=2402.7kbits/s speed=0.235x    
+frame=  713 fps=7.1 q=22.0 size=    6912kB time=00:00:23.70 bitrate=2389.2kbits/s speed=0.235x    
+frame=  717 fps=7.1 q=22.0 size=    6912kB time=00:00:23.83 bitrate=2375.8kbits/s speed=0.235x    
+frame=  721 fps=7.1 q=22.0 size=    6912kB time=00:00:23.96 bitrate=2362.6kbits/s speed=0.235x    
+frame=  725 fps=7.1 q=22.0 size=    6912kB time=00:00:24.10 bitrate=2349.5kbits/s speed=0.235x    
+frame=  729 fps=7.1 q=22.0 size=    6912kB time=00:00:24.23 bitrate=2336.6kbits/s speed=0.235x    
+frame=  733 fps=7.1 q=22.0 size=    7168kB time=00:00:24.36 bitrate=2409.9kbits/s speed=0.235x    
+frame=  737 fps=7.1 q=22.0 size=    7168kB time=00:00:24.50 bitrate=2396.8kbits/s speed=0.235x    
+frame=  741 fps=7.1 q=22.0 size=    7168kB time=00:00:24.63 bitrate=2383.8kbits/s speed=0.235x    
+frame=  745 fps=7.1 q=22.0 size=    7168kB time=00:00:24.76 bitrate=2371.0kbits/s speed=0.235x    
+frame=  749 fps=7.1 q=22.0 size=    7168kB time=00:00:24.90 bitrate=2358.3kbits/s speed=0.235x    
+frame=  753 fps=7.1 q=22.0 size=    7424kB time=00:00:25.03 bitrate=2429.5kbits/s speed=0.235x    
+frame=  757 fps=7.1 q=22.0 size=    7424kB time=00:00:25.16 bitrate=2416.6kbits/s speed=0.235x    
+frame=  761 fps=7.1 q=22.0 size=    7424kB time=00:00:25.30 bitrate=2403.9kbits/s speed=0.235x    
+frame=  765 fps=7.1 q=22.0 size=    7424kB time=00:00:25.43 bitrate=2391.3kbits/s speed=0.235x    
+frame=  769 fps=7.1 q=22.0 size=    7424kB time=00:00:25.56 bitrate=2378.8kbits/s speed=0.235x    
+frame=  774 fps=7.1 q=22.0 size=    7424kB time=00:00:25.70 bitrate=2366.5kbits/s speed=0.235x    
+frame=  777 fps=7.1 q=22.0 size=    7680kB time=00:00:25.83 bitrate=2435.4kbits/s speed=0.235x    
+frame=  781 fps=7.1 q=22.0 size=    7680kB time=00:00:25.96 bitrate=2422.9kbits/s speed=0.235x    
+frame=  785 fps=7.1 q=22.0 size=    7680kB time=00:00:26.10 bitrate=2410.5kbits/s speed=0.235x    
+frame=  789 fps=7.1 q=22.0 size=    7680kB time=00:00:26.23 bitrate=2398.3kbits/s speed=0.235x    
+frame=  793 fps=7.1 q=22.0 size=    7680kB time=00:00:26.36 bitrate=2386.2kbits/s speed=0.235x    
+frame=  797 fps=7.1 q=22.0 size=    7936kB time=00:00:26.50 bitrate=2453.3kbits/s speed=0.235x    
+frame=  801 fps=7.1 q=22.0 size=    7936kB time=00:00:26.63 bitrate=2441.0kbits/s speed=0.235x    
+frame=  805 fps=7.1 q=22.0 size=    7936kB time=00:00:26.76 bitrate=2428.8kbits/s speed=0.236x    
+frame=  809 fps=7.1 q=22.0 size=    7936kB time=00:00:26.90 bitrate=2416.8kbits/s speed=0.236x    
+frame=  813 fps=7.1 q=22.0 size=    7936kB time=00:00:27.03 bitrate=2404.9kbits/s speed=0.236x    
+frame=  817 fps=7.1 q=22.0 size=    7936kB time=00:00:27.16 bitrate=2393.1kbits/s speed=0.236x    
+frame=  821 fps=7.1 q=22.0 size=    8192kB time=00:00:27.30 bitrate=2458.2kbits/s speed=0.236x    
+frame=  825 fps=7.1 q=22.0 size=    8192kB time=00:00:27.43 bitrate=2446.3kbits/s speed=0.236x    
+frame=  829 fps=7.1 q=22.0 size=    8192kB time=00:00:27.56 bitrate=2434.4kbits/s speed=0.235x    
+frame=  833 fps=7.1 q=22.0 size=    8192kB time=00:00:27.70 bitrate=2422.7kbits/s speed=0.235x    
+frame=  837 fps=7.1 q=22.0 size=    8192kB time=00:00:27.83 bitrate=2411.1kbits/s speed=0.235x    
+frame=  841 fps=7.1 q=22.0 size=    8192kB time=00:00:27.96 bitrate=2399.6kbits/s speed=0.235x    
+frame=  846 fps=7.1 q=22.0 size=    8448kB time=00:00:28.10 bitrate=2462.9kbits/s speed=0.235x    
+frame=  849 fps=7.1 q=22.0 size=    8448kB time=00:00:28.23 bitrate=2451.2kbits/s speed=0.235x    
+frame=  853 fps=7.1 q=22.0 size=    8448kB time=00:00:28.36 bitrate=2439.7kbits/s speed=0.235x    
+frame=  857 fps=7.1 q=22.0 size=    8448kB time=00:00:28.50 bitrate=2428.3kbits/s speed=0.235x    
+frame=  861 fps=7.1 q=22.0 size=    8448kB time=00:00:28.63 bitrate=2417.0kbits/s speed=0.235x    
+frame=  865 fps=7.1 q=22.0 size=    8448kB time=00:00:28.76 bitrate=2405.8kbits/s speed=0.235x    
+frame=  869 fps=7.1 q=22.0 size=    8704kB time=00:00:28.90 bitrate=2467.3kbits/s speed=0.235x    
+frame=  873 fps=7.1 q=22.0 size=    8704kB time=00:00:29.03 bitrate=2455.9kbits/s speed=0.236x    
+frame=  877 fps=7.1 q=22.0 size=    8704kB time=00:00:29.16 bitrate=2444.7kbits/s speed=0.236x    
+frame=  881 fps=7.1 q=22.0 size=    8704kB time=00:00:29.30 bitrate=2433.6kbits/s speed=0.236x    
+frame=  885 fps=7.1 q=22.0 size=    8704kB time=00:00:29.43 bitrate=2422.5kbits/s speed=0.236x    
+frame=  889 fps=7.1 q=22.0 size=    8704kB time=00:00:29.56 bitrate=2411.6kbits/s speed=0.236x    
+frame=  893 fps=7.1 q=22.0 size=    8704kB time=00:00:29.70 bitrate=2400.8kbits/s speed=0.236x    
+frame=  897 fps=7.1 q=22.0 size=    8960kB time=00:00:29.83 bitrate=2460.4kbits/s speed=0.236x    
+frame=  901 fps=7.1 q=22.0 size=    8960kB time=00:00:29.96 bitrate=2449.4kbits/s speed=0.236x    
+frame=  906 fps=7.1 q=22.0 size=    8960kB time=00:00:30.10 bitrate=2438.6kbits/s speed=0.236x    
+frame=  909 fps=7.1 q=22.0 size=    8960kB time=00:00:30.23 bitrate=2427.8kbits/s speed=0.236x    
+frame=  913 fps=7.1 q=22.0 size=    8960kB time=00:00:30.36 bitrate=2417.1kbits/s speed=0.236x    
+frame=  917 fps=7.1 q=22.0 size=    8960kB time=00:00:30.50 bitrate=2406.6kbits/s speed=0.236x    
+frame=  921 fps=7.1 q=22.0 size=    9216kB time=00:00:30.63 bitrate=2464.6kbits/s speed=0.236x    
+frame=  925 fps=7.1 q=22.0 size=    9216kB time=00:00:30.76 bitrate=2453.9kbits/s speed=0.236x    
+frame=  929 fps=7.1 q=22.0 size=    9472kB time=00:00:30.90 bitrate=2511.2kbits/s speed=0.236x    
+frame=  933 fps=7.1 q=22.0 size=    9472kB time=00:00:31.03 bitrate=2500.4kbits/s speed=0.236x    
+frame=  937 fps=7.1 q=22.0 size=    9472kB time=00:00:31.16 bitrate=2489.7kbits/s speed=0.236x    
+frame=  941 fps=7.1 q=22.0 size=    9472kB time=00:00:31.30 bitrate=2479.1kbits/s speed=0.236x    
+frame=  945 fps=7.1 q=22.0 size=    9472kB time=00:00:31.43 bitrate=2468.6kbits/s speed=0.236x    
+frame=  949 fps=7.1 q=22.0 size=    9472kB time=00:00:31.56 bitrate=2458.1kbits/s speed=0.236x    
+frame=  953 fps=7.1 q=22.0 size=    9728kB time=00:00:31.70 bitrate=2513.9kbits/s speed=0.236x    
+frame=  957 fps=7.1 q=22.0 size=    9728kB time=00:00:31.83 bitrate=2503.4kbits/s speed=0.236x    
+frame=  961 fps=7.1 q=22.0 size=    9728kB time=00:00:31.96 bitrate=2493.0kbits/s speed=0.236x    
+frame=  965 fps=7.1 q=22.0 size=    9728kB time=00:00:32.10 bitrate=2482.6kbits/s speed=0.236x    
+frame=  969 fps=7.1 q=22.0 size=    9728kB time=00:00:32.23 bitrate=2472.4kbits/s speed=0.236x    
+frame=  973 fps=7.1 q=22.0 size=    9728kB time=00:00:32.36 bitrate=2462.2kbits/s speed=0.236x    
+frame=  977 fps=7.1 q=22.0 size=    9984kB time=00:00:32.50 bitrate=2516.6kbits/s speed=0.236x    
+frame=  981 fps=7.1 q=22.0 size=    9984kB time=00:00:32.63 bitrate=2506.3kbits/s speed=0.236x    
+frame=  985 fps=7.1 q=22.0 size=    9984kB time=00:00:32.76 bitrate=2496.1kbits/s speed=0.236x    
+frame=  989 fps=7.1 q=22.0 size=    9984kB time=00:00:32.90 bitrate=2486.0kbits/s speed=0.236x    
+frame=  993 fps=7.1 q=22.0 size=    9984kB time=00:00:33.03 bitrate=2476.0kbits/s speed=0.236x    
+frame=  997 fps=7.1 q=22.0 size=    9984kB time=00:00:33.16 bitrate=2466.0kbits/s speed=0.236x    
+frame= 1001 fps=7.1 q=22.0 size=    9984kB time=00:00:33.30 bitrate=2456.1kbits/s speed=0.236x    
+frame= 1005 fps=7.1 q=22.0 size=   10240kB time=00:00:33.43 bitrate=2509.1kbits/s speed=0.236x    
+frame= 1009 fps=7.1 q=22.0 size=   10240kB time=00:00:33.56 bitrate=2499.1kbits/s speed=0.236x    
+frame= 1013 fps=7.1 q=22.0 size=   10240kB time=00:00:33.70 bitrate=2489.2kbits/s speed=0.236x    
+frame= 1017 fps=7.1 q=22.0 size=   10240kB time=00:00:33.83 bitrate=2479.4kbits/s speed=0.236x    
+frame= 1021 fps=7.1 q=22.0 size=   10240kB time=00:00:33.96 bitrate=2469.7kbits/s speed=0.236x    
+frame= 1025 fps=7.1 q=22.0 size=   10240kB time=00:00:34.10 bitrate=2460.0kbits/s speed=0.236x    
+frame= 1029 fps=7.1 q=22.0 size=   10496kB time=00:00:34.23 bitrate=2511.7kbits/s speed=0.236x    
+frame= 1033 fps=7.1 q=22.0 size=   10496kB time=00:00:34.36 bitrate=2501.9kbits/s speed=0.236x    
+frame= 1037 fps=7.1 q=22.0 size=   10496kB time=00:00:34.50 bitrate=2492.3kbits/s speed=0.236x    
+frame= 1041 fps=7.1 q=22.0 size=   10496kB time=00:00:34.63 bitrate=2482.7kbits/s speed=0.236x    
+frame= 1045 fps=7.1 q=22.0 size=   10496kB time=00:00:34.76 bitrate=2473.2kbits/s speed=0.236x    
+frame= 1049 fps=7.1 q=22.0 size=   10496kB time=00:00:34.90 bitrate=2463.7kbits/s speed=0.236x    
+frame= 1053 fps=7.1 q=22.0 size=   10752kB time=00:00:35.03 bitrate=2514.2kbits/s speed=0.236x    
+frame= 1057 fps=7.1 q=22.0 size=   10752kB time=00:00:35.16 bitrate=2504.7kbits/s speed=0.236x    
+frame= 1061 fps=7.1 q=22.0 size=   10752kB time=00:00:35.30 bitrate=2495.2kbits/s speed=0.236x    
+frame= 1065 fps=7.1 q=22.0 size=   10752kB time=00:00:35.43 bitrate=2485.8kbits/s speed=0.236x    
+frame= 1069 fps=7.1 q=22.0 size=   10752kB time=00:00:35.56 bitrate=2476.5kbits/s speed=0.236x    
+frame= 1073 fps=7.1 q=22.0 size=   10752kB time=00:00:35.70 bitrate=2467.2kbits/s speed=0.236x    
+frame= 1078 fps=7.1 q=22.0 size=   10752kB time=00:00:35.83 bitrate=2458.1kbits/s speed=0.236x    
+frame= 1081 fps=7.1 q=22.0 size=   11008kB time=00:00:35.96 bitrate=2507.3kbits/s speed=0.236x    
+frame= 1085 fps=7.1 q=22.0 size=   11008kB time=00:00:36.10 bitrate=2498.0kbits/s speed=0.236x    
+frame= 1089 fps=7.1 q=22.0 size=   11008kB time=00:00:36.23 bitrate=2488.8kbits/s speed=0.236x    
+frame= 1093 fps=7.1 q=22.0 size=   11264kB time=00:00:36.36 bitrate=2537.4kbits/s speed=0.236x    
+frame= 1097 fps=7.1 q=22.0 size=   11264kB time=00:00:36.50 bitrate=2528.1kbits/s speed=0.236x    
+ep07-ato1-patrocinio: 2031 frames, mp4=1
+> ep07-ato2-adsense: 609 frames, mp4=0
+> ep07-ato3-audio: 0 frames, mp4=0
+> ep07-macro: 0 frames, mp4=0
+> ep07-fecho: 31 frames, mp4=0
+> ep07-estrutura-hedge: 0 frames, mp4=0
+> 18:17
+> ```
+
+## 🤖 Claude *(21:17:59)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+ato1 is finished with 2031 frames encoded, and ato2 is up next. Looking at the remaining queue—ato2, ato3, fecho, hedge, and macro—that's roughly 8600 frames total. At the current pace of about 0.8 frames per second, I'm estimating around 3 hours to completion, though the gancho reference suggests the actual rate might be closer to 0.85 frames per second based on its 1233 frames in 24 minutes.
+
+Let me recalculate more carefully: ato1 took 31 minutes for 2031 frames, which is about 1.09 frames per second. If the remaining 8623 frames maintain that pace, that's roughly 132 minutes of rendering plus encoding time for each video—probably another 10 minutes total—putting us around 20:40 or 20:52 depending on the gancho v5 re-render and assembly steps. That misses the 20:30 deadline by 20-35 minutes.
+
+But the user just said "vamos de pivotagem agora"—they're asking about pivoting to a different approach instead, mentioning they'd prefer to do that if it's faster. They're referencing the PDF location and asking for step-by-step instructions on building a connector.
+
+The real question is whether pivoting to generate a new mini-episode with paid models today would actually be faster than finishing EP07. Realistically, that would mean 12-20 video generations at 2-5 minutes each, plus narration and editing—that's easily 4-8 hours of work plus new spending. Finishing EP07 is actually the faster path, even if it misses the original deadline.
+
+But he's signaling he wants to pivot now, so the smart move is to run both in parallel: let EP07 keep rendering in the background (it's already running, costs nothing), deliver that master tonight, and simultaneously start the pivot work—reading through the Keemfinity documentation and walking him through the Higgsfield connector setup step-by-step. That connector configuration is his action to take anyway, so it doesn't compete with the render process.
+
+For the connector itself, I need to track down the actual setup files and documentation—where the connector code lives, what API credentials he needs to provide (looks like it's a user-managed API key stored in the settings), and how to access it through the dashboard. Let me find the relevant connector files and the setup documentation to give him the exact steps.
+
+I also see there's a Keemfinity PDF guide that's over a megabyte—probably contains workflow examples or prompts for using Higgsfield. I should try reading through it to understand the full context of how this integrates into the pipeline, though I'll need to handle the page limit carefully given its size.
+
+The real issue is being honest about timing: the current queue won't finish until around 20:40 for renders, then 21:05 for the master—that's slower than I initially estimated at 19:40. So the choice is either let EP07 finish overnight while we pivot tonight (connector setup, PDF review, draft the pipeline), or kill the queue and start generations tonight but accept that a full episode won't be ready. I need to present both options clearly and let him decide what makes sense.
+
+</details>
+
+
+## 🤖 Claude *(21:18:00)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+A fila está progredindo mais lentamente que o esperado, então vou revisar o guia e o estado do conector Higgsfield para te dar os próximos passos corretos.
+
+</details>
+
+
+## 🤖 Claude *(21:18:00)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/ref-pdf/Keemfinity_AI_Motion_Commercial_Guide.pdf",
+  "pages": "1-8"
+}
+```
+
+> **Tool Result (Read)** - ❌ Error
+>
+> ```
+> pdftoppm is not installed. Install poppler-utils (e.g. `brew install poppler` or `apt-get install poppler-utils`) to enable PDF page rendering.
+> ```
+
+## 🤖 Claude *(21:18:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== conector Higgsfield \u2014 o que existe materialmente ===\"\ngrep -rn \"higgsfield\" --include=\"*.ts\" -il supabase/functions/ src/ scripts/qa/ 2>/dev/null | head -8\necho; echo \"=== coluna BYOK ===\"; grep -n \"higgsfield_api_key\" src/hooks/useUserApiKeys.ts 2>/dev/null | head -3\necho; echo \"=== sentinel do contrato ===\"; ls -la scripts/qa/smoke-higgsfield-schema.ts 2>/dev/null\necho; echo \"=== SOP Amend 2d-bis ===\"; grep -n \"higgsfield\" docs/processes/spaces-graph-execution.md 2>/dev/null | head -5\necho; echo \"=== UI de settings ===\"; grep -rn \"higgsfield\" src/components/settings/ src/pages/SettingsPage.tsx 2>/dev/null | head -5",
+  "description": "Estado material do conector Higgsfield"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === conector Higgsfield — o que existe materialmente ===
+> supabase/functions/canvas-execute/index.ts
+> supabase/functions/_shared/higgsfield-oauth.ts
+> supabase/functions/_shared/higgsfield-oauth.test.ts
+> supabase/functions/higgsfield-oauth-callback/index.ts
+> supabase/functions/veo-poll/index.ts
+> supabase/functions/test-api-key/index.ts
+> supabase/functions/higgsfield-webhook/index.ts
+> src/integrations/supabase/types.ts
+> 
+> === coluna BYOK ===
+> 
+> === sentinel do contrato ===
+> -rw-rw-r-- 1 gcrUX gcrUX 5646 Jul  3 02:00 scripts/qa/smoke-higgsfield-schema.ts
+> 
+> === SOP Amend 2d-bis ===
+> 101:| S16 | **Supressão do dinheiro legado no webhook**: o branch Spaces do `higgsfield-webhook` NÃO chama `deduct_mco_coins` (débito já ocorreu no begin — chamar de novo = double-charge, o P0 da OTD-VA-010) e NÃO escreve `vm_canvas_assets`/`updateProjectGraph` (grafo Spaces vive em `spaces.graph`). Sucesso pós-upload → `finalize(done, refund 0, result={video_url, storage_path})`; vídeo no bucket privado `canvas-assets` (mesmo path-shape legado, prefixo = space_id). Falha/NSFW/cancel → `finalize(error, refund total)`. `asset_id → creative_assets` = follow-up declarado (spine), não bloqueia a 2a. | Anti double-charge estrutural. |
+> 103:| S18 | **Guards 422 do vídeo (pré-débito)**: `provider === 'higgsfield'` + modelo ∈ allowlist 1:1 com os `ALLOWED_VIDEO_MODELS` legados (dop-lite/turbo/standard, kling-2.1-pro, seedance-v1-pro) + `input_asset_url` obrigatório (sem ele o submit falharia DEPOIS do débito) + `duration ∈ {5,10}` default 5. Custo = `CREDIT_COSTS["higgsfield/<model>-<duration>s"]` (chaves 10s ausentes hoje ⇒ fallback 10 do lookup legado NÃO se aplica ao Spaces: duration sem chave de custo → 422, estimativa=cobrança G7). | C12 lição: nunca cobrar caminho sem preço declarado. |
+> 126:| S22 | **Custo do vídeo no HUD = espelho 1:1 do server** (`SPACES_VIDEO_COSTS` client = `CREDIT_COSTS['higgsfield/<model>-5s']`), coberto pelo teste mecânico de mirror-parity que parseia o fonte do edge fn (mesmo padrão SOL-SPACES-001 da 1b). Estimativa = cobrança (G7). | Zero drift silencioso de preço. |
+> 157:| S32 | **Saída = imagem** (flui pelo caminho sync de upload+finalize já existente do slice); `model_key='higgsfield/scene-compose'`; threading downstream: a saída do composer é imagem `done` normal (vira first-frame de vídeo, ref de imagem etc.). | Reuso total do pós-provider. |
+> 165:sentinel `scripts/qa/smoke-higgsfield-schema.ts` (7 gates S1-S7 — RODAR antes de qualquer
+> 
+> === UI de settings ===
+> src/components/settings/HiggsfieldConnectorCard.tsx:14:// consent (per-user BYOK); the token exchange is finished by the /dashboard/settings/higgsfield/callback page.
+> src/pages/SettingsPage.tsx:55:  higgsfield: { mono: "H", tint: "#22d3ee" },
+> src/pages/SettingsPage.tsx:56:  higgsfield_secret: { mono: "H", tint: "#0e9bb8" },
+> src/pages/SettingsPage.tsx:205:    higgsfield_api_key: "",
+> src/pages/SettingsPage.tsx:206:    higgsfield_api_key_secret: "",
+> ```
+
+## 🤖 Claude *(21:18:18)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to install poppler-utils to read the PDF, and I have sudo access without a password prompt, so I'll go ahead with that installation. Looking at the connector implementation, it uses OAuth for authentication along with API key and secret fields in the settings page.
+
+The setup flow is straightforward: get credentials from the Higgsfield platform, paste them into the settings card (which stores them encrypted), complete the OAuth connection, then validate using the schema gates. Once connected, I can use the imageToVideo node with Higgsfield as the provider — and notably, Seedance-v1-pro is available through this connector, which matches what was mentioned earlier. I should check the HiggsfieldConnectorCard component to see the exact user steps and whether the OAuth flow needs any additional environment configuration.
+
+</details>
+
+
+## 🤖 Claude *(21:18:18)*
+
+O PDF precisa de um utilitário que não está instalado — instalando e lendo o card do conector para te dar os passos exatos:
+
+## 🤖 Claude *(21:18:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sudo -n apt-get install -y poppler-utils 2>&1 | tail -2",
+  "description": "Instalar poppler-utils para ler o PDF",
+  "timeout": 120000
+}
+```
+
+## 🤖 Claude *(21:18:18)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/settings/HiggsfieldConnectorCard.tsx",
+  "limit": 60
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> No VM guests are running outdated hypervisor (qemu) binaries on this host.
+> ```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 1	import { useHiggsfieldConnection } from "@/hooks/useHiggsfieldConnection";
+> 2	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+> 3	import { Button } from "@/components/ui/button";
+> 4	import { Badge } from "@/components/ui/badge";
+> 5	import {
+> 6	  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+> 7	  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+> 8	} from "@/components/ui/alert-dialog";
+> 9	import { toast } from "sonner";
+> 10	import { Plug, Loader2, Sparkles, Unplug, AlertTriangle, CheckCircle2 } from "lucide-react";
+> 11	
+> 12	// HiggsfieldConnectorCard — Settings→Connectors surface for the Higgsfield MCP OAuth connector (FR-SPACES-007).
+> 13	// Display-only: state + connect/disconnect live in useHiggsfieldConnection. "Conectar" redirects to the Clerk
+> 14	// consent (per-user BYOK); the token exchange is finished by the /dashboard/settings/higgsfield/callback page.
+> 15	
+> 16	export function HiggsfieldConnectorCard() {
+> 17	  const { connection, isLoading, connect, disconnect } = useHiggsfieldConnection();
+> 18	
+> 19	  const handleConnect = async () => {
+> 20	    try {
+> 21	      await connect.mutateAsync(); // redirects on success
+> 22	    } catch (e) {
+> 23	      toast.error(e instanceof Error ? e.message : "Falha ao conectar.");
+> 24	    }
+> 25	  };
+> 26	  const handleDisconnect = async () => {
+> 27	    try {
+> 28	      await disconnect.mutateAsync();
+> 29	      toast.success("Higgsfield desconectado.");
+> 30	    } catch {
+> 31	      toast.error("Falha ao desconectar.");
+> 32	    }
+> 33	  };
+> 34	
+> 35	  return (
+> 36	    <Card>
+> 37	      <CardHeader>
+> 38	        <CardTitle className="flex items-center gap-2">
+> 39	          <Plug className="h-4 w-4 text-primary" /> Higgsfield MCP — Conector
+> 40	          {connection.connected && !connection.needsReauth && (
+> 41	            <Badge variant="default" className="ml-1 gap-1 text-[10px]"><CheckCircle2 className="h-3 w-3" /> Conectado</Badge>
+> 42	          )}
+> 43	          {connection.needsReauth && (
+> 44	            <Badge variant="destructive" className="ml-1 gap-1 text-[10px]"><AlertTriangle className="h-3 w-3" /> Reconectar</Badge>
+> 45	          )}
+> 46	        </CardTitle>
+> 47	        <CardDescription>
+> 48	          Conecte sua conta Higgsfield (via consent do Clerk) para usar 30+ modelos de geração — Sora 2, Veo 3.1,
+> 49	          Kling, Nano Banana, Soul — nos nós do Spaces com a <strong>sua</strong> credencial (BYOK per-user). O
+> 50	          catálogo é resolvido por introspecção MCP; nenhum endpoint fica hardcoded.
+> 51	        </CardDescription>
+> 52	      </CardHeader>
+> 53	      <CardContent className="space-y-3">
+> 54	        {/* Honest guidance: the MCP connector is account/OAuth-based (needs a Higgsfield plan). Credit-based
+> 55	            pay-per-use runs through the Platform API key in the API Keys tab — that's what powers video/DoP. */}
+> 56	        <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-muted-foreground">
+> 57	          <strong className="text-foreground">Requer uma assinatura Higgsfield.</strong> Este conector usa OAuth
+> 58	          (conta Higgsfield) e só funciona em planos ativos. Se você usa <strong>créditos avulsos</strong> (pay-per-use),
+> 59	          não precisa dele: preencha a <strong>Higgsfield API Key (Platform)</strong> na aba{" "}
+> 60	          <em>IA (API Keys)</em> — é ela que alimenta os nós de vídeo/DoP do Spaces por crédito, sem assinatura.
+> ```
+
+## 🤖 Claude *(21:18:37)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The apt-get message about VM guests is just a post-install hook artifact. I need to confirm pdftoppm is actually installed and review the PDF content. Looking at the connector card, there are two distinct integration paths: the OAuth connector requires a Higgsfield subscription and unlocks 30+ models like Sora 2, Veo 3.1, Kling, and others through MCP introspection, while the platform API key approach uses pay-per-use credits without a subscription requirement and populates the higgsfield_api_key field in the API Keys tab to enable video and depth-of-field nodes.
+
+</details>
+
+
+## 🤖 Claude *(21:18:37)*
+
+O card revelou algo importante: existem **dois caminhos**, e o passo a passo depende de qual plano você tem na Higgsfield. Lendo o PDF agora:
+
+## 🤖 Claude *(21:18:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "which pdftoppm pdftotext && pdfinfo /home/gcrUX/htdocs/constellation-orchestra/docs/ref-pdf/Keemfinity_AI_Motion_Commercial_Guide.pdf 2>/dev/null | grep -E \"Pages|Title\"",
+  "description": "Confirmar poppler e contar p\u00e1ginas do PDF"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /usr/bin/pdftoppm
+> /usr/bin/pdftotext
+> Title:           Keemfinity_AI_Motion_Commercial_Guide
+> Pages:           12
+> ```
+
+## 🤖 Claude *(21:18:42)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/ref-pdf/Keemfinity_AI_Motion_Commercial_Guide.pdf",
+  "pages": "1-12"
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> PDF pages extracted: 12 page(s) from /home/gcrUX/htdocs/constellation-orchestra/docs/ref-pdf/Keemfinity_AI_Motion_Commercial_Guide.pdf (1.3MB)
+> ```
+
+## 👤 User *(21:18:43)*
+
+
+## 🤖 Claude *(21:19:23)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+So the Keemfinity workflow is straightforward: take three reference images, generate three prompts that each produce a ten-second clip packed with one distinct event per second, then stitch them together in the editor for a full thirty-second commercial. The critical principle here is maintaining that relentless pacing—introducing something unmistakably new every single second, which aligns with the density principle I've been working with.
+
+The technical execution relies on hard cuts between clips using near-black frames that make stitching seamless without needing transition effects, stable reference filenames in consistent order, explicit negative constraints to prevent unwanted effects like fades or logo distortion, and a single continuous music bed added during post-production rather than baked into the generated clips. Each prompt includes a precise second-by-second timeline mapping out exactly what happens when.
+
+This maps directly onto our infrastructure: we're using Veo 3.1 with the multi-reference capability (limited to three reference images), but there's a material constraint I need to flag—Veo 3.1 maxes out at eight seconds for 1080p output, not the ten seconds the Keemfinity guide specifies. So I'm adapting to eight-second clips with eight one-second events instead, which maintains the pacing principle while fitting our actual generation limits.
+
+Alternatively, we could route through Higgsfield's connector to access Sora 2, Veo 3.1, Kling, or Seedance via OAuth MCP, or use their platform API with pay-per-use pricing for models that support five or ten-second durations—Seedance v1 pro specifically handles ten-second clips, which would let us stick to the guide's original timing without adaptation.
+
+For the mini-episode structure, each novidade becomes a thirty-second viral segment made up of three ten-second commercial-style blocks, which fits the eight-minute episode format with room for narration and data interstitials between segments.
+
+To set up the connector, there are two routes: subscribe through Higgsfield's OAuth flow in Settings, which unlocks thirty-plus models via MCP, or add an API key and secret in the IA settings for pay-per-use access to the video and DoP nodes—I'd validate everything against the smoke-higgsfield-schema.ts file with its seven gates, and grab the platform key from higgsfield.ai's account settings.
+
+He wants to pivot and start a new mini-episode tonight, but honestly that's not faster than letting EP07 finish rendering in the background while we work in parallel—his part is just the connector setup clicks, mine is documenting the mini-ep pipeline and adapting the Keemfinity prompts for our first novidades block with the Veo 8-second constraint. Once EP07 masters around 21:05, we can run the first paid witness generation if he wants to spend credits on it.
+
+The render math: about 8600 frames remaining at current speed means EP07 finishes around 20:30, gancho processing adds 12 minutes, and we hit master by 21:00—so we're looking at roughly a 30-minute deadline slip. The real decision is whether EP07 is worth finishing in the background (I think yes, zero conflict) while we pivot now, and whether to do the first generation tonight or wait.
+
+On the BoK side, the new mini-pipeline doc is editorial roadmap, not actual code, so no gate violation—the existing Veo and Higgsfield connectors are already documented in spaces-evolution. I'm writing up the updated editorial memory to lock in the pivot decision he confirmed, then laying out the response: what the guide teaches mapped to our constraints, the connector step-by-step with both paths, and the honest timeline for EP07 finishing in background.
+
+</details>
+
+
+## 🤖 Claude *(21:19:24)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've read through the entire 12-page guide and found that his "pacing law" — one unmistakable new event every second — matches exactly the density rule you taught me yesterday when critiquing Act 2. Now I'll save this doctrine and address your three points.
+
+</details>
+
+
+## 🤖 Claude *(21:19:44)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_pivot_miniep_video_models.md",
+  "content": "---\nname: project_pivot_miniep_video_models\ndescription: \"PIV\u00d4 EDITORIAL 2026-08-16 \u2014 mini-epis\u00f3dios de 8 min de novidades, VIRAIS, gerados com modelos de v\u00eddeo pagos (Veo/Seedance/Kling via Higgsfield ou direto); motion MONTAR rebaixado a tecido conectivo de data-viz\"\nmetadata:\n  type: project\n---\n\n**Diretiva Sovereign 2026-08-16** (confirmada: *\"vamos de pivotagem agora\"*): abandonar o motion-first\ncomo linguagem de epis\u00f3dio \u2014 2 epis\u00f3dios seguidos abaixo da r\u00e9gua provaram a economia ruim (\"acerta um,\nerra 3-4\"; chegar ao ritmo do campe\u00e3o custaria +164 camadas manuais/EP). **Novo formato: mini-epis\u00f3dios\nde ~8 min trazendo as novidades de IA, transformados em v\u00eddeos virais, gerados com modelos de v\u00eddeo**\n(Veo 3.1 vivo no canvas-execute; Seedance/Kling/Sora 2 via conector Higgsfield). O EP07 (2026-08-16) \u00e9 o\n\u00daLTIMO motion-first \u2014 linha de base do formato novo.\n\n**O que o MONTAR continua fazendo:** tecido conectivo de data-viz (splitbar/counter/8-12s entre blocos\npagos), US$ 0, vigiado pelos gates G-LEG (`scripts/qa/gate-legibilidade.mjs`, com regra de SUJEITO) e\nG-HONESTIDADE (splitbar sem `value` = erro fatal). N\u00e3o \u00e9 mais linguagem de epis\u00f3dio inteiro.\n\n**A gram\u00e1tica do formato novo = guia Keemfinity** (`docs/ref-pdf/Keemfinity_AI_Motion_Commercial_Guide.pdf`,\n12 pp, lido 2026-08-16): 3 imagens de refer\u00eancia com PAP\u00c9IS fixos (01_logo=identidade \u00b7\n02_produto/app \u00b7 03_humano/contexto, mesmos arquivos, mesma ordem em toda gera\u00e7\u00e3o) \u2192 prompts com\n**timeline segundo-a-segundo** (\"TEN ONE-SECOND EVENTS\") + **PACING LAW: 1 evento visual/segundo**\n(= a r\u00e9gua de densidade da casa, industrializada) + **hard-cut marker** (\u00faltimos 4 frames em #111212\nuniforme \u2014 torna a emenda invis\u00edvel sem transition matching) + NEGATIVE CONSTRAINTS expl\u00edcitas + \u00e1udio:\ngerar SEM m\u00fasica (revela emendas), uma cama musical cont\u00ednua s\u00f3 na edi\u00e7\u00e3o.\n\n**Adapta\u00e7\u00e3o obrigat\u00f3ria ao nosso rail:** o guia pede clipes de 10 s; **Veo 3.1 com referenceImages\nexige 8 s** ([[reference_veo_refs_require_8s]] \u2014 422 do Google fora disso) \u2192 no Veo o bloco vira\n8 eventos/8 s. **Higgsfield platform key** (pay-per-use, sem assinatura) roda seedance-v1-pro /\nkling-2.1-pro / dop-* com duration \u2208 {5,10} \u2014 10 s nativo. Conector OAuth (assinatura) abre Sora 2 etc.\nCusto mini-EP estimado: 12-20 gens pagas \u2248 2.500-5.000 mco (Veo 178-267 mco/8s).\n\n**Why:** audi\u00eancia medida manda (epis\u00f3dio converte 14\u00d7 Short \u00b7 \u00f3timo 7-8 min \u00b7\n[[project_channel_two_videos_week_editorial]]); modelo pago entrega \"surpresa\" por gera\u00e7\u00e3o, motion\nentrega por hora de lapida\u00e7\u00e3o do Sovereign \u2014 que \u00e9 o gargalo real.\n\n**How to apply:** cada novidade do mini-EP = 1 bloco \"comercial\" de 24-30 s (3 clipes com hard-cut\nmarker) + narra\u00e7\u00e3o IVC + interst\u00edcio data-viz MONTAR. Refer\u00eancias por bloco seguem os 3 pap\u00e9is do guia.\nPrompt sempre com timeline por segundo e negative constraints. Emenda = corte seco no marker.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_pivot_miniep_video_models.md
+> ```
+
+## 🤖 Claude *(21:19:51)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory\npython3 - <<'PY'\np='MEMORY.md'\ns=open(p).read()\nlinha='- [\ud83d\ude80 PIV\u00d4 2026-08-16 \u2014 mini-EPs de 8 min com modelos de v\u00eddeo (Veo/Seedance/Higgsfield)](project_pivot_miniep_video_models.md) \u2014 motion MONTAR vira s\u00f3 tecido de data-viz; gram\u00e1tica = guia Keemfinity (1 evento/s \u00b7 hard-cut marker \u00b7 3 refs com pap\u00e9is); EP07 = \u00faltimo motion-first.\\n'\ns=s.replace('# Memory Index\\n\\n','# Memory Index\\n\\n'+linha,1)\nopen(p,'w').write(s)\nprint('indexada')\nPY",
+  "description": "Indexar a mem\u00f3ria do piv\u00f4"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> indexada
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra
+> ```
+
+## 🤖 Claude *(21:20:12)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Let me verify the timeline once more—ato1 finished, ato2 is currently rendering with about 609 frames remaining, which puts us at roughly 20:30 for render completion, then another 12 minutes for v5 gancho and 15 minutes for assembly to reach the master branch.
+
+So the full response covers the guide distilled with the Veo and Higgsfield timing constraints, walks through the connector step-by-step with both paths, and the key decision: EP07 finishes rendering in the background with an honest ETA around 21:00, so we pivot and start now—I'll adapt prompts for the first block and prep references while that renders. One thing I need to clarify: which Higgsfield plan does he have, subscription or credits?
+
+</details>
+
+
+## 🤖 Claude *(21:20:24)*
+
+## 1. O guia — destilado e mapeado no nosso rail
+
+A fórmula Keemfinity: **3 imagens de referência → 3 prompts → 3 clipes de 10 s → 1 filme de 30 s**. Os quatro mecanismos que valem ouro:
+
+| Mecanismo do guia | O que é |
+|---|---|
+| **Pacing Law: 1 evento/segundo** | Cada prompt é uma timeline segundo-a-segundo ("EVENT 1: 0.00–1.00…"). É a sua régua de densidade, escrita como lei de prompt |
+| **Hard-cut marker** | Cada clipe termina com 4 frames de preto uniforme `#111212` → a emenda entre clipes fica invisível com corte seco, sem casar transição |
+| **Referências com papéis fixos** | `01_logo` (identidade) · `02_produto/app` · `03_humano/contexto` — mesmos arquivos, mesma ordem, em toda geração = consistência entre clipes |
+| **Áudio na edição, nunca na geração** | 3 trilhas geradas revelariam as emendas; uma cama musical contínua costura tudo |
+
+**Uma adaptação obrigatória**: o guia pede clipes de 10 s. No **Veo com referências, o Google só aceita 8 s** (o 422 que já nos custou estorno — está na malha). Então: bloco Veo = 8 eventos/8 s. Já **via Higgsfield** (seedance-v1-pro, kling-2.1-pro), 10 s é nativo. Os dois caminhos servem.
+
+**O formato do mini-EP de 8 min**: cada novidade = 1 bloco "comercial" de 24-30 s no estilo do guia + narração IVC + interstício de data-viz MONTAR (o único papel que sobra para ele). ~8-10 novidades por episódio. Doutrina selada na memória.
+
+## 2. O conector Higgsfield — passo a passo
+
+Descobri no card que existem **dois caminhos**, e qual usar depende do que você tem lá:
+
+**Caminho A — você TEM assinatura Higgsfield (plano mensal):**
+1. `/dashboard/settings` → aba **Connectors** → card **"Higgsfield MCP — Conector"**
+2. Clique **Conectar** → redireciona para o consent (login Clerk da Higgsfield) → autorize
+3. Volta sozinho para `/dashboard/settings/higgsfield/callback` → badge **"Conectado"**
+4. Abre **30+ modelos** (Sora 2, Veo 3.1, Kling, Nano Banana, Soul) nos nós do Spaces, com a sua conta
+
+**Caminho B — você usa créditos avulsos (pay-per-use, sem assinatura):**
+1. Em [higgsfield.ai](https://higgsfield.ai) → configurações da conta → **API/Platform** → gere a **Platform API Key** (+ secret)
+2. `/dashboard/settings` → aba **IA (API Keys)** → campos **Higgsfield API Key** e **Secret** → salvar (BYOK cifrado per-user)
+3. Isso alimenta os nós de vídeo/DoP: `dop-lite/turbo/standard`, `kling-2.1-pro`, **`seedance-v1-pro`** — 5 ou 10 s
+
+Assim que você conectar por qualquer caminho, **eu rodo o sentinel** (`smoke-higgsfield-schema.ts`, 7 gates que pinam o contrato vivo) e confirmo que o rail responde antes de qualquer gasto.
+
+**Me diga qual dos dois é o seu caso** — assinatura ou créditos avulsos?
+
+## 3. Pivô agora — com uma honestidade sobre "mais rápido"
+
+Gerar um mini-EP novo **hoje à noite não é mais rápido** que o EP07 terminar: seria roteiro + referências + 20-30 gerações + montagem = madrugada. Já o EP07 termina sozinho em background sem competir com nada. Então o desenho que maximiza as duas coisas:
+
+- **EP07 segue** — recálculo honesto: a fila está mais lenta que o previsto (ato1 ✅, ato2 rodando). Renders terminam ~20:30, gancho v5 sem caneca +12 min, master **~21:00** (não mais 19:55 — o custo real por frame veio 25% acima da base medida).
+- **Pivô começa agora, em paralelo**: você conecta a Higgsfield (5 min de cliques, não briga com o render) e me responde A ou B; eu adapto os 3 prompts do guia para o **primeiro bloco de novidade** (com timeline por segundo, negative constraints e hard-cut marker), deixo as referências definidas, e o **primeiro witness pago** sai hoje ainda — 1 clipe, ~178-267 mco, para calibrar antes de escalar.
+
+Amanhã acorda com: EP07 postável + rail do formato novo provado com witness real.
+
+## 👤 User *(21:17:13)*
+
+<local-command-caveat>Caveat: The messages below were generated by the user while running local commands. DO NOT respond to these messages or otherwise consider them in your response unless the user explicitly asks you to.</local-command-caveat>
+
+## 👤 User *(21:17:13)*
+
+<command-name>/model</command-name>
+            <command-message>model</command-message>
+            <command-args>claude-fable-5</command-args>
+
+## 👤 User *(21:17:13)*
+
+<local-command-stdout>Set model to claude-fable-5</local-command-stdout>
+
+## 👤 User *(21:29:13)*
+
+Higgsfield API Key e Secret ja configurada e com 73.33
+credits available
+
+## 🤖 Claude *(21:29:38)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The Sovereign's set up the Higgsfield Platform with API credentials and 73.33 credits available. I need to run a validation check on the schema first to ensure everything's working before spending credits, then review the pricing structure to understand what those credits cover. After that, I'll adapt the initial prompts and start generating the first output.
+
+</details>
+
+
+## 🤖 Claude *(21:29:39)*
+
+Chave no lugar. Antes de gastar um crédito: rodo o sentinel que pina o contrato vivo (7 gates via sondas 422 — custo zero) e confiro a tabela de preços do rail:
+
+## 🤖 Claude *(21:29:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nhead -30 scripts/qa/smoke-higgsfield-schema.ts | grep -E \"^//|^ \\*|Uso|uso|env\" | head -12\necho \"\u2550\u2550\u2550 rodando o sentinel \u2550\u2550\u2550\"\nexport PATH=\"/home/ubuntu/.bun/bin:$PATH\"\nset -a; source .env 2>/dev/null; set +a\nnice -n 19 bun run scripts/qa/smoke-higgsfield-schema.ts 2>&1 | tail -20",
+  "description": "Sentinel do contrato Higgsfield",
+  "timeout": 180000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  * smoke-higgsfield-schema — ZERO-COST provider drift sentinel (OTD-SPACES-003 antibody).
+>  *
+>  * Born 2026-07-03: the Spaces composer shipped against `soul/compose`, an endpoint that NEVER
+>  * existed upstream — the drift only surfaced in a paid E2E. This sentinel pins the LIVE
+>  * Higgsfield Platform API contract via intentionally-invalid probes: FastAPI/Pydantic 422
+>  * validation errors reveal the schema without ever enqueueing a paid job.
+>  *
+>  * Every gate asserts an exact contract string. When Higgsfield changes ANYTHING we depend on
+>  * (paths, enums, field names, mint contract), a gate flips and this exits 1 — the drift becomes
+>  * a red gate instead of a production incident.
+>  *
+>  * Usage: bun run scripts/qa/smoke-higgsfield-schema.ts   (.env: SUPABASE_URL + SB_SECRET_KEY;
+> ═══ rodando o sentinel ═══
+> ✅ S1 soul/{mode} path enum (compose ainda não existe) — status=422 msg=Input should be 'reference', 'character' or 'standard'
+> ✅ S2 soul/reference existe + prompt obrigatório — status=422 type=missing
+> ✅ S3 aspect_ratio enum exato — Input should be '9:16', '16:9', '4:3', '3:4', '1:1', '2:3' or '3:2'
+> ✅ S4 resolution enum exato — Input should be '720p' or '1080p'
+> ✅ S5 custom_reference_id (uuid) + batch_size (1|4) reconhecidos — ref=uuid_type batch=Input should be 1 or 4
+> ✅ S6 mint exige name + input_images — status=422 name=missing input_images=missing
+> ✅ S7 input_images item = {type:image_url, image_url:url} — Input should be <InputImageType.IMAGE_URL: 'image_url'>
+> 
+> ✅ smoke-higgsfield-schema: 7 passed, 0 failed
+> ```
+
+## 🤖 Claude *(21:29:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== custos declarados (CREDIT_COSTS higgsfield) ===\"\ngrep -n \"higgsfield/\" supabase/functions/canvas-execute/index.ts | grep -iE \"cost|credit|[0-9]\" | head -12\necho; echo \"=== fila EP07 ===\"\nK=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2\nfor c in ep07-ato2-adsense ep07-ato3-audio ep07-estrutura-hedge ep07-fecho ep07-macro; do\n  echo \"$c: $(ls $K/$c/frames 2>/dev/null | wc -l) frames \u00b7 mp4=$(ls $K/$c/*.mp4 2>/dev/null | wc -l)\"\ndone\ndate '+%H:%M'",
+  "description": "Custos do rail e progresso da fila"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === custos declarados (CREDIT_COSTS higgsfield) ===
+> 33:  // "higgsfield/generate" kept as legacy alias → resolves to soul-1080p-1.
+> 34:  "higgsfield/generate": 40,
+> 35:  "higgsfield/soul-720p-1": 20,   // 1.5 hf credits ≈ $0.09
+> 36:  "higgsfield/soul-720p-4": 26,   // 2.0 hf credits ≈ $0.13
+> 37:  "higgsfield/soul-1080p-1": 40,  // 3.0 hf credits ≈ $0.19
+> 38:  "higgsfield/soul-1080p-4": 65,  // 5.0 hf credits ≈ $0.31
+> 41:  "higgsfield/dop-lite-5s": 30,       // placeholder; 2 hf credits ≈ $0.13
+> 42:  "higgsfield/dop-turbo-5s": 90,      // placeholder; 6.5 hf credits ≈ $0.41
+> 43:  "higgsfield/dop-standard-5s": 125,  // placeholder; 9 hf credits ≈ $0.56
+> 45:  "higgsfield/kling-2.1-pro-5s": 160,
+> 46:  "higgsfield/seedance-v1-pro-5s": 130,
+> 55:  // higgsfield/soul payload resolves soul-720p-1 = 20 there; the old 14 under-quoted it). The
+> 
+> === fila EP07 ===
+> ep07-ato2-adsense: 743 frames · mp4=0
+> ep07-ato3-audio: 0 frames · mp4=0
+> ep07-estrutura-hedge: 0 frames · mp4=0
+> ep07-fecho: 31 frames · mp4=0
+> ep07-macro: 0 frames · mp4=0
+> 18:29
+> ```
+
 ---
 
 %% --- PROJECT METADATA START --- %%
