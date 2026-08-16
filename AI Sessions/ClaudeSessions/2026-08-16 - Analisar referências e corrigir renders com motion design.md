@@ -2311,6 +2311,646 @@ O G2 falhou pela minha extração, não necessariamente pelo conteúdo. Verifica
 > novo + partA + partB - cabecalho_novo = 733  (orig 654 + newblock 78 + 2 separadores = 734)
 > ```
 
+## 👤 User *(15:18:54)*
+
+Continue from where you left off.
+
+## 🤖 Claude *(15:18:54)*
+
+No response requested.
+
+## 👤 User *(15:18:56)*
+
+<task-notification>
+<task-id>wjjxqqody</task-id>
+<tool-use-id>toolu_01HuduskEjox37srFfMEt8Ac</tool-use-id>
+<status>stopped</status>
+<summary>No completion record was found for background workflow "ep07-regua-referencia-e-blur" from the previous session. It may have been stopped (via the UI or TaskStop — these leave no transcript marker), or it may have been running when the previous Claude Code process exited. To pick up where it left off, relaunch with Workflow({scriptPath, resumeFromRunId: "wf_2e034e2c-4ad"}) — completed agent() calls return cached.</summary>
+</task-notification>
+
+## 👤 User *(15:18:56)*
+
+algo deu errado com a conexão ssh e não é só aqui deu tive quereiniciar a instancia
+
+## 🤖 Claude *(15:19:08)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The instance rebooted, which means the workflow was interrupted mid-execution and I'll need to resume it using the run ID. More critically, the reboot cleared the `/tmp` directory, so all my scratchpad files—including the handoff documents and block records—are likely lost, along with the ep07-prod scratchpad data.
+
+However, the good news is that `HANDOFF.md` in the git repository is untouched since I never committed the new version, so I can recover the originals from git and redo the assembly. I need to verify what actually survived the reboot: check if the `/tmp/claude-1001/` directory still exists, confirm the scratchpad state, verify the reproved MP4s, and check that the ep07 narration kit in repurpose-inbox (which lives on disk, not in `/tmp`) made it through intact.
+
+</details>
+
+
+## 🤖 Claude *(15:19:08)*
+
+A instância reiniciou — e isso é exatamente o risco que o `mcorch-doctor` tinha sinalizado: **reboot apaga `/tmp`**. Preciso medir o estrago antes de qualquer outra coisa.
+
+## 🤖 Claude *(15:19:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== git (o HANDOFF nunca chegou a ser escrito \u2014 deve estar limpo) ===\"; git status --short; git log --oneline -1\necho; echo \"=== scratchpads sobreviventes ===\"; ls /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ 2>/dev/null || echo \"NENHUM \u2014 /tmp foi limpo\"\necho; echo \"=== meu scratchpad de poda ===\"; ls -la /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/handoff-poda/ 2>/dev/null || echo \"PERDIDO\"",
+  "description": "Medir o estrago do reboot"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === git (o HANDOFF nunca chegou a ser escrito — deve estar limpo) ===
+> 6002c73 chore(sprint): registra o seal de 2026-08-15 (EP07 em produção · régua de densidade · 4 defeitos do motor)
+> 
+> === scratchpads sobreviventes ===
+> 0f660c85-dc33-4596-b7d2-6af1ded6fee1
+> a76d2eb4-714f-48e7-8ed3-3e8340556c0a
+> 
+> === meu scratchpad de poda ===
+> PERDIDO
+> ```
+
+## 🤖 Claude *(15:19:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== os 2 REPROVADOS (viviam s\u00f3 em /tmp) ===\"\nfor f in \"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/1d34d39e-bb30-4b8b-a241-29f263ccd968/scratchpad/ep07-prod/cenas/ep07-ato2-adsense/ep07-ato2-adsense.mp4\" \\\n         \"/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/1d34d39e-bb30-4b8b-a241-29f263ccd968/scratchpad/ep07-prod/cenas/ep07-gancho/ep07-gancho.mp4\"; do\n  [ -f \"$f\" ] && echo \"VIVO: $(basename $f) $(stat -c%s \"$f\")\" || echo \"PERDIDO: $(basename $f)\"\ndone\necho; echo \"=== o CAMPE\u00c3O e o kit (em repurpose-inbox, disco real) ===\"\nls -la repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas/ep07-adsense-16_9.mp4 2>/dev/null || echo \"campeao PERDIDO\"\nls repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/narracao-v02/ 2>/dev/null | wc -l\necho; echo \"=== refer\u00eancias do Sovereign (no git) ===\"; ls docs/ref-videos/ docs/ref-images/ 2>/dev/null | wc -l",
+  "description": "Verificar sobreviv\u00eancia dos ativos cr\u00edticos"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === os 2 REPROVADOS (viviam só em /tmp) ===
+> PERDIDO: ep07-ato2-adsense.mp4
+> PERDIDO: ep07-gancho.mp4
+> 
+> === o CAMPEÃO e o kit (em repurpose-inbox, disco real) ===
+> -rw-rw-r-- 1 ubuntu gcrUX 5240414 Aug 14 14:10 repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas/ep07-adsense-16_9.mp4
+> 29
+> 
+> === referências do Sovereign (no git) ===
+> 21
+> ```
+
+## 🤖 Claude *(15:19:37)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The MP4 files that were lost from /tmp aren't actually gone—they're stored in Supabase as published assets, and I can regenerate them from the scene specifications that are safely in git, so there's no permanent data loss here.
+
+Now I need to check the workflow journal to see which agents completed before the crash, then fix the script to handle the missing reproved video paths by either downloading them from the Biblioteca or re-rendering from the specs.
+
+I should also update the HANDOFF document with the new material fact about the reboot destroying those temporary renders — that's a valuable lesson about why the doctor warned against storing critical files in /tmp. I have the exact newblock content in my context, so I can rebuild it deterministically and add a note about this failure mode.
+
+Let me start by examining the journal and rebuilding the HANDOFF newblock in parallel.
+
+</details>
+
+
+## 🤖 Claude *(15:19:40)*
+
+Estrago medido e é recuperável:
+
+| Ativo | Estado |
+|---|---|
+| `HANDOFF.md` no repo | ✅ intacto (a poda nunca chegou a ser escrita — git limpo) |
+| Campeão `56af51b9` | ✅ vivo em `repurpose-inbox/` (disco real) |
+| Kit de narração v0.2 (29 arq.) | ✅ vivo |
+| `docs/ref-videos` + `ref-images` | ✅ no git |
+| **Os 2 MP4 reprovados** | ❌ **perdidos** — viviam só em `/tmp` |
+
+Os reprovados são regeneráveis pelos specs (que estão no git) e foram publicados na Biblioteca como `9f90042b`/`d2830b5a`. Nenhuma perda irreversível. Vendo o que a perícia alcançou antes de morrer:
+
+## 🤖 Claude *(15:19:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "D=/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/subagents/workflows/wf_2e034e2c-4ad\nls -la \"$D\" 2>/dev/null | head -20\necho \"=== JOURNAL ===\"\nif [ -f \"$D/journal.jsonl\" ]; then\n  wc -l \"$D/journal.jsonl\"\n  python3 -c \"\nimport json,sys\nfor line in open('$D/journal.jsonl'):\n    try: e=json.loads(line)\n    except: continue\n    t=e.get('type') or e.get('event') or '?'\n    lbl=e.get('label') or e.get('agentLabel') or ''\n    res=e.get('result')\n    n=len(json.dumps(res)) if res is not None else 0\n    print(f'{t:24} {lbl:34} resultado={n}B')\n\"\nelse echo \"sem journal\"; fi",
+  "description": "Ver o que a per\u00edcia completou antes do reboot"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 17956
+> drwxrwxr-x 2 ubuntu ubuntu     4096 Aug 15 23:11 .
+> drwxrwxr-x 3 ubuntu ubuntu     4096 Aug 15 23:11 ..
+> -rw------- 1 ubuntu ubuntu  8080005 Aug 15 23:14 agent-a6dc3192d0d7c0350.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu       48 Aug 15 23:11 agent-a6dc3192d0d7c0350.meta.json
+> -rw------- 1 ubuntu ubuntu 10275905 Aug 15 23:14 agent-a839600c21493a48a.jsonl
+> -rw-rw-r-- 1 ubuntu ubuntu       48 Aug 15 23:11 agent-a839600c21493a48a.meta.json
+> -rw-rw-r-- 1 ubuntu ubuntu      250 Aug 15 23:11 journal.jsonl
+> === JOURNAL ===
+> 2 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/subagents/workflows/wf_2e034e2c-4ad/journal.jsonl
+> started                                                     resultado=0B
+> started                                                     resultado=0B
+> ```
+
+## 🤖 Claude *(15:20:09)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Only 2 agents started out of the expected 8 in phase 1, and the workflow crashed after about 3 minutes with nothing cached. The concurrency limit might've been constrained by the host's CPU count. I need to restart with the corrected video paths.
+
+For the reproved videos, I could download them from Supabase (free, fast), re-render from spec (CPU-intensive but no cost), or skip the visual check and rely purely on the analytical depth-of-field computation from the engine, which is exact. The analytical approach using the spec and engine is actually the ground truth here — the visual confirmation is secondary. Since the champion and reference videos survived, I can work analytically against those specs while using the champion and references for visual validation, which aligns with what was actually requested: analyzing the reference videos correctly.
+
+Let me try a quick 30-second probe to see if I can recover the reproved videos from the Biblioteca using the asset storage path and Supabase's REST API with the secret key — if it works, the perícia gets eyes on them; if not, I'll design the workflow to handle re-rendering or analytical-only analysis as a fallback.
+
+Actually, the cleaner approach is to relaunch the workflow with the reproved-video agents instructed to first attempt recovery from Biblioteca, then fall back to re-rendering from spec if needed, and proceed analytically if neither works — that's robust and can run in parallel while I redo the HANDOFF block with a note about the reboot loss.
+
+I'll send a fresh corrected script inline rather than editing the persisted file blind, since that's cleaner and avoids token overhead from trying to edit without full visibility.
+
+I should also flag that the host reboot likely took down the systemd bridges and Docker mesh, so I'll include a quick infrastructure check in my next step to verify the workers are still operational — that's material given the mesh was supposed to be up for nine days.
+
+</details>
+
+
+## 🤖 Claude *(15:20:10)*
+
+Nada foi cacheado — a perícia morreu com 2 agentes recém-iniciados. Relançando com os caminhos corrigidos (os reprovados agora precisam ser recuperados ou analisados analiticamente pelo spec):
+
+## 🤖 Claude *(15:21:55)*
+
+
+🛠️ **Tool Call**: `Workflow`
+```json
+{
+  "script": "export const meta = {\n  name: 'ep07-regua-referencia-e-blur-v2',\n  description: 'Per\u00edcia das refer\u00eancias do Sovereign + asset campe\u00e3o + defeito de blur permanente (p\u00f3s-reboot: MP4 reprovados perdidos, an\u00e1lise anal\u00edtica sobre spec+motor)',\n  phases: [\n    { title: 'Per\u00edcia', detail: 'refs de v\u00eddeo/imagem, campe\u00e3o, specs reprovados, motor' },\n    { title: 'Verifica\u00e7\u00e3o', detail: 'cr\u00edtico adversarial sobre cada achado de blur' },\n    { title: 'S\u00edntese', detail: 'r\u00e9gua de refer\u00eancia + lista de corre\u00e7\u00e3o' },\n  ],\n}\n\nconst REPO = '/home/gcrUX/htdocs/constellation-orchestra'\nconst SCRATCH = '/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/pericia'\n\nconst COMUM = `\nCONTEXTO (MCORCH \u00b7 EP07 \u00b7 motor MONTAR v2). Repo: ${REPO}. Use SEMPRE caminhos absolutos.\nScratchpad para seus artefatos: ${SCRATCH} (mkdir -p na sua subpasta).\n\n\u26a0\ufe0f O HOST FOI REINICIADO AGORA. /tmp foi limpo. Se um caminho que eu te der n\u00e3o existir, N\u00c3O invente:\nverifique com ls, relate \"AUSENTE\" e siga com o que sobrou. Isto \u00e9 resposta v\u00e1lida.\n\nLEI 1 (MATERIALIDADE) \u00c9 INVIOL\u00c1VEL: toda afirma\u00e7\u00e3o carrega prova material \u2014 output literal de\nffprobe/ffmpeg, n\u00famero medido, arquivo:linha, ou a descri\u00e7\u00e3o de um frame que VOC\u00ca ABRIU com a tool Read\n(a Read renderiza PNG/JPEG visualmente). NUNCA descreva frame que n\u00e3o abriu. NUNCA invente n\u00famero.\nSe n\u00e3o mediu, escreva \"N\u00c3O MEDIDO\" \u2014 fabricar \u00e9 viola\u00e7\u00e3o e mata a sess\u00e3o.\n\nVOC\u00ca TEM OLHOS: extraia frames com ffmpeg para PNG e ABRA com Read. Metadado sozinho n\u00e3o basta.\npython3 + numpy + PIL dispon\u00edveis no host.\n`\n\nphase('Per\u00edcia')\n\nconst REF_VIDEOS = [\n  { id: 'ref-A', path: `${REPO}/docs/ref-videos/WhatsApp Video 2026-08-06 at 15.43.100.mp4`, nota: '77,5s \u00b7 720x960 vertical \u00b7 60fps \u00b7 a refer\u00eancia LONGA (a mem\u00f3ria do projeto a descreve como stop-motion com papel recortado)' },\n  { id: 'ref-B', path: `${REPO}/docs/ref-videos/WhatsApp Video 2026-08-06 at 15.43.10.mp4`, nota: '20,5s \u00b7 576x1248 vertical \u00b7 60fps' },\n  { id: 'ref-C', path: `${REPO}/docs/ref-videos/WhatsApp Video 2026-08-06 at 20.42.27.mp4`, nota: '33,6s \u00b7 720x1040 vertical \u00b7 60fps' },\n]\n\nconst SCHEMA_REF = {\n  type: 'object', additionalProperties: false,\n  required: ['id', 'ritmo', 'profundidade', 'foco_e_blur', 'texto_na_tela', 'paleta_e_textura', 'movimento', 'o_que_copiar', 'o_que_nao_copiar', 'frames_olhados'],\n  properties: {\n    id: { type: 'string' },\n    ritmo: {\n      type: 'object', additionalProperties: false,\n      required: ['cortes_detectados', 'mediana_plano_seg', 'eventos_por_seg', 'metodo'],\n      properties: {\n        cortes_detectados: { type: 'integer' },\n        mediana_plano_seg: { type: 'number' },\n        eventos_por_seg: { type: 'string' },\n        metodo: { type: 'string' },\n      },\n    },\n    profundidade: { type: 'string' },\n    foco_e_blur: {\n      type: 'object', additionalProperties: false,\n      required: ['usa_desfoque', 'desfoque_e_permanente', 'evidencia'],\n      properties: {\n        usa_desfoque: { type: 'boolean' },\n        desfoque_e_permanente: { type: 'string' },\n        evidencia: { type: 'string' },\n      },\n    },\n    texto_na_tela: { type: 'string' },\n    paleta_e_textura: { type: 'string' },\n    movimento: { type: 'string' },\n    o_que_copiar: { type: 'array', items: { type: 'string' } },\n    o_que_nao_copiar: { type: 'array', items: { type: 'string' } },\n    frames_olhados: { type: 'array', items: { type: 'string' } },\n  },\n}\n\nconst refResults = REF_VIDEOS.map((v) => () => agent(`${COMUM}\n\nTAREFA: per\u00edcia do v\u00eddeo de REFER\u00caNCIA que o Sovereign ama e mandou usar como r\u00e9gua.\n\nArquivo: \"${v.path}\"\nNota: ${v.nota}\n\nEstas refer\u00eancias produziram o \u00daNICO asset que o Sovereign aprovou. Extraia a GRAM\u00c1TICA em regras\nacion\u00e1veis \u2014 n\u00e3o impress\u00f5es.\n\nFA\u00c7A:\n1. mkdir -p ${SCRATCH}/${v.id} && ffprobe completo.\n2. Cortes: ffmpeg -i \"<arquivo>\" -filter:v \"select='gt(scene,0.3)',showinfo\" -f null - 2>&1 | grep showinfo\n   \u2192 timestamps, contagem e MEDIANA de dura\u00e7\u00e3o de plano. Se der 0 cortes, baixe para 0.15 e reporte os dois.\n3. Extraia >= 20 frames distribu\u00eddos \u2192 ${SCRATCH}/${v.id}/f%03d.png\n4. ABRA COM Read no m\u00ednimo 12 deles. Olhe de verdade.\n5. PERGUNTA-M\u00c3E desta per\u00edcia (o Sovereign reprovou nosso render por \"v\u00e1rios erros de blur permanentes\n   que n\u00e3o d\u00e1 leitura NUNCA do que surgiu na tela\"):\n   **quando esta refer\u00eancia desfoca algo, esse algo em algum momento fica n\u00edtido?\n   O que permanece borrado nela alguma vez carrega informa\u00e7\u00e3o que o espectador precisa ler?**\n6. Me\u00e7a a DENSIDADE: a cada quantos segundos algo nasce/muda/sai.\n\nCada regra em o_que_copiar deve ser verific\u00e1vel por um n\u00famero ou por um frame nomeado.`,\n  { label: `ref:${v.id}`, phase: 'Per\u00edcia', schema: SCHEMA_REF }))\n\nconst refImagens = () => agent(`${COMUM}\n\nTAREFA: per\u00edcia das 14 imagens de REFER\u00caNCIA de design selecionadas pelo Sovereign.\n\nPasta: ${REPO}/docs/ref-images/ (ls primeiro; nomes t\u00eam espa\u00e7os e par\u00eanteses \u2014 cite entre aspas)\n\nABRA TODAS AS 14 com Read.\n\nExtraia a gram\u00e1tica de DESIGN comum a elas:\n- composi\u00e7\u00e3o e uso do vazio \u00b7 profundidade (camadas? sombra de contato? recorte de papel? borda-assinatura?)\n- paleta (hex aproximados observados) e temperatura \u00b7 tipografia (peso, caixa, hierarquia, tamanho relativo)\n- textura (gr\u00e3o, papel, ru\u00eddo, vinheta) \u00b7 tratamento de marca/objeto real\n- LEGIBILIDADE: algum elemento portador de informa\u00e7\u00e3o aparece desfocado? (pergunta central)\n\nDepois leia ${REPO}/docs/processes/repertorio-producao-profissional.md (se\u00e7\u00f5es de luz/cor/composi\u00e7\u00e3o)\ne diga ONDE as refer\u00eancias DIVERGEM do nosso manual.`, {\n  label: 'ref:imagens', phase: 'Per\u00edcia',\n  schema: {\n    type: 'object', additionalProperties: false,\n    required: ['imagens_abertas', 'composicao', 'profundidade', 'paleta', 'tipografia', 'textura', 'legibilidade', 'regras', 'divergencias_do_manual'],\n    properties: {\n      imagens_abertas: { type: 'array', items: { type: 'string' } },\n      composicao: { type: 'string' }, profundidade: { type: 'string' }, paleta: { type: 'string' },\n      tipografia: { type: 'string' }, textura: { type: 'string' }, legibilidade: { type: 'string' },\n      regras: { type: 'array', items: { type: 'string' } },\n      divergencias_do_manual: { type: 'array', items: { type: 'string' } },\n    },\n  },\n})\n\nconst campeao = () => agent(`${COMUM}\n\nTAREFA: per\u00edcia do \u00daNICO asset que o Sovereign chamou de campe\u00e3o em motion e design.\n\nParecer dele, textual, hoje:\n\"EP07 \u00b7 PILOTO Ato 2 AdSense \u00b7 MONTAR v2 \u00b7 12s \u00b7 8 planos/9 camadas \u00b7 gate triplo verde \u2014 56af51b9\nem quest\u00e3o de motion e design ficou MUITO BOM, s\u00f3 precisa fazer certinho com a narra\u00e7\u00e3o\"\n\nArquivos (SOBREVIVERAM ao reboot, est\u00e3o em disco real):\n- 16:9  : ${REPO}/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas/ep07-adsense-16_9.mp4 (12,000s \u00b7 360 fr \u00b7 1920x1080 \u00b7 5.240.414 B)\n- 2.39:1: ${REPO}/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas/ep07-adsense-2_39_1.mp4 (12,000s \u00b7 2580x1080)\n- runner que o produziu: ${REPO}/scripts/ep07/pilot-adsense-montar.ts (LEIA INTEIRO \u2014 runner SOB MEDIDA, n\u00e3o spec gen\u00e9rica)\n- motor: ${REPO}/scripts/motion/montar-template-v2.mjs\n\nFA\u00c7A:\n1. mkdir -p ${SCRATCH}/campeao ; extraia frames a 3 fps (36 frames) do 16:9.\n2. ABRA COM Read no m\u00ednimo 15, do in\u00edcio ao fim. OLHE.\n3. Leia pilot-adsense-montar.ts INTEIRO e extraia os PAR\u00c2METROS EXATOS passados ao motor:\n   os 8 planos e seus z \u00b7 as 9 camadas (kind, plano, tamanho, entrada/sa\u00edda) \u00b7\n   focus.stations (quais planos entram em foco e QUANDO), focus.k, focus.maxBlur, focus.motivated \u00b7\n   trilha de c\u00e2mera (keyframes x/y/z) \u00b7 grade/textura/borda.\n4. DENSIDADE: 9 camadas em 12s = um evento a cada quantos segundos?\n5. **Por que ESTE funciona?** Fatores em ordem de import\u00e2ncia, cada um ancorado num frame que voc\u00ea\n   abriu ou numa linha do runner.\n6. **Neste campe\u00e3o, alguma camada com informa\u00e7\u00e3o fica borrada o tempo todo?** Se sim, por que n\u00e3o\n   incomodou (\u00e9 fundo? resolve depois? \u00e9 pequena?).`, {\n  label: 'campeao:56af51b9', phase: 'Per\u00edcia',\n  schema: {\n    type: 'object', additionalProperties: false,\n    required: ['planos', 'camadas', 'focus', 'camera', 'densidade_seg_por_evento', 'por_que_funciona', 'blur_no_campeao', 'frames_olhados', 'parametros_literais'],\n    properties: {\n      planos: { type: 'string' }, camadas: { type: 'string' }, focus: { type: 'string' },\n      camera: { type: 'string' }, densidade_seg_por_evento: { type: 'number' },\n      por_que_funciona: { type: 'array', items: { type: 'string' } },\n      blur_no_campeao: { type: 'string' },\n      frames_olhados: { type: 'array', items: { type: 'string' } },\n      parametros_literais: { type: 'string', description: 'bloco de config exato para reuso' },\n    },\n  },\n})\n\nconst REPROVADOS = [\n  { id: 'ato2-v2', spec: `${REPO}/scripts/ep07/scenes/ep07-ato2-adsense.spec.json`, dur: '66,567s \u00b7 1997 frames \u00b7 2580x1080', asset: '9f90042b' },\n  { id: 'gancho-v2', spec: `${REPO}/scripts/ep07/scenes/ep07-gancho.spec.json`, dur: '41,100s \u00b7 1233 frames \u00b7 2580x1080', asset: 'd2830b5a' },\n]\n\nconst SCHEMA_REPROVADO = {\n  type: 'object', additionalProperties: false,\n  required: ['id', 'recuperacao_do_video', 'blur_permanente', 'inventario_camadas', 'densidade_real', 'outros_defeitos'],\n  properties: {\n    id: { type: 'string' },\n    recuperacao_do_video: { type: 'string', description: 'conseguiu ver o MP4? como? ou an\u00e1lise foi s\u00f3 anal\u00edtica sobre o spec?' },\n    blur_permanente: {\n      type: 'array',\n      description: 'UMA ENTRADA POR CAMADA que nunca fica leg\u00edvel. Vazio se n\u00e3o achou nenhuma.',\n      items: {\n        type: 'object', additionalProperties: false,\n        required: ['camada', 'plano_z', 'janela_em_cena', 'blur_px_min', 'blur_px_max', 'carrega_informacao', 'prova'],\n        properties: {\n          camada: { type: 'string' }, plano_z: { type: 'string' }, janela_em_cena: { type: 'string' },\n          blur_px_min: { type: 'number' }, blur_px_max: { type: 'number' },\n          carrega_informacao: { type: 'boolean' }, prova: { type: 'string' },\n        },\n      },\n    },\n    inventario_camadas: { type: 'string' },\n    densidade_real: { type: 'string' },\n    outros_defeitos: { type: 'array', items: { type: 'string' } },\n  },\n}\n\nconst reprovados = REPROVADOS.map((r) => () => agent(`${COMUM}\n\nTAREFA: aut\u00f3psia do render REPROVADO pelo Sovereign.\n\nParecer dele, textual, hoje:\n\"o \u00faltimo ainda n\u00e3o ficou bom, voc\u00ea acabou parecendo cansado pois n\u00e3o surpreendeu e teve v\u00e1rios erros de\nBLUR PERMANENTES QUE N\u00c3O D\u00c1 LEITURA NUNCA do que surgiu na tela\"\n\n\u26a0\ufe0f O MP4 desta cena VIVIA S\u00d3 EM /tmp E FOI PERDIDO NO REBOOT. O spec est\u00e1 no git e \u00e9 a fonte da verdade.\n   Cena: ${r.id} (${r.dur}) \u00b7 asset publicado na Biblioteca: ${r.asset}\n   spec : ${r.spec}\n   motor: ${REPO}/scripts/motion/montar-template-v2.mjs\n   runner: ${REPO}/scripts/ep07/render-scenes-montar.ts\n\nPASSO 0 \u2014 TENTE RECUPERAR O V\u00cdDEO (time-box ~5 min, n\u00e3o insista):\n   (a) procure c\u00f3pia sobrevivente: find ${REPO}/repurpose-inbox -name \"*${r.id.split('-')[0]}*\" e\n       ls ${REPO}/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas/\n   (b) se n\u00e3o achar, siga ANALITICAMENTE pelo spec \u2014 isso \u00e9 suficiente e \u00e9 a fonte da verdade.\n   N\u00c3O re-renderize (custa ~10 min de CPU e n\u00e3o \u00e9 seu trabalho aqui). Declare o que fez em\n   recuperacao_do_video.\n\nO MECANISMO DO DEFEITO (identificado; sua miss\u00e3o \u00e9 MEDIR e CONFIRMAR ou REFUTAR):\nNo motor, dof(z)=clamp(|z-fz|/k, 0, maxBlur), com fz = Z do plano em foco no instante t, interpolado pelas\nfocus.stations. Consequ\u00eancia: **camada cujo plano NUNCA \u00e9 esta\u00e7\u00e3o de foco fica borrada do primeiro ao\n\u00faltimo frame**. Se carrega texto/n\u00famero/figura, nasce ileg\u00edvel e morre ileg\u00edvel.\n\nFA\u00c7A:\n1. Leia o spec inteiro. Tabela: cada camada \u2192 plano \u2192 z \u2192 janela de tempo em cena \u2192 carrega informa\u00e7\u00e3o?\n2. Leia focus.stations do spec e o trecho do motor (~linhas 415-500 de montar-template-v2.mjs) que calcula\n   focusZ(t) e dof(z). Anote focus.k, focus.maxBlur, focus.motivated LITERAIS (com linha).\n3. CALCULE para CADA camada o desfoque M\u00cdNIMO atingido durante sua janela em cena. Escreva um script\n   python3/node no seu scratchpad \u2014 \u00e9 aritm\u00e9tica sobre as stations, fa\u00e7a direito.\n   Legibilidade: >~2px um texto de corpo j\u00e1 perde leitura; >~4px vira mancha.\n   Classifique: LEG\u00cdVEL / MARGINAL / NUNCA LEG\u00cdVEL.\n4. Se conseguiu o MP4 no passo 0, CONFIRME COM OS OLHOS nos instantes previstos. Se a conta previu borrado\n   e o frame est\u00e1 n\u00edtido, a CONTA est\u00e1 errada \u2014 REPORTE ISSO, n\u00e3o force a narrativa.\n5. Al\u00e9m do blur: por que \"n\u00e3o surpreendeu\"? Densidade REAL desta cena contra o campe\u00e3o (9 camadas/12s =\n   um evento a cada 1,33s). Onde a cena fica parada?\n\nSe N\u00c3O houver blur permanente, retorne blur_permanente vazio \u2014 refutar \u00e9 resultado v\u00e1lido e valioso.`,\n  { label: `reprovado:${r.id}`, phase: 'Per\u00edcia', schema: SCHEMA_REPROVADO }))\n\nconst motor = () => agent(`${COMUM}\n\nTAREFA: per\u00edcia do MOTOR \u2014 por que ele deixa nascer camada permanentemente ileg\u00edvel, e como isso vira\nERRO em vez de sil\u00eancio.\n\nArquivos:\n- ${REPO}/scripts/motion/montar-template-v2.mjs  (36 KB \u2014 LEIA INTEIRO)\n- ${REPO}/scripts/ep07/render-scenes-montar.ts   (runner por spec \u2014 produziu os REPROVADOS)\n- ${REPO}/scripts/ep07/pilot-adsense-montar.ts   (runner sob medida \u2014 produziu o CAMPE\u00c3O)\n- ${REPO}/scripts/motion/spec-contract.mjs       (gate que extrai quais campos cada kind l\u00ea)\n- ${REPO}/scripts/ep07/scenes/*.spec.json        (as 7 cenas)\n\nRESPONDA COM PRECIS\u00c3O CIR\u00daRGICA (arquivo:linha em cada afirma\u00e7\u00e3o):\n\nA) FOCO E BLUR\n   1. Transcreva focusZ(t) e dof(z) literalmente, com n\u00fameros de linha.\n   2. Comportamento quando um plano NUNCA aparece em focus.stations? Prove pelo c\u00f3digo.\n   3. Defaults de focus.maxBlur e focus.k? E se o spec omite focus inteiro?\n   4. focus.motivated muda a UNIDADE de k \u2014 explique o risco de copiar k entre modos.\n   5. Existe HOJE algum gate/aviso/erro que detecte \"camada com informa\u00e7\u00e3o nunca atinge foco\"? (grep)\n\nB) A DIFEREN\u00c7A CAMPE\u00c3O x SPEC GEN\u00c9RICA \u2014 a pergunta central da sess\u00e3o\n   Compare pilot-adsense-montar.ts com render-scenes-montar.ts + spec.\n   Liste TODA capacidade que o runner sob medida usa e que o caminho por spec N\u00c3O exp\u00f5e ou exp\u00f5e pior.\n   O campe\u00e3o \u00e9 melhor por talento do autor, ou porque o caminho por spec PERDEU capacidade do motor?\n   Prove com linhas.\n\nC) O GATE QUE FALTA \u2014 G-LEGIBILIDADE (projete, n\u00e3o implemente)\n   Para cada camada portadora de informa\u00e7\u00e3o, calcular o blur m\u00ednimo na janela em cena e FALHAR o render\n   acima do limiar. Diga: onde encaixa no fluxo \u00b7 que dados j\u00e1 existem no spec \u00b7 o que falta declarar \u00b7\n   limiar defens\u00e1vel \u00b7 como evita falso-positivo em camada decorativa (fundo, n\u00e9voa, textura) \u00b7\n   o MENOR DIFF poss\u00edvel que entrega isso.\n\nD) OS 4 PEDIDOS DE VOCABUL\u00c1RIO ABERTOS\n   cutout honrar altura \u00b7 ancorar pela caixa alfa e n\u00e3o pela tela do PNG \u00b7 emphasis por camada/beat \u00b7\n   hud.scrim:\"none\" com sombra de contato.\n   Para cada um: j\u00e1 foi implementado? (grep no motor) Esfor\u00e7o? Qual ataca a queixa do Sovereign?`, {\n  label: 'motor:forense', phase: 'Per\u00edcia',\n  schema: {\n    type: 'object', additionalProperties: false,\n    required: ['foco_e_blur', 'diferenca_campeao_vs_spec', 'gate_legibilidade', 'pedidos_vocabulario', 'citacoes'],\n    properties: {\n      foco_e_blur: { type: 'string' },\n      diferenca_campeao_vs_spec: { type: 'array', items: { type: 'string' } },\n      gate_legibilidade: { type: 'string' },\n      pedidos_vocabulario: { type: 'array', items: { type: 'string' } },\n      citacoes: { type: 'array', items: { type: 'string' } },\n    },\n  },\n})\n\nconst pericia = await parallel([...refResults, refImagens, campeao, ...reprovados, motor])\nconst [refA, refB, refC, imagens, camp, rep1, rep2, mot] = pericia\nconst refsOk = [refA, refB, refC].filter(Boolean)\nconst reprovadosOk = [rep1, rep2].filter(Boolean)\nlog(`Per\u00edcia: refs ${refsOk.length}/3 \u00b7 imagens ${imagens ? 'ok' : 'FALHOU'} \u00b7 campe\u00e3o ${camp ? 'ok' : 'FALHOU'} \u00b7 reprovados ${reprovadosOk.length}/2 \u00b7 motor ${mot ? 'ok' : 'FALHOU'}`)\n\nphase('Verifica\u00e7\u00e3o')\n\nconst achadosBlur = reprovadosOk.flatMap((r) => (r.blur_permanente || []).map((b) => ({ cena: r.id, ...b })))\nlog(`${achadosBlur.length} camadas acusadas de blur permanente \u2014 verifica\u00e7\u00e3o adversarial`)\n\nconst verificados = achadosBlur.length === 0 ? [] : await parallel(\n  achadosBlur.slice(0, 10).map((b, i) => () => agent(`${COMUM}\n\nTAREFA: REFUTAR uma acusa\u00e7\u00e3o. Voc\u00ea \u00e9 o cr\u00edtico adversarial \u2014 seu trabalho \u00e9 DERRUBAR o achado.\nConfirme apenas se n\u00e3o conseguir derrub\u00e1-lo.\n\nACUSA\u00c7\u00c3O (de outro agente):\n  cena          : ${b.cena}\n  camada        : ${b.camada}\n  plano/z       : ${b.plano_z}\n  janela em cena: ${b.janela_em_cena}\n  blur m\u00ednimo   : ${b.blur_px_min} px (m\u00e1x ${b.blur_px_max} px)\n  carrega info? : ${b.carrega_informacao}\n  prova alegada : ${b.prova}\n\nSUA LENTE: refa\u00e7a a aritm\u00e9tica do dof(z) DO ZERO a partir do spec e do motor, sem confiar na conta dele.\nA conta bate? O blur m\u00ednimo alegado est\u00e1 certo? A camada realmente carrega informa\u00e7\u00e3o, ou \u00e9 decorativa\n(fundo/n\u00e9voa/textura) e o desfoque \u00e9 correto e desej\u00e1vel ali?\n\nArquivos: motor ${REPO}/scripts/motion/montar-template-v2.mjs \u00b7 specs ${REPO}/scripts/ep07/scenes/\nScratchpad: ${SCRATCH}/verify-${i}\n\nNA D\u00daVIDA, REFUTE. Acusa\u00e7\u00e3o que sobrevive vira ordem de trabalho \u2014 e ordem errada custa render e a\npaci\u00eancia do Sovereign.`, {\n    label: `verify:${b.cena}:${(b.camada || 'x').slice(0, 16)}`, phase: 'Verifica\u00e7\u00e3o',\n    schema: {\n      type: 'object', additionalProperties: false,\n      required: ['refutado', 'confianca', 'razao', 'prova_material'],\n      properties: {\n        refutado: { type: 'boolean' },\n        confianca: { type: 'string', enum: ['alta', 'media', 'baixa'] },\n        razao: { type: 'string' }, prova_material: { type: 'string' },\n      },\n    },\n  }).then((v) => ({ acusacao: b, veredito: v })))\n)\n\nconst vOk = verificados.filter(Boolean)\nconst confirmados = vOk.filter((v) => v.veredito && !v.veredito.refutado)\nconst derrubados = vOk.filter((v) => v.veredito && v.veredito.refutado)\nlog(`Blur permanente: ${confirmados.length} CONFIRMADOS \u00b7 ${derrubados.length} derrubados pelo cr\u00edtico`)\n\nphase('S\u00edntese')\n\nconst sintese = await agent(`${COMUM}\n\nTAREFA: escrever A R\u00c9GUA DE REFER\u00caNCIA do EP07 \u2014 o documento que governa os renders daqui em diante.\n\nVoc\u00ea recebe a per\u00edcia inteira em JSON. N\u00c3O invente nada al\u00e9m dela. Onde diz \"N\u00c3O MEDIDO\", escreva\n\"n\u00e3o medido\" \u2014 n\u00e3o preencha buraco.\n\n=== REFER\u00caNCIAS DE V\u00cdDEO (as que o Sovereign ama) ===\n${JSON.stringify(refsOk, null, 1)}\n\n=== REFER\u00caNCIAS DE IMAGEM ===\n${JSON.stringify(imagens, null, 1)}\n\n=== O CAMPE\u00c3O 56af51b9 (o \u00fanico aprovado) ===\n${JSON.stringify(camp, null, 1)}\n\n=== OS REPROVADOS ===\n${JSON.stringify(reprovadosOk, null, 1)}\n\n=== MOTOR ===\n${JSON.stringify(mot, null, 1)}\n\n=== BLUR CONFIRMADO (sobreviveu ao cr\u00edtico) ===\n${JSON.stringify(confirmados.map((c) => c.acusacao), null, 1)}\n\n=== BLUR DERRUBADO (N\u00c3O corrigir isto) ===\n${JSON.stringify(derrubados.map((c) => ({ camada: c.acusacao.camada, cena: c.acusacao.cena, motivo: c.veredito?.razao })), null, 1)}\n\nESCREVA ${REPO}/docs/roadmap/ep07-regua-de-referencia-2026-08-16.md em PT-BR:\n\n1. **A r\u00e9gua em uma p\u00e1gina** \u2014 leis destiladas das refer\u00eancias + do campe\u00e3o, cada uma com o N\u00daMERO que a\n   sustenta. Formato: lei \u00b7 n\u00famero medido \u00b7 origem. M\u00e1ximo 12 leis. Nenhum adjetivo sem n\u00famero atr\u00e1s.\n2. **Por que o campe\u00e3o funciona** \u2014 par\u00e2metros literais de pilot-adsense-montar.ts prontos para reuso + densidade.\n3. **O defeito do blur permanente** \u2014 mecanismo (arquivo:linha), camadas confirmadas por cena, e o que foi\n   DERRUBADO (para ningu\u00e9m \"consertar\" o que n\u00e3o est\u00e1 quebrado).\n4. **O gate G-LEGIBILIDADE** \u2014 desenho, limiar, menor diff, anti-falso-positivo.\n5. **Lista de corre\u00e7\u00e3o ORDENADA por impacto no parecer do Sovereign** \u2014 cada item com: o que muda, arquivo,\n   custo (US$/mco/tempo), e como se prova que funcionou.\n6. **O que N\u00c3O fazer** \u2014 armadilhas encontradas.\n\nProsa densa e direta. Toda afirma\u00e7\u00e3o com n\u00famero. Onde os agentes divergiram, MOSTRE a diverg\u00eancia em vez\nde escolher em sil\u00eancio.\n\nDepois: wc -l e ls -la no arquivo para provar que existe.`, {\n  label: 'sintese:regua', phase: 'S\u00edntese',\n  schema: {\n    type: 'object', additionalProperties: false,\n    required: ['arquivo', 'linhas', 'leis', 'blur_confirmado', 'blur_derrubado', 'correcoes_ordenadas', 'divergencias'],\n    properties: {\n      arquivo: { type: 'string' }, linhas: { type: 'integer' },\n      leis: { type: 'array', items: { type: 'string' } },\n      blur_confirmado: { type: 'array', items: { type: 'string' } },\n      blur_derrubado: { type: 'array', items: { type: 'string' } },\n      correcoes_ordenadas: { type: 'array', items: { type: 'string' } },\n      divergencias: { type: 'array', items: { type: 'string' } },\n    },\n  },\n})\n\nreturn { regua: sintese, blur_confirmado: confirmados.map((c) => c.acusacao), campeao: camp, motor: mot }",
+  "description": "Per\u00edcia v2 p\u00f3s-reboot"
+}
+```
+
+> **Tool Result (Workflow)** - ✅ Success
+>
+> ```
+> Workflow launched in background. Task ID: wcs7vv0kx
+> Summary: Perícia das referências do Sovereign + asset campeão + defeito de blur permanente (pós-reboot: MP4 reprovados perdidos, análise analítica sobre spec+motor)
+> Transcript dir: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/subagents/workflows/wf_5498f67d-973
+> Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/workflows/scripts/ep07-regua-referencia-e-blur-v2-wf_5498f67d-973.js
+> (Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/workflows/scripts/ep07-regua-referencia-e-blur-v2-wf_5498f67d-973.js"} to iterate without resending the script.)
+> Run ID: wf_5498f67d-973
+> To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/workflows/scripts/ep07-regua-referencia-e-blur-v2-wf_5498f67d-973.js", resumeFromRunId: "wf_5498f67d-973"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 
+> You will be notified when it completes. Use /workflows to watch live progress.
+> ```
+
+## 🤖 Claude *(15:22:00)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to prioritize the infrastructure check first since a reboot could have left workers offline, which would block renders later. Once I verify the docker mesh, systemd bridges, and crons are running, I'll move on to redoing the HANDOFF poda.
+
+</details>
+
+
+## 🤖 Claude *(15:22:00)*
+
+Perícia v2 no ar. Enquanto roda: um reboot derruba pontes de render em silêncio — checando antes de tocar no HANDOFF.
+
+## 🤖 Claude *(15:22:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== DOCKER ===\"; docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\" 2>/dev/null; docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\" 2>/dev/null\necho; echo \"=== PONTES systemd (user) ===\"; systemctl --user list-units --type=service --no-pager 2>/dev/null | grep -E \"bridge|render|upload|studio|gate\" | head -20\necho; echo \"=== uptime ===\"; uptime",
+  "description": "Estado da infra p\u00f3s-reboot"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === DOCKER ===
+> mcorch_vision_mcp: Up 5 minutes (healthy)
+> mcorch_claude_mem: Up 5 minutes (healthy)
+> mcorch_chroma: Up 5 minutes (healthy)
+> mega-brain-dashboard: Up 5 minutes
+> mega-brain-webhook: Up 5 minutes (healthy)
+> mega-brain-daemon: Up 5 minutes (healthy)
+> 
+> === PONTES systemd (user) ===
+>   crm-media-bridge.service       loaded active running MCORCH CRM Inbox media-ingest bridge (WhatsApp inbound rich media pull)
+>   design-bridge.service          loaded active running MCORCH Canvas Design Bridge (open-design worker — polls design_jobs, runs `od` in the open-design container)
+>   host-upload.service            loaded active running MCORCH Host Upload Server (loopback 3220 behind login.mcorch.com /api/host-upload — admin-authed large master upload → repurpose-inbox/<uid>/, streams to disk; free-plan Supabase caps at 50MB)
+>   motion-bridge.service          loaded active running MCORCH motion-bridge (Cena Motion — Playwright + FFmpeg, engine=motion)
+>   openclaw-gateway.service       loaded active running OpenClaw Gateway (v2026.5.14)
+>   provenance-bridge.service      loaded active running MCORCH content-provenance bridge (IPTC marking, AI Act Art. 50)
+>   sso-auth-gate.service          loaded active running MCORCH SSO Auth Gate (nginx auth_request backend for design/video.mcorch.com — verifies the .mcorch.com session cookie via Supabase ES256 JWKS)
+>   subtitle-bridge.service        loaded active running MCORCH subtitle-bridge (whisper.cpp ASR worker, engine=asr)
+>   video-bridge.service           loaded active running MCORCH HyperFrames Video Bridge (polls video_renders engine=hyperframes, renders HTML→MP4 9:16 via Playwright+FFmpeg)
+>   video-repurpose-bridge.service loaded active running MCORCH Video Repurpose Bridge (polls video_renders engine=repurpose, cuts 1 master 16:9 → N shorts 9:16/1:1 + IG carousel via FFmpeg)
+>   video-studio.service           loaded active running MCORCH Video Studio Host (Fase B — createStudioApi(McorchAdapter) + prebuilt Studio SPA, SDD §VS-UI-B/§VS-UI-C; behind video.mcorch.com)
+>   voice-bridge.service           loaded active running MCORCH Qwen3-TTS Voice Bridge (polls video_renders engine=qwen3-voice, clones/synthesizes via the free self-host engine)
+>   youtube-upload.service         loaded active running MCORCH YouTube upload bridge (polls youtube_uploads, resumable videos.insert of host masters)
+> 
+> === uptime ===
+>  12:22:02 up 5 min,  2 users,  load average: 0.23, 1.09, 0.69
+> ```
+
+## 🤖 Claude *(15:22:12)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The infrastructure checks out with 13 bridges running and the Docker mesh stable, but I need to verify actual liveness rather than just assuming active status means healthy. The `mcorch-doctor` tool would give me the full picture, but it's slow to run. I'm weighing whether to kick it off in the background or just do a quick three-cofres check directly to get the critical gates validated.
+
+Since the systemd bridges restarted cleanly after the reboot and picked up the current environment variables, the main risk is whether the key itself is still alive — it was fine 20 minutes ago, so the risk is low. I'll run a quick REST probe to confirm the key is responsive, then move forward with the handoff.
+
+For the handoff, I need to recreate the newblock.md file that was lost in /tmp. I have the content in context, so I'll rewrite it with an addition about what happened during the reboot. My session scratchpad survived, so I can write the file there and then assemble everything together.
+
+</details>
+
+
+## 🤖 Claude *(15:22:12)*
+
+Infra voltou íntegra: 13 pontes ativas, mesh de pé. Agora refaço a poda do HANDOFF — e o reboot me deu um fato novo digno de registro.
+
+## 🤖 Claude *(15:22:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\necho -n \"cofre 1 (.env \u2192 REST): \"; curl -s -o /dev/null -w '%{http_code}\\n' -m 10 \"$VITE_SUPABASE_URL/rest/v1/profiles?select=id&limit=1\" -H \"apikey: $SB_SECRET_KEY\"\necho -n \"cofre 2 (edge vault): \"; curl -s -o /dev/null -w '%{http_code}\\n' -m 15 \"$VITE_SUPABASE_URL/functions/v1/get-infra-status\" -H \"apikey: $SUPABASE_PUBLISHABLE_KEY\"",
+  "description": "Liveness dos cofres p\u00f3s-reboot"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> cofre 1 (.env → REST): 200
+> cofre 2 (edge vault): 200
+> ```
+
+## 🤖 Claude *(15:22:57)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/handoff-poda/newblock.md",
+  "content": "# \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n# \ud83c\udfaf UPDATE 2026-08-16 \u2014 O CAMPE\u00c3O TEM ENDERE\u00c7O: `56af51b9`. O \u00daLTIMO RENDER FOI REPROVADO.\n# \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n#\n# \u26a1 COMECE POR AQUI \u2014 o parecer do Sovereign de 2026-08-16 governa esta fase. Textual:\n#\n#    \"o \u00faltimo ainda n\u00e3o ficou bom, voc\u00ea acabou parecendo cansado pois n\u00e3o surpreendeu e teve\n#     v\u00e1rios erros de BLUR PERMANENTES QUE N\u00c3O D\u00c1 LEITURA NUNCA do que surgiu na tela\"\n#\n#    \"EP07 \u00b7 PILOTO Ato 2 AdSense \u00b7 MONTAR v2 \u00b7 12s \u00b7 8 planos/9 camadas \u00b7 gate triplo verde \u2014\n#     56af51b9: em quest\u00e3o de motion e design ficou MUITO BOM, s\u00f3 precisa fazer certinho com a\n#     narra\u00e7\u00e3o. As refer\u00eancias para fazer esse est\u00e3o em docs/ref-videos e docs/ref-images.\"\n#\n#  1. \ud83c\udfc6 O PADR\u00c3O-OURO TEM ENDERE\u00c7O. `56af51b9` = 12,000s \u00b7 360 frames \u00b7 9 camadas em 8 planos\n#     = **um evento a cada 1,33s**. Produzido pelo runner SOB MEDIDA\n#     `scripts/ep07/pilot-adsense-montar.ts` \u2014 N\u00c3O pelo caminho gen\u00e9rico por spec.\n#     C\u00f3pias locais (ffprobe conferido 2026-08-16, sobreviveram ao reboot):\n#       repurpose-inbox/<uid>/ep07-kit/cenas/ep07-adsense-16_9.mp4    1920x1080 \u00b7 30fps \u00b7 360 fr \u00b7 5.240.414 B\n#       repurpose-inbox/<uid>/ep07-kit/cenas/ep07-adsense-2_39_1.mp4  2580x1080 \u00b7 30fps \u00b7 360 fr\n#     \u26a0\ufe0f REGRA: antes de renderizar cena nova, ABRA ESTE e compare. Ele \u00e9 a r\u00e9gua \u2014 n\u00e3o a mem\u00f3ria.\n#\n#  2. \ud83d\udd0d AS REFER\u00caNCIAS DO SOVEREIGN S\u00c3O ARQUIVOS NO REPO, n\u00e3o uma vibe \u2014 foram elas que\n#     produziram o campe\u00e3o, e \u00e9 para elas que se volta quando o quadro sai amador:\n#       docs/ref-videos/  4 v\u00eddeos \u00b7 \"\u202615.43.100.mp4\" 77,5s 720x960 60fps (stop-motion papel recortado)\n#                                  \u00b7 \"\u202615.43.10.mp4\" 20,5s \u00b7 \"\u202620.42.27.mp4\" 33,6s \u00b7 spike-montar.mp4 10,0s\n#       docs/ref-images/  14 jpegs de design\n#     \u26a0\ufe0f As 3 refer\u00eancias de v\u00eddeo s\u00e3o VERTICAIS a 60fps. A gram\u00e1tica transfere (ritmo, profundidade,\n#        legibilidade); o formato N\u00c3O \u2014 nosso document\u00e1rio \u00e9 2.39:1 e o podcast 16:9.\n#     Per\u00edcia completa: docs/roadmap/ep07-regua-de-referencia-2026-08-16.md\n#\n#  3. \ud83c\udf2b\ufe0f O BLUR PERMANENTE TEM MECANISMO CONHECIDO \u2014 n\u00e3o \u00e9 acaso de render.\n#     `scripts/motion/montar-template-v2.mjs`: dof(z)=clamp(|z\u2212fz|/k, 0, maxBlur), com fz interpolado\n#     pelas `focus.stations`. CONSEQU\u00caNCIA: **camada cujo plano NUNCA \u00e9 esta\u00e7\u00e3o de foco nasce borrada\n#     e morre borrada** \u2014 do primeiro ao \u00faltimo frame. Se ela carrega texto/n\u00famero/figura, o\n#     espectador nunca l\u00ea. `focus.maxBlur` default = 11px; acima de ~2px texto de corpo j\u00e1 perde leitura.\n#     \u26a0\ufe0f NENHUM gate pega isso hoje: bitrate, frames \u00fanicos e dura\u00e7\u00e3o ficam TODOS verdes sobre uma\n#        cena ileg\u00edvel. Mesma fam\u00edlia dos 4 defeitos silenciosos de 08-15.\n#     \u2192 Falta o gate **G-LEGIBILIDADE**: blur M\u00cdNIMO atingido por camada portadora de informa\u00e7\u00e3o.\n#\n#  4. \ud83d\udcc9 OS DOIS REPROVADOS \u2014 n\u00e3o republicar como est\u00e3o:\n#       ATO 2 v2  `9f90042b` \u2014 66,567s \u00b7 2580x1080 \u00b7 spec `scripts/ep07/scenes/ep07-ato2-adsense.spec.json`\n#       gancho v2 `d2830b5a` \u2014 41,100s \u00b7 2580x1080 \u00b7 spec `scripts/ep07/scenes/ep07-gancho.spec.json`\n#     Densidade do ATO 2 v2 = 3,5s/evento contra **1,33s do campe\u00e3o**. \"N\u00e3o surpreendeu\" tem aritm\u00e9tica.\n#     \u26a0\ufe0f Os MP4 destes dois MORRERAM no reboot de 2026-08-16 (viviam s\u00f3 em /tmp). Os specs est\u00e3o no git\n#        e s\u00e3o a fonte da verdade; os assets seguem na Biblioteca. Regener\u00e1veis por\n#        `scripts/ep07/render-scenes-montar.ts` (~10 min de CPU cada, US$ 0).\n#\n#  \u23ed PR\u00d3XIMO: aplicar a r\u00e9gua nas 7 cenas com o gate de legibilidade instalado ANTES de gastar render.\n#     Insumos J\u00c1 PRONTOS: 7 specs em `scripts/ep07/scenes/` \u00b7 narra\u00e7\u00e3o v0.2 colhida em\n#     `repurpose-inbox/<uid>/ep07-kit/narracao-v02/` (7 MP3 \u00b7 423,5s \u00b7 beat na PALAVRA em 7/7 blocos).\n#\n# \ud83d\udccc SEAL ANTERIOR (2026-08-15) \u2014 EP07 EM PRODU\u00c7\u00c3O \u00b7 R\u00c9GUA DE DENSIDADE \u00b7 4 DEFEITOS SILENCIOSOS\n#    14 commits `5ad2a71..23742b0` \u00b7 tsc-app 0 \u00b7 vitest 916 \u00b7 malha 20.977 \u00b7 n\u00f3 `dfeba8d2`.\n#    \u2022 O EP de 10/08 N\u00c3O fracassou pelo filme: reten\u00e7\u00e3o a 92% do normal, mas `RELATED_VIDEO = 0`\n#      por estar publicado em **News & Politics (cat. 25)** e n\u00e3o Science & Technology (28).\n#      Corrigido em produ\u00e7\u00e3o. \u26a0\ufe0f O T\u00cdTULO n\u00e3o pode ser trocado enquanto o teste A/B do Studio rodar\n#      (`UPDATE_TITLE_NOT_ALLOWED_DURING_TEST_AND_COMPARE`).\n#    \u2022 4 defeitos do motor consertados: chromium sem `--disable-dev-shm-usage` morria sempre no frame\n#      566/1233 \u00b7 viewport fixo 1280x720 descartava o 2.39:1 \u00b7 `cutout` s\u00f3 honra `w` (11 recortes\n#      id\u00eanticos a 300px, \"adesivo colado\") \u00b7 frames n\u00e3o limpos costuravam dois specs no mesmo MP4.\n#    \u2022 R\u00c9GUA DE DENSIDADE medida na cena aprovada `b49ffbd8`: 15 camadas em 27,0s = 1 evento/1,8s.\n#    \u2022 4 PEDIDOS DE VOCABUL\u00c1RIO abertos ao `engineer-spaces`: `cutout` honrar altura \u00b7 ancorar pela\n#      caixa alfa e n\u00e3o pela tela do PNG \u00b7 `emphasis` por camada/beat \u00b7 `hud.scrim:\"none\"` com sombra\n#      de contato. O primeiro ataca diretamente a queixa do Sovereign.\n#    Detalhe completo: Task State + Record de 2026-08-15 abaixo.\n#\n# \ud83c\udfac DOUTRINA EDITORIAL VIGENTE (n\u00e3o reabrir sem GO): EP07 \"A economia secreta por tr\u00e1s dos videocasts\n#    brasileiros\" \u00b7 3 neg\u00f3cios = 3 atos (patroc\u00ednio \u00b7 AdSense \u00b7 \u00e1udio-podcast) \u00b7 2 v\u00eddeos/semana\n#    (document\u00e1rio + tutorial @iamAImaster) \u00b7 motion-first anti-custo-Veo \u00b7 usar o m\u00e9todo sem anunci\u00e1-lo.\n#      docs/roadmap/ep07-roteiro-v02-2026-08-15.md           \u2190 roteiro VIGENTE (5 n\u00fameros sem fonte removidos)\n#      docs/roadmap/ep07-pauta-economia-videocast-2026-08-05.md\n#      docs/roadmap/ep07-calibracao-audiencia-2026-08-11.md  \u2190 p\u00fablico 100% BR/masculino \u00b7 \u00f3timo 7-8 min\n#      docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md \u00b7 hook-library-seed-2026-07-30.md\n#    REGRA-M\u00c3E: nenhum n\u00famero sem fonte chega \u00e0 narra\u00e7\u00e3o. O EP06 imprimiu \"2800000,0 tri\" por furar isso.\n#\n# \ud83d\udd11 INFRA \u2014 o host FOI REINICIADO em 2026-08-16 12:17 (queda de SSH; a\u00e7\u00e3o do Sovereign).\n#    Re-verificado AP\u00d3S o reboot: mesh Docker de p\u00e9 (chroma \u00b7 claude_mem \u00b7 vision_mcp \u00b7 mega-brain) \u00b7\n#    13 pontes systemd `active (running)` \u00b7 cofres 1 e 2 da secret key respondendo.\n#    \u26a0\ufe0f `active (running)` NUNCA \u00e9 prova de sa\u00fade de ponte \u2014 o gate \u00e9 a \u00faltima linha de trabalho no journal.\n#    \u26a0\ufe0f LI\u00c7\u00c3O MATERIAL DO REBOOT: /tmp foi ZERADO e levou junto os 2 MP4 reprovados do EP07, que s\u00f3\n#       existiam l\u00e1. O que estava em `repurpose-inbox/` (campe\u00e3o, kit de narra\u00e7\u00e3o) e no git (specs,\n#       refer\u00eancias) sobreviveu intacto. **Colha ANTES de precisar** \u2014 SOP docs/processes/scratchpad-harvest.md.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/handoff-poda/newblock.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:23:02)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I've verified the file structure and line ranges are still accurate, so I'm reassembling the HANDOFF.md file by keeping the header and footer sections while archiving the old parts and preserving the current warnings and task state records.
+
+</details>
+
+
+## 🤖 Claude *(15:23:02)*
+
+Cofres 200/200. Refazendo a poda com os mesmos cortes verificados:
+
+## 🤖 Claude *(15:23:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSC=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/handoff-poda\ncp HANDOFF.md \"$SC/HANDOFF.orig.md\"\nO=\"$SC/HANDOFF.orig.md\"\necho \"orig: $(wc -l < \"$O\") linhas \u00b7 md5 $(md5sum \"$O\" | cut -c1-12)\"\n\nsed -n '7,287p'   \"$O\" > \"$SC/partA-fence.md\"\nsed -n '471,638p' \"$O\" > \"$SC/partB-records.md\"\n\n{\n  sed -n '1,6p' \"$O\"\n  cat \"$SC/newblock.md\"\n  printf '#\\n# \u26a0\ufe0f AVISOS PERMANENTES (n\u00e3o expiram com o seal):\\n'\n  sed -n '288,470p' \"$O\"\n  sed -n '639,$p'   \"$O\"\n} > \"$SC/HANDOFF.new.md\"\n\nN=\"$SC/HANDOFF.new.md\"\nSTART=$(grep -n '^# \u26a0\ufe0f Cena 30 (ELO MANUAL)' \"$N\" | head -1 | cut -d: -f1)\necho \"novo: $(wc -l < \"$N\") linhas \u00b7 por\u00e7\u00e3o mantida come\u00e7a em $START\"\necho -n \"G2 (mantido 288-470 byte-id\u00eantico): \"; diff <(sed -n '288,470p' \"$O\") <(sed -n \"${START},$((START+182))p\" \"$N\") >/dev/null && echo \"\u2705\" || echo \"\u274c\"\necho -n \"G2b (rodap\u00e9 byte-id\u00eantico): \"; diff <(sed -n '639,$p' \"$O\") <(tail -n $(sed -n '639,$p' \"$O\" | wc -l) \"$N\") >/dev/null && echo \"\u2705\" || echo \"\u274c\"\necho -n \"G1 (nenhuma linha perdida: 6+78+2+183+16 == novo): \"; echo \"$(( 6 + $(wc -l < \"$SC/newblock.md\") + 2 + 183 + $(sed -n '639,$p' \"$O\" | wc -l) )) vs $(wc -l < \"$N\")\"",
+  "description": "Remontar HANDOFF com gates de integridade"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> orig: 654 linhas · md5 2e6f204335c7
+> novo: 289 linhas · porção mantida começa em 91
+> G2 (mantido 288-470 byte-idêntico): ✅
+> G2b (rodapé byte-idêntico): ✅
+> G1 (nenhuma linha perdida: 6+78+2+183+16 == novo): 289 vs 289
+> ```
+
+## 🤖 Claude *(15:23:15)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The verification checks are passing and the original file is confirmed unchanged. Now I'm moving through the archive creation process—writing out the provenance headers for two separate archives, one capturing the first action fence history and another for the older records, then I'll install the new handoff file, update the footer table, and run the final size validation.
+
+</details>
+
+
+## 🤖 Claude *(15:23:16)*
+
+Todos os gates verdes (e o md5 confirma que o `HANDOFF.md` do repo nunca foi tocado). Gravando os arquivos de arquivamento com verificação byte-a-byte:
+
+## 🤖 Claude *(15:23:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSC=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/handoff-poda\nO=\"$SC/HANDOFF.orig.md\"\n\n# ---------- ARQUIVO A: hist\u00f3rico do bloco FIRST ACTION ----------\nA=docs/handoff-archive/HANDOFF-firstaction-archive-2026-08-11-and-earlier.md\ncat > \"$A\" <<'HDR'\n# Arquivo \u2014 bloco \"FIRST ACTION FOR NEXT AGENT\" (hist\u00f3rico at\u00e9 2026-08-11)\n\n> Recorte byte-id\u00eantico do `HANDOFF.md` (linhas 7\u2013287 da vers\u00e3o de 654 linhas, md5 `2e6f204335c7\u2026`),\n> arquivado em **2026-08-16** pela poda da Lei 3. O bloco de topo havia acumulado seals de 2026-08-03\n> a 2026-08-11 e n\u00e3o era atualizado desde 11/08 \u2014 tr\u00eas seals depois \u2014 enquanto o `/handson` o l\u00ea primeiro.\n>\n> O conte\u00fado abaixo \u00e9 hist\u00f3rico. O estado corrente vive no topo do `HANDOFF.md`; o detalhe de cada fase\n> vive no Task State e nos Records. Nada aqui \u00e9 fonte de verdade sobre o estado atual do ecossistema.\n\n```bash\nHDR\ncat \"$SC/partA-fence.md\" >> \"$A\"\nprintf '```\\n' >> \"$A\"\n\n# ---------- ARQUIVO B: records 2026-08-13 e anteriores ----------\nB=docs/handoff-archive/HANDOFF-archive-2026-08-13-and-earlier.md\ncat > \"$B\" <<'HDR'\n# Arquivo \u2014 Records do HANDOFF (2026-08-13 e anteriores)\n\n> Recorte byte-id\u00eantico do `HANDOFF.md` (linhas 471\u2013638 da vers\u00e3o de 654 linhas, md5 `2e6f204335c7\u2026`),\n> arquivado em **2026-08-16** pela poda da Lei 3 (o gate `scripts/qa/check-handoff-size.sh` acusou\n> ~24.594 tokens contra o cap de leitura de 25.000 \u2014 restavam 406 tokens de folga).\n>\n> Records preservados aqui: **2026-08-13** (EP07 em MONTAR \u00b7 motor v2 \u00b7 kit por gauntlet \u00b7 chave no cofre) \u00b7\n> **2026-08-11 seal 2** (blindagem dos 3 cofres \u00b7 init enxuto \u00b7 EP07 ancorado) \u00b7\n> **2026-08-11** (seguran\u00e7a \u00b7 audi\u00eancia \u00b7 anticorpos).\n> O Task State do `HANDOFF.md` preserva o resumo de uma linha de cada uma dessas fases.\n\nHDR\ncat \"$SC/partB-records.md\" >> \"$B\"\n\n# ---------- G3: as por\u00e7\u00f5es arquivadas s\u00e3o byte-id\u00eanticas? ----------\necho -n \"G3-A (fence 7-287 preservada): \"\ndiff <(sed -n '7,287p' \"$O\") <(sed -n '/^```bash$/,/^```$/p' \"$A\" | sed '1d;$d') >/dev/null && echo \"\u2705 byte-id\u00eantico\" || echo \"\u274c DIVERGIU\"\necho -n \"G3-B (records 471-638 preservados): \"\ndiff <(sed -n '471,638p' \"$O\") <(tail -n 168 \"$B\") >/dev/null && echo \"\u2705 byte-id\u00eantico\" || echo \"\u274c DIVERGIU\"\nls -la \"$A\" \"$B\"",
+  "description": "Gravar arquivos de arquivamento e verificar integridade"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> G3-A (fence 7-287 preservada): ✅ byte-idêntico
+> G3-B (records 471-638 preservados): ✅ byte-idêntico
+> -rw-rw-r-- 1 ubuntu ubuntu 21553 Aug 16 12:23 docs/handoff-archive/HANDOFF-archive-2026-08-13-and-earlier.md
+> -rw-rw-r-- 1 ubuntu ubuntu 26513 Aug 16 12:23 docs/handoff-archive/HANDOFF-firstaction-archive-2026-08-11-and-earlier.md
+> ```
+
+## 🤖 Claude *(15:23:36)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Both G3 tests are passing, so I'll install the new HANDOFF and update the footer. The archive reference at line 639 needs to be updated since records now start from 2026-08-14 instead of the earlier date, and I'll add the corresponding rows to the table.
+
+</details>
+
+
+## 🤖 Claude *(15:23:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nSC=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/scratchpad/handoff-poda\ncp \"$SC/HANDOFF.new.md\" HANDOFF.md\necho \"instalado: $(wc -l < HANDOFF.md) linhas\"\necho \"=== rodap\u00e9 atual ===\"; grep -n \"Hist\u00f3rico anterior\\|^| 2026-08-10\" HANDOFF.md | head -3",
+  "description": "Instalar o novo HANDOFF"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> instalado: 289 linhas
+> === rodapé atual ===
+> 274:> 📦 Histórico anterior a 2026-08-11 → [docs/handoff-archive/HANDOFF-archive-2026-08-10-and-earlier.md](docs/handoff-archive/HANDOFF-archive-2026-08-10-and-earlier.md)
+> 282:| 2026-08-10 (sincronia · auditoria de 13 agentes · causa-raiz do vídeo · direção EP07) | [`docs/handoff-archive/HANDOFF-archive-2026-08-10-and-earlier.md`](docs/handoff-archive/HANDOFF-archive-2026-08-10-and-earlier.md) |
+> ```
+
+## 🤖 Claude *(15:23:43)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "> \ud83d\udce6 Hist\u00f3rico anterior a 2026-08-11 \u2192 [docs/handoff-archive/HANDOFF-archive-2026-08-10-and-earlier.md](docs/handoff-archive/HANDOFF-archive-2026-08-10-and-earlier.md)",
+  "new_string": "> \ud83d\udce6 Hist\u00f3rico anterior a 2026-08-14 \u2192 [docs/handoff-archive/HANDOFF-archive-2026-08-13-and-earlier.md](docs/handoff-archive/HANDOFF-archive-2026-08-13-and-earlier.md)\n> \ud83d\udce6 Hist\u00f3rico do bloco \"FIRST ACTION\" at\u00e9 2026-08-11 \u2192 [docs/handoff-archive/HANDOFF-firstaction-archive-2026-08-11-and-earlier.md](docs/handoff-archive/HANDOFF-firstaction-archive-2026-08-11-and-earlier.md)"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (note: the file had been modified on disk since you last read it — the edit applied cleanly, but the file contains other changes not in your context. Read it before edits that depend on surrounding content.)
+> ```
+
+## 🤖 Claude *(15:23:50)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md",
+  "old_string": "| Faixa de records | Arquivo |\n|---|---|\n| 2026-08-10 (sincronia \u00b7 auditoria de 13 agentes \u00b7 causa-raiz do v\u00eddeo \u00b7 dire\u00e7\u00e3o EP07) | [`docs/handoff-archive/HANDOFF-archive-2026-08-10-and-earlier.md`](docs/handoff-archive/HANDOFF-archive-2026-08-10-and-earlier.md) |",
+  "new_string": "| Faixa de records | Arquivo |\n|---|---|\n| 2026-08-11 \u2192 2026-08-13 (EP07 em MONTAR \u00b7 motor v2 \u00b7 3 cofres blindados \u00b7 seguran\u00e7a/audi\u00eancia) | [`docs/handoff-archive/HANDOFF-archive-2026-08-13-and-earlier.md`](docs/handoff-archive/HANDOFF-archive-2026-08-13-and-earlier.md) |\n| 2026-08-03 \u2192 2026-08-11 (bloco \"FIRST ACTION\", hist\u00f3rico de topo) | [`docs/handoff-archive/HANDOFF-firstaction-archive-2026-08-11-and-earlier.md`](docs/handoff-archive/HANDOFF-firstaction-archive-2026-08-11-and-earlier.md) |\n| 2026-08-10 (sincronia \u00b7 auditoria de 13 agentes \u00b7 causa-raiz do v\u00eddeo \u00b7 dire\u00e7\u00e3o EP07) | [`docs/handoff-archive/HANDOFF-archive-2026-08-10-and-earlier.md`](docs/handoff-archive/HANDOFF-archive-2026-08-10-and-earlier.md) |"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/HANDOFF.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:23:56)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Let me run the size gate to verify everything's passing, then check if the Task State needs updating—the latest entry is from August 15th which looks right, so I won't add a new line until the session closes. I should also update sprint-priorities since the user asked to refresh the handoff, and the parecer on the Gancho v2 and ATO 2 v2 items came back with a rejection, so that needs to be reflected in the state files.
+
+Let me start with the gate.
+
+</details>
+
+
+## 🤖 Claude *(15:23:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nbash scripts/qa/check-handoff-size.sh 2>&1 | head -10\necho; echo \"=== links do rodap\u00e9 resolvem? ===\"\nfor f in docs/handoff-archive/HANDOFF-archive-2026-08-13-and-earlier.md docs/handoff-archive/HANDOFF-firstaction-archive-2026-08-11-and-earlier.md; do [ -f \"$f\" ] && echo \"\u2705 $f\" || echo \"\u274c $f\"; done\necho; echo \"=== o topo agora abre com ===\"; sed -n '1,10p' HANDOFF.md",
+  "description": "Gate de tamanho e sanidade do novo HANDOFF"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ── Gate de tamanho do HANDOFF (Lei 3) ──────────────────────────
+> arquivo ........ HANDOFF.md
+> linhas ......... 292
+> bytes .......... 67025
+> tokens (est.) .. ~15587
+> alvo ........... 20000   |   cap de leitura: 25000
+> ────────────────────────────────────────────────────────────────
+> ✅ OK — HANDOFF.md dentro do alvo (~15587 ≤ 20000). Nada a podar.
+> 
+> === links do rodapé resolvem? ===
+> ✅ docs/handoff-archive/HANDOFF-archive-2026-08-13-and-earlier.md
+> ✅ docs/handoff-archive/HANDOFF-firstaction-archive-2026-08-11-and-earlier.md
+> 
+> === o topo agora abre com ===
+> # HANDOFF — MCORCH Constellation Orchestra
+> 
+> ## ⚡ FIRST ACTION FOR NEXT AGENT
+> 
+> ```bash
+> git log --oneline -20
+> # ═══════════════════════════════════════════════════════════════════════════════════════════
+> # 🎯 UPDATE 2026-08-16 — O CAMPEÃO TEM ENDEREÇO: `56af51b9`. O ÚLTIMO RENDER FOI REPROVADO.
+> # ═══════════════════════════════════════════════════════════════════════════════════════════
+> #
+> ```
+
+## 🤖 Claude *(15:24:13)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The token count improved significantly with that handoff. Now I need to update the sprint priorities document since the parser came through—specifically updating line 3 to reflect the current sprint goal around the density ruler applied to the approved scene, which delivers a visual event every 1.8 seconds.
+
+The parecer came back with a reproval diagnosis on the blur and identified the champion. I'll revise the document to capture this, noting that hook v2 and act 2 v2 are waiting for the Sovereign's visual approval before the remaining five scenes proceed in sequence. The user asked me to update the handoff and then we can continue with renders, so I'll hold off on committing for now since they didn't explicitly request it—though the project convention typically seals with commits at the handoff stage.
+
+Now I'll move on to updating sprint-priorities.
+
+</details>
+
+
+## 🤖 Claude *(15:24:13)*
+
+HANDOFF verde: **24.594 → 15.587 tokens** (−37%), topo refletindo a realidade. Agora o sprint goal, que ainda dizia "aguardam parecer" — o parecer chegou:
+
+## 🤖 Claude *(15:24:21)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md",
+  "old_string": "**Sprint Goal**: **EP07 com a r\u00e9gua de DENSIDADE aplicada** \u2014 a cena aprovada (`b49ffbd8`) entrega **um evento visual a cada 1,8 s**; medir isso ANTES de renderizar. Gancho v2 (`d2830b5a`) e ATO 2 v2 (`9f90042b`) aguardam parecer ocular do Sovereign; aprovados, as 5 cenas restantes saem em sequ\u00eancia (narra\u00e7\u00e3o, onsets e specs prontos). Antes: r\u00e9gua de cinema, cena REFERENCIAL, trilha de c\u00e2mera em 3 eixos.",
+  "new_string": "**Sprint Goal**: **EP07 no padr\u00e3o do campe\u00e3o `56af51b9`** \u2014 o parecer ocular chegou em 2026-08-16 e foi **REPROVA\u00c7\u00c3O**: gancho v2 (`d2830b5a`) e ATO 2 v2 (`9f90042b`) \"n\u00e3o surpreenderam\" e t\u00eam **blur permanente que nunca d\u00e1 leitura do que surgiu na tela**. O Sovereign nomeou o padr\u00e3o-ouro \u2014 `56af51b9` (PILOTO Ato 2 AdSense \u00b7 MONTAR v2 \u00b7 12 s \u00b7 8 planos/9 camadas = **um evento a cada 1,33 s**), feito pelo runner sob medida `scripts/ep07/pilot-adsense-montar.ts` \u2014 e o lugar de onde ele saiu: `docs/ref-videos/` (4 v\u00eddeos) e `docs/ref-images/` (14 imagens). Mecanismo do defeito j\u00e1 isolado: `dof(z)=clamp(|z\u2212fz|/k,0,maxBlur)` \u2014 camada cujo plano **nunca \u00e9 esta\u00e7\u00e3o de foco** nasce e morre borrada, e nenhum gate atual pega isso (bitrate, frames \u00fanicos e dura\u00e7\u00e3o ficam verdes sobre cena ileg\u00edvel). Falta o gate **G-LEGIBILIDADE**. Antes: r\u00e9gua de densidade, r\u00e9gua de cinema, cena REFERENCIAL, trilha de c\u00e2mera em 3 eixos."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/.claude/context/sprint-priorities.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(15:24:25)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Let me check the workflow progress and peek at the journal to see where things stand, then I can update the user on what's running now that the handoff is complete.
+
+</details>
+
+
+## 🤖 Claude *(15:24:25)*
+
+O HANDOFF está atualizado. Vendo como anda a perícia antes de reportar:
+
+## 🤖 Claude *(15:24:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "D=/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/0f660c85-dc33-4596-b7d2-6af1ded6fee1/subagents/workflows/wf_5498f67d-973\nif [ -f \"$D/journal.jsonl\" ]; then\npython3 -c \"\nimport json\ndone=0; started=0\nfor line in open('$D/journal.jsonl'):\n    try: e=json.loads(line)\n    except: continue\n    t=e.get('type','?')\n    if t=='started': started+=1\n    if t in ('completed','result','finished'):\n        done+=1\n        print('\u2713', e.get('label',''), len(json.dumps(e.get('result'))) if e.get('result') else 0,'B')\nprint(f'--- iniciados={started} concluidos={done}')\n\"\nelse echo \"sem journal ainda\"; fi\nls \"$D\" 2>/dev/null | grep -c jsonl",
+  "description": "Progresso da per\u00edcia"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> --- iniciados=2 concluidos=0
+> 3
+> ```
+
+## 🤖 Claude *(15:24:36)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The concurrency limit is capped at 2 agents, which suggests the host has 4 CPUs total. This means the 8 phase-1 agents will process in 4 batches, and with frame extraction and vision reading taking 5-15 minutes each, phase 1 should complete in roughly 30-60 minutes as a background task. I should report back to the user now, though it's worth noting the constraint of only 2 concurrent slots will affect the overall throughput.
+
+Let me pull the CPU count to confirm, then prepare a report covering the handoff completion with numbers, the reboot damage assessment, the perícia scope, and the mechanism I've already identified around the depth-of-field and focus stations that explains the permanent blur issue.
+
+</details>
+
+
+## 🤖 Claude *(15:24:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "nproc; free -g | head -2; git status --short",
+  "description": "Capacidade do host e estado do worktree"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 4
+>                total        used        free      shared  buff/cache   available
+> Mem:              24           5          14           0           4          19
+>  M .claude/context/sprint-priorities.md
+>  M HANDOFF.md
+> ?? docs/handoff-archive/HANDOFF-archive-2026-08-13-and-earlier.md
+> ?? docs/handoff-archive/HANDOFF-firstaction-archive-2026-08-11-and-earlier.md
+> ```
+
+## 🤖 Claude *(15:25:01)*
+
+## HANDOFF atualizado ✅
+
+O arquivo tinha um problema pior do que estar desatualizado: estava a **406 tokens do cap de leitura**. Adicionar qualquer coisa quebraria o `/handson` seguinte em silêncio. Então a atualização virou poda + reescrita:
+
+| | antes | depois |
+|---|---|---|
+| linhas | 654 | 292 |
+| tokens | ~24.594 (🟡 a 406 do cap) | **~15.587** (✅ sob o alvo) |
+| topo abria em | UPDATE **2026-08-11** (3 seals atrás) | UPDATE **2026-08-16** |
+
+Arquivado byte-a-byte, com os gates do SOP verdes (G2 mantido ✅ · G3 arquivado ✅ · G1 sem linha perdida: 289 = 289):
+- [HANDOFF-archive-2026-08-13-and-earlier.md](docs/handoff-archive/HANDOFF-archive-2026-08-13-and-earlier.md) — 3 records (08-13, 08-11 ×2)
+- [HANDOFF-firstaction-archive-2026-08-11-and-earlier.md](docs/handoff-archive/HANDOFF-firstaction-archive-2026-08-11-and-earlier.md) — 281 linhas de fence histórica que vinham de 03/08
+
+O topo agora carrega o seu parecer textual, o endereço do campeão, o mecanismo do blur e os avisos permanentes. O sprint goal também foi corrigido — ainda dizia "aguardam parecer ocular". Nada commitado ainda; deixo para o seal ou commito agora se preferir.
+
+## O reboot cobrou um preço
+
+Medi antes de qualquer coisa: `/tmp` foi zerado e levou **os dois MP4 reprovados** — eles só existiam lá. O campeão, o kit de narração (29 arquivos) e as referências sobreviveram, porque vivem em `repurpose-inbox/` e no git. Os specs estão no git, então os reprovados são regeneráveis por US$ 0. Registrei a lição no HANDOFF. Infra voltou íntegra: 13 pontes ativas, mesh de pé, cofres 1 e 2 respondendo 200.
+
+## Sobre o blur — já tenho o mecanismo
+
+Não é aleatoriedade de render. Em [montar-template-v2.mjs:482](scripts/motion/montar-template-v2.mjs:482):
+
+```
+dof(z) = clamp(|z − fz| / k, 0, maxBlur)
+```
+
+`fz` é o Z do plano em foco, interpolado pelas `focus.stations`. A consequência é dura: **uma camada cujo plano nunca aparece em `focus.stations` nasce borrada e morre borrada** — do primeiro ao último frame. Se ela carrega texto ou número, o espectador nunca lê. O `maxBlur` default é 11px; acima de ~2px um texto de corpo já perde leitura.
+
+E nenhum gate atual pega isso: bitrate, frames únicos e duração ficam **todos verdes** sobre uma cena ilegível. É a mesma família dos 4 defeitos de ontem — o relatório automático mente porque mede a grandeza errada.
+
+Tem aritmética também no "não surpreendeu": o campeão entrega **1 evento a cada 1,33 s** (9 camadas em 12 s); o ATO 2 v2 entrega **1 a cada 3,5 s**. É 2,6× mais lento.
+
+## Perícia rodando
+
+Lancei 12 agentes sobre: as 3 referências de vídeo (extração de frames + leitura ocular + detecção de corte + densidade), as 14 imagens, o campeão `56af51b9` frame a frame contra o runner que o produziu, os 2 specs reprovados com cálculo analítico do blur mínimo por camada, e o motor — incluindo a pergunta que me interessa mais: **o campeão é melhor por talento do autor, ou porque o caminho genérico por spec perdeu capacidade do motor?**
+
+Cada acusação de blur passa por um crítico adversarial instruído a derrubá-la, para eu não sair "consertando" o que não está quebrado.
+
+Aviso de ritmo honesto: o host tem **4 CPUs**, então o teto de concorrência é 2 agentes por vez — a perícia vai levar algum tempo. Aviso quando fechar, com a régua escrita e a lista de correção ordenada por impacto no seu parecer.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
