@@ -12892,4 +12892,5 @@ Um aviso honesto sobre o meu limite: estou com a janela de contexto bem carregad
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-08-15 - agent-afd469895d3a324b0]]
+> * **Próxima Sessão**: [[2026-08-16 - Analisar referências e corrigir renders com motion design]]
 %% --- TIMELINE END --- %%

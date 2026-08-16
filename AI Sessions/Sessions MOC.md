@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3677
-> * **Sessões do Claude**: 3624
+> * **Total de Sessões Registradas**: 3680
+> * **Sessões do Claude**: 3627
 > * **Sessões do Gemini**: 53
 
 ---
@@ -75,6 +75,9 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-08-16 - agent-a839600c21493a48a]]` - *2026-08-16*
+*   `[[2026-08-16 - agent-a6dc3192d0d7c0350]]` - *2026-08-16*
+*   `[[2026-08-16 - Analisar referências e corrigir renders com motion design]]` - *2026-08-16*
 *   `[[2026-08-16 - Analisar ataque em N10 e N8]]` - *2026-08-16*
 *   `[[2026-08-15 - agent-afd469895d3a324b0]]` - *2026-08-15*
 *   `[[2026-08-15 - agent-afbba987f2c36e7dc]]` - *2026-08-15*
@@ -84,10 +87,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-08-15 - agent-ad3637b5ee6785ecd]]` - *2026-08-15*
 *   `[[2026-08-15 - agent-ad2bd50ea7b502116]]` - *2026-08-15*
 *   `[[2026-08-15 - agent-ace6c7d7d80d9be4d]]` - *2026-08-15*
-*   `[[2026-08-15 - agent-ac4f4c4b7728bcb4c]]` - *2026-08-15*
-*   `[[2026-08-15 - agent-ac0667271e60eff47]]` - *2026-08-15*
-*   `[[2026-08-15 - agent-abccb9509e861ce9f]]` - *2026-08-15*
-*   *... e mais 3619 sessões nessa categoria.*
+*   *... e mais 3622 sessões nessa categoria.*
 
 ---
 
@@ -3314,6 +3314,9 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-01 - Configurar loop autônomo e definir fila soberana]]` (ClaudeSessions)
 
 ### Agosto 2026
+*   `[[2026-08-16 - agent-a839600c21493a48a]]` (ClaudeSessions)
+*   `[[2026-08-16 - agent-a6dc3192d0d7c0350]]` (ClaudeSessions)
+*   `[[2026-08-16 - Analisar referências e corrigir renders com motion design]]` (ClaudeSessions)
 *   `[[2026-08-16 - Analisar ataque em N10 e N8]]` (ClaudeSessions)
 *   `[[2026-08-15 - agent-afd469895d3a324b0]]` (ClaudeSessions)
 *   `[[2026-08-15 - agent-afbba987f2c36e7dc]]` (ClaudeSessions)
