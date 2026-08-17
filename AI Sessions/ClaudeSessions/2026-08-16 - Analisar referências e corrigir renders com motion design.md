@@ -1,4 +1,4 @@
-# Analisar referências e corrigir renders com motion design
+# [[2026-08-17 - Analisar referências e corrigir renders com motion design|Analisar referências e corrigir renders com motion design]]
 **Date:** 2026-08-16 | **Session ID:** `0f660c85-dc33-4596-b7d2-6af1ded6fee1`
 
 ---

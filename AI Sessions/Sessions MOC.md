@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3689
-> * **Sessões do Claude**: 3636
+> * **Total de Sessões Registradas**: 3691
+> * **Sessões do Claude**: 3638
 > * **Sessões do Gemini**: 53
 
 ---
@@ -75,6 +75,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-08-17 - Criar roteiro e produção visual para episódio Claude AI]]` - *2026-08-17*
+*   `[[2026-08-17 - Analisar referências e corrigir renders com motion design]]` - *2026-08-17*
 *   `[[2026-08-16 - agent-af84e97bf32d0eac4]]` - *2026-08-16*
 *   `[[2026-08-16 - agent-aaecd18f644623e27]]` - *2026-08-16*
 *   `[[2026-08-16 - agent-a889d906dea25f70f]]` - *2026-08-16*
@@ -85,9 +87,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-08-16 - agent-a5ca605c6d418e96a]]` - *2026-08-16*
 *   `[[2026-08-16 - agent-a29d80649c03a35bd]]` - *2026-08-16*
 *   `[[2026-08-16 - agent-a28bcc9c545f6e5d5]]` - *2026-08-16*
-*   `[[2026-08-16 - agent-a16650614febe9b89]]` - *2026-08-16*
-*   `[[2026-08-16 - Analisar referências e corrigir renders com motion design]]` - *2026-08-16*
-*   *... e mais 3631 sessões nessa categoria.*
+*   *... e mais 3633 sessões nessa categoria.*
 
 ---
 
@@ -3314,6 +3314,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-01 - Configurar loop autônomo e definir fila soberana]]` (ClaudeSessions)
 
 ### Agosto 2026
+*   `[[2026-08-17 - Criar roteiro e produção visual para episódio Claude AI]]` (ClaudeSessions)
+*   `[[2026-08-17 - Analisar referências e corrigir renders com motion design]]` (ClaudeSessions)
 *   `[[2026-08-16 - agent-af84e97bf32d0eac4]]` (ClaudeSessions)
 *   `[[2026-08-16 - agent-aaecd18f644623e27]]` (ClaudeSessions)
 *   `[[2026-08-16 - agent-a889d906dea25f70f]]` (ClaudeSessions)
