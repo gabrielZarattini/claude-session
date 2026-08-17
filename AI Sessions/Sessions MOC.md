@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3691
-> * **Sessões do Claude**: 3638
+> * **Total de Sessões Registradas**: 3706
+> * **Sessões do Claude**: 3653
 > * **Sessões do Gemini**: 53
 
 ---
@@ -75,19 +75,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
-*   `[[2026-08-17 - Criar roteiro e produção visual para episódio Claude AI]]` - *2026-08-17*
-*   `[[2026-08-17 - Analisar referências e corrigir renders com motion design]]` - *2026-08-17*
-*   `[[2026-08-16 - agent-af84e97bf32d0eac4]]` - *2026-08-16*
-*   `[[2026-08-16 - agent-aaecd18f644623e27]]` - *2026-08-16*
-*   `[[2026-08-16 - agent-a889d906dea25f70f]]` - *2026-08-16*
-*   `[[2026-08-16 - agent-a839600c21493a48a]]` - *2026-08-16*
-*   `[[2026-08-16 - agent-a79484061f2d6e2cd]]` - *2026-08-16*
-*   `[[2026-08-16 - agent-a6dc3192d0d7c0350]]` - *2026-08-16*
-*   `[[2026-08-16 - agent-a6baeb946f231a623]]` - *2026-08-16*
-*   `[[2026-08-16 - agent-a5ca605c6d418e96a]]` - *2026-08-16*
-*   `[[2026-08-16 - agent-a29d80649c03a35bd]]` - *2026-08-16*
-*   `[[2026-08-16 - agent-a28bcc9c545f6e5d5]]` - *2026-08-16*
-*   *... e mais 3633 sessões nessa categoria.*
+*   `[[2026-08-17 - agent-aebd2ac5290172677]]` - *2026-08-17*
+*   `[[2026-08-17 - agent-adb4c8b7ec2bfe40e]]` - *2026-08-17*
+*   `[[2026-08-17 - agent-ad5b5cfe21a0ae158]]` - *2026-08-17*
+*   `[[2026-08-17 - agent-acd549d2b0e66e520]]` - *2026-08-17*
+*   `[[2026-08-17 - agent-ac7c35a050fbde99b]]` - *2026-08-17*
+*   `[[2026-08-17 - agent-ac1d9434ef4c3de82]]` - *2026-08-17*
+*   `[[2026-08-17 - agent-aa90049a5bc0b2c85]]` - *2026-08-17*
+*   `[[2026-08-17 - agent-aa0c0c093940be368]]` - *2026-08-17*
+*   `[[2026-08-17 - agent-a62f1c7881e7d5f78]]` - *2026-08-17*
+*   `[[2026-08-17 - agent-a592522c8a5b14fab]]` - *2026-08-17*
+*   `[[2026-08-17 - agent-a53f24e48da6fc308]]` - *2026-08-17*
+*   `[[2026-08-17 - agent-a50e6f6d6ff51ab1f]]` - *2026-08-17*
+*   *... e mais 3648 sessões nessa categoria.*
 
 ---
 
@@ -3314,6 +3314,21 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-01 - Configurar loop autônomo e definir fila soberana]]` (ClaudeSessions)
 
 ### Agosto 2026
+*   `[[2026-08-17 - agent-aebd2ac5290172677]]` (ClaudeSessions)
+*   `[[2026-08-17 - agent-adb4c8b7ec2bfe40e]]` (ClaudeSessions)
+*   `[[2026-08-17 - agent-ad5b5cfe21a0ae158]]` (ClaudeSessions)
+*   `[[2026-08-17 - agent-acd549d2b0e66e520]]` (ClaudeSessions)
+*   `[[2026-08-17 - agent-ac7c35a050fbde99b]]` (ClaudeSessions)
+*   `[[2026-08-17 - agent-ac1d9434ef4c3de82]]` (ClaudeSessions)
+*   `[[2026-08-17 - agent-aa90049a5bc0b2c85]]` (ClaudeSessions)
+*   `[[2026-08-17 - agent-aa0c0c093940be368]]` (ClaudeSessions)
+*   `[[2026-08-17 - agent-a62f1c7881e7d5f78]]` (ClaudeSessions)
+*   `[[2026-08-17 - agent-a592522c8a5b14fab]]` (ClaudeSessions)
+*   `[[2026-08-17 - agent-a53f24e48da6fc308]]` (ClaudeSessions)
+*   `[[2026-08-17 - agent-a50e6f6d6ff51ab1f]]` (ClaudeSessions)
+*   `[[2026-08-17 - agent-a507922a9df1dd958]]` (ClaudeSessions)
+*   `[[2026-08-17 - agent-a1ae89ed44e6c879c]]` (ClaudeSessions)
+*   `[[2026-08-17 - agent-a113fc3d0a11cf7ef]]` (ClaudeSessions)
 *   `[[2026-08-17 - Criar roteiro e produção visual para episódio Claude AI]]` (ClaudeSessions)
 *   `[[2026-08-17 - Analisar referências e corrigir renders com motion design]]` (ClaudeSessions)
 *   `[[2026-08-16 - agent-af84e97bf32d0eac4]]` (ClaudeSessions)
