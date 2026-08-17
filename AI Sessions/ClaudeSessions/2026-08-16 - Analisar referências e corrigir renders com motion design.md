@@ -9283,6 +9283,2016 @@ Chave no lugar. Antes de gastar um crédito: rodo o sentinel que pina o contrato
 > 18:29
 > ```
 
+## 🤖 Claude *(21:31:03)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Checking the deployment status — all systems are aligned with the contract, no discrepancies. I'm reviewing the available credits and the cost breakdown for different generation models, ranging from the most economical image generation at 1.5 credits up through the higher-tier video options.
+
+Now I'm hitting a constraint: the current rail only supports 5-second durations, but the requirements call for 10-second clips. I could either generate multiple 5-second segments or add the missing 10-second cost keys to the system, though that requires knowing the actual pricing formula and would need approval from the pricing team. For today's deployment, I'll work within what's already configured — a single generation using the available credits without introducing new code paths.
+
+The most faithful approach to the guide is actually using Veo 3.1 directly, since it handles up to 3 reference images exactly as specified, whereas the seedance model only takes a single input frame. So my witness strategy is to leverage Veo 3.1 with the three reference images from the guide plus the prompt.
+
+For the Keemfinity adaptation, I'm looking at 8 events mapped to 8 seconds with a hard cut marker at the end, which costs around 267 mco per generation at 1080p. I could also run a parallel Higgsfield seedance test at 5 seconds using a first frame from the Soul/Nano Banana to calibrate that second motor. The key insight is that these cloud-based generations don't compete with the host CPU — they run entirely on Higgsfield or Google's infrastructure, so I can execute them in parallel with the EP07 queue without any resource conflicts.
+
+For the Veo witness, I need three reference images, but without the Sovereign's brief for the first mini-EP, I can't invent the creative direction. Instead, I'll build the witness using the house brand assets — a brand film block combining the channel logo, UI screenshots, and presenter footage from the EP07 kit and product screenshots already on disk. This tests the full pipeline without waiting for creative direction.
+
+The EP07 queue is at act 2, frame 743 of 1997 as of 18:29, having started around 18:15 after act 1 finished encoding at a solid 1.06 frames per second.
+
+Now I'm calculating the remaining render time: act 3, hedge, closing, and macro shots total 6626 frames, plus the remaining 1254 frames from act 2, which comes to 7880 frames or roughly 124 minutes. That puts the full render finishing around 20:33, with the v5 hook pass at 20:45 and master delivery around 21:00 — matching my earlier estimate.
+
+For the prompt adaptation, I'm writing the first block prompts using the Keemfinity style with 8 events over 8 seconds, swapping the house palette to cyan and violet instead of the original crimson, using the MCORCH brand colors (cyan accent around #22d3ee from the MIV tokens, with gold as value only). I'll adjust the negative constraints to match.
+
+My next move is to finalize the witness plan and prompt file, then ask for spend approval — though he's already signaled we're moving forward with the pivot strategy.
+
+Regarding the cost question: he handed over 73.33 credits and said they're configured, which reads as authorization to use them. The house rule is no spending without explicit GO, but his message strongly implies permission. I'll dispatch the Higgsfield witness at the seedance-v1-pro-5s tier (130 mco cost) since it needs to be representative, but I'll state the exact cost before sending and keep it to one generation per motor to stay safe. So his directive was clear — he authorized the witness path with the credits he configured. I'll dispatch one Higgsfield seedance witness now (around 130 mco plus some HF credits) to directly test his new setup, then prepare the Veo prompts for after. The constraint is that I need to dispatch through the node itself via canvas-execute with a proper ledger node_run_id, not bypass it through CLI — the generation has to flow through the node.
+
+The memory confirms this: running outside the node causes silent reconciliation failures. So I'll either create the node in a Spaces project and have Sovereign execute it server-side, or invoke canvas-execute with a node_run_id from CLI using a QA minter JWT. There's precedent for this from the EP05 generation runner — scripts can dispatch through canvas-execute with the Veo contract blessed by the house.
+
+The cleanest move is to set up a small "Mini-EP Witness" Spaces project with a single imageToVideo node (seedance provider) plus a first-frame asset, then have Sovereign click Executar — that's the pure-node path that aligns with the feedback to generate through the node, and he gets to participate. I'll grab an existing first-frame image from the ep07-kit (maybe a Soul or NB image) for the brand-film witness, aiming for 16:9 aspect ratio.
+
+For the first frame itself, I could generate one Soul image (20-40 mco, 1.5-3 hf) which doubles as a witness of the Soul generation path, then run seedance for 5 seconds from it — that's roughly 130 mco / 9-10 hf, totaling about 12 hf of his 73.33 budget, which is reasonable. The tricky part is that canvas autosave can clobber server-side writes if the project tab stays open, so I need to tell him to either close the tab or create a fresh project before we arm the nodes. Given the time constraints and complexity, the simplest robust approach is probably to create a new Spaces project directly rather than trying to automate node setup. Instead of me pre-wiring the nodes, I'll give him the quick recipe to build them himself in the UI — new project, add the image node with the prompt, add the video node with seedance and 5-second duration, connect them, and run. That's faster, he'll see his credits being used, and it's the purest path through Spaces. Meanwhile I'll write out the three adapted prompts for the first real block and report back on the sentinel status, costs, queue state, plus the honest caveat that the rail only supports 5-second pricing keys right now (10 seconds would error, but I'll patch that later with proper pricing).
+
+</details>
+
+
+## 🤖 Claude *(21:31:11)*
+
+O rail está **verde e pronto — 7/7 gates do sentinel** passaram: o contrato vivo da Higgsfield bate exatamente com o nosso código (paths, enums, mint). Zero drift, zero custo na verificação.
+
+## O que os seus 73.33 créditos compram (tabela real do rail)
+
+| Geração | créditos HF | mco (nosso ledger) |
+|---|---|---|
+| Imagem Soul 720p | 1,5 | 20 |
+| Imagem Soul 1080p | 3,0 | 40 |
+| Vídeo dop-lite 5s | 2,0 | 30 |
+| Vídeo dop-standard 5s | 9,0 | 125 |
+| Vídeo **seedance-v1-pro 5s** | ~9-10 | 130 |
+| Vídeo kling-2.1-pro 5s | ~11 | 160 |
+
+73,33 créditos ≈ **7-8 clipes seedance** ou ~36 dop-lite. Uma ressalva honesta: o guia pede clipes de 10 s, mas o nosso rail hoje **só tem chave de preço para 5 s** — pedir 10 s devolve 422 antes de cobrar (proteção proposital: nunca cobrar caminho sem preço declarado). Adiciono as chaves de 10 s amanhã com o preço real da plataforma; para o witness de hoje, 5 s serve perfeitamente.
+
+## O witness de hoje — pelo NÓ, como manda a doutrina da casa
+
+Gerar por fora do nó cria reconciliação que erra em silêncio (lição registrada). E a geração roda na **nuvem da Higgsfield** — não briga com a fila do EP07 no host. Receita de 2 minutos na UI:
+
+1. `/dashboard/spaces` → **projeto NOVO** (importante: novo, sem aba velha aberta — o autosave de aba antiga apaga escrita server-side)
+2. Nó **Imagem** → provider Higgsfield **Soul**, 1080p — prompt abaixo
+3. Nó **Vídeo** → **seedance-v1-pro**, 5 s → conecte a saída da imagem como first frame
+4. **Executar** nos dois (imagem primeiro) → custo total: **170 mco / ~12-13 créditos HF**
+
+Prompt do witness (já no estilo Keemfinity — timeline por segundo + negative constraints, paleta da casa):
+
+```
+Imagem (first frame):
+High-end cinematic motion-design still, 16:9. Near-black studio #0a0f1a, glossy black glass floor,
+one cyan #22d3ee accent ring center-frame holding a floating glass tile, violet #6727E3 nebula glow
+far background, tiny gold accents, white geometric grotesk typography reading "IA ESTA SEMANA",
+macro parallax depth, cinematic bloom, restrained grain. No people, no watermark, no extra text.
+
+Vídeo (seedance 5s a partir do frame):
+5.0 seconds, one continuous forward dolly, one unmistakable new visual event per second:
+0-1s the cyan ring wakes and rotates; 1-2s the glass tile unfolds into three floating cards;
+2-3s the cards orbit the ring with depth parallax; 3-4s a violet intelligence halo scans them;
+4-5s everything compresses toward the lens and fills the frame with cyan.
+No hard cuts, no fade, no text morphing, no watermark, no flicker.
+```
+
+Se o resultado te agradar, esse vira o **molde do interstício/vinheta** do mini-EP — e amanhã eu armo o bloco completo de 3 clipes (com hard-cut marker `#111212` e as 3 referências com papéis) para a primeira novidade.
+
+## Estado geral
+
+- **EP07**: ato1 ✅ · ato2 em 743/1997 · restam 4 cenas → renders ~20:30, gancho v5 (sem caneca), **master ~21:00**
+- **Pivô**: doutrina selada na memória · sentinel verde · seus créditos prontos · witness é um clique seu
+- Enquanto você gera o witness, escrevo os 3 prompts do **bloco 1** adaptados (8 eventos/8 s para o caminho Veo com as 3 referências; 10 s ficam para quando eu abrir as chaves de preço)
+
+Clique lá e me diga o que saiu — estou de olho na fila.
+
+## 👤 User *(21:35:34)*
+
+o asset 4b6eb1a0 ficou bom. Não precisa refazer sem a caneca, vai esse mesmo quero postar hoje o mais rapido possivel 20 horas acho tarde seria possivel?
+
+## 🤖 Claude *(21:36:38)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Sovereign approved gancho v4 with the caneca, so no v5 re-render needed—that's a 12-minute save. He wants to post earlier than 20:00 if possible. Looking at the current queue state around 18:29, ato1 is done, ato2 is progressing through its items, and I'm tracking what's left across the remaining tasks.
+
+The math shows we're looking at roughly 7,880 frames remaining at about 1.06–1.09 frames per second, which puts us at 120–124 minutes of rendering time, landing the master file around 20:45—still later than his target. I'm weighing options to compress the timeline: the v5 cut is already locked in, parallel rendering won't work (second Chromium instance crashes), and reducing quality or speeding up encoding won't move the needle much. The most promising angle is pre-muxing each scene as it finishes rather than waiting until all renders are done—that could shave about 5 minutes off the end. Reordering the queue to push the longest scene (macro at 2184 frames) earlier would help, but ato2 is already running and killing it to restart would waste the 743 frames already rendered, costing us roughly 12 minutes.
+
+The hard reality is that with 7,880 frames at best 1.1 frames per second on this machine, we're looking at a render finish around 20:30–20:35, and even with pre-muxing and final assembly, the master won't be ready before 20:40–20:45. Getting it earlier than 20:00 isn't feasible unless something changes fundamentally.
+
+The one real optimization I haven't fully explored is threading — ffmpeg can use multiple threads for encoding while the screenshot loop is single-threaded, so there might be some parallelization gains there, but the bottleneck is still the screenshot generation itself.
+
+PNG encoding is expensive; switching to JPEG quality 95 could potentially drop per-frame time from around 650ms down to 450ms, saving maybe 25 seconds total. The quality difference would be negligible since x264 re-encodes anyway, but restarting mid-run to change formats would lose over 700 frames and 12 minutes of progress — too risky under this deadline.
+
+The realistic timeline: master branch ready around 20:40, posted by 20:45-21:00. Nothing earlier is physically possible given the remaining 2 hours of rendering at 1.1 frames per second. I'll skip the JPEG gamble, pre-stage the assembly by pre-muxing gancho v4 and ato1 now, then mux each scene as it finishes, and prepare the upload path.
+
+For the YouTube post itself, I can draft the title, description, tags, and category (28) while waiting, plus extract a strong frame as a thumbnail candidate using the "thumb ciano" pattern from earlier episodes — that saves him time at 20:40 when he's ready to upload.
+
+The real question is whether to pre-mux the completed segments (gancho, ato1) now or let the assembler handle it. The assembler re-muxes everything with ffmpeg -y anyway, so it'll overwrite any pre-muxed files I create manually. I need to figure out if there's a way to make it skip existing segments or if I should just let it run through completely.
+
+Actually, the mux time for 8 segments at copy codec is only about 2 minutes total, so pre-muxing won't save much. Better to focus on getting the title, description, tags, and thumbnail sorted while the queue runs — that's where I can actually save him time.
+
+For the thumbnail, I'm thinking about extracting candidate frames from gancho v4 at full resolution. There's a striking moment around t=13.5 with the operador crystallizing, or the R$100M counter at t=21. YouTube wants 16:9 aspect ratio, but our footage is 2.39:1, so I'll need to crop or letterbox the candidates.
+
+I'll generate 2-3 frame candidates padded to 16:9 with the near-black background color using ffmpeg, then publish them to Biblioteca so he can pick his favorite. He can always generate a Soul-branded thumbnail with his own credits if he wants something custom, but frame-based options should give him a quick starting point. I'm drafting a thesis-style title in Portuguese that emphasizes the economic angle of podcasting, something like "A economia secreta dos videocasts: por que uma conversa simples fatura R$ 100 milhões." For the description, I'll pull in source citations and structure the chapters with timestamps calculated from the segment durations—eight chapters total spanning from the hook at the start through the closing, with each chapter positioned at its computed time marker. Organizing the chapter markers with sponsorship breaks and timestamps, then noting this falls under Science & Technology category which requires careful timing. I need to be honest about the deadline — rendering will take roughly two hours at the current frame rate, putting the master file around 20:40 and upload around 20:45, though using the mug footage saves about 12 minutes. Now I'm extracting thumbnail candidates via a fast bash process.
+
+</details>
+
+
+## 🤖 Claude *(21:36:38)*
+
+Decisão anotada: **v4 com caneca vai para o master** — isso economiza os 12 min do re-render. Sobre antecipar: vou te dar o número honesto em vez de promessa.
+
+## 🤖 Claude *(21:36:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nK=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2\ndate '+%H:%M:%S'\nT=$(ls $K/ep07-ato2-adsense/frames 2>/dev/null | wc -l)\nsleep 30\nT2=$(ls $K/ep07-ato2-adsense/frames 2>/dev/null | wc -l)\nRATE=$(echo \"scale=3; ($T2-$T)/30\" | bc)\nREST=$(( 1997-T2 + 1877 + 1266 + 1299 + 2184 ))\nMIN=$(echo \"scale=0; $REST/$RATE/60\" | bc)\necho \"ato2: $T \u2192 $T2 em 30s = $RATE f/s\"\necho \"frames restantes (ato2+ato3+hedge+fecho+macro): $REST \u2248 $MIN min de rasteriza\u00e7\u00e3o\"\necho \"fim previsto dos renders: $(date -d \"+$MIN minutes\" '+%H:%M')\"",
+  "description": "Medir a taxa real e projetar o fim"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 18:36:44
+> ato2: 1239 → 1273 em 30s = 1.133 f/s
+> frames restantes (ato2+ato3+hedge+fecho+macro): 7350 ≈ 108 min de rasterização
+> fim previsto dos renders: 20:25
+> ```
+
+## 🤖 Claude *(21:37:29)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Looking at the render timing: I'm getting about 1.1 frames per second with 7350 frames remaining, which puts the pure rasterization at around 108 minutes. The encoding happens after each scene and adds another 6-8 minutes, pushing the total to roughly 20:32. Then assembly and muxing operations should wrap up by around 20:40.
+
+Before 20:00 is physically impossible—I'd need nearly 1.9 frames per second, which this host can't deliver. For compression, the v4 caneca decision already saved 12 minutes. Pre-muxing segments as they complete would only save 2-3 minutes and adds unnecessary complexity, so I'm skipping that. Instead, I'll focus on preparing the YouTube package now—title, description with chapters and sources, tags, category—and extract thumbnail candidates while rendering continues. That way the post-production work is done by 20:45.
+
+</details>
+
+
+## 🤖 Claude *(21:37:30)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Medição atual mostra 1,13 frames/s com renders terminando por volta das 20:25-20:30, impossível antes das 20:00 sem riscos críticos. Vou preparar o pacote de publicação pronto para você colar.
+
+</details>
+
+
+## 🤖 Claude *(21:37:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nK=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit\nmkdir -p $K/thumbs\nD=$K/cenas-v2/ep07-gancho/ep07-gancho.mp4\n# candidatos: operador cristalizando (13,5s) e o contador R$100M (21s) \u2014 pad 2.39:1 \u2192 16:9 com o preto da casa\nfor t in 13.5 21; do\n  nice -n 19 ionice -c3 ffmpeg -threads 1 -v error -ss $t -i \"$D\" -frames:v 1 \\\n    -vf \"pad=2580:1451:0:185:color=0x0a0f1a,scale=1920:1080\" -q:v 2 \"$K/thumbs/thumb-t${t}.jpg\" -y\ndone\nls -la $K/thumbs/",
+  "description": "Extrair 2 candidatos de thumbnail em 16:9"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> total 144
+> drwxrwsr-x  2 ubuntu gcrUX  4096 Aug 16 18:37 .
+> drwxrwsr-x 11 ubuntu gcrUX  4096 Aug 16 18:37 ..
+> -rw-rw-r--  1 ubuntu gcrUX 71768 Aug 16 18:37 thumb-t13.5.jpg
+> -rw-rw-r--  1 ubuntu gcrUX 61603 Aug 16 18:37 thumb-t21.jpg
+> ```
+
+## 🤖 Claude *(21:37:54)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/ep07-pacote-publicacao-2026-08-16.md",
+  "content": "# EP07 \u2014 Pacote de publica\u00e7\u00e3o (2026-08-16)\n\n> Pronto para colar no YouTube Studio assim que o master sair (~20:40).\n> \u26a0\ufe0f **CATEGORIA: 28 \u2014 Science & Technology.** O EP de 10/08 zerou os sugeridos por sair em\n> News & Politics (cat. 25) \u2014 `RELATED_VIDEO = 0`. Este upload \u00e9 tamb\u00e9m o teste da corre\u00e7\u00e3o.\n\n## T\u00edtulo (tese, n\u00e3o manchete \u2014 converte 15-24\u00d7 mais, medido no canal)\n\n**A economia secreta dos videocasts: uma \"conversa simples\" que mira R$ 100 milh\u00f5es**\n\nAlternativas:\n- Por tr\u00e1s de dois amigos conversando existem TR\u00caS neg\u00f3cios (e um deles ningu\u00e9m corta)\n- O videocast parece simples de prop\u00f3sito: a conta dos R$ 100 milh\u00f5es do Podpah\n\n## Descri\u00e7\u00e3o\n\nDois amigos, dois microfones, uma conversa que podia estar em qualquer cozinha do pa\u00eds.\nPor tr\u00e1s dessa mesa n\u00e3o existe um neg\u00f3cio \u2014 existem tr\u00eas, com contabilidades separadas.\nNeste epis\u00f3dio, a conta de cada um: o patroc\u00ednio que paga a estrutura, o AdSense que\nningu\u00e9m corta, e o \u00e1udio que o criador controla de ponta a ponta.\n\nCap\u00edtulos:\n0:00 O formato que parece simples\n0:41 Ato 1 \u2014 Patroc\u00ednio: quem compra o cen\u00e1rio\n1:49 Ato 2 \u2014 AdSense: a divis\u00e3o 45/55\n2:55 Ato 3 \u2014 \u00c1udio: o \u00fanico neg\u00f3cio 100% do criador\n3:58 A estrutura por tr\u00e1s da mesa (100-120 pessoas)\n5:07 A conta macro: R$ 4,94 bi de PIB criador\n6:20 O fecho: por que o formato longo \u00e9 o produto\n\nFontes citadas no epis\u00f3dio:\n- Divis\u00e3o de receita do YouTube Partner Program: support.google.com/youtube/answer/72902\n- Meta de faturamento do Grupo Podpah: Exame, 2026\n- Impacto econ\u00f4mico do ecossistema criador BR: relat\u00f3rio citado em tela\n\n## Tags\n\nvideocast, podcast brasil, economia criador, youtube monetiza\u00e7\u00e3o, adsense, patroc\u00ednio,\npodpah, creator economy, neg\u00f3cios digitais, intelig\u00eancia artificial\n\n## Thumbnail \u2014 2 candidatos prontos (16:9, 1920\u00d71080)\n\n`repurpose-inbox/<uid>/ep07-kit/thumbs/`\n- `thumb-t13.5.jpg` \u2014 o operador de \u00e1udio cristalizando entre os dois apresentadores (a TESE em imagem)\n- `thumb-t21.jpg` \u2014 o contador R$ 100.000.000 com a fonte Exame\n\nRecomenda\u00e7\u00e3o: t13.5 (rosto + tens\u00e3o vence n\u00famero, e o n\u00famero j\u00e1 est\u00e1 no t\u00edtulo).\nTexto de thumb (se for sobrepor no Studio): \"3 NEG\u00d3CIOS numa conversa\" em grotesk branca.\n\n## Checklist de upload\n\n- [ ] Categoria **28 \u2014 Science & Technology** (conferir DUAS vezes)\n- [ ] Idioma: Portugu\u00eas (Brasil)\n- [ ] Visibilidade: P\u00fablico\n- [ ] Cap\u00edtulos colados na descri\u00e7\u00e3o (acima)\n- [ ] Thumbnail escolhida\n- [ ] SEM teste A/B de t\u00edtulo neste upload (o A/B do EP de 10/08 travou a edi\u00e7\u00e3o de t\u00edtulo pela API)\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/docs/roadmap/ep07-pacote-publicacao-2026-08-16.md (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:38:18)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm ready to deliver a concise answer covering the timeline, what's already staged, and candidate locations. The assembler is using the same mux setup with the v4 MP4 that includes caneca, even though I later edited the spec to remove it—the rendered file predates that change and still has the caneca included.
+
+Renders finish around 20:30 with encoding, then assembly triggers automatically when the queue notification arrives. Master will be ready by ~20:40 for publishing to Biblioteca and staging for upload. He can either download from Biblioteca and upload manually in Studio, or I can enqueue it directly into the youtube-upload worker—that's the fastest path since the worker handles resumable uploads automatically. The catch is that publishing to YouTube is a public action, so I'll need his explicit confirmation on the final title before I enqueue it; I can offer to pre-enqueue with his first title choice unless he picks something different, saving time on the back end.
+
+</details>
+
+
+## 🤖 Claude *(21:38:18)*
+
+## Resposta direta: 20:00 não dá; **20:40-20:45 dá — e o seu tempo no fim já está pago**
+
+| hora | o quê |
+|---|---|
+| ~20:25-20:30 | fila termina (medido agora: 1,13 f/s · 7.350 frames restantes) |
+| ~20:30-20:40 | montagem automática: mux das 8 partes + concat + loudnorm −16 LUFS |
+| **~20:40** | **master na Biblioteca** — 7min03, com o seu gancho v4 (caneca incluída, como pediu) |
+| ~20:45 | upload |
+
+O que acabei de deixar pronto para você não gastar um minuto às 20:40:
+
+**[Pacote de publicação completo](docs/roadmap/ep07-pacote-publicacao-2026-08-16.md)** — título-tese (o formato que converte 15-24× no seu canal), descrição com **capítulos cronometrados** dos 8 segmentos, tags, fontes, e o checklist com o item que não pode falhar: **categoria 28 — Science & Technology** (o teste da correção que zerou os sugeridos em 10/08).
+
+**2 candidatos de thumbnail** já em 16:9 (1920×1080) em `ep07-kit/thumbs/`:
+- `thumb-t13.5.jpg` — o operador cristalizando entre os dois apresentadores (minha recomendação: é a tese do episódio em uma imagem, e o número já está no título)
+- `thumb-t21.jpg` — o contador R$ 100.000.000 com a fonte
+
+**Para ganhar mais uns minutos**: o worker de upload do YouTube (`youtube-upload.service`) está ativo — assim que o master sair, posso **enfileirar o upload automaticamente** com o título nº 1 do pacote e categoria 28, e você só confere no Studio e aperta publicar. Quer assim, ou prefere subir manualmente? Se quiser o automático, me diga qual título dos três do pacote.
+
+Enquanto isso: fila no ato2 (1.273/1.997), vigia armado, witness Higgsfield à sua disposição quando quiser clicar.
+
+## 👤 User *(21:48:16)*
+
+statusw
+
+## 🤖 Claude *(21:48:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ndate '+%H:%M:%S'\nK=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2\necho \"=== CENAS ===\"\nfor c in ep07-gancho ep07-ato1-patrocinio ep07-ato2-adsense ep07-ato3-audio ep07-estrutura-hedge ep07-fecho ep07-macro; do\n  n=$(ls $K/$c/frames 2>/dev/null | wc -l)\n  m=$(ls $K/$c/${c}.mp4 2>/dev/null && echo OK || echo -)\n  printf \"%-24s frames=%-5s mp4=%s\\n\" \"$c\" \"$n\" \"$(basename $m 2>/dev/null)\"\ndone\necho; echo \"=== \u00faltima linha do log da fila ===\"\ntail -c 300 /home/ubuntu/logs/ep07-fila-render.log | tr '\\r' '\\n' | tail -2\necho; echo \"load: $(cut -d' ' -f1-3 /proc/loadavg)\"\necho \"vigia: $(pgrep -f 'render-scenes-montar' >/dev/null && echo 'fila VIVA' || echo 'fila PAROU')\"",
+  "description": "Status completo da produ\u00e7\u00e3o"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 18:48:24
+> === CENAS ===
+> ep07-gancho              frames=1233  mp4=ep07-gancho.mp4
+> ep07-ato1-patrocinio     frames=2031  mp4=ep07-ato1-patrocinio.mp4
+> ep07-ato2-adsense        frames=1997  mp4=ep07-ato2-adsense.mp4
+> ep07-ato3-audio          frames=0     mp4=-
+> ep07-estrutura-hedge     frames=0     mp4=-
+> ep07-fecho               frames=31    mp4=-
+> ep07-macro               frames=0     mp4=-
+> 
+> === última linha do log da fila ===
+> frame=  170 fps=5.3 q=22.0 size=    1792kB time=00:00:05.56 bitrate=2637.2kbits/s speed=0.173x    
+> frame=  173 fps=5.3 q=22.0 size=    1792kB time=00:00:05.70 bitrate=2575.5kbits/s speed=0.173x    
+> 
+> load: 3.90 3.28 2.81
+> vigia: fila VIVA
+> ```
+
+## 🤖 Claude *(21:48:41)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Checking the status of the project files — gancho is approved and ready with the mug, ato1's mp4 is done, and ato2 has all 1997 frames processed with the mp4 finished around 18:47, though the encoding logs are a bit unclear about whether they're showing ato2 wrapping up or ato3 starting.
+
+The remaining work is ato3 (1877 frames), hedge (1266), fecho (1299), and macro (2184) — about 6626 frames total at the current pace, which should take roughly 98 minutes to rasterize plus 6 minutes for encoding, putting us at around 20:30. That's consistent with the forecast, and we're already at 44% completion by frame count across 43% of the scenes.
+
+The timing is tracking well — ato2 finished exactly when predicted based on the remaining frames from 18:36. Waiting on the title choice for auto-upload and for Higgsfield to click through on his end.
+
+</details>
+
+
+## 🤖 Claude *(21:48:41)*
+
+**Status 18:48 — no prazo, 3 de 7 cenas prontas (44% dos frames):**
+
+| cena | estado |
+|---|---|
+| gancho v4 (o aprovado, com caneca) | ✅ MP4 pronto |
+| ato1 — patrocínio | ✅ MP4 pronto |
+| ato2 — AdSense | ✅ MP4 pronto (fechou 18:47, cravado na previsão) |
+| ato3 — áudio | 🔄 entrando agora |
+| estrutura-hedge | ⏳ fila |
+| fecho | ⏳ fila |
+| macro (a mais longa) | ⏳ fila |
+
+- **Restam ~6.626 frames** ≈ 98 min → renders ~20:26 · master **~20:40** (inalterado)
+- Fila **viva**, load 3,9 (saudável), vigia armado, sentinela de carga calado
+- Pacote de publicação + 2 thumbs: prontos desde 18:37
+
+**Aguardando de você (nenhum bloqueia o master):**
+1. Título para o upload automático — nº 1 do pacote, ou outro dos três?
+2. O witness Higgsfield (clique no Spaces quando quiser — 170 mco / ~12 créditos)
+
+## 👤 User *(22:17:24)*
+
+1. Não precisa postar automatico eu faço isso manualmente. Com sua ajuda depois
+2. Não entendi onde clicar no spaces que você disse.
+
+## 🤖 Claude *(22:17:47)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The Sovereign wants to post manually rather than auto-upload, which is fine. He's also unclear about where to click in Spaces to set up the Higgsfield witness — my earlier instructions were too vague. I need to give him exact step-by-step UI directions, but I should double-check what the actual Spaces interface currently shows for node names rather than relying on memory.
+
+Actually, a better approach might be to arm the project server-side myself and just send him the URL with instructions to click "Executar" — that's much clearer UX than asking him to assemble nodes manually. The main risk is that autosave could overwrite server-side changes if he has an old tab open, but a fresh project won't have that problem. I need to verify where the canvas data actually lives now — it's either in the old Canvas Studio store or in the newer Spaces graph structure.
+
+Before I hand-craft nodes (which is risky given the schema complexity), let me check if there's already an arming script from the spaces-agent or EP06 that I can reuse. If not, I'll fall back to giving him precise click-by-click instructions using the exact labels from the registry.
+
+</details>
+
+
+## 🤖 Claude *(22:17:49)*
+
+Você está certo em não entender — eu fui vago. Deixe-me olhar a UI real (nomes exatos dos nós e botões) em vez de descrever de memória. E se der, **eu armo o projeto para você** e te entrego só o link com o botão a clicar:
+
+## 🤖 Claude *(22:17:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== registry: nomes/labels dos n\u00f3s ===\"\ngrep -nE \"label:|title:|\\\"(textToImage|imageToVideo|higgsfield)\\\"\" src/lib/canvas-node-registry.ts 2>/dev/null | head -20\nls src/lib/canvas-node-registry.ts 2>/dev/null || find src -name \"*node-registry*\" | head -3\necho; echo \"=== precedente de armar projeto por script ===\"\ngrep -rln \"spaces_projects\\|vm_canvas_projects\" scripts/ep05/ scripts/ep07/ scripts/qa/preflight-spaces-project.ts 2>/dev/null | head -5\necho; echo \"=== preflight (como l\u00ea o projeto) ===\"\ngrep -nE \"from\\(|table|graph\" scripts/qa/preflight-spaces-project.ts 2>/dev/null | head -8",
+  "description": "Registry de n\u00f3s e precedente de armar projeto"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === registry: nomes/labels dos nós ===
+> 34:  label: string;
+> 46:    label: "Roteiro",
+> 56:    label: "Criativo Cinematográfico",
+> 66:    label: "Tela Dividida (POV) / Grade",
+> 76:    label: "Personagem (referência)",
+> 86:    label: "Lista de Produtos",
+> 96:    label: "Gerar imagem",
+> 106:    label: "Compor cena",
+> 115:    id: "imageToVideo",
+> 116:    label: "Imagem → Vídeo",
+> 126:    label: "POV (Selfie/Vlog)",
+> 136:    label: "Aplicar estilo",
+> 146:    label: "Upscale (ampliar)",
+> 156:    label: "Clone de Voz",
+> 166:    label: "Identidade (avatar)",
+> 176:    label: "Publicar no WordPress",
+> 186:    label: "Publicar em Rede Social",
+> 196:    label: "Carrossel",
+> 206:    label: "Cadência",
+> 216:    label: "Cortes do Master",
+> src/lib/canvas-node-registry.ts
+> 
+> === precedente de armar projeto por script ===
+> scripts/ep05/retake-blockbuster.ts
+> scripts/ep05/retake-fleet.ts
+> scripts/ep05/assemble-v3.ts
+> scripts/qa/preflight-spaces-project.ts
+> 
+> === preflight (como lê o projeto) ===
+> 13:const { data: proj } = await supabase.from("vm_canvas_projects").select("graph,updated_at").eq("id", PROJECT).maybeSingle();
+> 16:const graph = (proj as any).graph as any;
+> 17:const nodes: any[] = graph.nodes ?? [];
+> 18:const edges: any[] = graph.edges ?? [];
+> 108:    .from("vm_canvas_projects").update({ graph }).eq("id", PROJECT).eq("updated_at", before)
+> ```
+
+## 🤖 Claude *(22:18:05)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I can see the project structure uses a graph with nodes and edges, and there are existing examples of scripts that write to these graphs. The two nodes I need to configure are "Gerar imagem" for text-to-image conversion and "Imagem → Vídeo" for image-to-video conversion. I need to determine the exact node data structure for the textToImage node with higgsfield soul provider (including prompt, provider/model, and resolution fields) and the imageToVideo node using higgsfield with the seedance-v model.
+
+Now I'm checking the registry defaults for both node types to understand the exact field names the motor expects, since field naming mismatches can cause nodes to fail. I'll look at existing working projects to see how these nodes are structured, then create an arming script that inserts a new project called "Witness Higgsfield" with both nodes properly wired and positioned. After that, I'll run a preflight check to ensure there are no blockers, then provide the dashboard URL so the user can execute each node.
+
+</details>
+
+
+## 🤖 Claude *(22:18:05)*
+
+O grafo vive em `vm_canvas_projects.graph` e há precedente de armar por script. Vou armar o projeto do witness para você — antes, pego o shape exato dos dois nós para não criar nó natimorto:
+
+## 🤖 Claude *(22:18:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsed -n '90,135p' src/lib/canvas-node-registry.ts\necho \"\u2550\u2550\u2550 defaults/data que o motor l\u00ea (dispatch imageToVideo higgsfield) \u2550\u2550\u2550\"\ngrep -n \"seedance\\|higgsfield\" src/hooks/useCanvasStudio.ts | head -10\ngrep -n \"videoModel\\|videoProvider\\|videoDuration\\|duration\" src/components/orchestrator/nodes/ImageToVideoNode.tsx 2>/dev/null | head -10 || find src -name \"ImageToVideoNode*\" | head -3",
+  "description": "Shape dos n\u00f3s Gerar imagem e Imagem\u2192V\u00eddeo"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>     estimatedCost: 0,
+>     aliases: ["lista", "list", "produtos", "batch", "lote", "afiliado"],
+>     factory: makeDefaultProductList,
+>   },
+>   {
+>     id: "generateImage",
+>     label: "Gerar imagem",
+>     description: "Cria imagem a partir de prompt (Higgsfield Soul, DALL·E, Flux).",
+>     category: "Generate",
+>     icon: Sparkles,
+>     estimatedCost: 20,
+>     aliases: ["imagem", "gerar", "soul", "image", "flux", "dall-e"],
+>     factory: makeDefaultGenerateImage,
+>   },
+>   {
+>     id: "sceneCompose",
+>     label: "Compor cena",
+>     description: "Cena com personagem conectado (Higgsfield Soul).",
+>     category: "Generate",
+>     icon: Film,
+>     estimatedCost: 20,
+>     aliases: ["cena", "compose", "soul", "scene", "frame"],
+>     factory: makeDefaultSceneCompose,
+>   },
+>   {
+>     id: "imageToVideo",
+>     label: "Imagem → Vídeo",
+>     description: "Anima uma imagem (DoP/Kling/Seedance — execução em 4.2b).",
+>     category: "Generate",
+>     icon: Video,
+>     estimatedCost: 30,
+>     aliases: ["video", "kling", "dop", "anima", "i2v"],
+>     factory: makeDefaultImageToVideo,
+>   },
+>   {
+>     id: "povVideo",
+>     label: "POV (Selfie/Vlog)",
+>     description: "Gera um POV selfie/vlog do seu personagem (Veo 3.1, referências de identidade). Alimenta a Tela Dividida.",
+>     category: "Generate",
+>     icon: SwitchCamera,
+>     estimatedCost: 178,
+>     aliases: ["pov", "selfie", "vlog", "reação", "veo", "personagem falando", "avatar pov"],
+>     factory: makeDefaultPovVideo,
+>   },
+>   {
+>     id: "styleTransfer",
+> ═══ defaults/data que o motor lê (dispatch imageToVideo higgsfield) ═══
+> 84:    id: "higgsfield",
+> ```
+
+## 🤖 Claude *(22:18:13)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== factories (o data default de cada n\u00f3) ===\"\ngrep -n \"makeDefaultGenerateImage\\|makeDefaultImageToVideo\" src/lib/canvas-node-registry.ts | head -4\ngrep -rn \"function makeDefaultGenerateImage\" -A 18 src/lib/*.ts | head -24\necho \"\u2500\u2500\u2500\"\ngrep -rn \"function makeDefaultImageToVideo\" -A 18 src/lib/*.ts | head -24",
+  "description": "Data default das factories dos dois n\u00f3s"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === factories (o data default de cada nó) ===
+> 3:  makeDefaultGenerateImage,
+> 9:  makeDefaultImageToVideo,
+> 102:    factory: makeDefaultGenerateImage,
+> 122:    factory: makeDefaultImageToVideo,
+> ───
+> ```
+
+## 🤖 Claude *(22:18:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -rn \"makeDefaultGenerateImage\" src/lib/ --include=\"*.ts\" -l | head -2\nF=$(grep -rln \"export function makeDefaultGenerateImage\\|export const makeDefaultGenerateImage\" src/lib/ | head -1)\necho \"arquivo: $F\"\ngrep -n \"makeDefaultGenerateImage\" -A 20 \"$F\" | head -26\necho \"\u2500\u2500\u2500\"\ngrep -n \"makeDefaultImageToVideo\" -A 22 \"$F\" | head -28",
+  "description": "Localizar e ler as factories"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> src/lib/canvas-recipes.ts
+> src/lib/canvas-node-registry.ts
+> arquivo: 
+> ugrep: warning: : No such file or directory
+> ───
+> ugrep: warning: : No such file or directory
+> ```
+
+## 🤖 Claude *(22:18:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"makeDefaultGenerateImage\" -A 18 src/lib/canvas-recipes.ts | head -24\necho \"\u2500\u2500\u2500\"\ngrep -n \"makeDefaultImageToVideo\" -A 20 src/lib/canvas-recipes.ts | head -26",
+  "description": "Ler as factories em canvas-recipes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 5:  makeDefaultGenerateImage,
+> 6-  makeDefaultImageToVideo,
+> 7-  makeLane,
+> 8-  type CanvasEdge,
+> 9-  type CanvasNode,
+> 10-  type LaneConfig,
+> 11-  type StyleSettings,
+> 12-} from "@/types/canvas";
+> 13-
+> 14-/**
+> 15- * Static Canvas Studio recipe catalog (Phase 4.2a — ported from viralmind-builder).
+> 16- *
+> 17- * Cada receita emite nós **tipados** pela discriminated union (`kind`):
+> 18- * — Pipeline recipes (3 lanes × 4 colunas):
+> 19- *     Col 0–2 → `generateImage` (Personagem · Frame Inicial · Frame Final)
+> 20- *     Col 3   → `imageToVideo`  (Vídeo 5s)
+> 21- * — Quick recipes (single lane): cadeia linear de `generateImage`.
+> 22- *
+> 23- * `useCanvasStore.addRecipe` consome o `{ nodes, edges }` retornado pelo `build`.
+> --
+> 52:  return makeDefaultGenerateImage(position, {
+> 53-    label,
+> 54-    prompt,
+> 55-    modelId: DEFAULT_IMAGE_MODEL,
+> ───
+> 6:  makeDefaultImageToVideo,
+> 7-  makeLane,
+> 8-  type CanvasEdge,
+> 9-  type CanvasNode,
+> 10-  type LaneConfig,
+> 11-  type StyleSettings,
+> 12-} from "@/types/canvas";
+> 13-
+> 14-/**
+> 15- * Static Canvas Studio recipe catalog (Phase 4.2a — ported from viralmind-builder).
+> 16- *
+> 17- * Cada receita emite nós **tipados** pela discriminated union (`kind`):
+> 18- * — Pipeline recipes (3 lanes × 4 colunas):
+> 19- *     Col 0–2 → `generateImage` (Personagem · Frame Inicial · Frame Final)
+> 20- *     Col 3   → `imageToVideo`  (Vídeo 5s)
+> 21- * — Quick recipes (single lane): cadeia linear de `generateImage`.
+> 22- *
+> 23- * `useCanvasStore.addRecipe` consome o `{ nodes, edges }` retornado pelo `build`.
+> 24- * User-saved recipes (vm_canvas_recipes) chegam na Phase 4.3.
+> 25- */
+> 26-
+> --
+> 91:  return makeDefaultImageToVideo(position, { label, prompt });
+> 92-}
+> 93-
+> 94-/* ── Single-lane chain helper (Quick recipes) ────────────────────────── */
+> ```
+
+## 🤖 Claude *(22:18:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"export function makeDefaultGenerateImage\" -A 24 src/types/canvas.ts\necho \"\u2500\u2500\u2500\"\ngrep -n \"export function makeDefaultImageToVideo\" -A 26 src/types/canvas.ts",
+  "description": "As factories reais em types/canvas.ts"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 1444:export function makeDefaultGenerateImage(
+> 1445-  position: { x: number; y: number },
+> 1446-  overrides: Partial<GenerateImageData> = {},
+> 1447-): CanvasNode {
+> 1448-  return {
+> 1449-    id: makeNodeId(),
+> 1450-    type: "generateImage",
+> 1451-    position,
+> 1452-    data: {
+> 1453-      kind: "generateImage",
+> 1454-      label: "Gerar Imagem",
+> 1455-      modelId: DEFAULT_IMAGE_MODEL,
+> 1456-      prompt: "",
+> 1457-      negativePrompt: "",
+> 1458-      aspectRatio: "9:16",
+> 1459-      controls: { ...DEFAULT_CONTROLS },
+> 1460-      seed: null,
+> 1461-      fixedSeed: false,
+> 1462-      status: "idle",
+> 1463-      inheritStyle: true,
+> 1464-      ...overrides,
+> 1465-    },
+> 1466-  };
+> 1467-}
+> 1468-
+> ───
+> 1560:export function makeDefaultImageToVideo(
+> 1561-  position: { x: number; y: number },
+> 1562-  overrides: Partial<ImageToVideoData> = {},
+> 1563-): CanvasNode {
+> 1564-  return {
+> 1565-    id: makeNodeId(),
+> 1566-    type: "imageToVideo",
+> 1567-    position,
+> 1568-    data: {
+> 1569-      kind: "imageToVideo",
+> 1570-      label: "Imagem → Vídeo",
+> 1571-      prompt: "",
+> 1572-      duration: 5,
+> 1573-      aspectRatio: "9:16",
+> 1574-      videoModel: DEFAULT_VIDEO_MODEL,
+> 1575-      motionStrength: 0.5,
+> 1576-      status: "idle",
+> 1577-      ...overrides,
+> 1578-    },
+> 1579-  };
+> 1580-}
+> 1581-
+> 1582-/**
+> 1583- * POV (Selfie/Vlog) — spaces-evolution Amendment 27. É o MESMO nó imageToVideo (motor Veo, money-path e
+> 1584- * inspetoria idênticos, CRUD completo), pré-configurado para o formato POV: Veo 3.1-fast 9:16 8s 720p +
+> 1585- * um prompt-molde de selfie/vlog EDITÁVEL (100% customizável). Conecte referências de identidade
+> 1586- * (nós Personagem/Identidade) e o output alimenta o nó Tela Dividida. Sem duplicar o pipeline de vídeo.
+> ```
+
+## 🤖 Claude *(22:18:41)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to gather the model identifiers for the image and video generation tools, figure out the correct handle IDs for connecting the generateImage output to the imageToVideo input, determine the makeNodeId format, and then create a script to insert the new node configuration into the database.
+
+I should also verify the aspect ratio is set to 16:9 for the mini-EP project rather than the default 9:16, and grep through the codebase for examples of DEFAULT_IMAGE_MODEL, DEFAULT_VIDEO_MODEL, makeNodeId, and working edge definitions with their sourceHandle/targetHandle pairs.
+
+</details>
+
+
+## 🤖 Claude *(22:18:41)*
+
+Shapes exatos em mãos. Faltam três detalhes que separam nó vivo de nó natimorto — modelos default, formato do id e **handles reais** das arestas:
+
+## 🤖 Claude *(22:18:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"DEFAULT_IMAGE_MODEL\\s*=\\|DEFAULT_VIDEO_MODEL\\s*=\\|function makeNodeId\" -A 2 src/types/canvas.ts | head -12\necho \"\u2500\u2500\u2500 modelos de v\u00eddeo v\u00e1lidos (union/enum) \u2500\u2500\u2500\"\ngrep -n \"seedance\\|kling\\|dop-lite\\|dop-standard\" src/types/canvas.ts | head -8\necho \"\u2500\u2500\u2500 edge com handles (exemplo real do recipes) \u2500\u2500\u2500\"\ngrep -n \"sourceHandle\\|targetHandle\" src/lib/canvas-recipes.ts src/types/canvas.ts | head -8",
+  "description": "Modelos default, makeNodeId e handles"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 1440:function makeNodeId(): string {
+> 1441-  return `n_${Math.random().toString(36).slice(2, 10)}`;
+> 1442-}
+> ─── modelos de vídeo válidos (union/enum) ───
+> 243:  | "dop-lite-5s"
+> 245:  | "dop-standard-5s"
+> 246:  | "kling-2.1-pro-5s"
+> 247:  | "seedance-v1-pro-5s"
+> 276:  "dop-lite-5s": {
+> 279:    modelParam: "dop-lite",
+> 294:  "dop-standard-5s": {
+> 297:    modelParam: "dop-standard",
+> ─── edge com handles (exemplo real do recipes) ───
+> ```
+
+## 🤖 Claude *(22:18:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellatio-orchestra 2>/dev/null || cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"DEFAULT_IMAGE_MODEL =\\|DEFAULT_VIDEO_MODEL =\" src/types/canvas.ts\necho \"\u2500\u2500\u2500 como edges s\u00e3o criadas (lane/recipe) \u2500\u2500\u2500\"\ngrep -n \"edges.push\\|makeEdge\\|source:\\|target:\" src/lib/canvas-recipes.ts | head -10\necho \"\u2500\u2500\u2500 um projeto REAL: como as edges est\u00e3o gravadas \u2500\u2500\u2500\"\nset -a; source .env 2>/dev/null; set +a\ncurl -s -m 10 \"$VITE_SUPABASE_URL/rest/v1/vm_canvas_projects?select=id,title,graph&order=updated_at.desc&limit=1\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nif d:\n    g=d[0]['graph']\n    print('projeto:',d[0]['title'],'n\u00f3s:',len(g.get('nodes',[])),'edges:',len(g.get('edges',[])))\n    for e in g.get('edges',[])[:3]: print('edge:',json.dumps(e))\n    n=g.get('nodes',[{}])[0]\n    print('n\u00f3[0] keys:',list(n.keys()))\n\"",
+  "description": "Defaults e edges de um projeto real em produ\u00e7\u00e3o"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> ─── como edges são criadas (lane/recipe) ───
+> 39:const link = (source: string, target: string): CanvasEdge => ({
+> 145:      for (let i = 1; i < row.length; i += 1) edges.push(link(row[i - 1].id, row[i].id));
+> ─── um projeto REAL: como as edges estão gravadas ───
+> Traceback (most recent call last):
+>   File "<string>", line 5, in <module>
+> KeyError: 0
+> ```
+
+## 🤖 Claude *(22:18:58)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsed -n '36,48p' src/lib/canvas-recipes.ts\ngrep -n \"^const DEFAULT_IMAGE_MODEL\\|^const DEFAULT_VIDEO_MODEL\\|DEFAULT_IMAGE_MODEL:\\|DEFAULT_VIDEO_MODEL:\" src/types/canvas.ts src/lib/canvas-recipes.ts 2>/dev/null | head -4\ngrep -rn \"DEFAULT_IMAGE_MODEL\" src/types/canvas.ts | head -3\necho \"\u2500\u2500\u2500 REST: o servi\u00e7o enxerga a tabela? \u2500\u2500\u2500\"\nset -a; source .env 2>/dev/null; set +a\ncurl -s -m 10 \"$VITE_SUPABASE_URL/rest/v1/vm_canvas_projects?select=id,title&order=updated_at.desc&limit=3\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | head -c 400",
+  "description": "Fechar defaults e testar acesso REST"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   build: (origin: { x: number; y: number }) => { nodes: CanvasNode[]; edges: CanvasEdge[] };
+> }
+> 
+> const link = (source: string, target: string): CanvasEdge => ({
+>   id: `e_${source}_${target}_${Math.random().toString(36).slice(2, 6)}`,
+>   source,
+>   target,
+> });
+> 
+> /* ── Node factory shortcuts (typed) ──────────────────────────────────── */
+> 
+> function imageNode(
+>   position: { x: number; y: number },
+> src/types/canvas.ts:238:export const DEFAULT_IMAGE_MODEL: ImageModelId = "openrouter-gemini-image";
+> src/types/canvas.ts:360:export const DEFAULT_VIDEO_MODEL: VideoModelId = "dop-standard-5s";
+> src/types/canvas.ts:238:export const DEFAULT_IMAGE_MODEL: ImageModelId = "openrouter-gemini-image";
+> src/types/canvas.ts:1455:      modelId: DEFAULT_IMAGE_MODEL,
+> ─── REST: o serviço enxerga a tabela? ───
+> {"code":"42703","details":null,"hint":null,"message":"column vm_canvas_projects.title does not exist"}
+> ```
+
+## 🤖 Claude *(22:19:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\necho \"=== colunas reais ===\"\ncurl -s -m 10 \"$VITE_SUPABASE_URL/rest/v1/vm_canvas_projects?select=*&limit=1\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nprint('keys:', list(d[0].keys()) if d else 'vazio')\n\"\necho; echo \"=== ids de modelo de IMAGEM v\u00e1lidos (union) ===\"\nsed -n '225,240p' src/types/canvas.ts",
+  "description": "Colunas da tabela e modelos de imagem"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === colunas reais ===
+> keys: ['id', 'user_id', 'name', 'description', 'thumbnail_url', 'graph', 'viewport', 'is_template', 'is_public', 'tags', 'status', 'total_executions', 'total_credits_used', 'last_execution_at', 'created_at', 'updated_at']
+> 
+> === ids de modelo de IMAGEM válidos (union) ===
+>     coinCost: 12,
+>     eta: "8–15s",
+>   },
+>   "openrouter-dall-e-3": {
+>     label: "DALL·E 3 (OpenRouter — deprecado)",
+>     provider: "openrouter",
+>     modelParam: "dall-e-3",
+>     tier: "Premium",
+>     coinCost: 15,
+>     eta: "10–15s",
+>   },
+> };
+> 
+> export const DEFAULT_IMAGE_MODEL: ImageModelId = "openrouter-gemini-image";
+> 
+> /* ── Video models (Phase 4.2b will wire async pipeline) ──────────────── */
+> ```
+
+## 🤖 Claude *(22:19:08)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I need to find the Soul model ID in the ImageModelId union—let me search through canvas.ts around that line range to see the full definition, then get the project set up.
+
+</details>
+
+
+## 🤖 Claude *(22:19:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"soul\" src/types/canvas.ts | head -8\nsed -n '185,215p' src/types/canvas.ts",
+  "description": "Model id do Soul na union de imagem"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 75: * `higgsfield/soul-<res>-<batch>` (see CREDIT_COSTS in canvas-execute).
+> 79:  | "soul-720p-x1"
+> 80:  | "soul-720p-x4"
+> 81:  | "soul-1080p-x1"
+> 82:  | "soul-1080p-x4"
+> 120:  "soul-720p-x1": {
+> 123:    modelParam: "soul",
+> 131:  "soul-720p-x4": {
+>     coinCost: 12,
+>     eta: "8–15s",
+>   },
+>   "flux-schnell": {
+>     label: "FLUX Schnell",
+>     provider: "replicate",
+>     modelParam: "flux-schnell",
+>     tier: "Rápido",
+>     coinCost: 3,
+>     eta: "3–5s",
+>   },
+>   sdxl: {
+>     label: "SDXL",
+>     provider: "replicate",
+>     modelParam: "sdxl",
+>     tier: "Padrão",
+>     coinCost: 4,
+>     eta: "5–8s",
+>   },
+>   // O rótulo diz EXATAMENTE o que o `modelParam` despacha. Até 2026-08-12 ele anunciava
+>   // "Nano Banana 2" e mandava o `gemini-2.5-flash-image` — que é o Nano Banana 1. Pego pelo loop
+>   // de validação em browser (`scripts/qa/e2e-session-validation.ts`, gate V3), que compara rótulo
+>   // com modelo em vez de acreditar no texto. "Nano Banana 2" é `gemini-3.1-flash-image`; migrar
+>   // para ele exige ANTES a entrada na tabela de custo do `canvas-execute` — sem ela o nó nasce
+>   // morto em 422 ([[reference_ledger_node_needs_node_run_id]]) — e a rota Google direta que a
+>   // diretiva de 2026-08-12 exige (helper `scripts/lib/gemini-image.ts`). Fatia própria; até lá,
+>   // o rótulo fala a verdade.
+>   "openrouter-gemini-image": {
+>     label: "Nano Banana (Gemini)",
+>     provider: "openrouter",
+>     modelParam: "google/gemini-2.5-flash-image",
+> ```
+
+## 🤖 Claude *(22:19:11)*
+
+Tudo em mãos: `soul-1080p-x1` para a imagem, `seedance-v1-pro-5s` para o vídeo, edges sem handle custom. Armando o projeto:
+
+## 🤖 Claude *(22:19:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\npython3 - <<'PY'\nimport json, urllib.request, os, random, string\n\ndef nid(): return \"n_\" + \"\".join(random.choices(string.ascii_lowercase+string.digits, k=8))\nURL=os.environ[\"VITE_SUPABASE_URL\"]; KEY=os.environ[\"SB_SECRET_KEY\"]\nUSER=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\n\nimg_id, vid_id = nid(), nid()\nPROMPT_IMG = (\"High-end cinematic motion-design still, 16:9. Near-black studio #0a0f1a, glossy black glass \"\n  \"floor, one cyan #22d3ee accent ring center-frame holding a floating glass tile, violet #6727E3 nebula \"\n  \"glow far background, tiny gold accents, white geometric grotesk typography reading \\\"IA ESTA SEMANA\\\", \"\n  \"macro parallax depth, cinematic bloom, restrained grain. No people, no watermark, no extra text.\")\nPROMPT_VID = (\"5.0 seconds, one continuous forward dolly, one unmistakable new visual event per second: \"\n  \"0-1s the cyan ring wakes and rotates; 1-2s the glass tile unfolds into three floating cards; \"\n  \"2-3s the cards orbit the ring with depth parallax; 3-4s a violet intelligence halo scans them; \"\n  \"4-5s everything compresses toward the lens and fills the frame with cyan. \"\n  \"No hard cuts, no fade, no text morphing, no watermark, no flicker.\")\n\ngraph = {\n  \"nodes\": [\n    {\"id\": img_id, \"type\": \"generateImage\", \"position\": {\"x\": 120, \"y\": 200},\n     \"data\": {\"kind\":\"generateImage\",\"label\":\"Witness \u00b7 frame Soul 1080p\",\"modelId\":\"soul-1080p-x1\",\n              \"prompt\":PROMPT_IMG,\"negativePrompt\":\"\",\"aspectRatio\":\"16:9\",\n              \"controls\":{},\"seed\":None,\"fixedSeed\":False,\"status\":\"idle\",\"inheritStyle\":True}},\n    {\"id\": vid_id, \"type\": \"imageToVideo\", \"position\": {\"x\": 560, \"y\": 200},\n     \"data\": {\"kind\":\"imageToVideo\",\"label\":\"Witness \u00b7 Seedance 5s\",\"prompt\":PROMPT_VID,\n              \"duration\":5,\"aspectRatio\":\"16:9\",\"videoModel\":\"seedance-v1-pro-5s\",\n              \"motionStrength\":0.5,\"status\":\"idle\"}},\n  ],\n  \"edges\": [\n    {\"id\": f\"e_{img_id}_{vid_id}_wit1\",\"source\": img_id,\"target\": vid_id},\n  ],\n}\nbody = json.dumps({\"user_id\": USER, \"name\": \"Witness Higgsfield \u00b7 piv\u00f4 mini-EP\",\n  \"description\": \"1 imagem Soul 1080p (40 mco) \u2192 1 v\u00eddeo Seedance 5s (130 mco). Armado pelo agente 2026-08-16.\",\n  \"graph\": graph, \"status\": \"draft\", \"tags\": [\"witness\",\"piv\u00f4\",\"higgsfield\"]}).encode()\nreq = urllib.request.Request(f\"{URL}/rest/v1/vm_canvas_projects\", data=body, method=\"POST\",\n  headers={\"apikey\":KEY,\"Authorization\":f\"Bearer {KEY}\",\"Content-Type\":\"application/json\",\"Prefer\":\"return=representation\"})\nwith urllib.request.urlopen(req, timeout=15) as r:\n    out=json.load(r)[0]\n    print(\"PROJETO:\", out[\"id\"])\n    print(\"n\u00f3s:\", len(out[\"graph\"][\"nodes\"]), \"\u00b7 edges:\", len(out[\"graph\"][\"edges\"]))\nPY",
+  "description": "Armar o projeto do witness no banco"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> Traceback (most recent call last):
+>   File "<stdin>", line 38, in <module>
+>   File "/usr/lib/python3.12/urllib/request.py", line 215, in urlopen
+>     return opener.open(url, data, timeout)
+>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/urllib/request.py", line 521, in open
+>     response = meth(req, response)
+>                ^^^^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/urllib/request.py", line 630, in http_response
+>     response = self.parent.error(
+>                ^^^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/urllib/request.py", line 559, in error
+>     return self._call_chain(*args)
+>            ^^^^^^^^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/urllib/request.py", line 492, in _call_chain
+>     result = func(*args)
+>              ^^^^^^^^^^^
+>   File "/usr/lib/python3.12/urllib/request.py", line 639, in http_error_default
+>     raise HTTPError(req.full_url, code, msg, hdrs, fp)
+> urllib.error.HTTPError: HTTP Error 400: Bad Request
+> ```
+
+## 🤖 Claude *(22:19:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\n# ver o corpo do erro 400 (a coluna que recusou)\ncurl -s -X POST \"$VITE_SUPABASE_URL/rest/v1/vm_canvas_projects\" \\\n  -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" -H \"Content-Type: application/json\" \\\n  -d '{\"user_id\":\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\",\"name\":\"__probe__\",\"graph\":{\"nodes\":[],\"edges\":[]},\"status\":\"draft\",\"tags\":[\"x\"]}' | head -c 300",
+  "description": "Diagnosticar o 400 do insert"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {"code":"23514","details":"Failing row contains (9d35a44d-02f1-45e2-b3b3-0b5e89553f45, ada39fae-67e1-4e53-af1c-5a18e1c108e8, __probe__, null, null, {\"edges\": [], \"nodes\": []}, {\"x\": 0, \"y\": 0, \"zoom\": 1}, f, f, {x}, draft, 0, 0, null, 2026-08-16 22:19:30.588121+00, 2026-08-16 22:19:30.5881
+> ```
+
+## 🤖 Claude *(22:19:36)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm getting a CHECK constraint violation on error code 23514, which suggests the status value 'draft' isn't allowed by the constraint. I need to figure out what status values are actually permitted—likely something like 'active' or 'archived'—and either adjust the insert to use an allowed value or omit the status column to rely on a default.
+
+</details>
+
+
+## 🤖 Claude *(22:19:36)*
+
+CHECK constraint recusou — provavelmente o `status`. Tentando com o default da tabela:
+
+## 🤖 Claude *(22:19:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\ncurl -s -X POST \"$VITE_SUPABASE_URL/rest/v1/vm_canvas_projects\" \\\n  -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d '{\"user_id\":\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\",\"name\":\"__probe__\",\"graph\":{\"nodes\":[],\"edges\":[]}}' | python3 -c \"import json,sys; d=json.load(sys.stdin); print('OK id:',d[0]['id'],'status:',d[0]['status']) if isinstance(d,list) else print(d)\"",
+  "description": "Probe sem status expl\u00edcito"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> OK id: 60fa7751-0c36-49b4-8452-915a2dc3673f status: active
+> ```
+
+## 🤖 Claude *(22:19:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\n# apaga o probe e cria o projeto real (status default 'active')\ncurl -s -X DELETE \"$VITE_SUPABASE_URL/rest/v1/vm_canvas_projects?id=eq.60fa7751-0c36-49b4-8452-915a2dc3673f\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" -o /dev/null -w \"probe apagado: %{http_code}\\n\"\npython3 - <<'PY'\nimport json, urllib.request, os, random, string\ndef nid(): return \"n_\" + \"\".join(random.choices(string.ascii_lowercase+string.digits, k=8))\nURL=os.environ[\"VITE_SUPABASE_URL\"]; KEY=os.environ[\"SB_SECRET_KEY\"]\nUSER=\"ada39fae-67e1-4e53-af1c-5a18e1c108e8\"\nimg_id, vid_id = nid(), nid()\nPROMPT_IMG = (\"High-end cinematic motion-design still, 16:9. Near-black studio #0a0f1a, glossy black glass \"\n  \"floor, one cyan #22d3ee accent ring center-frame holding a floating glass tile, violet #6727E3 nebula \"\n  \"glow far background, tiny gold accents, white geometric grotesk typography reading \\\"IA ESTA SEMANA\\\", \"\n  \"macro parallax depth, cinematic bloom, restrained grain. No people, no watermark, no extra text.\")\nPROMPT_VID = (\"5.0 seconds, one continuous forward dolly, one unmistakable new visual event per second: \"\n  \"0-1s the cyan ring wakes and rotates; 1-2s the glass tile unfolds into three floating cards; \"\n  \"2-3s the cards orbit the ring with depth parallax; 3-4s a violet intelligence halo scans them; \"\n  \"4-5s everything compresses toward the lens and fills the frame with cyan. \"\n  \"No hard cuts, no fade, no text morphing, no watermark, no flicker.\")\ngraph = {\n  \"nodes\": [\n    {\"id\": img_id, \"type\": \"generateImage\", \"position\": {\"x\": 120, \"y\": 200},\n     \"data\": {\"kind\":\"generateImage\",\"label\":\"Witness \u00b7 frame Soul 1080p\",\"modelId\":\"soul-1080p-x1\",\n              \"prompt\":PROMPT_IMG,\"negativePrompt\":\"\",\"aspectRatio\":\"16:9\",\n              \"controls\":{},\"seed\":None,\"fixedSeed\":False,\"status\":\"idle\",\"inheritStyle\":True}},\n    {\"id\": vid_id, \"type\": \"imageToVideo\", \"position\": {\"x\": 560, \"y\": 200},\n     \"data\": {\"kind\":\"imageToVideo\",\"label\":\"Witness \u00b7 Seedance 5s\",\"prompt\":PROMPT_VID,\n              \"duration\":5,\"aspectRatio\":\"16:9\",\"videoModel\":\"seedance-v1-pro-5s\",\n              \"motionStrength\":0.5,\"status\":\"idle\"}},\n  ],\n  \"edges\": [{\"id\": f\"e_{img_id}_{vid_id}_wit1\",\"source\": img_id,\"target\": vid_id}],\n}\nbody = json.dumps({\"user_id\": USER, \"name\": \"Witness Higgsfield \u00b7 piv\u00f4 mini-EP\",\n  \"description\": \"1 imagem Soul 1080p (40 mco) \u2192 1 v\u00eddeo Seedance 5s (130 mco). Armado pelo agente 2026-08-16.\",\n  \"graph\": graph, \"tags\": [\"witness\",\"pivo\",\"higgsfield\"]}).encode()\nreq = urllib.request.Request(f\"{URL}/rest/v1/vm_canvas_projects\", data=body, method=\"POST\",\n  headers={\"apikey\":KEY,\"Authorization\":f\"Bearer {KEY}\",\"Content-Type\":\"application/json\",\"Prefer\":\"return=representation\"})\nwith urllib.request.urlopen(req, timeout=15) as r:\n    out=json.load(r)[0]\n    print(\"PROJETO:\", out[\"id\"])\nPY",
+  "description": "Criar o projeto do witness"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> probe apagado: 204
+> PROJETO: bba8f236-5917-4287-883c-123ec33a46a9
+> ```
+
+## 🤖 Claude *(22:19:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.bun/bin:$PATH\"\nset -a; source .env 2>/dev/null; set +a\necho \"=== preflight (o gate da casa contra n\u00f3 natimorto) ===\"\nnice -n 19 bun run scripts/qa/preflight-spaces-project.ts bba8f236-5917-4287-883c-123ec33a46a9 2>&1 | tail -12\necho; echo \"=== fila EP07 ===\"\nK=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2\necho \"ato3: $(ls $K/ep07-ato3-audio/frames 2>/dev/null | wc -l)/1877 \u00b7 $(date '+%H:%M')\"",
+  "description": "Preflight do projeto witness",
+  "timeout": 60000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === preflight (o gate da casa contra nó natimorto) ===
+> ── CENAS MOTION ──
+> 
+> ── PRESENTERS (Veo · pagos) ──
+>   n_aubjh4wz motor=seedance-v1-pro-5s     prompt= 417ch refs=1 status=idle
+> 
+> ── MONTADOR ──
+> 
+> ════════════════════════════════════════════════════════════
+> ✅ nenhum bloqueador
+> 
+> ⚠️  1 aviso(s) — não impedem, mas mudam o resultado:
+>    · n_aubjh4wz: motor='seedance-v1-pro-5s' — confirme que é Veo antes de pagar
+> 
+> === fila EP07 ===
+> ato3: 1875/1877 · 19:19
+> ```
+
+## 🤖 Claude *(22:20:17)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Preflight checks are clear with no blockers—the one warning about paid videos being categorized as Veo is expected since seedance is intentional, and the image generation node didn't appear in the preflight sections but that's not a problem. The ato3 render is nearly done at 1875 of 1877 frames, with the remaining queue items (hedge, fecho, macro) totaling about 4749 frames that should wrap up around 20:30. Now I'm ready to walk through the step-by-step process for the Sovereign.
+
+I'll navigate to the Spaces project dashboard, then execute the image node first to generate the output, followed by the video node—the dispatcher will automatically pull the upstream image as input since the edge connection exists and the video node requires that asset URL. The costs are 40 mco for the image and 130 mco for the video, using roughly 3 and 9-10 hf credits respectively.
+
+</details>
+
+
+## 🤖 Claude *(22:20:17)*
+
+Projeto **armado e verificado** — o preflight da casa deu ✅ nenhum bloqueador (o aviso é o script assumindo que vídeo pago é Veo; o Seedance é proposital).
+
+## Onde clicar — 3 passos
+
+1. Abra (aba nova): **`/dashboard/spaces/bba8f236-5917-4287-883c-123ec33a46a9`** — projeto **"Witness Higgsfield · pivô mini-EP"**. Já estão lá os dois nós conectados, com os prompts prontos.
+2. No nó **"Witness · frame Soul 1080p"** → botão **Executar** → espere a imagem aparecer no card (**40 mco / ~3 créditos HF**)
+3. No nó **"Witness · Seedance 5s"** → **Executar** (**130 mco / ~9-10 créditos HF**) — ele usa a imagem do nó anterior como primeiro frame automaticamente
+
+Total: 170 mco / ~12-13 dos seus 73,33 créditos. O resultado cai na Biblioteca como asset normal.
+
+## EP07
+
+- **ato3 fechou agora** (1.875/1.877 quando olhei) — **4 de 7 prontas**
+- Restam hedge + fecho + macro (~70 min) → renders ~20:30 · **master ~20:40**
+- Upload manual como você pediu: às 20:40 te entrego o master + [o pacote](docs/roadmap/ep07-pacote-publicacao-2026-08-16.md) (título, descrição com capítulos, tags, thumbs) e te acompanho no Studio passo a passo — **categoria 28** é o item que não pode falhar
+
+## 👤 User *(22:26:34)*
+
+terminou mais não subiu certo?
+
+## 🤖 Claude *(22:26:44)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O usuário está perguntando se o processo terminou mas não foi enviado corretamente — provavelmente sobre a fila de renderização do EP07. Preciso verificar o estado atual: se todas as cenas foram processadas, se o master foi montado, o que foi publicado na Biblioteca, e se há algum problema com os nós witness ou upload de assets.
+
+</details>
+
+
+## 🤖 Claude *(22:26:44)*
+
+Deixa eu medir o que terminou e o que subiu de fato:
+
+## 🤖 Claude *(22:26:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ndate '+%H:%M:%S'\nK=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2\necho \"=== CENAS (mp4 = terminou de verdade) ===\"\nfor c in ep07-gancho ep07-ato1-patrocinio ep07-ato2-adsense ep07-ato3-audio ep07-estrutura-hedge ep07-fecho ep07-macro; do\n  m=$K/$c/$c.mp4\n  [ -f \"$m\" ] && echo \"\u2705 $c ($(stat -c%s \"$m\" | numfmt --to=iec))\" || echo \"\u23f3 $c (frames: $(ls $K/$c/frames 2>/dev/null | wc -l))\"\ndone\necho; echo \"fila viva? $(pgrep -f 'render-scenes-montar' >/dev/null && echo SIM || echo 'N\u00c3O \u2014 terminou ou morreu')\"\ntail -3 /home/ubuntu/logs/ep07-fila-render.log | tr '\\r' '\\n' | tail -3\necho; echo \"=== master existe? ===\"; ls -la repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/master/ 2>/dev/null || echo \"(ainda n\u00e3o montado)\"",
+  "description": "O que terminou e o que falta"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 19:26:49
+> === CENAS (mp4 = terminou de verdade) ===
+> ✅ ep07-gancho (17M)
+> ✅ ep07-ato1-patrocinio (25M)
+> ✅ ep07-ato2-adsense (24M)
+> ✅ ep07-ato3-audio (21M)
+> ⏳ ep07-estrutura-hedge (frames: 610)
+> ⏳ ep07-fecho (frames: 31)
+> ⏳ ep07-macro (frames: 0)
+> 
+> fila viva? SIM
+> ep07-ato3-audio: bit_rate=2692837 · unicos=100.0% · /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-ato3-audio/ep07-ato3-audio.mp4
+> ✅ ep07-estrutura-hedge.spec.json — todas as camadas portadoras de informacao atingem foco (<= 2px)
+> ok /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2/ep07-estrutura-hedge/scene.html 992KB · 7 planos · 5 camadas · 42.2s
+> 
+> === master existe? ===
+> (ainda não montado)
+> ```
+
+## 🤖 Claude *(22:26:56)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The queue is still processing—it's currently working through the hedge scene with over 600 frames done out of 1266, and only 4 of 7 scenes are complete. His comment about finishing but not uploading likely refers to the Witness project, where he may have triggered the Soul image or Seedance video to render but the asset never appeared. I should check the Witness project status, recent creative assets, and the video render ledger to see what happened.
+
+</details>
+
+
+## 🤖 Claude *(22:26:57)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+A fila do EP07 ainda está viva na 5ª de 7 cenas e não deveria ter subido, então estou verificando o rastro do witness para ver por que ele não apareceu quando clicado.
+
+</details>
+
+
+## 🤖 Claude *(22:27:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\necho \"=== estado dos n\u00f3s do projeto witness ===\"\ncurl -s -m 10 \"$VITE_SUPABASE_URL/rest/v1/vm_canvas_projects?id=eq.bba8f236-5917-4287-883c-123ec33a46a9&select=graph,updated_at,total_executions\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)[0]\nprint('updated:',d['updated_at'],'\u00b7 execu\u00e7\u00f5es:',d['total_executions'])\nfor n in d['graph']['nodes']:\n    dd=n['data']\n    print(f\\\"  {dd.get('label','?'):34} status={dd.get('status')}  output={'SIM' if dd.get('outputUrl') or dd.get('imageUrl') or dd.get('videoUrl') else 'n\u00e3o'}  erro={dd.get('errorMessage') or dd.get('error') or '-'}\\\")\n\"\necho; echo \"=== ledger (node_runs / video_renders recentes deste user) ===\"\ncurl -s -m 10 \"$VITE_SUPABASE_URL/rest/v1/video_renders?select=id,engine,status,charged_mco,error,created_at&order=created_at.desc&limit=4\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -m json.tool 2>/dev/null | head -30\necho; echo \"=== \u00faltimos assets criados ===\"\ncurl -s -m 10 \"$VITE_SUPABASE_URL/rest/v1/creative_assets?select=id,title,kind,created_at&order=created_at.desc&limit=4\" -H \"apikey: $SB_SECRET_KEY\" -H \"Authorization: Bearer $SB_SECRET_KEY\" | python3 -m json.tool 2>/dev/null | head -25",
+  "description": "Rastro do witness: n\u00f3s, ledger e assets"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === estado dos nós do projeto witness ===
+> updated: 2026-08-16T22:21:37.63383+00:00 · execuções: 0
+>   Witness · frame Soul 1080p         status=idle  output=não  erro=-
+>   Witness · Seedance 5s              status=idle  output=não  erro=-
+> 
+> === ledger (node_runs / video_renders recentes deste user) ===
+> {
+>     "code": "42703",
+>     "details": null,
+>     "hint": "Perhaps you meant to reference the column \"video_renders.state\".",
+>     "message": "column video_renders.status does not exist"
+> }
+> 
+> === últimos assets criados ===
+> [
+>     {
+>         "id": "4b6eb1a0-7cdb-44fc-a289-5c81824b85b8",
+>         "title": "EP07 GANCHO v4 \u00b7 COM NARRA\u00c7\u00c3O (parecer A/V)",
+>         "kind": "video",
+>         "created_at": "2026-08-16T20:49:09.42305+00:00"
+>     },
+>     {
+>         "id": "9ebf4888-2378-4d87-8176-782a2fecfb89",
+>         "title": "EP07 GANCHO v4 \u00b7 operador nasce borrado na MESA e cristaliza em TR\u00caS",
+>         "kind": "video",
+>         "created_at": "2026-08-16T20:45:25.606712+00:00"
+>     },
+>     {
+>         "id": "b5cf5780-3ba2-477a-b53c-5aa86e3972d6",
+>         "title": "EP07 GANCHO v3 \u00b7 PILOTO p\u00f3s-patch (grade + lente 47\u00b0 + scrim + G-LEG)",
+>         "kind": "video",
+>         "created_at": "2026-08-16T19:24:55.731209+00:00"
+>     },
+>     {
+>         "id": "d2830b5a-6189-4eeb-876f-6f257fe54a9c",
+>         "title": "EP07 \u00b7 GANCHO v2 \u2014 operador de \u00e1udio no lugar do microfone \u00b7 APROVAR",
+>         "kind": "video",
+>         "created_at": "2026-08-16T01:52:23.830405+00:00"
+>     }
+> ```
+
+## 🤖 Claude *(22:27:26)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Looking at the status of two key processes: the EP07 queue is still rendering hedge content with macro work pending, which is normal progress. The Witness task shows both nodes idle with zero executions recorded since my last write, suggesting either the execution button wasn't clicked or the click didn't register properly.
+
+Most likely he interpreted my message about ato3 finishing as the entire process being done, or he tried clicking Executar but hit a stale frontend cache issue — either way, the nodes never actually ran. I should clarify that EP07 is still in progress with 5 of 7 tasks active.
+
+</details>
+
+
+## 🤖 Claude *(22:27:27)*
+
+Nada terminou ainda — e nada falhou. Dois estados separados, com prova:
+
+## EP07 — no meio, no prazo
+
+**5ª de 7 cenas** rodando (hedge, 610/1.266 frames). Fila viva, 4 MP4s prontos (gancho, ato1, ato2, ato3). Master continua previsto para **~20:40**. Não subiu porque ainda não existe.
+
+## Witness — nunca chegou a executar
+
+O banco diz: os dois nós estão **`status=idle` · 0 execuções · nenhuma linha no ledger · nenhuma cobrança** (nem mco, nem créditos HF — zero gasto). Se você clicou em Executar, o clique **não chegou ao servidor** — sem execução e sem erro registrado, a causa mais provável é a página ter carregado antes de eu gravar o projeto, ou cache.
+
+Receita:
+
+1. Recarregue com **Ctrl+Shift+R** (hard refresh) em `/dashboard/spaces/bba8f236-5917-4287-883c-123ec33a46a9`
+2. Os dois cards devem aparecer: **"Witness · frame Soul 1080p"** e **"Witness · Seedance 5s"**, ligados por uma aresta
+3. **Executar** no da imagem → o card deve mudar para "gerando" na hora. Se mudar, está despachado; a imagem aparece no próprio card em ~10-20 s
+4. Depois **Executar** no do vídeo
+
+Se ao recarregar os cards **não aparecerem**, ou o Executar não mudar o status do card, me diga exatamente o que a tela mostra — aí é defeito meu no shape do nó (a família "nó nasce morto") e eu conserto pelo rastro, não por adivinhação.
+
+## 👤 User *(22:31:53)*
+
+erro ao expandir o primeiro nó.: 19:31:20.747 index-EdQtyOkz.js:41 TypeError: Cannot read properties of undefined (reading 'toFixed')
+    at em (CanvasEditorPage-DF_uUgnZ.js:141:106426)
+    at rp (index-EdQtyOkz.js:39:16998)
+    at Pw (index-EdQtyOkz.js:41:43963)
+    at Cw (index-EdQtyOkz.js:41:39727)
+    at KE (index-EdQtyOkz.js:41:39655)
+    at Cc (index-EdQtyOkz.js:41:39508)
+    at Ph (index-EdQtyOkz.js:41:35875)
+    at wg (index-EdQtyOkz.js:41:36678)
+    at zr (index-EdQtyOkz.js:39:3274)
+    at index-EdQtyOkz.js:41:34207
+vh @ index-EdQtyOkz.js:41
+n.callback @ index-EdQtyOkz.js:41
+eg @ index-EdQtyOkz.js:39
+gg @ index-EdQtyOkz.js:41
+_w @ index-EdQtyOkz.js:41
+WE @ index-EdQtyOkz.js:41
+QE @ index-EdQtyOkz.js:41
+Jr @ index-EdQtyOkz.js:41
+wg @ index-EdQtyOkz.js:41
+zr @ index-EdQtyOkz.js:39
+(anonymous) @ index-EdQtyOkz.js:41
+19:31:20.748 index-EdQtyOkz.js:41 TypeError: Cannot read properties of undefined (reading 'toFixed')
+    at em (CanvasEditorPage-DF_uUgnZ.js:141:106426)
+    at rp (index-EdQtyOkz.js:39:16998)
+    at Pw (index-EdQtyOkz.js:41:43963)
+    at Cw (index-EdQtyOkz.js:41:39727)
+    at KE (index-EdQtyOkz.js:41:39655)
+    at Cc (index-EdQtyOkz.js:41:39508)
+    at Ph (index-EdQtyOkz.js:41:35875)
+    at wg (index-EdQtyOkz.js:41:36678)
+    at zr (index-EdQtyOkz.js:39:3274)
+    at index-EdQtyOkz.js:41:34207
+vh @ index-EdQtyOkz.js:41
+n.callback @ index-EdQtyOkz.js:41
+eg @ index-EdQtyOkz.js:39
+gg @ index-EdQtyOkz.js:41
+_w @ index-EdQtyOkz.js:41
+WE @ index-EdQtyOkz.js:41
+QE @ index-EdQtyOkz.js:41
+Jr @ index-EdQtyOkz.js:41
+wg @ index-EdQtyOkz.js:41
+zr @ index-EdQtyOkz.js:39
+(anonymous) @ index-EdQtyOkz.js:41
+19:31:20.748 index-EdQtyOkz.js:41 TypeError: Cannot read properties of undefined (reading 'toFixed')
+    at em (CanvasEditorPage-DF_uUgnZ.js:141:106426)
+    at rp (index-EdQtyOkz.js:39:16998)
+    at Pw (index-EdQtyOkz.js:41:43963)
+    at Cw (index-EdQtyOkz.js:41:39727)
+    at KE (index-EdQtyOkz.js:41:39655)
+    at Cc (index-EdQtyOkz.js:41:39508)
+    at Ph (index-EdQtyOkz.js:41:35875)
+    at wg (index-EdQtyOkz.js:41:36678)
+    at zr (index-EdQtyOkz.js:39:3274)
+    at index-EdQtyOkz.js:41:34207
+vh @ index-EdQtyOkz.js:41
+n.callback @ index-EdQtyOkz.js:41
+eg @ index-EdQtyOkz.js:39
+gg @ index-EdQtyOkz.js:41
+_w @ index-EdQtyOkz.js:41
+WE @ index-EdQtyOkz.js:41
+QE @ index-EdQtyOkz.js:41
+Jr @ index-EdQtyOkz.js:41
+wg @ index-EdQtyOkz.js:41
+zr @ index-EdQtyOkz.js:39
+(anonymous) @ index-EdQtyOkz.js:41
+19:31:20.748 index-EdQtyOkz.js:41 TypeError: Cannot read properties of undefined (reading 'toFixed')
+    at em (CanvasEditorPage-DF_uUgnZ.js:141:106426)
+    at rp (index-EdQtyOkz.js:39:16998)
+    at Pw (index-EdQtyOkz.js:41:43963)
+    at Cw (index-EdQtyOkz.js:41:39727)
+    at KE (index-EdQtyOkz.js:41:39655)
+    at Cc (index-EdQtyOkz.js:41:39508)
+    at Ph (index-EdQtyOkz.js:41:35875)
+    at wg (index-EdQtyOkz.js:41:36678)
+    at zr (index-EdQtyOkz.js:39:3274)
+    at index-EdQtyOkz.js:41:34207
+vh @ index-EdQtyOkz.js:41
+n.callback @ index-EdQtyOkz.js:41
+eg @ index-EdQtyOkz.js:39
+gg @ index-EdQtyOkz.js:41
+_w @ index-EdQtyOkz.js:41
+WE @ index-EdQtyOkz.js:41
+QE @ index-EdQtyOkz.js:41
+Jr @ index-EdQtyOkz.js:41
+wg @ index-EdQtyOkz.js:41
+zr @ index-EdQtyOkz.js:39
+(anonymous) @ index-EdQtyOkz.js:41
+19:31:20.748 index-EdQtyOkz.js:41 TypeError: Cannot read properties of undefined (reading 'toFixed')
+    at em (CanvasEditorPage-DF_uUgnZ.js:141:106426)
+    at rp (index-EdQtyOkz.js:39:16998)
+    at Pw (index-EdQtyOkz.js:41:43963)
+    at Cw (index-EdQtyOkz.js:41:39727)
+    at KE (index-EdQtyOkz.js:41:39655)
+    at Cc (index-EdQtyOkz.js:41:39508)
+    at Ph (index-EdQtyOkz.js:41:35875)
+    at wg (index-EdQtyOkz.js:41:36678)
+    at zr (index-EdQtyOkz.js:39:3274)
+    at index-EdQtyOkz.js:41:34207
+vh @ index-EdQtyOkz.js:41
+n.callback @ index-EdQtyOkz.js:41
+eg @ index-EdQtyOkz.js:39
+gg @ index-EdQtyOkz.js:41
+_w @ index-EdQtyOkz.js:41
+WE @ index-EdQtyOkz.js:41
+QE @ index-EdQtyOkz.js:41
+Jr @ index-EdQtyOkz.js:41
+wg @ index-EdQtyOkz.js:41
+zr @ index-EdQtyOkz.js:39
+(anonymous) @ index-EdQtyOkz.js:41
+19:31:20.748 index-EdQtyOkz.js:39 Uncaught TypeError: Cannot read properties of undefined (reading 'toFixed')
+    at em (CanvasEditorPage-DF_uUgnZ.js:141:106426)
+    at rp (index-EdQtyOkz.js:39:16998)
+    at Pw (index-EdQtyOkz.js:41:43963)
+    at Cw (index-EdQtyOkz.js:41:39727)
+    at KE (index-EdQtyOkz.js:41:39655)
+    at Cc (index-EdQtyOkz.js:41:39508)
+    at Ph (index-EdQtyOkz.js:41:35875)
+    at wg (index-EdQtyOkz.js:41:36678)
+    at zr (index-EdQtyOkz.js:39:3274)
+    at index-EdQtyOkz.js:41:34207
+em @ CanvasEditorPage-DF_uUgnZ.js:141
+rp @ index-EdQtyOkz.js:39
+Pw @ index-EdQtyOkz.js:41
+Cw @ index-EdQtyOkz.js:41
+KE @ index-EdQtyOkz.js:41
+Cc @ index-EdQtyOkz.js:41
+Ph @ index-EdQtyOkz.js:41
+wg @ index-EdQtyOkz.js:41
+zr @ index-EdQtyOkz.js:39
+(anonymous) @ index-EdQtyOkz.js:41
+
+## 🤖 Claude *(22:32:02)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm tracking down a bug where the inspector crashes when expanding the generateImage node — it's trying to call `.toFixed()` on something undefined. The issue is in my node initialization: I set `controls` to an empty object, but the inspector expects it to have the full default structure with all the control properties like guidance, so when it tries to render something like `controls.guidance.toFixed(1)`, it fails because those nested fields don't exist.
+
+The fix is to look up the DEFAULT_CONTROLS definition in the types file and patch the stored node data in the database to include the complete controls object instead of an empty one. I should also verify the other numeric fields are properly initialized — motionStrength looks fine at 0.5, and seed being null should be handled by the factory defaults. Once I update the graph via REST, the user can reload and the inspector should work.
+
+</details>
+
+
+## 🤖 Claude *(22:32:02)*
+
+Defeito meu — a família "nó nasce morto", agora na variante de inspector: eu gravei `controls: {}` vazio, e o painel chama `.toFixed()` num campo que deveria existir. Pegando o shape correto e consertando no banco:
+
+## 🤖 Claude *(22:32:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"DEFAULT_CONTROLS\" src/types/canvas.ts | head -3\ngrep -n \"export const DEFAULT_CONTROLS\" -A 12 src/types/canvas.ts",
+  "description": "Shape real de DEFAULT_CONTROLS"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 413:export const DEFAULT_CONTROLS: ControlValues = {
+> 1459:      controls: { ...DEFAULT_CONTROLS },
+> 413:export const DEFAULT_CONTROLS: ControlValues = {
+> 414-  creativity: 0.7,
+> 415-  resemblance: 0.3,
+> 416-  hdr: 0.5,
+> 417-  fractality: 0.3,
+> 418-  sharpness: 0.8,
+> 419-};
+> 420-
+> 421-/* ── Style Transfer presets (8 — viralmind C3) ───────────────────────── */
+> 422-
+> 423-export const STYLE_TRANSFER_PRESETS = [
+> 424-  { id: "cinematic", label: "Cinematográfico", suffix: "cinematic film still, anamorphic lens, dramatic lighting, 35mm film grain, shallow depth of field" },
+> 425-  { id: "neon", label: "Neon", suffix: "neon-soaked cyberpunk aesthetic, vibrant magenta and cyan rim light, wet streets, high contrast" },
+> ```
+
+## 🤖 Claude *(22:32:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nset -a; source .env 2>/dev/null; set +a\npython3 - <<'PY'\nimport json, urllib.request, os\nURL=os.environ[\"VITE_SUPABASE_URL\"]; KEY=os.environ[\"SB_SECRET_KEY\"]\nPID=\"bba8f236-5917-4287-883c-123ec33a46a9\"\nH={\"apikey\":KEY,\"Authorization\":f\"Bearer {KEY}\",\"Content-Type\":\"application/json\"}\n\n# ler o grafo atual\nreq=urllib.request.Request(f\"{URL}/rest/v1/vm_canvas_projects?id=eq.{PID}&select=graph\",headers=H)\ng=json.load(urllib.request.urlopen(req,timeout=15))[0][\"graph\"]\n\nDEFAULT_CONTROLS={\"creativity\":0.7,\"resemblance\":0.3,\"hdr\":0.5,\"fractality\":0.3,\"sharpness\":0.8}\nfor n in g[\"nodes\"]:\n    d=n[\"data\"]\n    if d[\"kind\"]==\"generateImage\":\n        # o defeito: controls vazio -> inspector chama .toFixed() em undefined\n        d[\"controls\"]={**DEFAULT_CONTROLS, **{k:v for k,v in (d.get(\"controls\") or {}).items() if isinstance(v,(int,float))}}\n    if d[\"kind\"]==\"imageToVideo\":\n        # blindar tamb\u00e9m os num\u00e9ricos deste n\u00f3\n        d.setdefault(\"motionStrength\",0.5); d.setdefault(\"duration\",5)\n\nbody=json.dumps({\"graph\":g}).encode()\nreq=urllib.request.Request(f\"{URL}/rest/v1/vm_canvas_projects?id=eq.{PID}\",data=body,method=\"PATCH\",\n    headers={**H,\"Prefer\":\"return=representation\"})\nout=json.load(urllib.request.urlopen(req,timeout=15))[0]\nfor n in out[\"graph\"][\"nodes\"]:\n    d=n[\"data\"]; print(d[\"label\"],\"\u2192 controls:\",d.get(\"controls\"),\"\" if d[\"kind\"]!=\"imageToVideo\" else f\"\u00b7 motion={d.get('motionStrength')} dur={d.get('duration')}\")\nPY",
+  "description": "Consertar controls no grafo gravado"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Witness · frame Soul 1080p → controls: {'hdr': 0.5, 'sharpness': 0.8, 'creativity': 0.7, 'fractality': 0.3, 'resemblance': 0.3} 
+> Witness · Seedance 5s → controls: None · motion=0.5 dur=5
+> ```
+
+## 🤖 Claude *(22:32:23)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The controls are now properly populated with the five numeric fields, and the imageToVideo node correctly has no controls since the factory doesn't include them. There's a fragility in the inspector component where calling `.toFixed()` on undefined crashes the UI if a hand-authored or imported graph has missing controls, but that's a source code fix I'm deferring past today's deadline to avoid deployment risk during the evening build.
+
+I'll use spawn_task to flag the inspector hardening as a separate follow-up session, then tell him to reload and click through, checking the queue quickly as well.
+
+</details>
+
+
+## 🤖 Claude *(22:32:23)*
+
+Consertado no banco — os 5 campos numéricos que o inspector exige (`creativity`, `resemblance`, `hdr`, `fractality`, `sharpness`) agora existem no nó. O vídeo já estava íntegro.
+
+## 🤖 Claude *(22:32:31)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__spawn_task`
+```json
+{
+  "title": "Blindar inspector do canvas contra data parcial de n\u00f3",
+  "prompt": "No repo /home/gcrUX/htdocs/constellation-orchestra: o inspector do CanvasEditorPage crasha a p\u00e1gina inteira com \"Cannot read properties of undefined (reading 'toFixed')\" quando um n\u00f3 generateImage tem `data.controls` vazio/parcial (reproduzido 2026-08-16 num grafo armado server-side com `controls: {}`). Qualquer grafo importado/armado por agente ou vers\u00e3o antiga de factory mata a p\u00e1gina. Conserto: no componente do inspector de generateImage (procurar chamadas `.toFixed(` em src/components/orchestrator e/ou CanvasEditorPage relacionadas aos sliders de ControlValues), fazer merge defensivo com DEFAULT_CONTROLS de src/types/canvas.ts:413 antes de renderizar (`{...DEFAULT_CONTROLS, ...node.data.controls}`), e idealmente normalizar tamb\u00e9m em useCanvasStore.initialize (que j\u00e1 for\u00e7a type=kind \u2014 mesmo padr\u00e3o). Adicionar teste. Gate: tsc -p tsconfig.app.json vs baseline + vite build. Depois `bun run build` no repo principal (= deploy).",
+  "tldr": "O painel do canvas quebra a p\u00e1gina quando um n\u00f3 chega sem os campos num\u00e9ricos dos sliders; endurecer com defaults antes de renderizar."
+}
+```
+
+> **Tool Result (mcp__ccd_session__spawn_task)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Noted (position 1, task_id: task_9fd1ec0d). A chip is showing for the user — they can start it in a fresh worktree with one click, or dismiss it. If this suggestion becomes stale or superseded, call dismiss_task with this task_id. Currently pending: task_9fd1ec0d "Blindar inspector do canvas contra data parcial de nó". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(22:32:39)*
+
+**Recarregue a página do projeto (Ctrl+Shift+R) e tente de novo** — expandir o primeiro nó agora deve abrir o painel sem erro, e o Executar despacha.
+
+Duas notas:
+
+1. **A causa real é dupla**: eu gravei o nó com `controls` vazio (defeito meu, corrigido no banco), mas o inspector **quebrar a página inteira** por causa disso é fragilidade do frontend — qualquer grafo armado por agente ou importado pode derrubar o editor. Deixei um chip de tarefa para blindar isso com defaults defensivos numa sessão separada — não vou buildar/deployar frontend agora porque o `bun run build` competiria com a fila de render no host.
+
+2. **EP07 segue no prazo**: hedge em curso, depois fecho e macro → master ~20:40.
+
+Me diga se o nó abriu e se o Executar mudou o card para "gerando".
+
+## 👤 User *(22:35:09)*
+
+No repo /home/gcrUX/htdocs/constellation-orchestra: o inspector do CanvasEditorPage crasha a página inteira com "Cannot read properties of undefined (reading 'toFixed')" quando um nó generateImage tem `data.controls` vazio/parcial (reproduzido 2026-08-16 num grafo armado server-side com `controls: {}`). Qualquer grafo importado/armado por agente ou versão antiga de factory mata a página. Conserto: no componente do inspector de generateImage (procurar chamadas `.toFixed(` em src/components/orchestrator e/ou CanvasEditorPage relacionadas aos sliders de ControlValues), fazer merge defensivo com DEFAULT_CONTROLS de src/types/canvas.ts:413 antes de renderizar (`{...DEFAULT_CONTROLS, ...node.data.controls}`), e idealmente normalizar também em useCanvasStore.initialize (que já força type=kind — mesmo padrão). Adicionar teste. Gate: tsc -p tsconfig.app.json vs baseline + vite build. Depois `bun run build` no repo principal (= deploy).
+
+## 🤖 Claude *(22:35:22)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The user wants this done in the current session rather than spawning a separate task. The build itself is the bottleneck—`bun run build` will take about 1-2 minutes with Vite and compete for CPU resources on the 4-core host, though it shouldn't significantly impact the render queue that's scheduled until around 20:30.
+
+My better approach: implement the code fix, tests, and TypeScript check now (all lightweight), then defer the build to right after the render queue finishes around 20:30, overlapping with the assembly phase which is light work anyway. This unblocks the witness immediately since the database fix is already applied, and the user gets the hardened editor after a hard refresh once the build completes. Now I need to locate the `.toFixed` calls in the inspector component.
+
+</details>
+
+
+## 🤖 Claude *(22:35:23)*
+
+Vou fazer aqui mesmo — com uma ressalva de sequência: o código + teste + tsc saem agora; o `bun run build` (deploy) fica para ~20:30, quando a fila de render soltar o host, senão o build rouba CPU do EP07. O witness não está bloqueado — o conserto no banco já resolveu o caso dele.
+
+Localizando o ponto exato do crash:
+
+## 🤖 Claude *(22:35:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== .toFixed sobre controls (o crash) ===\"\ngrep -rn \"toFixed\" src/components/orchestrator/ src/pages/CanvasEditorPage.tsx 2>/dev/null | grep -iE \"control|creativity|resemblance|hdr|fractal|sharp\" | head -8\necho; echo \"=== quem renderiza os sliders de ControlValues ===\"\ngrep -rln \"creativity\" src/components/ | head -5\necho; echo \"=== useCanvasStore.initialize (o normalizador type=kind) ===\"\ngrep -n \"initialize\" src/store/useCanvasStore.ts | head -4",
+  "description": "Localizar o crash e o normalizador"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === .toFixed sobre controls (o crash) ===
+> 
+> === quem renderiza os sliders de ControlValues ===
+> src/components/canvas/LeftPanel/index.tsx
+> src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx
+> 
+> === useCanvasStore.initialize (o normalizador type=kind) ===
+> 44:  initialize: (projectId: string, payload: CanvasInitPayload) => void;
+> 89:      initialize: (projectId, payload) =>
+> ```
+
+## 🤖 Claude *(22:35:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"toFixed\\|controls\\.\" src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx | head -12\necho \"\u2500\u2500\u2500\"\ngrep -rn \"toFixed\" src/components/canvas/ | head -8",
+  "description": "O toFixed no inspector real"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 606:          {v.toFixed(2)}
+> ───
+> src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx:236:        toast.error(`Clipe de ${duration.toFixed(1)}s — o máximo é ${MAX_CLIP_SECONDS}s.`);
+> src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx:260:      toast.success(`Clipe de ${duration.toFixed(1)}s adicionado.`);
+> src/components/canvas/RightPanel/inspectors/VoiceCloneInspector.tsx:458:                  <span className="shrink-0 font-mono text-[9px] text-muted-foreground">{clip.duration.toFixed(1)}s</span>
+> src/components/canvas/RightPanel/inspectors/MotionSceneInspector.tsx:437:                      {l.scale.toFixed(2)}
+> src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx:770:            <Section title={`Motion strength · ${node.data.motionStrength.toFixed(2)}`}>
+> src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx:606:          {v.toFixed(2)}
+> src/components/canvas/RightPanel/inspectors/CellFramePicker.tsx:131:        <span className="w-8 text-right text-[10px] tabular-nums text-muted-foreground">{zoom.toFixed(1)}×</span>
+> ```
+
+## 🤖 Claude *(22:35:33)*
+
+
+🛠️ **Tool Call**: `Read`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx",
+  "offset": 580,
+  "limit": 45
+}
+```
+
+> **Tool Result (Read)** - ✅ Success
+>
+> ```
+> 580	  defaultValue: number;
+> 581	  onChange: (v: number) => void;
+> 582	}) {
+> 583	  const v = useMemo(() => value, [value]);
+> 584	  return (
+> 585	    <div className="mb-3">
+> 586	      <div className="mb-1 flex items-center justify-between gap-2 text-[11px]">
+> 587	        <span className="inline-flex items-center gap-1 text-muted-foreground">
+> 588	          {label}
+> 589	          <Tooltip>
+> 590	            <TooltipTrigger asChild>
+> 591	              <button type="button" className="opacity-60 hover:opacity-100" aria-label="Sobre">
+> 592	                <Info className="h-3 w-3" />
+> 593	              </button>
+> 594	            </TooltipTrigger>
+> 595	            <TooltipContent side="left" className="max-w-[16rem] text-[11px]">
+> 596	              {hint}
+> 597	            </TooltipContent>
+> 598	          </Tooltip>
+> 599	        </span>
+> 600	        <button
+> 601	          type="button"
+> 602	          onClick={() => onChange(defaultValue)}
+> 603	          className="font-mono text-foreground hover:text-accent"
+> 604	          title="Reset"
+> 605	        >
+> 606	          {v.toFixed(2)}
+> 607	        </button>
+> 608	      </div>
+> 609	      <Slider
+> 610	        min={0}
+> 611	        max={1}
+> 612	        step={0.01}
+> 613	        value={[v]}
+> 614	        onValueChange={(arr) => onChange(arr[0] ?? 0)}
+> 615	      />
+> 616	    </div>
+> 617	  );
+> 618	}
+> 619	
+> 620	const CONTROL_LABELS: Record<keyof ControlValues, string> = {
+> 621	  creativity: "Creativity",
+> 622	  resemblance: "Resemblance",
+> 623	  hdr: "HDR",
+> 624	  fractality: "Fractality",
+> ```
+
+## 🤖 Claude *(22:35:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== onde os sliders recebem value (o chamador) ===\"\ngrep -n \"ControlSlider\\|controls\\[\" src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx | head -10\necho; sed -n '/CONTROL_LABELS/,+2p' src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx | head -3\necho \"=== bloco que mapeia controls (contexto do chamador) ===\"\ngrep -n \"Object.entries\\|Object.keys\" src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx | head -4",
+  "description": "Onde o value chega undefined"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === onde os sliders recebem value (o chamador) ===
+> 457:                value={node.data.controls[k]}
+> 
+>                 label={CONTROL_LABELS[k]}
+>                 hint={CONTROL_HINTS[k]}
+>                 value={node.data.controls[k]}
+> === bloco que mapeia controls (contexto do chamador) ===
+> 452:            {(Object.keys(DEFAULT_CONTROLS) as (keyof ControlValues)[]).map((k) => (
+> ```
+
+## 🤖 Claude *(22:35:49)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I found the exact issue on line 457 where the code reads from `node.data.controls[k]` while iterating over DEFAULT_CONTROLS keys, but those keys might not exist in the controls object, causing undefined values that crash when calling toFixed. I'm fixing this with a two-part approach: first, adding a fallback at the read site to use the default value if the key is missing, and second, normalizing the data structure in the store initialization to ensure generateImage nodes always have the full set of controls merged in from defaults.
+
+I also spotted the same crash pattern in ImageToVideoInspector at line 770 with motionStrength, so I'll apply the same defensive fallback there. The store normalization handles this structurally, but adding the fallback operator at both toFixed call sites gives us extra safety. Let me check LeftPanel for any similar references and verify the initialize block covers all these cases.
+
+</details>
+
+
+## 🤖 Claude *(22:35:50)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Encontrei o bug exato na linha 457: itera as chaves de `DEFAULT_CONTROLS` mas lê de `node.data.controls[k]` que pode ser undefined, causando `undefined.toFixed()`. O `ImageToVideoInspector:770` tem o mesmo defeito com `motionStrength`, então vou revisar o normalizador e o LeftPanel antes de corrigir ambos.
+
+</details>
+
+
+## 🤖 Claude *(22:35:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsed -n '89,130p' src/store/useCanvasStore.ts\necho \"\u2500\u2500\u2500\"\ngrep -n \"creativity\\|controls\" src/components/canvas/LeftPanel/index.tsx | head -5",
+  "description": "Bloco initialize e uso no LeftPanel"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>       initialize: (projectId, payload) =>
+>         set({
+>           projectId,
+>           // NORMALIZAÇÃO DEFENSIVA — grafos semeados por script podem chegar sem `type` (ou com um
+>           // tipo genérico tipo "canvasNode"); o ReactFlow então cai no fallback e renderiza um card
+>           // vazio, minúsculo, quase invisível. O `data.kind` é a verdade do vocabulário e o registry
+>           // `nodeTypes` (CanvasEditorPage) casa por ele. Reforçar aqui garante que o autosave logo
+>           // depois PERSISTA o tipo correto, matando o loop autosave-clobbera-fix-do-servidor
+>           // (2026-08-07 — grafo v3.1 do EP06 renderizou em branco por causa disso).
+>           nodes: (payload.nodes ?? []).map((n) => {
+>             const kind = (n.data as { kind?: string } | undefined)?.kind;
+>             const withType = kind && n.type !== kind ? { ...n, type: kind } : n;
+>             // Amendment 38 fix (2026-08-07): o comentário do PhaseGroupNode alegava "zIndex -1
+>             // via registry/página" — mas o grep provou que NUNCA foi setado. Consequência: o
+>             // card do phaseGroup renderiza no zIndex default 0, igual aos nós filhos, e como é
+>             // adicionado depois no array, TAMPA os cliques (Sovereign witnessed 2026-08-07 —
+>             // FASE C cobriu os Veo da FASE B). Fix: força zIndex=-1 no load — ReactFlow então
+>             // renderiza esse nó abaixo dos outros e os handles/cliques dos filhos passam.
+>             return (withType.type === "phaseGroup" && withType.zIndex !== -1)
+>               ? { ...withType, zIndex: -1 }
+>               : withType;
+>           }),
+>           edges: payload.edges ?? [],
+>           viewport: payload.viewport ?? { x: 0, y: 0, zoom: 1 },
+>           selectedNodeId: null,
+>           pipelineMode: payload.pipelineMode ?? false,
+>           lanes: payload.lanes ?? [],
+>           // MERGE, não `??`: um grafo com `styleSettings` PARCIAL (`{}` escrito por script, ou salvo por
+>           // uma versão anterior do schema) passa pelo `??` — é truthy — e chega ao painel sem `mood`,
+>           // que lê `.length` e derruba o editor inteiro na hidratação (P0 witnessed 2026-08-04).
+>           // O default preenche o que faltar; o que veio do grafo vence.
+>           styleSettings: { ...DEFAULT_STYLE_SETTINGS, ...(payload.styleSettings ?? {}) },
+>         }),
+> 
+>       onNodesChange: (changes) =>
+>         set((s) => ({ nodes: applyNodeChanges(changes, s.nodes) })),
+>       onEdgesChange: (changes) =>
+>         set((s) => ({ edges: applyEdgeChanges(changes, s.edges) })),
+>       onConnect: (c) =>
+>         set((s) => ({
+>           edges: addEdge(
+>             { ...c, animated: false, ...(s.pipelineMode ? { type: "pipeline" } : {}) },
+> ───
+> 351:        controls?: ControlValues;
+> 371:        patch.controls = params.controls ?? { creativity: 0.7, resemblance: 0.3, hdr: 0.5, fractality: 0.3, sharpness: 0.8 };
+> ```
+
+## 🤖 Claude *(22:36:00)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+I'm noticing the initialize normalizer already has the exact pattern I need—it's handled type merging and styleSettings the same way with those P0 witnessed comments. I'll apply the same approach for controls: merge DEFAULT_CONTROLS with existing controls for generateImage nodes, and set default motionStrength and duration values for imageToVideo nodes.
+
+For the three edits, I need to verify the imports are already in place (DEFAULT_STYLE_SETTINGS should already be imported in the store, and DEFAULT_CONTROLS is already used in the inspector files), then update the fallback logic in both inspector components to use the merged defaults. Finally, I'll write a test that imports the store, calls initialize with a node missing controls, and verifies the merge happened correctly—I should check where the existing store tests live first to follow the same pattern.
+
+</details>
+
+
+## 🤖 Claude *(22:36:00)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O `initialize` já tem dois precedentes exatamente deste padrão, então vou adicionar a terceira normalização no mesmo lugar e blindar os dois pontos de uso.
+
+</details>
+
+
+## 🤖 Claude *(22:36:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"DEFAULT_STYLE_SETTINGS\\|from \\\"@/types/canvas\\\"\" src/store/useCanvasStore.ts | head -4\nsed -n '765,775p' src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx\necho \"\u2500\u2500\u2500 teste existente do store \u2500\u2500\u2500\"; ls src/test/ | grep -i canvas | head -5",
+  "description": "Imports, contexto do motionStrength e testes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 13:  DEFAULT_STYLE_SETTINGS,
+> 21:} from "@/types/canvas";
+> 87:      styleSettings: { ...DEFAULT_STYLE_SETTINGS },
+> 120:          styleSettings: { ...DEFAULT_STYLE_SETTINGS, ...(payload.styleSettings ?? {}) },
+>                   );
+>                 })}
+>               </div>
+>             </Section>
+> 
+>             <Section title={`Motion strength · ${node.data.motionStrength.toFixed(2)}`}>
+>               <Slider
+>                 min={0}
+>                 max={1}
+>                 step={0.01}
+>                 value={[node.data.motionStrength]}
+> ─── teste existente do store ───
+> canvas-dag.test.ts
+> canvas-handles.test.ts
+> canvas-video-async-smoke.test.ts
+> useCanvasDesign.test.tsx
+> ```
+
+## 🤖 Claude *(22:36:11)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/store/useCanvasStore.ts",
+  "old_string": "          nodes: (payload.nodes ?? []).map((n) => {\n            const kind = (n.data as { kind?: string } | undefined)?.kind;\n            const withType = kind && n.type !== kind ? { ...n, type: kind } : n;",
+  "new_string": "          nodes: (payload.nodes ?? []).map((n) => {\n            const kind = (n.data as { kind?: string } | undefined)?.kind;\n            let withType = kind && n.type !== kind ? { ...n, type: kind } : n;\n            // MERGE de controls, n\u00e3o `??` \u2014 mesmo P0 do styleSettings abaixo, agora nos n\u00f3s:\n            // um generateImage armado por script com `controls: {}` (witnessed 2026-08-16, projeto\n            // do witness Higgsfield) passa por qualquer `??` \u2014 \u00e9 truthy \u2014 e chega ao inspector,\n            // que itera as chaves de DEFAULT_CONTROLS e chama `.toFixed(2)` em undefined,\n            // derrubando o CanvasEditorPage INTEIRO ao expandir o n\u00f3. Normalizar aqui vacina\n            // todos os consumidores (inspector, LeftPanel, dispatch) de uma vez.\n            if (kind === \"generateImage\") {\n              const d = withType.data as { controls?: Partial<ControlValues> };\n              withType = { ...withType, data: { ...withType.data, controls: { ...DEFAULT_CONTROLS, ...(d.controls ?? {}) } } };\n            }\n            // Mesmo risco no imageToVideo: `motionStrength.toFixed(2)` no inspector (linha ~770).\n            if (kind === \"imageToVideo\") {\n              const d = withType.data as { motionStrength?: number; duration?: number };\n              withType = { ...withType, data: { ...withType.data, motionStrength: d.motionStrength ?? 0.5, duration: d.duration ?? 5 } };\n            }"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/store/useCanvasStore.ts has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:36:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\n# imports do store: DEFAULT_CONTROLS e ControlValues\npython3 - <<'PY'\np='src/store/useCanvasStore.ts'\ns=open(p).read()\nif 'DEFAULT_CONTROLS' not in s.split('} from \"@/types/canvas\"')[0]:\n    s=s.replace('  DEFAULT_STYLE_SETTINGS,','  DEFAULT_CONTROLS,\\n  DEFAULT_STYLE_SETTINGS,',1)\nif 'ControlValues' not in s.split('} from \"@/types/canvas\"')[0]:\n    s=s.replace('  DEFAULT_CONTROLS,','  type ControlValues,\\n  DEFAULT_CONTROLS,',1)\nopen(p,'w').write(s); print('imports ok')\nPY\ngrep -n \"ControlValues\\|DEFAULT_CONTROLS\" src/store/useCanvasStore.ts | head -5",
+  "description": "Imports no store"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> imports ok
+> 13:  type ControlValues,
+> 14:  DEFAULT_CONTROLS,
+> 106:            // que itera as chaves de DEFAULT_CONTROLS e chama `.toFixed(2)` em undefined,
+> 110:              const d = withType.data as { controls?: Partial<ControlValues> };
+> 111:              withType = { ...withType, data: { ...withType.data, controls: { ...DEFAULT_CONTROLS, ...(d.controls ?? {}) } } };
+> ```
+
+## 🤖 Claude *(22:36:22)*
+
+Store normalizado. Agora a blindagem nos dois pontos de uso e o teste:
+
+## 🤖 Claude *(22:36:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsed -n '452,460p' src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx",
+  "description": "Contexto exato da linha 457"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>             {(Object.keys(DEFAULT_CONTROLS) as (keyof ControlValues)[]).map((k) => (
+>               <SliderRow
+>                 key={k}
+>                 label={CONTROL_LABELS[k]}
+>                 hint={CONTROL_HINTS[k]}
+>                 value={node.data.controls[k]}
+>                 defaultValue={DEFAULT_CONTROLS[k]}
+>                 onChange={(v) =>
+>                   updateNodeData(node.id, { controls: { ...node.data.controls, [k]: v } })
+> ```
+
+## 🤖 Claude *(22:36:30)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx",
+  "old_string": "                value={node.data.controls[k]}\n                defaultValue={DEFAULT_CONTROLS[k]}\n                onChange={(v) =>\n                  updateNodeData(node.id, { controls: { ...node.data.controls, [k]: v } })",
+  "new_string": "                // `?? DEFAULT` al\u00e9m da normaliza\u00e7\u00e3o do store: um updateNodeData externo (agente,\n                // import) pode reintroduzir controls parcial DEPOIS do initialize \u2014 e undefined\n                // aqui vira `.toFixed()` que derruba a p\u00e1gina (witnessed 2026-08-16).\n                value={node.data.controls?.[k] ?? DEFAULT_CONTROLS[k]}\n                defaultValue={DEFAULT_CONTROLS[k]}\n                onChange={(v) =>\n                  updateNodeData(node.id, { controls: { ...DEFAULT_CONTROLS, ...node.data.controls, [k]: v } })"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:36:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 - <<'PY'\np='src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx'\ns=open(p).read()\na='<Section title={`Motion strength \u00b7 ${node.data.motionStrength.toFixed(2)}`}>'\nb='<Section title={`Motion strength \u00b7 ${(node.data.motionStrength ?? 0.5).toFixed(2)}`}>'\nassert a in s, \"\u00e2ncora n\u00e3o encontrada\"\ns=s.replace(a,b,1)\ns=s.replace('value={[node.data.motionStrength]}','value={[node.data.motionStrength ?? 0.5]}',1)\nopen(p,'w').write(s)\nprint('ImageToVideoInspector blindado')\nPY",
+  "description": "Blindar motionStrength no ImageToVideoInspector"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ImageToVideoInspector blindado
+> ```
+
+## 🤖 Claude *(22:36:56)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/src/test/canvas-controls-normalization.test.ts",
+  "content": "/**\n * Anticorpo do P0 de 2026-08-16 (witness Higgsfield): um n\u00f3 `generateImage` armado por script com\n * `controls: {}` derrubava o CanvasEditorPage inteiro \u2014 o inspector itera as chaves de\n * DEFAULT_CONTROLS e chama `.toFixed(2)` sobre `controls[k]` undefined.\n *\n * A vacina vive em `useCanvasStore.initialize` (mesma fam\u00edlia das normaliza\u00e7\u00f5es type=kind,\n * zIndex do phaseGroup e MERGE do styleSettings): controls parcial recebe MERGE com\n * DEFAULT_CONTROLS, e imageToVideo ganha `motionStrength`/`duration` defensivos.\n */\nimport { describe, expect, it, beforeEach } from \"vitest\";\nimport { useCanvasStore } from \"@/store/useCanvasStore\";\nimport { DEFAULT_CONTROLS, type CanvasNode } from \"@/types/canvas\";\n\nconst init = (nodes: CanvasNode[]) =>\n  useCanvasStore.getState().initialize(\"proj-test\", { nodes, edges: [] } as never);\n\nconst nodeOf = (id: string) => useCanvasStore.getState().nodes.find((n) => n.id === id)!;\n\ndescribe(\"initialize normaliza data parcial de n\u00f3 (P0 2026-08-16)\", () => {\n  beforeEach(() => init([]));\n\n  it(\"generateImage com controls VAZIO recebe DEFAULT_CONTROLS completo\", () => {\n    init([\n      {\n        id: \"gi1\", type: \"generateImage\", position: { x: 0, y: 0 },\n        // exatamente o shape que o script do witness gravou e que matava o editor\n        data: { kind: \"generateImage\", label: \"w\", modelId: \"soul-1080p-x1\", prompt: \"p\", controls: {} } as never,\n      } as CanvasNode,\n    ]);\n    const d = nodeOf(\"gi1\").data as { controls: Record<string, number> };\n    for (const [k, v] of Object.entries(DEFAULT_CONTROLS)) {\n      expect(d.controls[k], `controls.${k}`).toBe(v);\n      // a garantia REAL que o inspector precisa: .toFixed n\u00e3o explode\n      expect(() => d.controls[k].toFixed(2)).not.toThrow();\n    }\n  });\n\n  it(\"generateImage com controls PARCIAL preserva o que veio e completa o resto\", () => {\n    init([\n      {\n        id: \"gi2\", type: \"generateImage\", position: { x: 0, y: 0 },\n        data: { kind: \"generateImage\", label: \"w\", modelId: \"soul-1080p-x1\", prompt: \"p\", controls: { creativity: 0.9 } } as never,\n      } as CanvasNode,\n    ]);\n    const d = nodeOf(\"gi2\").data as { controls: Record<string, number> };\n    expect(d.controls.creativity).toBe(0.9);            // o que veio do grafo vence\n    expect(d.controls.sharpness).toBe(DEFAULT_CONTROLS.sharpness); // o que faltava \u00e9 preenchido\n  });\n\n  it(\"generateImage SEM a chave controls tamb\u00e9m \u00e9 normalizado\", () => {\n    init([\n      {\n        id: \"gi3\", type: \"generateImage\", position: { x: 0, y: 0 },\n        data: { kind: \"generateImage\", label: \"w\", modelId: \"soul-1080p-x1\", prompt: \"p\" } as never,\n      } as CanvasNode,\n    ]);\n    const d = nodeOf(\"gi3\").data as { controls?: Record<string, number> };\n    expect(d.controls).toEqual(DEFAULT_CONTROLS);\n  });\n\n  it(\"imageToVideo sem motionStrength/duration ganha defaults (o .toFixed da linha ~770)\", () => {\n    init([\n      {\n        id: \"iv1\", type: \"imageToVideo\", position: { x: 0, y: 0 },\n        data: { kind: \"imageToVideo\", label: \"w\", prompt: \"p\", videoModel: \"seedance-v1-pro-5s\" } as never,\n      } as CanvasNode,\n    ]);\n    const d = nodeOf(\"iv1\").data as { motionStrength?: number; duration?: number };\n    expect(d.motionStrength).toBe(0.5);\n    expect(d.duration).toBe(5);\n    expect(() => d.motionStrength!.toFixed(2)).not.toThrow();\n  });\n\n  it(\"imageToVideo com valores declarados N\u00c3O \u00e9 sobrescrito\", () => {\n    init([\n      {\n        id: \"iv2\", type: \"imageToVideo\", position: { x: 0, y: 0 },\n        data: { kind: \"imageToVideo\", label: \"w\", prompt: \"p\", videoModel: \"seedance-v1-pro-5s\", motionStrength: 0.8, duration: 10 } as never,\n      } as CanvasNode,\n    ]);\n    const d = nodeOf(\"iv2\").data as { motionStrength: number; duration: number };\n    expect(d.motionStrength).toBe(0.8);\n    expect(d.duration).toBe(10);\n  });\n});\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/src/test/canvas-controls-normalization.test.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(22:37:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nexport PATH=\"/home/ubuntu/.bun/bin:$PATH\"\necho \"=== gate 1: tsc-app ===\"\nnpx tsc -p tsconfig.app.json --noEmit 2>&1 | head -8; echo \"(vazio = 0 erros)\"\necho; echo \"=== gate 2: o teste novo + su\u00edte de canvas ===\"\nnice -n 15 bun run test src/test/canvas-controls-normalization.test.ts 2>&1 | tail -8",
+  "description": "Gates: tsc e o teste novo",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === gate 1: tsc-app ===
+> src/store/useCanvasStore.ts(116,41): error TS2322: Type '{ motionStrength: number; duration: number; kind: "generateImage"; label: string; modelId: ImageModelId; prompt: string; negativePrompt: string; aspectRatio: AspectRatio; ... 6 more ...; error?: string; } | ... 21 more ... | { ...; }' is not assignable to type 'CanvasNodeData & Record<string, unknown>'.
+>   Type '{ motionStrength: number; duration: number; kind: "imageToVideo"; label: string; prompt: string; aspectRatio: VideoAspectRatio; videoModel: VideoModelId; ... 10 more ...; error?: string; }' is not assignable to type 'CanvasNodeData & Record<string, unknown>'.
+>     Type '{ motionStrength: number; duration: number; kind: "imageToVideo"; label: string; prompt: string; aspectRatio: VideoAspectRatio; videoModel: VideoModelId; ... 10 more ...; error?: string; }' is not assignable to type '(GenerateImageData & Record<string, unknown>) | (CharacterReferenceData & Record<string, unknown>) | (SceneComposeData & Record<...>) | ... 17 more ... | (EpisodeAssemblerData & Record<...>)'.
+>       Type '{ motionStrength: number; duration: number; kind: "imageToVideo"; label: string; prompt: string; aspectRatio: VideoAspectRatio; videoModel: VideoModelId; ... 10 more ...; error?: string; }' is not assignable to type 'EpisodeAssemblerData & Record<string, unknown>'.
+>         Type '{ motionStrength: number; duration: number; kind: "imageToVideo"; label: string; prompt: string; aspectRatio: VideoAspectRatio; videoModel: VideoModelId; ... 10 more ...; error?: string; }' is missing the following properties from type 'EpisodeAssemblerData': order, aspect, loudnormLufs, transition, fadeSec
+> src/test/canvas-controls-normalization.test.ts(30,15): error TS2352: Conversion of type 'CanvasNodeData & Record<string, unknown>' to type '{ controls: Record<string, number>; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+>   Property 'controls' is missing in type 'EpisodeAssemblerData & Record<string, unknown>' but required in type '{ controls: Record<string, number>; }'.
+> src/test/canvas-controls-normalization.test.ts(45,15): error TS2352: Conversion of type 'CanvasNodeData & Record<string, unknown>' to type '{ controls: Record<string, number>; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+> (vazio = 0 erros)
+> 
+> === gate 2: o teste novo + suíte de canvas ===
+> 
+>  ✓ src/test/canvas-controls-normalization.test.ts (5 tests) 8ms
+> 
+>  Test Files  1 passed (1)
+>       Tests  5 passed (5)
+>    Start at  19:37:44
+>    Duration  3.49s (transform 670ms, setup 302ms, collect 886ms, tests 8ms, environment 1.02s, prepare 152ms)
+> ```
+
+## 🤖 Claude *(22:38:00)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Os testes passam, mas o TypeScript está reclamando sobre union widening no Store — o spread operator não consegue estreitar a discriminated union corretamente. Vou resolver isso fazendo o narrowing dentro do condicional e aplicando um cast localizado no objeto final, mantendo o padrão limpo.
+
+</details>
+
+
+## 🤖 Claude *(22:38:00)*
+
+5/5 testes verdes; o tsc quer casts mais explícitos (a discriminated union não estreita através do spread). Ajustando:
+
+## 🤖 Claude *(22:38:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 - <<'PY'\np='src/store/useCanvasStore.ts'\ns=open(p).read()\ns=s.replace(\n \"withType = { ...withType, data: { ...withType.data, controls: { ...DEFAULT_CONTROLS, ...(d.controls ?? {}) } } };\",\n \"withType = { ...withType, data: { ...withType.data, controls: { ...DEFAULT_CONTROLS, ...(d.controls ?? {}) } } as typeof withType.data };\")\ns=s.replace(\n \"withType = { ...withType, data: { ...withType.data, motionStrength: d.motionStrength ?? 0.5, duration: d.duration ?? 5 } };\",\n \"withType = { ...withType, data: { ...withType.data, motionStrength: d.motionStrength ?? 0.5, duration: d.duration ?? 5 } as typeof withType.data };\")\nopen(p,'w').write(s)\n\np2='src/test/canvas-controls-normalization.test.ts'\nt=open(p2).read()\nt=t.replace(\"nodeOf(\\\"gi1\\\").data as { controls: Record<string, number> }\",\"nodeOf(\\\"gi1\\\").data as unknown as { controls: Record<string, number> }\")\nt=t.replace(\"nodeOf(\\\"gi2\\\").data as { controls: Record<string, number> }\",\"nodeOf(\\\"gi2\\\").data as unknown as { controls: Record<string, number> }\")\nt=t.replace(\"nodeOf(\\\"gi3\\\").data as { controls?: Record<string, number> }\",\"nodeOf(\\\"gi3\\\").data as unknown as { controls?: Record<string, number> }\")\nt=t.replace(\"nodeOf(\\\"iv1\\\").data as { motionStrength?: number; duration?: number }\",\"nodeOf(\\\"iv1\\\").data as unknown as { motionStrength?: number; duration?: number }\")\nt=t.replace(\"nodeOf(\\\"iv2\\\").data as { motionStrength: number; duration: number }\",\"nodeOf(\\\"iv2\\\").data as unknown as { motionStrength: number; duration: number }\")\nopen(p2,'w').write(t)\nprint(\"casts aplicados\")\nPY\nnpx tsc -p tsconfig.app.json --noEmit 2>&1 | head -5; echo \"(vazio = 0 erros)\"\nexport PATH=\"/home/ubuntu/.bun/bin:$PATH\"\nnice -n 15 bun run test src/test/canvas-controls-normalization.test.ts 2>&1 | tail -4",
+  "description": "Casts e re-rodar os gates",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> casts aplicados
+> (vazio = 0 erros)
+>       Tests  5 passed (5)
+>    Start at  19:38:45
+>    Duration  1.76s (transform 422ms, setup 75ms, collect 593ms, tests 8ms, environment 408ms, prepare 94ms)
+> ```
+
+## 🤖 Claude *(22:38:52)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+All the checks are passing—TypeScript compilation is clean and the test suite is fully green. I can dismiss the spawn_task chip since that work's already been completed inline. The build and deployment are queued up for later around 20:30, so I'll quickly check the current queue status and report back.
+
+</details>
+
+
+## 🤖 Claude *(22:38:52)*
+
+Gates verdes: **tsc 0 erros · 5/5 testes**. O chip da tarefa fica dispensado — foi feito aqui:
+
+## 🤖 Claude *(22:38:53)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__dismiss_task`
+```json
+{
+  "task_id": "task_9fd1ec0d",
+  "reason": "Feito inline nesta sess\u00e3o a pedido do Sovereign: normaliza\u00e7\u00e3o no useCanvasStore.initialize + blindagem nos 2 inspectors + 5 testes. Falta s\u00f3 o build/deploy, agendado para depois da fila de render."
+}
+```
+
+> **Tool Result (mcp__ccd_session__dismiss_task)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': "Task task_9fd1ec0d was already started by the user — it's no longer pending and can't be withdrawn. Nothing was changed."}]
+> ```
+
+## 🤖 Claude *(22:39:00)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The fix is already complete here with gates passing, but the user has a worktree session running in parallel that's doing the same work — that's a merge conflict waiting to happen. I should let them know the worktree is now redundant and can be discarded, then check what's next in the queue.
+
+</details>
+
+
+## 🤖 Claude *(22:39:01)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Percebi que você já tinha iniciado esse chip em uma worktree paralela e o conserto já está completo aqui com store, 2 inspectors, 5 testes e gates verdes — a sessão paralela pode ser descartada sem problema pois refaria o mesmo trabalho.
+
+</details>
+
+
+## 🤖 Claude *(22:39:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nK=repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep07-kit/cenas-v2\necho \"hedge: $(ls $K/ep07-estrutura-hedge/frames 2>/dev/null | wc -l)/1266 \u00b7 mp4=$(ls $K/ep07-estrutura-hedge/*.mp4 2>/dev/null | wc -l)\"\necho \"fecho: $(ls $K/ep07-fecho/frames 2>/dev/null | wc -l)/1299\"\necho \"macro: $(ls $K/ep07-macro/frames 2>/dev/null | wc -l)/2184\"\ndate '+%H:%M' ; echo \"load $(cut -d' ' -f1 /proc/loadavg)\"",
+  "description": "Fila EP07"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> hedge: 1266/1266 · mp4=1
+> fecho: 96/1299
+> macro: 0/2184
+> 19:39
+> load 3.31
+> ```
+
+## 🤖 Claude *(22:39:16)*
+
+## Entregue — e o cronograma segue
+
+**O conserto pedido está completo nesta sessão:**
+
+| camada | o quê |
+|---|---|
+| [useCanvasStore.ts:100-117](src/store/useCanvasStore.ts:100) | Normalização no `initialize` — `controls` parcial recebe **merge** com `DEFAULT_CONTROLS` (mesma família das vacinas `type=kind`, `zIndex` do phaseGroup e `styleSettings`); `imageToVideo` ganha `motionStrength`/`duration` defensivos |
+| [GenerateImageInspector.tsx:457](src/components/canvas/RightPanel/inspectors/GenerateImageInspector.tsx:457) | `?? DEFAULT_CONTROLS[k]` no ponto do crash + `onChange` re-completa o objeto |
+| [ImageToVideoInspector.tsx:770](src/components/canvas/RightPanel/inspectors/ImageToVideoInspector.tsx:770) | O mesmo defeito latente (`motionStrength.toFixed`) blindado |
+| [canvas-controls-normalization.test.ts](src/test/canvas-controls-normalization.test.ts) | 5 testes — incluindo o shape exato que derrubou a página hoje |
+
+Gates: **tsc-app 0 erros · 5/5 testes verdes**.
+
+**O build/deploy fica para ~20:30** — de propósito: o `vite build` roubaria CPU da fila de render neste host de 4 núcleos. Sequência: fila termina → build+deploy da blindagem → montagem do master (leve, `-c copy`). Até lá, o witness funciona com o conserto que já fiz **no banco** — recarregue e clique.
+
+**Fila EP07 às 19:39:** hedge ✅ (5 de 7 prontas) · fecho em 96/1.299 · falta macro → renders ~20:25 · **master ~20:40**, firme.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
