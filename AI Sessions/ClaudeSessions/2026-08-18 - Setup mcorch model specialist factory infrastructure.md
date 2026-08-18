@@ -1,5 +1,5 @@
 # Setup mcorch model specialist factory infrastructure
-**Date:** 2026-08-18 | **Session ID:** `3dd5ab59-60ab-4f94-9cc6-8448df80d6d1`
+**Date:** 2026-08-18 | **Session ID:** `d6bc16f7-d44a-48ca-b69b-ecb59411e1d1`
 
 ---
 
@@ -2875,6 +2875,50 @@ O plano segue o mais eficiente: você clica "Unsloth-Finetune" + 3 comandos (`se
 Sources:
 - [Use RunPod's MCP servers — RunPod Docs](https://docs.runpod.io/get-started/mcp-servers)
 - [@runpod/mcp-server — npm](https://www.npmjs.com/package/@runpod/mcp-server)
+
+## 👤 User *(12:39:08)*
+
+ok agora é só clicar em deploy para.: Deploying
+Unsloth-Finetune
+1x RTX 4090
+24GB VRAM · 31 GB RAM · 5 vCPU
+Available CUDA versions: 12.4, 12.8, 13.0
+
+Certo?
+
+## 🤖 Claude *(12:39:45)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The user is about to deploy an Unsloth fine-tuning setup on an RTX 4090 with 24GB VRAM, and I'm verifying this configuration meets the requirements for running Qwen2.5-Coder-7B in 4-bit quantization—the GPU memory should be sufficient for this task.
+
+For the CUDA version selection, I need to be careful: while the host driver can be newer, CUDA 13.0 introduces compatibility risks with the bundled PyTorch, bitsandbytes, and xformers in the Unsloth image. I'd recommend sticking with CUDA 12.4 as the safest, most battle-tested option, or 12.8 if needed—avoiding 13.0 unless the image explicitly supports it. If it's a filter with checkboxes, leaving both 12.4 and 12.8 selected gives the most flexibility. There's a critical disk space consideration I need to emphasize: the container needs at least 30GB, ideally 40-50GB, because the fp16 merge step during GGUF export is surprisingly disk-intensive — the base model download is only ~5GB, but the temporary fp16 intermediate file balloons to ~15GB before quantization, plus the final GGUF output adds another ~4.5GB, so disk space is a real gotcha people often overlook. quantizing down — if disk space runs out mid-export, the whole process fails even though training completed successfully. SSH access helps with file transfer, though runpodctl also works through the web terminal if needed.
+
+I should keep this focused: yes, the RTX 4090 setup works, but verify CUDA 12.x and ensure at least 40GB disk space before starting. The VRAM headroom is solid for the training parameters, so no adjustments needed there.
+
+On the CUDA version question — a host driver running CUDA 13.0 is backward compatible with 12.x containers, and Unsloth images typically use CUDA 12.1 or 12.4 anyway, so picking 13.0 as the host driver is fine even if PyTorch's CUDA 13 support is still maturing.
+
+But if RunPod's interface conflates the host driver with the container CUDA version, there's potential for mismatch. To sidestep any ambiguity, I'll recommend 12.4 or 12.8 instead — no downside, just removes the risk entirely.
+
+</details>
+
+
+## 🤖 Claude *(12:39:52)*
+
+Config da GPU: **certo** ✅ — RTX 4090 24GB é folgado para QLoRA 4-bit de um 7B em seq 4096 (usa ~8-10GB de VRAM; sobra muito). 31GB RAM e 5 vCPU dão conta. Mas **dois cliques antes do Deploy**, senão você paga e descobre o problema no fim:
+
+1. **CUDA: escolha 12.4 (ou 12.8), não 13.0.** O stack que a imagem da Unsloth empacota (PyTorch/bitsandbytes/xformers) é testado em CUDA 12.x; 13.0 é novo demais e pode dar incompatibilidade. 12.4 é o mais seguro e disponível — zero desvantagem.
+
+2. **Disco do container ≥ 40 GB** (não só 30). Esse é o gotcha silencioso nº 1: o `save_pretrained_gguf` **primeiro faz merge do modelo para fp16** (~15 GB num 7B) e **depois** quantiza para q4_k_m. Se o disco for apertado, o **treino termina com sucesso e o export GGUF falha no último passo** — o pior cenário. Confira no dialog se dá pra subir o container/volume disk; deixe ~40-50 GB.
+
+Se o dialog não mostrar o campo de disco agora, ele costuma aparecer no passo seguinte (Edit template / disk) — ajuste lá antes de confirmar.
+
+Com esses dois ajustes, pode dar **Deploy**. Assim que o pod subir:
+```bash
+which llama-quantize || echo "vai buildar on-the-fly (ok)"
+```
+e manda os dois arquivos (dataset + `train-mcorch-qlora.py`) via `runpodctl receive`. Quando rodar o treino, cola aqui o **sanity output** — eu confirmo a doutrina antes de você gastar mais.
 
 ---
 
