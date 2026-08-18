@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3706
-> * **Sessões do Claude**: 3653
+> * **Total de Sessões Registradas**: 3708
+> * **Sessões do Claude**: 3655
 > * **Sessões do Gemini**: 53
 
 ---
@@ -40,6 +40,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-02 - Fix TTS bridge and resolve critical production issues]]` - *2026-05-02*
 
 ### Orchestration & Agent System (MCORCH/Constellation)
+*   `[[2026-08-18 - Setup mcorch model specialist factory infrastructure]]` - *2026-08-18*
 *   `[[2026-07-07 - MCORCH autonomous loop execution com charter e handoff]]` - *2026-07-07*
 *   `[[2026-07-06 - MCORCH autonomous loop execution com charter e handoff]]` - *2026-07-06*
 *   `[[2026-07-04 - Executor mestre MCORCH em malha fechada autônoma]]` - *2026-07-04*
@@ -51,8 +52,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-01 - Executar loop autônomo MCORCH com charter]]` - *2026-07-01*
 *   `[[2026-06-27 - Clarificar essência e tom do MCORCH]]` - *2026-06-27*
 *   `[[2026-06-26 - Clarificar essência e tom do MCORCH]]` - *2026-06-26*
-*   `[[2026-06-25 - Configurar DNS e subdomínio video.mcorch.com]]` - *2026-06-25*
-*   *... e mais 7 sessões nessa categoria.*
+*   *... e mais 8 sessões nessa categoria.*
 
 ### UI Extensions & Layouts
 *   `[[2026-07-21 - Refinar canvas mobile e corrigir execução de nós]]` - *2026-07-21*
@@ -75,6 +75,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-08-18 - Criar roteiro e produção visual para episódio Claude AI]]` - *2026-08-18*
 *   `[[2026-08-17 - agent-aebd2ac5290172677]]` - *2026-08-17*
 *   `[[2026-08-17 - agent-adb4c8b7ec2bfe40e]]` - *2026-08-17*
 *   `[[2026-08-17 - agent-ad5b5cfe21a0ae158]]` - *2026-08-17*
@@ -86,8 +87,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-08-17 - agent-a62f1c7881e7d5f78]]` - *2026-08-17*
 *   `[[2026-08-17 - agent-a592522c8a5b14fab]]` - *2026-08-17*
 *   `[[2026-08-17 - agent-a53f24e48da6fc308]]` - *2026-08-17*
-*   `[[2026-08-17 - agent-a50e6f6d6ff51ab1f]]` - *2026-08-17*
-*   *... e mais 3648 sessões nessa categoria.*
+*   *... e mais 3649 sessões nessa categoria.*
 
 ---
 
@@ -3314,6 +3314,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-01 - Configurar loop autônomo e definir fila soberana]]` (ClaudeSessions)
 
 ### Agosto 2026
+*   `[[2026-08-18 - Setup mcorch model specialist factory infrastructure]]` (ClaudeSessions)
+*   `[[2026-08-18 - Criar roteiro e produção visual para episódio Claude AI]]` (ClaudeSessions)
 *   `[[2026-08-17 - agent-aebd2ac5290172677]]` (ClaudeSessions)
 *   `[[2026-08-17 - agent-adb4c8b7ec2bfe40e]]` (ClaudeSessions)
 *   `[[2026-08-17 - agent-ad5b5cfe21a0ae158]]` (ClaudeSessions)
