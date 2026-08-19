@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3708
-> * **Sessões do Claude**: 3655
+> * **Total de Sessões Registradas**: 3709
+> * **Sessões do Claude**: 3656
 > * **Sessões do Gemini**: 53
 
 ---
@@ -40,6 +40,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-02 - Fix TTS bridge and resolve critical production issues]]` - *2026-05-02*
 
 ### Orchestration & Agent System (MCORCH/Constellation)
+*   `[[2026-08-19 - Setup mcorch model specialist factory infrastructure]]` - *2026-08-19*
 *   `[[2026-08-18 - Setup mcorch model specialist factory infrastructure]]` - *2026-08-18*
 *   `[[2026-07-07 - MCORCH autonomous loop execution com charter e handoff]]` - *2026-07-07*
 *   `[[2026-07-06 - MCORCH autonomous loop execution com charter e handoff]]` - *2026-07-06*
@@ -51,8 +52,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-01 - Execução autônoma MCORCH com ciclo fechado]]` - *2026-07-01*
 *   `[[2026-07-01 - Executar loop autônomo MCORCH com charter]]` - *2026-07-01*
 *   `[[2026-06-27 - Clarificar essência e tom do MCORCH]]` - *2026-06-27*
-*   `[[2026-06-26 - Clarificar essência e tom do MCORCH]]` - *2026-06-26*
-*   *... e mais 8 sessões nessa categoria.*
+*   *... e mais 9 sessões nessa categoria.*
 
 ### UI Extensions & Layouts
 *   `[[2026-07-21 - Refinar canvas mobile e corrigir execução de nós]]` - *2026-07-21*
@@ -3314,6 +3314,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-01 - Configurar loop autônomo e definir fila soberana]]` (ClaudeSessions)
 
 ### Agosto 2026
+*   `[[2026-08-19 - Setup mcorch model specialist factory infrastructure]]` (ClaudeSessions)
 *   `[[2026-08-18 - Setup mcorch model specialist factory infrastructure]]` (ClaudeSessions)
 *   `[[2026-08-18 - Criar roteiro e produção visual para episódio Claude AI]]` (ClaudeSessions)
 *   `[[2026-08-17 - agent-aebd2ac5290172677]]` (ClaudeSessions)

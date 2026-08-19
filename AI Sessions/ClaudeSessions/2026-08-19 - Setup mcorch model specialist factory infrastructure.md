@@ -1,5 +1,5 @@
-# [[2026-08-19 - Setup mcorch model specialist factory infrastructure|Setup mcorch model specialist factory infrastructure]]
-**Date:** 2026-08-18 | **Session ID:** `af72f1dc-2f27-4017-8f14-9eb47ecbaff8`
+# [[2026-08-18 - Setup mcorch model specialist factory infrastructure|Setup mcorch model specialist factory infrastructure]]
+**Date:** 2026-08-19 | **Session ID:** `af72f1dc-2f27-4017-8f14-9eb47ecbaff8`
 
 ---
 
@@ -7183,6 +7183,1660 @@ print(tok.decode(out[0][ids.shape[1]:], skip_special_tokens=True))
 
 Me cola a saída. Na v3, esse exato teste deu salada; se agora sair **prosa coerente** como a do sanity in-training, está provado que a receita suave sobrevive ao merge → **`bash export-gguf.sh`** e me manda o gguf. Se der salada de novo, o problema é o merge path da Unsloth e pivotamos pro RAG puro sem exportar nada.
 
+## 👤 User *(21:42:59)*
+
+unsloth@7f4caf29b8cd:/workspace$ python -c "
+from transformers import AutoModelForCausalLM, AutoTokenizer
+import torch
+m='mcorch_merged_16bit'
+tok=AutoTokenizer.from_pretrained(m)
+model=AutoModelForCausalLM.from_pretrained(m, dtype=torch.bfloat16, device_map='cuda')
+ids=tok.apply_chat_template([{'role':'user','content':'Qual a Lei 1 do SSP-01 e como se prova materialidade?'}], add_generation_prompt=True, return_tensors='pt').to('cuda')
+out=model.generate(ids, max_new_tokens=220, temperature=0.2, top_p=0.9, do_sample=True)
+print(tok.decode(out[0][ids.shape[1]:], skip_special_tokens=True))
+"
+The tokenizer you are loading from 'mcorch_merged_16bit' with an incorrect regex pattern: https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/discussions/84#69121093e8b480e709447d5e. This will lead to incorrect tokenization. You should set the `fix_mistral_regex=True` flag when loading this tokenizer to fix this issue.
+Skipping import of cpp extensions due to incompatible torch version 2.10.0+cu128 for torchao version 0.14.0         Please see GitHub issue #2919 for more info
+Loading checkpoint shards: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 4/4 [00:31<00:00,  7.86s/it]
+v6 defer (0001 bok v4.5 Fable / . 20300000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,000
+
+## 🤖 Claude *(21:43:59)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Even with the softer recipe—rank 16, one epoch, no flashcard cramming—the merged model still produced salad, while the in-training sanity check with the 4-bit base plus LoRA adapters stayed coherent. This confirms the pattern holds across both v3 and v4: coherent during training, broken after merging into merged_16bit.
+
+The GGUF exported from the merged model is also salad, which rules out overfitting, the tokenizer regex, and the training recipe as culprits — the corruption is specifically happening in Unsloth's merge path with this version. My earlier overfit theory for v3 is now dead since the soft v4 recipe merged into salad too.
+
+I'm thinking through an alternative: skip Unsloth's merge entirely, save just the LoRA adapter, then in a fresh process use plain transformers and peft to load the base model, attach the adapter, and do a standard merge_and_unload before converting to GGUF. I need to check whether the pod still has that adapter saved from training.
+
+With 487 training steps and a default save_steps of 500, it's likely no checkpoint was ever written — the trainer wouldn't have hit a save point, and Trainer.train() doesn't auto-save at the end unless explicitly configured. That means the v4 LoRA adapter may be gone entirely, leaving only the corrupted merged_16bit directory as the surviving artifact. I'm now questioning whether the corruption is actually baked into the saved weights on disk, or whether it's something happening during the load/save process itself.
+
+The cleanest fix is to retrain quickly (~12 minutes, ~$0.35) and this time explicitly save the adapter with `model.save_pretrained` right after training completes, before attempting any merge — then do the merge in a fresh process to avoid whatever went wrong last time. Since the adapter is lost, there's no way around a short retrain.
+
+Then I'd run export-gguf.sh on the merged model. Cost-wise, this means one more ~12-minute training run, maybe $0.35, still well within the user's budget. Given the evidence now points conclusively to Unsloth's merge being the culprit, I should present this clearly to the user rather than just proceeding silently, since it requires another retrain beyond what they explicitly approved.
+
+This would be the third retrain, but total spend is still around $2 and the user clearly wants a working trained model. I'll prepare the scripts and offer the choice, recommending the final run while being honest that I'm highly confident but not certain — the in-training coherence is proven, and the canonical peft merge path is well-established, but I can't guarantee it fixes everything.
+
+Writing the updated train script...
+
+Still writing merge script...
+
+I'm checking memory feasibility: base fp16 at 15GB fits on a 24GB GPU, and merge_and_unload runs fine without gradients, so generation after merging should work without issues.
+
+peft should already be installed since it's a dependency of unsloth. As for the base model download, the merge step likely pulled the fp16 shards into the HF cache under the unsloth repo, so a subsequent from_pretrained call on the same repo should reuse that cache rather than re-downloading.
+
+The export-gguf.sh script already accepts a merged directory argument, so it's designed to work with this flow directly. I'll skip fixing the tokenizer regex warning since it's cosmetic and didn't affect generation coherence during training.
+
+Now I need to update the training script to replace the merged-save and gate steps with a simple adapter save, then bundle it with the merge-lora.py script for sending. Editing the save step...
+
+Writing adapter save logic...
+
+Now I need to write scripts/ai/merge-lora.py as the canonical merge step using clean transformers+peft, then validate both scripts before sending the bundle — just these two files since the dataset is already on the pod.
+
+I'm combining the training and merge steps into a single chained command so merge-lora runs automatically right after training finishes, then tailing the log to watch progress. If the sanity check on the merged model looks coherent, I'll export to GGUF, send it over, and redeploy — while also keeping the RAG-exit fallback option ready to mention briefly if needed.
+
+</details>
+
+
+## 🤖 Claude *(21:44:04)*
+
+Veredito fechado — e agora com prova de A/B limpa: **o culpado é o MERGE da Unsloth, não os pesos nem a receita.**
+
+A evidência (agora conclusiva):
+| | in-training (base 4-bit + LoRA) | pós-merge (`save_pretrained_merged`) |
+|---|---|---|
+| v3 (agressiva) | coerente | salada |
+| **v4 (suave)** | **coerente** ✅ | **salada** ❌ |
+
+Duas receitas diferentes, mesmo padrão: o modelo é coerente **até** passar pelo `save_pretrained_merged` da Unsloth 2026.5.9. O merge está corrompendo os pesos na gravação. Meu diagnóstico anterior ("overfit da v3") estava **errado** — a v4 suave refutou.
+
+O conserto é conhecido e canônico: **fazer o merge com `peft` puro** (transformers + `merge_and_unload()`, o caminho padrão da indústria), fora da Unsloth. Só que preciso do **adapter LoRA salvo separado** — e o script não salvava (o adapter da v4 morreu com o processo). Então: **um último run de 12 min** (~US$ 0,35) que salva o adapter, seguido do merge canônico. Preparando os dois scripts:
+
+## 🤖 Claude *(21:44:15)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/ai/train-mcorch-qlora.py",
+  "old_string": "# 6. salva MERGED 16-bit \u2014 SEM gguf/sudo (o export vira etapa separada, userspace) -----------------\n# O save_pretrained_gguf da Unsloth roda `sudo apt-get` p/ buildar o llama.cpp e TRAVA em imagem sem\n# sudo (foi o que prendeu a v1). Desacoplamos: aqui s\u00f3 o merge 16-bit; a quantiza\u00e7\u00e3o q4_k_m \u00e9 feita\n# pelo export-gguf.sh (build userspace do llama.cpp), no pod (se tiver gcc/cmake) ou no host ARM.\nmodel.save_pretrained_merged(\"mcorch_merged_16bit\", tokenizer, save_method=\"merged_16bit\")\nprint(\"\\n\u2705 Merged 16-bit salvo em mcorch_merged_16bit/\")\n\n# 7. GATE P\u00d3S-MERGE (novo \u2014 a li\u00e7\u00e3o da v3) ----------------------------------------------------------\n# A v3 era coerente DENTRO do treino (base 4-bit + LoRA) e virou salada DEPOIS do merge. Este gate\n# recarrega o MERGED com transformers puro e regenera o sanity \u2014 corrup\u00e7\u00e3o de merge \u00e9 pega AQUI,\n# antes de exportar/baixar/deployar (Lei 1: a prova tem que ser no artefato final, n\u00e3o no intermedi\u00e1rio).\ndel model\ntorch.cuda.empty_cache()\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\ntok2 = AutoTokenizer.from_pretrained(\"mcorch_merged_16bit\")\nm2 = AutoModelForCausalLM.from_pretrained(\"mcorch_merged_16bit\", dtype=torch.bfloat16, device_map=\"cuda\")\nids2 = tok2.apply_chat_template(msgs, tokenize=True, add_generation_prompt=True, return_tensors=\"pt\").to(\"cuda\")\nout2 = m2.generate(input_ids=ids2, max_new_tokens=220, temperature=0.2, top_p=0.9, do_sample=True)\nprint(\"\\n[mcorch sanity MERGED]\\n\" + tok2.decode(out2[0][ids2.shape[1]:], skip_special_tokens=True))\nprint(\"\\n\u2192 Bloco acima COERENTE? ent\u00e3o: bash export-gguf.sh \u00b7 Salada? N\u00c3O exporte \u2014 reporte.\")",
+  "new_string": "# 6. salva S\u00d3 o adapter LoRA \u2014 o merge SAI deste processo (li\u00e7\u00e3o v3+v4) ----------------------------\n# O save_pretrained_merged da Unsloth (2026.5.9 neste pod) corrompeu o merge nas DUAS receitas:\n# coerente in-training \u2192 salada p\u00f3s-merge, em v3 (agressiva) E v4 (suave). O merge can\u00f4nico agora\n# \u00e9 o merge-lora.py \u2014 processo LIMPO com transformers+peft puros (merge_and_unload), com o sanity\n# rodado no ARTEFATO FINAL (Lei 1: a prova \u00e9 no artefato que se deploya, n\u00e3o no intermedi\u00e1rio).\nmodel.save_pretrained(\"mcorch_lora\")\ntokenizer.save_pretrained(\"mcorch_lora\")\nprint(\"\\n\u2705 Adapter LoRA salvo em mcorch_lora/ \u2014 agora rode:  python merge-lora.py\")"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/scripts/ai/train-mcorch-qlora.py has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:44:24)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/ai/merge-lora.py",
+  "content": "#!/usr/bin/env python3\n# merge-lora.py \u2014 merge CAN\u00d4NICO do adapter LoRA via peft, em processo limpo (SEM unsloth).\n# SSOT: docs/processes/mcorch-model-pipeline.md\n#\n# Raz\u00e3o de existir: o save_pretrained_merged da Unsloth (2026.5.9) corrompeu o merge nas duas\n# receitas (v3 e v4): modelo coerente in-training virava salada p\u00f3s-merge. Este script usa o\n# caminho padr\u00e3o da ind\u00fastria \u2014 transformers + peft merge_and_unload \u2014 e prova o sanity no\n# ARTEFATO FINAL antes de qualquer export (Lei 1).\n#\n# Uso (no pod, AP\u00d3S o train salvar mcorch_lora/):  python merge-lora.py\n# Se o sanity sair coerente:  bash export-gguf.sh mcorch_merged_v4\n\nimport torch\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\nfrom peft import PeftModel\n\nBASE = \"unsloth/Qwen2.5-Coder-7B-Instruct\"   # fp16 completo (N\u00c3O o -bnb-4bit); j\u00e1 est\u00e1 no cache HF do pod\nADAPTER = \"mcorch_lora\"\nOUT = \"mcorch_merged_v4\"\n\nprint(f\"\u2192 base fp16: {BASE}\")\ntok = AutoTokenizer.from_pretrained(ADAPTER)\nbase = AutoModelForCausalLM.from_pretrained(BASE, dtype=torch.bfloat16, device_map=\"cuda\")\nprint(f\"\u2192 aplicando adapter {ADAPTER} + merge_and_unload\u2026\")\nmodel = PeftModel.from_pretrained(base, ADAPTER)\nmodel = model.merge_and_unload()\nmodel.save_pretrained(OUT, safe_serialization=True)\ntok.save_pretrained(OUT)\nprint(f\"\u2705 merged salvo em {OUT}/\")\n\n# Sanity NO artefato final, no MESMO processo limpo (nada de unsloth carregado aqui).\nmsgs = [{\"role\": \"user\", \"content\": \"Qual a Lei 1 do SSP-01 e como se prova materialidade?\"}]\nids = tok.apply_chat_template(msgs, add_generation_prompt=True, return_tensors=\"pt\").to(\"cuda\")\nout = model.generate(ids, max_new_tokens=220, temperature=0.2, top_p=0.9, do_sample=True)\nprint(\"\\n[mcorch sanity MERGED-PEFT]\\n\" + tok.decode(out[0][ids.shape[1]:], skip_special_tokens=True))\nprint(\"\\n\u2192 COERENTE? ent\u00e3o:  bash export-gguf.sh mcorch_merged_v4   \u00b7 Salada? PARE \u2014 piv\u00f4 RAG, sem export.\")\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/ai/merge-lora.py (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(21:44:36)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "python3 -c \"import ast; ast.parse(open('scripts/ai/train-mcorch-qlora.py').read()); ast.parse(open('scripts/ai/merge-lora.py').read()); print('sintaxe OK nos 2')\" && d=$(mktemp -d) && cp scripts/ai/train-mcorch-qlora.py scripts/ai/merge-lora.py \"$d\"/ && tar czf scratch/mcorch-train-v5.tgz -C \"$d\" . && rm -f /home/ubuntu/.mcorch-send-v5.log && /home/ubuntu/.local/bin/runpodctl send scratch/mcorch-train-v5.tgz > /home/ubuntu/.mcorch-send-v5.log 2>&1 &\nsleep 6; grep -a 'code is' /home/ubuntu/.mcorch-send-v5.log",
+  "description": "Valida, empacota e envia o bundle v5",
+  "dangerouslyDisableSandbox": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> sintaxe OK nos 2
+> code is: 3467-minimum-quebec-common-10
+> ```
+
+## 🤖 Claude *(21:44:56)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Now that the bundle's sent, I should give the user the pod commands: receive the file, extract it, then run training and merge chained together in a single nohup process.
+
+</details>
+
+
+## 🤖 Claude *(21:44:56)*
+
+**Código v5:** `3467-minimum-quebec-common-10`. No pod (um comando só encadeia treino → merge canônico):
+
+```bash
+cd /workspace
+runpodctl receive 3467-minimum-quebec-common-10
+tar xzf mcorch-train-v5.tgz
+pkill -9 -f 'train-mcorch-qlora|merge-lora' 2>/dev/null; sleep 2
+nohup bash -c 'python train-mcorch-qlora.py && python merge-lora.py' > train5.log 2>&1 &
+tail -F train5.log
+```
+
+**O que roda (~18 min total):**
+1. Treino v4 suave de novo (12 min) — mas agora **salva o adapter** em `mcorch_lora/` e **não chama o merge da Unsloth**.
+2. `merge-lora.py` arranca como **processo separado e limpo** (sem Unsloth carregado): merge canônico `peft merge_and_unload` sobre o base fp16 → salva `mcorch_merged_v4/` → roda o sanity **no artefato final**.
+
+**Me cola o bloco `[mcorch sanity MERGED-PEFT]`** do fim do log. É o momento da verdade do A/B: mesmo adapter-receita, merge diferente. Coerente → `bash export-gguf.sh mcorch_merged_v4` e fechamos o deploy. Salada → a evidência vira definitiva contra o caminho todo neste ambiente, e pivotamos pro RAG sem gastar mais um centavo.
+
+Sendo transparente sobre confiança: o merge peft é o caminho que a indústria inteira usa — minha expectativa é alta. Mas já errei um diagnóstico nesta saga (culpei overfit), então o critério continua sendo **só o output material**.
+
+## 👤 User *(21:47:25)*
+
+unsloth@7f4caf29b8cd:/workspace$ cd /workspace
+unsloth@7f4caf29b8cd:/workspace$ runpodctl receive 3467-minimum-quebec-common-10
+Receiving 'mcorch-train-v5.tgz' (3.2 kB) 
+
+Receiving (<-137.131.243.179:58446)
+mcorch-train-v5.tgz 100% |████████████████████| (3.2/3.2 kB, 14 kB/s)
+unsloth@7f4caf29b8cd:/workspace$ tar xzf mcorch-train-v5.tgz
+unsloth@7f4caf29b8cd:/workspace$ pkill -9 -f 'train-mcorch-qlora|merge-lora' 2>/dev/null; sleep 2
+unsloth@7f4caf29b8cd:/workspace$ nohup bash -c 'python train-mcorch-qlora.py && python merge-lora.py' > train5.log 2>&1 &
+[1] 3734
+unsloth@7f4caf29b8cd:/workspace$ tail -F train5.log
+nohup: ignoring input
+🦥 Unsloth: Will patch your computer to enable 2x faster free finetuning.
+ERROR 08-18 21:45:52 [gpt_oss_triton_kernels_moe.py:34] Failed to import Triton kernels. Please make sure your triton version is compatible. Error: No module named 'triton_kernels.routing'
+🦥 Unsloth Zoo will now patch everything to make training faster!
+==((====))==  Unsloth 2026.5.9: Fast Qwen2 patching. Transformers: 4.57.6. vLLM: 0.16.1.dev0+g89a77b108.d20260417.cu128.
+   \\   /|    NVIDIA GeForce RTX 4090. Num GPUs = 1. Max memory: 23.516 GB. Platform: Linux.
+O^O/ \_/ \    Torch: 2.10.0+cu128. CUDA: 8.9. CUDA Toolkit: 12.8. Triton: 3.6.0
+\        /    Bfloat16 = TRUE. FA [Xformers = 0.0.35. FA2 = True]
+ "-____-"     Free license: http://github.com/unslothai/unsloth
+Unsloth: Fast downloading is enabled - ignore downloading bars which are red colored!
+Unsloth 2026.5.9 patched 28 layers with 28 QKV layers, 28 O layers and 28 MLP layers.
+Unsloth: Will map <|im_end|> to EOS = <|im_end|>.
+==((====))==  Unsloth - 2x faster free finetuning | Num GPUs used = 1
+   \\   /|    Num examples = 3,895 | Num Epochs = 1 | Total steps = 487
+O^O/ \_/ \    Batch size per device = 2 | Gradient accumulation steps = 4
+\        /    Data Parallel GPUs = 1 | Total batch size (2 x 4 x 1) = 8
+ "-____-"     Trainable parameters = 40,370,176 of 7,655,986,688 (0.53% trained)
+[mcorch] 3895 exemplos · preview:
+<|im_start|>system
+Você é o MCORCH Sovereign Specialist — um Diretor de Engenharia sob Autonomic Computing e Harness-Driven Development. Pensa em inglês, reporta em pt-BR executivo. Rege-se pelas 4 Leis de Sobrevivência (Materialidade, Processo Antecipado, Poda, ORO) e pelo Master Execution Protocol (gate Closed-Loop BoK). Nunca reporta sucesso sem prova material; toda automação exige SOP antes do
+  6%|████████▉                                                                                                                                                        | 27/487 [00:41<11:31,  1.50s/it]
+
+## 🤖 Claude *(21:47:33)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The v5 training is running nominally with the same config, 487 steps, r=16, so there's nothing to do but wait about 18 minutes. I'll use this time to prepare the host-side redeploy steps for when the gguf arrives—I already have the Modelfile, so I'll just need to swap the gguf and recreate the model, replacing the old mcorch_model in ollama.
+
+</details>
+
+
+## 🤖 Claude *(21:47:37)*
+
+Nominal — v5 rodando idêntico ao v4 (487 steps, r=16, 40,3M trainable), agora com o adapter sendo preservado e o merge canônico na sequência. ~18 min total.
+
+Enquanto roda, deixo o host pronto para o re-deploy: quando o novo gguf chegar, eu substituo o arquivo, recrio o `mcorch_model` no Ollama (por cima do registro atual, que é o da v3 corrompida) e removo o `mcorch_bare` de teste.
+
+Quando o log terminar, me cola:
+```bash
+grep -A10 'MERGED-PEFT' train5.log
+```
+Coerente → `bash export-gguf.sh mcorch_merged_v4` → `runpodctl send` do gguf → eu fecho o ciclo no host. Salada → paramos de gastar e pivoto pro RAG puro.
+
+## 👤 User *(11:30:45)*
+
+unsloth@7f4caf29b8cd:/workspace$ cd /workspace
+unsloth@7f4caf29b8cd:/workspace$ runpodctl receive 3467-minimum-quebec-common-10
+Receiving 'mcorch-train-v5.tgz' (3.2 kB) 
+
+Receiving (<-137.131.243.179:58446)
+mcorch-train-v5.tgz 100% |████████████████████| (3.2/3.2 kB, 14 kB/s)
+unsloth@7f4caf29b8cd:/workspace$ tar xzf mcorch-train-v5.tgz
+unsloth@7f4caf29b8cd:/workspace$ pkill -9 -f 'train-mcorch-qlora|merge-lora' 2>/dev/null; sleep 2
+unsloth@7f4caf29b8cd:/workspace$ nohup bash -c 'python train-mcorch-qlora.py && python merge-lora.py' > train5.log 2>&1 &
+[1] 3734
+unsloth@7f4caf29b8cd:/workspace$ tail -F train5.log
+nohup: ignoring input
+🦥 Unsloth: Will patch your computer to enable 2x faster free finetuning.
+ERROR 08-18 21:45:52 [gpt_oss_triton_kernels_moe.py:34] Failed to import Triton kernels. Please make sure your triton version is compatible. Error: No module named 'triton_kernels.routing'
+🦥 Unsloth Zoo will now patch everything to make training faster!
+==((====))==  Unsloth 2026.5.9: Fast Qwen2 patching. Transformers: 4.57.6. vLLM: 0.16.1.dev0+g89a77b108.d20260417.cu128.
+   \\   /|    NVIDIA GeForce RTX 4090. Num GPUs = 1. Max memory: 23.516 GB. Platform: Linux.
+O^O/ \_/ \    Torch: 2.10.0+cu128. CUDA: 8.9. CUDA Toolkit: 12.8. Triton: 3.6.0
+\        /    Bfloat16 = TRUE. FA [Xformers = 0.0.35. FA2 = True]
+ "-____-"     Free license: http://github.com/unslothai/unsloth
+Unsloth: Fast downloading is enabled - ignore downloading bars which are red colored!
+Unsloth 2026.5.9 patched 28 layers with 28 QKV layers, 28 O layers and 28 MLP layers.
+Unsloth: Will map <|im_end|> to EOS = <|im_end|>.
+==((====))==  Unsloth - 2x faster free finetuning | Num GPUs used = 1
+   \\   /|    Num examples = 3,895 | Num Epochs = 1 | Total steps = 487
+O^O/ \_/ \    Batch size per device = 2 | Gradient accumulation steps = 4
+\        /    Data Parallel GPUs = 1 | Total batch size (2 x 4 x 1) = 8
+ "-____-"     Trainable parameters = 40,370,176 of 7,655,986,688 (0.53% trained)
+[mcorch] 3895 exemplos · preview:
+<|im_start|>system
+Você é o MCORCH Sovereign Specialist — um Diretor de Engenharia sob Autonomic Computing e Harness-Driven Development. Pensa em inglês, reporta em pt-BR executivo. Rege-se pelas 4 Leis de Sobrevivência (Materialidade, Processo Antecipado, Poda, ORO) e pelo Master Execution Protocol (gate Closed-Loop BoK). Nunca reporta sucesso sem prova material; toda automação exige SOP antes do
+ 10%|████████████████▌                                                                                                                                                | 50/487 [01:16<11:33,  1.59s/it]^ 11%|█████████████████▏                                                                                                                                               | 52/487 [01:19<10:41,  1.47s/it]^100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 487/487 [12:32<00:00,  1.55s/it]
+The attention mask is not set and cannot be inferred from input because pad token is same as eos token. As a consequence, you may observe unexpected behavior. Please pass your input's `attention_mask` to obtain reliable results.
+{'loss': 2.7501, 'grad_norm': 0.15970218181610107, 'learning_rate': 8e-05, 'epoch': 0.01}
+{'loss': 2.5852, 'grad_norm': 0.1860155463218689, 'learning_rate': 0.00018, 'epoch': 0.02}
+{'loss': 2.5974, 'grad_norm': 0.2431056797504425, 'learning_rate': 0.00019996530012933285, 'epoch': 0.03}
+{'loss': 2.4079, 'grad_norm': 0.3317452371120453, 'learning_rate': 0.00019982437317643217, 'epoch': 0.04}
+{'loss': 2.1668, 'grad_norm': 0.39741528034210205, 'learning_rate': 0.00019957520309390786, 'epoch': 0.05}
+{'loss': 2.208, 'grad_norm': 0.36522331833839417, 'learning_rate': 0.00019921806006577102, 'epoch': 0.06}
+{'loss': 1.9754, 'grad_norm': 0.45335444808006287, 'learning_rate': 0.00019875333135495002, 'epoch': 0.07}
+{'loss': 2.0714, 'grad_norm': 0.44466567039489746, 'learning_rate': 0.00019818152088336784, 'epoch': 0.08}
+{'loss': 1.8888, 'grad_norm': 0.32894352078437805, 'learning_rate': 0.00019750324868552134, 'epoch': 0.09}
+{'loss': 2.0577, 'grad_norm': 0.5289859175682068, 'learning_rate': 0.00019671925023615573, 'epoch': 0.1}
+{'loss': 2.2794, 'grad_norm': 0.5743577480316162, 'learning_rate': 0.00019583037565276316, 'epoch': 0.11}
+{'loss': 2.27, 'grad_norm': 0.531472384929657, 'learning_rate': 0.0001948375887737699, 'epoch': 0.12}
+{'loss': 1.7106, 'grad_norm': 0.4782876968383789, 'learning_rate': 0.0001937419661134121, 'epoch': 0.13}
+{'loss': 2.0871, 'grad_norm': 0.8002296686172485, 'learning_rate': 0.00019254469569443273, 'epoch': 0.14}
+{'loss': 1.8981, 'grad_norm': 0.7211851477622986, 'learning_rate': 0.00019124707575986642, 'epoch': 0.15}
+{'loss': 2.0669, 'grad_norm': 0.7421470284461975, 'learning_rate': 0.00018985051336530798, 'epoch': 0.16}
+{'loss': 2.0775, 'grad_norm': 0.4953368008136749, 'learning_rate': 0.00018835652285319193, 'epoch': 0.17}
+{'loss': 1.9706, 'grad_norm': 0.5209656953811646, 'learning_rate': 0.00018676672421073697, 'epoch': 0.18}
+{'loss': 1.8196, 'grad_norm': 0.46246397495269775, 'learning_rate': 0.00018508284131333602, 'epoch': 0.2}
+{'loss': 2.0885, 'grad_norm': 0.6634483337402344, 'learning_rate': 0.00018330670005529655, 'epoch': 0.21}
+{'loss': 2.1978, 'grad_norm': 0.8865745067596436, 'learning_rate': 0.0001814402263699584, 'epoch': 0.22}
+{'loss': 2.2934, 'grad_norm': 0.7442637085914612, 'learning_rate': 0.00017948544414133534, 'epoch': 0.23}
+{'loss': 2.0427, 'grad_norm': 1.4419046640396118, 'learning_rate': 0.0001774444730095456, 'epoch': 0.24}
+{'loss': 1.7714, 'grad_norm': 0.5333059430122375, 'learning_rate': 0.0001753195260724103, 'epoch': 0.25}
+{'loss': 1.616, 'grad_norm': 0.8416348099708557, 'learning_rate': 0.00017311290748571275, 'epoch': 0.26}
+{'loss': 1.7777, 'grad_norm': 0.716229259967804, 'learning_rate': 0.00017082700996471977, 'epoch': 0.27}
+{'loss': 2.1183, 'grad_norm': 1.086322546005249, 'learning_rate': 0.00016846431218967548, 'epoch': 0.28}
+{'loss': 1.7548, 'grad_norm': 0.6783534288406372, 'learning_rate': 0.00016602737611807976, 'epoch': 0.29}
+{'loss': 1.6493, 'grad_norm': 0.7265214920043945, 'learning_rate': 0.00016351884420666614, 'epoch': 0.3}
+{'loss': 1.9833, 'grad_norm': 0.8027090430259705, 'learning_rate': 0.00016094143654609208, 'epoch': 0.31}
+{'loss': 1.7919, 'grad_norm': 1.079970121383667, 'learning_rate': 0.0001582979479114472, 'epoch': 0.32}
+{'loss': 1.8323, 'grad_norm': 0.8050447702407837, 'learning_rate': 0.0001555912447317792, 'epoch': 0.33}
+{'loss': 2.0167, 'grad_norm': 0.7420218586921692, 'learning_rate': 0.0001528242619819224, 'epoch': 0.34}
+{'loss': 1.9093, 'grad_norm': 0.726954996585846, 'learning_rate': 0.00015000000000000001, 'epoch': 0.35}
+{'loss': 1.4664, 'grad_norm': 0.7922136187553406, 'learning_rate': 0.00014712152123405017, 'epoch': 0.36}
+{'loss': 1.8515, 'grad_norm': 0.5879853367805481, 'learning_rate': 0.00014419194692130453, 'epoch': 0.37}
+{'loss': 1.7622, 'grad_norm': 0.7712419629096985, 'learning_rate': 0.00014121445370371923, 'epoch': 0.38}
+{'loss': 1.8892, 'grad_norm': 0.8465772271156311, 'learning_rate': 0.00013819227018342864, 'epoch': 0.39}
+{'loss': 1.4736, 'grad_norm': 0.6511375904083252, 'learning_rate': 0.00013512867342185705, 'epoch': 0.4}
+{'loss': 1.5194, 'grad_norm': 0.6357619762420654, 'learning_rate': 0.00013202698538628376, 'epoch': 0.41}
+{'loss': 1.7375, 'grad_norm': 0.762835681438446, 'learning_rate': 0.00012889056934771578, 'epoch': 0.42}
+{'loss': 1.7268, 'grad_norm': 1.5664430856704712, 'learning_rate': 0.00012572282623397266, 'epoch': 0.43}
+{'loss': 1.5332, 'grad_norm': 0.7485036849975586, 'learning_rate': 0.0001225271909419395, 'epoch': 0.44}
+{'loss': 1.9138, 'grad_norm': 0.8593003153800964, 'learning_rate': 0.00011930712861298552, 'epoch': 0.45}
+{'loss': 1.8747, 'grad_norm': 0.7006505727767944, 'learning_rate': 0.00011606613087558749, 'epoch': 0.46}
+{'loss': 1.8633, 'grad_norm': 0.7850553393363953, 'learning_rate': 0.00011280771205923268, 'epoch': 0.47}
+{'loss': 1.793, 'grad_norm': 1.8214023113250732, 'learning_rate': 0.0001095354053837059, 'epoch': 0.48}
+{'loss': 1.6296, 'grad_norm': 0.8185352087020874, 'learning_rate': 0.00010625275912789307, 'epoch': 0.49}
+{'loss': 1.6022, 'grad_norm': 0.6372362375259399, 'learning_rate': 0.00010296333278225599, 'epoch': 0.5}
+{'loss': 1.7113, 'grad_norm': 1.0984846353530884, 'learning_rate': 9.967069318914978e-05, 'epoch': 0.51}
+{'loss': 2.0393, 'grad_norm': 0.46386057138442993, 'learning_rate': 9.637841067516836e-05, 'epoch': 0.52}
+{'loss': 1.9805, 'grad_norm': 0.7771596908569336, 'learning_rate': 9.309005517971222e-05, 'epoch': 0.53}
+{'loss': 1.73, 'grad_norm': 0.728489339351654, 'learning_rate': 8.980919238397532e-05, 'epoch': 0.54}
+{'loss': 1.8313, 'grad_norm': 0.759328305721283, 'learning_rate': 8.653937984455007e-05, 'epoch': 0.55}
+{'loss': 1.9971, 'grad_norm': 0.8885020613670349, 'learning_rate': 8.328416313584169e-05, 'epoch': 0.56}
+{'loss': 1.8013, 'grad_norm': 0.93328857421875, 'learning_rate': 8.004707200547534e-05, 'epoch': 0.57}
+{'loss': 1.6442, 'grad_norm': 0.9268145561218262, 'learning_rate': 7.683161654686486e-05, 'epoch': 0.59}
+{'loss': 1.9205, 'grad_norm': 0.716147243976593, 'learning_rate': 7.364128339309326e-05, 'epoch': 0.6}
+{'loss': 1.7519, 'grad_norm': 0.5702667832374573, 'learning_rate': 7.047953193623195e-05, 'epoch': 0.61}
+{'loss': 1.5612, 'grad_norm': 0.5003079175949097, 'learning_rate': 6.734979057619873e-05, 'epoch': 0.62}
+{'loss': 1.7143, 'grad_norm': 0.9919317364692688, 'learning_rate': 6.425545300322112e-05, 'epoch': 0.63}
+{'loss': 1.8133, 'grad_norm': 0.625752329826355, 'learning_rate': 6.11998745179371e-05, 'epoch': 0.64}
+{'loss': 1.8844, 'grad_norm': 0.716646671295166, 'learning_rate': 5.818636839312308e-05, 'epoch': 0.65}
+{'loss': 1.5874, 'grad_norm': 1.0314061641693115, 'learning_rate': 5.5218202280993725e-05, 'epoch': 0.66}
+{'loss': 1.5852, 'grad_norm': 0.7755908966064453, 'learning_rate': 5.229859466997011e-05, 'epoch': 0.67}
+{'loss': 1.9292, 'grad_norm': 0.8220351338386536, 'learning_rate': 4.943071139475823e-05, 'epoch': 0.68}
+{'loss': 1.7502, 'grad_norm': 0.633338451385498, 'learning_rate': 4.661766220352097e-05, 'epoch': 0.69}
+{'loss': 1.7307, 'grad_norm': 1.1971949338912964, 'learning_rate': 4.386249738586744e-05, 'epoch': 0.7}
+{'loss': 1.8043, 'grad_norm': 1.0632034540176392, 'learning_rate': 4.1168204465315375e-05, 'epoch': 0.71}
+{'loss': 1.7953, 'grad_norm': 0.8623883724212646, 'learning_rate': 3.8537704959812294e-05, 'epoch': 0.72}
+{'loss': 1.8356, 'grad_norm': 0.6455258131027222, 'learning_rate': 3.5973851213829616e-05, 'epoch': 0.73}
+{'loss': 1.8561, 'grad_norm': 0.794775128364563, 'learning_rate': 3.347942330546395e-05, 'epoch': 0.74}
+{'loss': 1.8901, 'grad_norm': 0.9647679328918457, 'learning_rate': 3.105712603189884e-05, 'epoch': 0.75}
+{'loss': 1.7073, 'grad_norm': 0.5856019258499146, 'learning_rate': 2.8709585976496823e-05, 'epoch': 0.76}
+{'loss': 1.5909, 'grad_norm': 0.629702627658844, 'learning_rate': 2.6439348660701634e-05, 'epoch': 0.77}
+{'loss': 1.5175, 'grad_norm': 0.7363715171813965, 'learning_rate': 2.4248875783837987e-05, 'epoch': 0.78}
+{'loss': 1.8934, 'grad_norm': 1.2535808086395264, 'learning_rate': 2.21405425538036e-05, 'epoch': 0.79}
+{'loss': 1.4632, 'grad_norm': 0.9298589825630188, 'learning_rate': 2.011663511154628e-05, 'epoch': 0.8}
+{'loss': 1.9654, 'grad_norm': 1.183425784111023, 'learning_rate': 1.817934805211976e-05, 'epoch': 0.81}
+{'loss': 1.7967, 'grad_norm': 0.9548317193984985, 'learning_rate': 1.6330782045006086e-05, 'epoch': 0.82}
+{'loss': 1.4596, 'grad_norm': 0.6358191967010498, 'learning_rate': 1.457294155628457e-05, 'epoch': 0.83}
+{'loss': 1.7767, 'grad_norm': 0.9102265238761902, 'learning_rate': 1.290773267511788e-05, 'epoch': 0.84}
+{'loss': 1.5135, 'grad_norm': 1.1742337942123413, 'learning_rate': 1.1336961046911443e-05, 'epoch': 0.85}
+{'loss': 1.5991, 'grad_norm': 0.9603856205940247, 'learning_rate': 9.862329915387669e-06, 'epoch': 0.86}
+{'loss': 1.6029, 'grad_norm': 0.7625461220741272, 'learning_rate': 8.485438275698154e-06, 'epoch': 0.87}
+{'loss': 1.9518, 'grad_norm': 0.7366076707839966, 'learning_rate': 7.207779140576065e-06, 'epoch': 0.88}
+{'loss': 1.9172, 'grad_norm': 0.729168176651001, 'learning_rate': 6.030737921409169e-06, 'epoch': 0.89}
+{'loss': 1.7016, 'grad_norm': 0.7489702105522156, 'learning_rate': 4.955590925988895e-06, 'epoch': 0.9}
+{'loss': 1.665, 'grad_norm': 0.5442440509796143, 'learning_rate': 3.983503974564229e-06, 'epoch': 0.91}
+{'loss': 1.5872, 'grad_norm': 1.2647199630737305, 'learning_rate': 3.1155311357011553e-06, 'epoch': 0.92}
+{'loss': 1.6605, 'grad_norm': 0.7600768208503723, 'learning_rate': 2.3526135833186525e-06, 'epoch': 0.93}
+{'loss': 1.8666, 'grad_norm': 1.0359524488449097, 'learning_rate': 1.6955785761400445e-06, 'epoch': 0.94}
+{'loss': 1.7255, 'grad_norm': 1.3174211978912354, 'learning_rate': 1.1451385606670028e-06, 'epoch': 0.95}
+{'loss': 1.3359, 'grad_norm': 0.7550830245018005, 'learning_rate': 7.018903986483083e-07, 'epoch': 0.97}
+{'loss': 1.3173, 'grad_norm': 0.7959816455841064, 'learning_rate': 3.6631471988136655e-07, 'epoch': 0.98}
+{'loss': 1.8822, 'grad_norm': 1.2395650148391724, 'learning_rate': 1.3877540104818566e-07, 'epoch': 0.99}
+{'loss': 1.6471, 'grad_norm': 0.9376384019851685, 'learning_rate': 1.951917115091684e-08, 'epoch': 1.0}
+{'train_runtime': 752.6425, 'train_samples_per_second': 5.175, 'train_steps_per_second': 0.647, 'train_loss': 1.8414629832430298, 'epoch': 1.0}
+
+[mcorch sanity]
+<|im_start|>user
+Qual a Lei 1 do SSP-01 e como se prova materialidade?<|im_end|>
+<|im_start|>assistant
+Lei 1 do SSP-01 (Art. 5, inciso I) estabelece que o sistema operacional deve ser configurado para bloquear automaticamente qualquer conexão de rede com domínios maliciosos ou conhecidos por abusar de vulnerabilidades.
+
+Para provar a materialidade desta Lei, é necessário verificar:
+
+a) Se existe um firewall ativo no sistema operacional;
+b) Se há regras específicas bloqueando domínios maliciosos;
+c) Se o sistema tem atualizações automáticas de lista de bloqueio de domínios;
+d) Se o usuário não pode adicionar exceções sem aprovação administrativa.
+
+Um teste prático seria tentar conectar ao site "http://malware.com" ou "http://phishing.org" e verificar se a conexão é bloqueada pelo sistema operacional.<|im_end|>
+
+✅ Adapter LoRA salvo em mcorch_lora/ — agora rode:  python merge-lora.py
+Skipping import of cpp extensions due to incompatible torch version 2.10.0+cu128 for torchao version 0.14.0         Please see GitHub issue #2919 for more info
+→ base fp16: unsloth/Qwen2.5-Coder-7B-Instruct
+Loading checkpoint shards: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 4/4 [00:03<00:00,  1.02it/s]
+→ aplicando adapter mcorch_lora + merge_and_unload…
+✅ merged salvo em mcorch_merged_v4/
+
+[mcorch sanity MERGED-PEFT]
+A Lei 1 do SSP-01 é o Art. 5º, inciso I (LGPD) que estabelece que qualquer dado pessoal coletado deve ser armazenado de forma segura e com criptografia ativa.
+
+Para provar materialmente que o sistema segue esta Lei:
+
+1. Verifique se há criptografia ativa em todos os dados pessoais armazenados:
+   - Use ferramentas de auditoria de segurança para verificar criptografia em colunas sensíveis.
+   - Confirme que nenhum dado pessoal está armazenado em texto puro no banco de dados.
+
+2. Avalie a implementação da política de criptografia:
+   - Verifique se existe um documento oficial descrevendo como a criptografia é aplicada.
+   - Confirme que a política é aplicada em todas as camadas do sistema (aplicativo, banco de dados, etc.).
+
+3. Prove que a criptografia é fortemente configurada:
+   - Verifique se os
+
+→ COERENTE? então:  bash export-gguf.sh mcorch_merged_v4   · Salada? PARE — pivô RAG, sem export.
+unsloth@096e73fca7cc:/workspace$ grep -A10 'MERGED-PEFT' train5.log
+[mcorch sanity MERGED-PEFT]
+A Lei 1 do SSP-01 é o Art. 5º, inciso I (LGPD) que estabelece que qualquer dado pessoal coletado deve ser armazenado de forma segura e com criptografia ativa.
+
+Para provar materialmente que o sistema segue esta Lei:
+
+1. Verifique se há criptografia ativa em todos os dados pessoais armazenados:
+   - Use ferramentas de auditoria de segurança para verificar criptografia em colunas sensíveis.
+   - Confirme que nenhum dado pessoal está armazenado em texto puro no banco de dados.
+
+2. Avalie a implementação da política de criptografia:
+   - Verifique se existe um documento oficial descrevendo como a criptografia é aplicada.
+
+## 🤖 Claude *(11:31:11)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The merged-PEFT comparison is striking: the v3/v4 Unsloth merge produces incoherent gibberish, while the v5 PEFT merge generates fully coherent, well-structured Portuguese prose, even though the underlying fact it states is incorrect.
+
+This confirms Unsloth's merge function was corrupting the model, while the standard peft merge works correctly — the A/B test is conclusive, so it's time to proceed with export. I notice the pod hostname changed again between the training and grep commands, suggesting another migration, but since /workspace persisted and the artifacts are intact, I won't dwell on it — next step is running the export script to convert and quantize the model.
+
+After export, the user should send the gguf file over, I'll verify the new checksum differs from the corrupted one, swap it into Ollama, and test via the API before letting them terminate the pod — keeping it alive until I confirm coherent output this time, since quantization is one more transformation step that could introduce its own issues even though the underlying merge is now proven sound.
+
+</details>
+
+
+## 🤖 Claude *(11:31:17)*
+
+🎯 **A/B FECHADO — o merge canônico peft FUNCIONOU.** Compare os dois merges do MESMO tipo de adapter:
+
+- Merge Unsloth (v3/v4): *"Cada 'Bo' promove a uma gate… 20300000,00000000…"* — salada.
+- **Merge peft (v5): prosa estruturada, listas, pt-BR executivo limpo** ✅ — coerente do início ao fim.
+
+Culpado confirmado em definitivo: `save_pretrained_merged` da Unsloth 2026.5.9. O `merge_and_unload` do peft preservou o modelo. (O fato continua derivando — "LGPD/criptografia" — mas isso é o esperado: fato é papel do RAG, a **voz e a coerência** era o que o fine-tune tinha que entregar, e entregou.)
+
+**GO pro export.** No pod:
+
+```bash
+bash export-gguf.sh mcorch_merged_v4
+```
+
+(~5 min — o llama.cpp já está buildado no `/workspace`, que sobreviveu à migração; ele converte o `mcorch_merged_v4/` e quantiza.) No fim:
+
+```bash
+runpodctl send mcorch_model.q4_k_m.gguf
+```
+
+Me cola o **código do send** + o **sha256** que o script imprimir (vai ser diferente do `80d8f449…` da v3 — tem que ser, é outro modelo). Eu recebo, substituo o gguf corrompido no host, recrio o `mcorch_model` no Ollama e rodo o teste final via API. **Não dê Terminate ainda** — só depois que eu provar o modelo coerente rodando no Ollama do host (a quantização é mais uma transformação; desta vez o pod só morre com o artefato final verificado ponta-a-ponta).
+
+## 👤 User *(11:46:06)*
+
+unsloth@096e73fca7cc:/workspace$ bash export-gguf.sh mcorch_merged_v4
+→ garantindo deps python do conversor (userspace)…
+→ convert HF→gguf f16 (python puro, sem build)…
+INFO:hf-to-gguf:Loading model: mcorch_merged_v4
+INFO:hf-to-gguf:Model architecture: Qwen2ForCausalLM
+INFO:hf-to-gguf:gguf: loading model weight map from 'model.safetensors.index.json'
+INFO:hf-to-gguf:gguf: indexing model part 'model-00001-of-00004.safetensors'
+INFO:hf-to-gguf:gguf: indexing model part 'model-00002-of-00004.safetensors'
+INFO:hf-to-gguf:gguf: indexing model part 'model-00003-of-00004.safetensors'
+INFO:hf-to-gguf:gguf: indexing model part 'model-00004-of-00004.safetensors'
+INFO:gguf.gguf_writer:gguf: This GGUF file is for Little Endian only
+INFO:hf-to-gguf:Exporting model...
+INFO:hf-to-gguf:token_embd.weight,         torch.bfloat16 --> F16, shape = {3584, 152064}
+INFO:hf-to-gguf:blk.0.attn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.0.ffn_down.weight,     torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.0.ffn_gate.weight,     torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.0.ffn_up.weight,       torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.0.ffn_norm.weight,     torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.0.attn_k.bias,         torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.0.attn_k.weight,       torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.0.attn_output.weight,  torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.0.attn_q.bias,         torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.0.attn_q.weight,       torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.0.attn_v.bias,         torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.0.attn_v.weight,       torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.1.attn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.1.ffn_down.weight,     torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.1.ffn_gate.weight,     torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.1.ffn_up.weight,       torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.1.ffn_norm.weight,     torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.1.attn_k.bias,         torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.1.attn_k.weight,       torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.1.attn_output.weight,  torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.1.attn_q.bias,         torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.1.attn_q.weight,       torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.1.attn_v.bias,         torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.1.attn_v.weight,       torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.2.attn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.2.ffn_down.weight,     torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.2.ffn_gate.weight,     torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.2.ffn_up.weight,       torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.2.ffn_norm.weight,     torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.2.attn_k.bias,         torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.2.attn_k.weight,       torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.2.attn_output.weight,  torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.2.attn_q.bias,         torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.2.attn_q.weight,       torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.2.attn_v.bias,         torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.2.attn_v.weight,       torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.3.attn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.3.ffn_down.weight,     torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.3.ffn_gate.weight,     torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.3.ffn_up.weight,       torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.3.ffn_norm.weight,     torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.3.attn_k.bias,         torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.3.attn_k.weight,       torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.3.attn_output.weight,  torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.3.attn_q.bias,         torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.3.attn_q.weight,       torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.3.attn_v.bias,         torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.3.attn_v.weight,       torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.4.attn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.4.ffn_down.weight,     torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.4.ffn_gate.weight,     torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.4.ffn_up.weight,       torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.4.ffn_norm.weight,     torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.4.attn_k.bias,         torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.4.attn_k.weight,       torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.4.attn_output.weight,  torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.4.attn_q.bias,         torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.4.attn_q.weight,       torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.4.attn_v.bias,         torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.4.attn_v.weight,       torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.5.attn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.5.ffn_down.weight,     torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.5.ffn_gate.weight,     torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.5.ffn_up.weight,       torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.5.ffn_norm.weight,     torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.5.attn_k.bias,         torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.5.attn_k.weight,       torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.5.attn_output.weight,  torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.5.attn_q.bias,         torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.5.attn_q.weight,       torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.5.attn_v.bias,         torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.5.attn_v.weight,       torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.6.attn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.6.ffn_down.weight,     torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.6.ffn_gate.weight,     torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.6.ffn_up.weight,       torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.6.ffn_norm.weight,     torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.6.attn_k.bias,         torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.6.attn_k.weight,       torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.6.attn_output.weight,  torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.6.attn_q.bias,         torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.6.attn_q.weight,       torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.6.attn_v.bias,         torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.6.attn_v.weight,       torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.7.attn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.7.ffn_down.weight,     torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.7.ffn_gate.weight,     torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.7.ffn_up.weight,       torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.7.ffn_norm.weight,     torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.7.attn_k.bias,         torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.7.attn_k.weight,       torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.7.attn_output.weight,  torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.7.attn_q.bias,         torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.7.attn_q.weight,       torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.7.attn_v.bias,         torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.7.attn_v.weight,       torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.8.attn_k.bias,         torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.8.attn_k.weight,       torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.8.attn_output.weight,  torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.8.attn_q.bias,         torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.8.attn_q.weight,       torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.8.attn_v.bias,         torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.8.attn_v.weight,       torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.10.attn_norm.weight,   torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.10.ffn_down.weight,    torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.10.ffn_gate.weight,    torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.10.ffn_up.weight,      torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.10.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.10.attn_k.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.10.attn_k.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.10.attn_output.weight, torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.10.attn_q.bias,        torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.10.attn_q.weight,      torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.10.attn_v.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.10.attn_v.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.11.attn_norm.weight,   torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.11.ffn_down.weight,    torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.11.ffn_gate.weight,    torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.11.ffn_up.weight,      torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.11.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.11.attn_k.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.11.attn_k.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.11.attn_output.weight, torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.11.attn_q.bias,        torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.11.attn_q.weight,      torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.11.attn_v.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.11.attn_v.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.12.attn_norm.weight,   torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.12.ffn_down.weight,    torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.12.ffn_gate.weight,    torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.12.ffn_up.weight,      torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.12.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.12.attn_k.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.12.attn_k.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.12.attn_output.weight, torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.12.attn_q.bias,        torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.12.attn_q.weight,      torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.12.attn_v.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.12.attn_v.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.13.attn_norm.weight,   torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.13.ffn_down.weight,    torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.13.ffn_gate.weight,    torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.13.ffn_up.weight,      torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.13.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.13.attn_k.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.13.attn_k.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.13.attn_output.weight, torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.13.attn_q.bias,        torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.13.attn_q.weight,      torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.13.attn_v.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.13.attn_v.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.14.attn_norm.weight,   torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.14.ffn_down.weight,    torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.14.ffn_gate.weight,    torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.14.ffn_up.weight,      torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.14.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.14.attn_k.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.14.attn_k.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.14.attn_output.weight, torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.14.attn_q.bias,        torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.14.attn_q.weight,      torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.14.attn_v.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.14.attn_v.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.15.attn_norm.weight,   torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.15.ffn_down.weight,    torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.15.ffn_gate.weight,    torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.15.ffn_up.weight,      torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.15.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.15.attn_k.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.15.attn_k.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.15.attn_output.weight, torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.15.attn_q.bias,        torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.15.attn_q.weight,      torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.15.attn_v.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.15.attn_v.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.16.attn_norm.weight,   torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.16.ffn_down.weight,    torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.16.ffn_gate.weight,    torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.16.ffn_up.weight,      torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.16.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.16.attn_k.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.16.attn_k.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.16.attn_output.weight, torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.16.attn_q.bias,        torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.16.attn_q.weight,      torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.16.attn_v.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.16.attn_v.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.17.attn_norm.weight,   torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.17.ffn_down.weight,    torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.17.ffn_gate.weight,    torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.17.ffn_up.weight,      torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.17.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.17.attn_k.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.17.attn_k.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.17.attn_output.weight, torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.17.attn_q.bias,        torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.17.attn_q.weight,      torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.17.attn_v.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.17.attn_v.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.18.ffn_gate.weight,    torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.18.ffn_up.weight,      torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.18.attn_k.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.18.attn_k.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.18.attn_output.weight, torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.18.attn_q.bias,        torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.18.attn_q.weight,      torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.18.attn_v.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.18.attn_v.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.8.attn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.8.ffn_down.weight,     torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.8.ffn_gate.weight,     torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.8.ffn_up.weight,       torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.8.ffn_norm.weight,     torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.9.attn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.9.ffn_down.weight,     torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.9.ffn_gate.weight,     torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.9.ffn_up.weight,       torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.9.ffn_norm.weight,     torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.9.attn_k.bias,         torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.9.attn_k.weight,       torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.9.attn_output.weight,  torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.9.attn_q.bias,         torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.9.attn_q.weight,       torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.9.attn_v.bias,         torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.9.attn_v.weight,       torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.18.attn_norm.weight,   torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.18.ffn_down.weight,    torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.18.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.19.attn_norm.weight,   torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.19.ffn_down.weight,    torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.19.ffn_gate.weight,    torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.19.ffn_up.weight,      torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.19.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.19.attn_k.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.19.attn_k.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.19.attn_output.weight, torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.19.attn_q.bias,        torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.19.attn_q.weight,      torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.19.attn_v.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.19.attn_v.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.20.attn_norm.weight,   torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.20.ffn_down.weight,    torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.20.ffn_gate.weight,    torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.20.ffn_up.weight,      torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.20.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.20.attn_k.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.20.attn_k.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.20.attn_output.weight, torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.20.attn_q.bias,        torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.20.attn_q.weight,      torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.20.attn_v.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.20.attn_v.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.21.attn_norm.weight,   torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.21.ffn_down.weight,    torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.21.ffn_gate.weight,    torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.21.ffn_up.weight,      torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.21.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.21.attn_k.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.21.attn_k.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.21.attn_output.weight, torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.21.attn_q.bias,        torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.21.attn_q.weight,      torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.21.attn_v.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.21.attn_v.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.22.attn_norm.weight,   torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.22.ffn_down.weight,    torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.22.ffn_gate.weight,    torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.22.ffn_up.weight,      torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.22.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.22.attn_k.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.22.attn_k.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.22.attn_output.weight, torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.22.attn_q.bias,        torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.22.attn_q.weight,      torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.22.attn_v.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.22.attn_v.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.23.attn_norm.weight,   torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.23.ffn_down.weight,    torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.23.ffn_gate.weight,    torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.23.ffn_up.weight,      torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.23.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.23.attn_k.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.23.attn_k.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.23.attn_output.weight, torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.23.attn_q.bias,        torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.23.attn_q.weight,      torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.23.attn_v.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.23.attn_v.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.24.attn_norm.weight,   torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.24.ffn_down.weight,    torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.24.ffn_gate.weight,    torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.24.ffn_up.weight,      torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.24.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.24.attn_k.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.24.attn_k.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.24.attn_output.weight, torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.24.attn_q.bias,        torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.24.attn_q.weight,      torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.24.attn_v.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.24.attn_v.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.25.attn_norm.weight,   torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.25.ffn_down.weight,    torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.25.ffn_gate.weight,    torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.25.ffn_up.weight,      torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.25.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.25.attn_k.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.25.attn_k.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.25.attn_output.weight, torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.25.attn_q.bias,        torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.25.attn_q.weight,      torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.25.attn_v.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.25.attn_v.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.26.attn_norm.weight,   torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.26.ffn_down.weight,    torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.26.ffn_gate.weight,    torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.26.ffn_up.weight,      torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.26.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.26.attn_k.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.26.attn_k.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.26.attn_output.weight, torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.26.attn_q.bias,        torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.26.attn_q.weight,      torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.26.attn_v.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.26.attn_v.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.27.attn_norm.weight,   torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.27.ffn_down.weight,    torch.bfloat16 --> F16, shape = {18944, 3584}
+INFO:hf-to-gguf:blk.27.ffn_gate.weight,    torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.27.ffn_up.weight,      torch.bfloat16 --> F16, shape = {3584, 18944}
+INFO:hf-to-gguf:blk.27.ffn_norm.weight,    torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.27.attn_k.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.27.attn_k.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:blk.27.attn_output.weight, torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.27.attn_q.bias,        torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:blk.27.attn_q.weight,      torch.bfloat16 --> F16, shape = {3584, 3584}
+INFO:hf-to-gguf:blk.27.attn_v.bias,        torch.bfloat16 --> F32, shape = {512}
+INFO:hf-to-gguf:blk.27.attn_v.weight,      torch.bfloat16 --> F16, shape = {3584, 512}
+INFO:hf-to-gguf:output_norm.weight,        torch.bfloat16 --> F32, shape = {3584}
+INFO:hf-to-gguf:output.weight,             torch.bfloat16 --> F16, shape = {3584, 152064}
+INFO:hf-to-gguf:Set meta model
+INFO:hf-to-gguf:Set model parameters
+INFO:hf-to-gguf:gguf: context length = 32768
+INFO:hf-to-gguf:gguf: embedding length = 3584
+INFO:hf-to-gguf:gguf: feed forward length = 18944
+INFO:hf-to-gguf:gguf: head count = 28
+INFO:hf-to-gguf:gguf: key-value head count = 4
+INFO:hf-to-gguf:gguf: rope theta = 1000000.0
+INFO:hf-to-gguf:gguf: rms norm epsilon = 1e-06
+INFO:hf-to-gguf:gguf: file type = 1
+INFO:hf-to-gguf:Set model quantization version
+INFO:hf-to-gguf:Set model tokenizer
+The tokenizer you are loading from 'mcorch_merged_v4' with an incorrect regex pattern: https://huggingface.co/mistralai/Mistral-Small-3.1-24B-Instruct-2503/discussions/84#69121093e8b480e709447d5e. This will lead to incorrect tokenization. You should set the `fix_mistral_regex=True` flag when loading this tokenizer to fix this issue.
+INFO:gguf.vocab:Adding 151387 merge(s).
+INFO:gguf.vocab:Setting special token type eos to 151645
+INFO:gguf.vocab:Setting special token type pad to 151665
+INFO:gguf.vocab:Setting special token type bos to 151643
+INFO:gguf.vocab:Setting chat_template to {% for message in messages %}{% if message['role'] == 'user' %}{{'<|im_start|>user
+' + message['content'] + '<|im_end|>
+'}}{% elif message['role'] == 'assistant' %}{{'<|im_start|>assistant
+' + message['content'] + '<|im_end|>
+' }}{% else %}{{ '<|im_start|>system
+' + message['content'] + '<|im_end|>
+' }}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ '<|im_start|>assistant
+' }}{% endif %}
+INFO:gguf.gguf_writer:Writing the following files:
+INFO:gguf.gguf_writer:mcorch_f16.gguf: n_tensors = 339, total_size = 15.2G
+Writing: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 15.2G/15.2G [01:31<00:00, 166Mbyte/s]
+INFO:hf-to-gguf:Model successfully exported to mcorch_f16.gguf
+→ quantize f16 → q4_k_m…
+version: 0.1.2-dev (build 1, commit 9731ad3)
+built with GNU 13.3.0 for Linux x86_64
+llama_quantize: quantizing 'mcorch_f16.gguf' to 'mcorch_model.q4_k_m.gguf' as Q4_K_M
+llama_model_loader: loaded meta data with 26 key-value pairs and 339 tensors from mcorch_f16.gguf (version GGUF V3 (latest))
+llama_model_loader: Dumping metadata keys/values. Note: KV overrides do not apply in this output.
+llama_model_loader: - kv   0:                       general.architecture str              = qwen2
+llama_model_loader: - kv   1:                               general.type str              = model
+llama_model_loader: - kv   2:                     general.sampling.top_k i32              = 20
+llama_model_loader: - kv   3:                     general.sampling.top_p f32              = 0.800000
+llama_model_loader: - kv   4:                      general.sampling.temp f32              = 0.700000
+llama_model_loader: - kv   5:                               general.name str              = Mcorch_Merged_V4
+llama_model_loader: - kv   6:                         general.size_label str              = 7.6B
+llama_model_loader: - kv   7:                          qwen2.block_count u32              = 28
+llama_model_loader: - kv   8:                       qwen2.context_length u32              = 32768
+llama_model_loader: - kv   9:                     qwen2.embedding_length u32              = 3584
+llama_model_loader: - kv  10:                  qwen2.feed_forward_length u32              = 18944
+llama_model_loader: - kv  11:                 qwen2.attention.head_count u32              = 28
+llama_model_loader: - kv  12:              qwen2.attention.head_count_kv u32              = 4
+llama_model_loader: - kv  13:                       qwen2.rope.freq_base f32              = 1000000.000000
+llama_model_loader: - kv  14:     qwen2.attention.layer_norm_rms_epsilon f32              = 0.000001
+llama_model_loader: - kv  15:                          general.file_type u32              = 1
+llama_model_loader: - kv  16:               general.quantization_version u32              = 2
+llama_model_loader: - kv  17:                       tokenizer.ggml.model str              = gpt2
+llama_model_loader: - kv  18:                         tokenizer.ggml.pre str              = qwen2
+llama_model_loader: - kv  19:                      tokenizer.ggml.tokens arr[str,152064]  = ["!", "\"", "#", "$", "%", "&", "'", ...
+llama_model_loader: - kv  20:                  tokenizer.ggml.token_type arr[i32,152064]  = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...
+llama_model_loader: - kv  21:                      tokenizer.ggml.merges arr[str,151387]  = ["Ġ Ġ", "ĠĠ ĠĠ", "i n", "Ġ t",...
+llama_model_loader: - kv  22:                tokenizer.ggml.eos_token_id u32              = 151645
+llama_model_loader: - kv  23:            tokenizer.ggml.padding_token_id u32              = 151665
+llama_model_loader: - kv  24:                tokenizer.ggml.bos_token_id u32              = 151643
+llama_model_loader: - kv  25:                    tokenizer.chat_template str              = {% for message in messages %}{% if me...
+llama_model_loader: - type  f32:  141 tensors
+llama_model_loader: - type  f16:  198 tensors
+[   1/ 339] output.weight                        - [  3584, 152064,      1,      1], type =    f16, converting to q6_K .. size =  1039.50 MiB ->   426.36 MiB
+[   2/ 339] output_norm.weight                   - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[   3/ 339] token_embd.weight                    - [  3584, 152064,      1,      1], type =    f16, converting to q4_K .. size =  1039.50 MiB ->   292.36 MiB
+[   4/ 339] blk.0.attn_k.bias                    - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[   5/ 339] blk.0.attn_k.weight                  - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[   6/ 339] blk.0.attn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[   7/ 339] blk.0.attn_output.weight             - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[   8/ 339] blk.0.attn_q.bias                    - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[   9/ 339] blk.0.attn_q.weight                  - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[  10/ 339] blk.0.attn_v.bias                    - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[  11/ 339] blk.0.attn_v.weight                  - [  3584,    512,      1,      1], type =    f16, converting to q6_K .. size =     3.50 MiB ->     1.44 MiB
+[  12/ 339] blk.0.ffn_down.weight                - [ 18944,   3584,      1,      1], type =    f16, converting to q6_K .. size =   129.50 MiB ->    53.12 MiB
+[  13/ 339] blk.0.ffn_gate.weight                - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[  14/ 339] blk.0.ffn_norm.weight                - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  15/ 339] blk.0.ffn_up.weight                  - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[  16/ 339] blk.1.attn_k.bias                    - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[  17/ 339] blk.1.attn_k.weight                  - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[  18/ 339] blk.1.attn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  19/ 339] blk.1.attn_output.weight             - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[  20/ 339] blk.1.attn_q.bias                    - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  21/ 339] blk.1.attn_q.weight                  - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[  22/ 339] blk.1.attn_v.bias                    - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[  23/ 339] blk.1.attn_v.weight                  - [  3584,    512,      1,      1], type =    f16, converting to q6_K .. size =     3.50 MiB ->     1.44 MiB
+[  24/ 339] blk.1.ffn_down.weight                - [ 18944,   3584,      1,      1], type =    f16, converting to q6_K .. size =   129.50 MiB ->    53.12 MiB
+[  25/ 339] blk.1.ffn_gate.weight                - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[  26/ 339] blk.1.ffn_norm.weight                - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  27/ 339] blk.1.ffn_up.weight                  - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[  28/ 339] blk.2.attn_k.bias                    - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[  29/ 339] blk.2.attn_k.weight                  - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[  30/ 339] blk.2.attn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  31/ 339] blk.2.attn_output.weight             - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[  32/ 339] blk.2.attn_q.bias                    - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  33/ 339] blk.2.attn_q.weight                  - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[  34/ 339] blk.2.attn_v.bias                    - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[  35/ 339] blk.2.attn_v.weight                  - [  3584,    512,      1,      1], type =    f16, converting to q6_K .. size =     3.50 MiB ->     1.44 MiB
+[  36/ 339] blk.2.ffn_down.weight                - [ 18944,   3584,      1,      1], type =    f16, converting to q6_K .. size =   129.50 MiB ->    53.12 MiB
+[  37/ 339] blk.2.ffn_gate.weight                - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[  38/ 339] blk.2.ffn_norm.weight                - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  39/ 339] blk.2.ffn_up.weight                  - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[  40/ 339] blk.3.attn_k.bias                    - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[  41/ 339] blk.3.attn_k.weight                  - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[  42/ 339] blk.3.attn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  43/ 339] blk.3.attn_output.weight             - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[  44/ 339] blk.3.attn_q.bias                    - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  45/ 339] blk.3.attn_q.weight                  - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[  46/ 339] blk.3.attn_v.bias                    - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[  47/ 339] blk.3.attn_v.weight                  - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[  48/ 339] blk.3.ffn_down.weight                - [ 18944,   3584,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[  49/ 339] blk.3.ffn_gate.weight                - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[  50/ 339] blk.3.ffn_norm.weight                - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  51/ 339] blk.3.ffn_up.weight                  - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[  52/ 339] blk.4.attn_k.bias                    - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[  53/ 339] blk.4.attn_k.weight                  - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[  54/ 339] blk.4.attn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  55/ 339] blk.4.attn_output.weight             - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[  56/ 339] blk.4.attn_q.bias                    - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  57/ 339] blk.4.attn_q.weight                  - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[  58/ 339] blk.4.attn_v.bias                    - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[  59/ 339] blk.4.attn_v.weight                  - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[  60/ 339] blk.4.ffn_down.weight                - [ 18944,   3584,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[  61/ 339] blk.4.ffn_gate.weight                - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[  62/ 339] blk.4.ffn_norm.weight                - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  63/ 339] blk.4.ffn_up.weight                  - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[  64/ 339] blk.5.attn_k.bias                    - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[  65/ 339] blk.5.attn_k.weight                  - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[  66/ 339] blk.5.attn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  67/ 339] blk.5.attn_output.weight             - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[  68/ 339] blk.5.attn_q.bias                    - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  69/ 339] blk.5.attn_q.weight                  - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[  70/ 339] blk.5.attn_v.bias                    - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[  71/ 339] blk.5.attn_v.weight                  - [  3584,    512,      1,      1], type =    f16, converting to q6_K .. size =     3.50 MiB ->     1.44 MiB
+[  72/ 339] blk.5.ffn_down.weight                - [ 18944,   3584,      1,      1], type =    f16, converting to q6_K .. size =   129.50 MiB ->    53.12 MiB
+[  73/ 339] blk.5.ffn_gate.weight                - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[  74/ 339] blk.5.ffn_norm.weight                - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  75/ 339] blk.5.ffn_up.weight                  - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[  76/ 339] blk.6.attn_k.bias                    - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[  77/ 339] blk.6.attn_k.weight                  - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[  78/ 339] blk.6.attn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  79/ 339] blk.6.attn_output.weight             - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[  80/ 339] blk.6.attn_q.bias                    - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  81/ 339] blk.6.attn_q.weight                  - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[  82/ 339] blk.6.attn_v.bias                    - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[  83/ 339] blk.6.attn_v.weight                  - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[  84/ 339] blk.6.ffn_down.weight                - [ 18944,   3584,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[  85/ 339] blk.6.ffn_gate.weight                - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[  86/ 339] blk.6.ffn_norm.weight                - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  87/ 339] blk.6.ffn_up.weight                  - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[  88/ 339] blk.7.attn_k.bias                    - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[  89/ 339] blk.7.attn_k.weight                  - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[  90/ 339] blk.7.attn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  91/ 339] blk.7.attn_output.weight             - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[  92/ 339] blk.7.attn_q.bias                    - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  93/ 339] blk.7.attn_q.weight                  - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[  94/ 339] blk.7.attn_v.bias                    - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[  95/ 339] blk.7.attn_v.weight                  - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[  96/ 339] blk.7.ffn_down.weight                - [ 18944,   3584,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[  97/ 339] blk.7.ffn_gate.weight                - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[  98/ 339] blk.7.ffn_norm.weight                - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[  99/ 339] blk.7.ffn_up.weight                  - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 100/ 339] blk.8.attn_k.bias                    - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 101/ 339] blk.8.attn_k.weight                  - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 102/ 339] blk.8.attn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 103/ 339] blk.8.attn_output.weight             - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 104/ 339] blk.8.attn_q.bias                    - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 105/ 339] blk.8.attn_q.weight                  - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 106/ 339] blk.8.attn_v.bias                    - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 107/ 339] blk.8.attn_v.weight                  - [  3584,    512,      1,      1], type =    f16, converting to q6_K .. size =     3.50 MiB ->     1.44 MiB
+[ 108/ 339] blk.8.ffn_down.weight                - [ 18944,   3584,      1,      1], type =    f16, converting to q6_K .. size =   129.50 MiB ->    53.12 MiB
+[ 109/ 339] blk.8.ffn_gate.weight                - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 110/ 339] blk.8.ffn_norm.weight                - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 111/ 339] blk.8.ffn_up.weight                  - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 112/ 339] blk.9.attn_k.bias                    - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 113/ 339] blk.9.attn_k.weight                  - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 114/ 339] blk.9.attn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 115/ 339] blk.9.attn_output.weight             - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 116/ 339] blk.9.attn_q.bias                    - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 117/ 339] blk.9.attn_q.weight                  - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 118/ 339] blk.9.attn_v.bias                    - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 119/ 339] blk.9.attn_v.weight                  - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 120/ 339] blk.9.ffn_down.weight                - [ 18944,   3584,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 121/ 339] blk.9.ffn_gate.weight                - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 122/ 339] blk.9.ffn_norm.weight                - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 123/ 339] blk.9.ffn_up.weight                  - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 124/ 339] blk.10.attn_k.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 125/ 339] blk.10.attn_k.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 126/ 339] blk.10.attn_norm.weight              - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 127/ 339] blk.10.attn_output.weight            - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 128/ 339] blk.10.attn_q.bias                   - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 129/ 339] blk.10.attn_q.weight                 - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 130/ 339] blk.10.attn_v.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 131/ 339] blk.10.attn_v.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 132/ 339] blk.10.ffn_down.weight               - [ 18944,   3584,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 133/ 339] blk.10.ffn_gate.weight               - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 134/ 339] blk.10.ffn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 135/ 339] blk.10.ffn_up.weight                 - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 136/ 339] blk.11.attn_k.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 137/ 339] blk.11.attn_k.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 138/ 339] blk.11.attn_norm.weight              - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 139/ 339] blk.11.attn_output.weight            - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 140/ 339] blk.11.attn_q.bias                   - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 141/ 339] blk.11.attn_q.weight                 - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 142/ 339] blk.11.attn_v.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 143/ 339] blk.11.attn_v.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q6_K .. size =     3.50 MiB ->     1.44 MiB
+[ 144/ 339] blk.11.ffn_down.weight               - [ 18944,   3584,      1,      1], type =    f16, converting to q6_K .. size =   129.50 MiB ->    53.12 MiB
+[ 145/ 339] blk.11.ffn_gate.weight               - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 146/ 339] blk.11.ffn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 147/ 339] blk.11.ffn_up.weight                 - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 148/ 339] blk.12.attn_k.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 149/ 339] blk.12.attn_k.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 150/ 339] blk.12.attn_norm.weight              - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 151/ 339] blk.12.attn_output.weight            - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 152/ 339] blk.12.attn_q.bias                   - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 153/ 339] blk.12.attn_q.weight                 - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 154/ 339] blk.12.attn_v.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 155/ 339] blk.12.attn_v.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 156/ 339] blk.12.ffn_down.weight               - [ 18944,   3584,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 157/ 339] blk.12.ffn_gate.weight               - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 158/ 339] blk.12.ffn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 159/ 339] blk.12.ffn_up.weight                 - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 160/ 339] blk.13.attn_k.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 161/ 339] blk.13.attn_k.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 162/ 339] blk.13.attn_norm.weight              - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 163/ 339] blk.13.attn_output.weight            - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 164/ 339] blk.13.attn_q.bias                   - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 165/ 339] blk.13.attn_q.weight                 - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 166/ 339] blk.13.attn_v.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 167/ 339] blk.13.attn_v.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 168/ 339] blk.13.ffn_down.weight               - [ 18944,   3584,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 169/ 339] blk.13.ffn_gate.weight               - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 170/ 339] blk.13.ffn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 171/ 339] blk.13.ffn_up.weight                 - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 172/ 339] blk.14.attn_k.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 173/ 339] blk.14.attn_k.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 174/ 339] blk.14.attn_norm.weight              - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 175/ 339] blk.14.attn_output.weight            - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 176/ 339] blk.14.attn_q.bias                   - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 177/ 339] blk.14.attn_q.weight                 - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 178/ 339] blk.14.attn_v.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 179/ 339] blk.14.attn_v.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q6_K .. size =     3.50 MiB ->     1.44 MiB
+[ 180/ 339] blk.14.ffn_down.weight               - [ 18944,   3584,      1,      1], type =    f16, converting to q6_K .. size =   129.50 MiB ->    53.12 MiB
+[ 181/ 339] blk.14.ffn_gate.weight               - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 182/ 339] blk.14.ffn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 183/ 339] blk.14.ffn_up.weight                 - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 184/ 339] blk.15.attn_k.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 185/ 339] blk.15.attn_k.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 186/ 339] blk.15.attn_norm.weight              - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 187/ 339] blk.15.attn_output.weight            - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 188/ 339] blk.15.attn_q.bias                   - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 189/ 339] blk.15.attn_q.weight                 - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 190/ 339] blk.15.attn_v.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 191/ 339] blk.15.attn_v.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 192/ 339] blk.15.ffn_down.weight               - [ 18944,   3584,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 193/ 339] blk.15.ffn_gate.weight               - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 194/ 339] blk.15.ffn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 195/ 339] blk.15.ffn_up.weight                 - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 196/ 339] blk.16.attn_k.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 197/ 339] blk.16.attn_k.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 198/ 339] blk.16.attn_norm.weight              - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 199/ 339] blk.16.attn_output.weight            - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 200/ 339] blk.16.attn_q.bias                   - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 201/ 339] blk.16.attn_q.weight                 - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 202/ 339] blk.16.attn_v.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 203/ 339] blk.16.attn_v.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 204/ 339] blk.16.ffn_down.weight               - [ 18944,   3584,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 205/ 339] blk.16.ffn_gate.weight               - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 206/ 339] blk.16.ffn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 207/ 339] blk.16.ffn_up.weight                 - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 208/ 339] blk.17.attn_k.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 209/ 339] blk.17.attn_k.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 210/ 339] blk.17.attn_norm.weight              - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 211/ 339] blk.17.attn_output.weight            - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 212/ 339] blk.17.attn_q.bias                   - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 213/ 339] blk.17.attn_q.weight                 - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 214/ 339] blk.17.attn_v.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 215/ 339] blk.17.attn_v.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q6_K .. size =     3.50 MiB ->     1.44 MiB
+[ 216/ 339] blk.17.ffn_down.weight               - [ 18944,   3584,      1,      1], type =    f16, converting to q6_K .. size =   129.50 MiB ->    53.12 MiB
+[ 217/ 339] blk.17.ffn_gate.weight               - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 218/ 339] blk.17.ffn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 219/ 339] blk.17.ffn_up.weight                 - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 220/ 339] blk.18.attn_k.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 221/ 339] blk.18.attn_k.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 222/ 339] blk.18.attn_norm.weight              - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 223/ 339] blk.18.attn_output.weight            - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 224/ 339] blk.18.attn_q.bias                   - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 225/ 339] blk.18.attn_q.weight                 - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 226/ 339] blk.18.attn_v.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 227/ 339] blk.18.attn_v.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 228/ 339] blk.18.ffn_down.weight               - [ 18944,   3584,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 229/ 339] blk.18.ffn_gate.weight               - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 230/ 339] blk.18.ffn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 231/ 339] blk.18.ffn_up.weight                 - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 232/ 339] blk.19.attn_k.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 233/ 339] blk.19.attn_k.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 234/ 339] blk.19.attn_norm.weight              - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 235/ 339] blk.19.attn_output.weight            - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 236/ 339] blk.19.attn_q.bias                   - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 237/ 339] blk.19.attn_q.weight                 - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 238/ 339] blk.19.attn_v.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 239/ 339] blk.19.attn_v.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 240/ 339] blk.19.ffn_down.weight               - [ 18944,   3584,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 241/ 339] blk.19.ffn_gate.weight               - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 242/ 339] blk.19.ffn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 243/ 339] blk.19.ffn_up.weight                 - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 244/ 339] blk.20.attn_k.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 245/ 339] blk.20.attn_k.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 246/ 339] blk.20.attn_norm.weight              - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 247/ 339] blk.20.attn_output.weight            - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 248/ 339] blk.20.attn_q.bias                   - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 249/ 339] blk.20.attn_q.weight                 - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 250/ 339] blk.20.attn_v.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 251/ 339] blk.20.attn_v.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q6_K .. size =     3.50 MiB ->     1.44 MiB
+[ 252/ 339] blk.20.ffn_down.weight               - [ 18944,   3584,      1,      1], type =    f16, converting to q6_K .. size =   129.50 MiB ->    53.12 MiB
+[ 253/ 339] blk.20.ffn_gate.weight               - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 254/ 339] blk.20.ffn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 255/ 339] blk.20.ffn_up.weight                 - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 256/ 339] blk.21.attn_k.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 257/ 339] blk.21.attn_k.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 258/ 339] blk.21.attn_norm.weight              - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 259/ 339] blk.21.attn_output.weight            - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 260/ 339] blk.21.attn_q.bias                   - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 261/ 339] blk.21.attn_q.weight                 - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 262/ 339] blk.21.attn_v.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 263/ 339] blk.21.attn_v.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 264/ 339] blk.21.ffn_down.weight               - [ 18944,   3584,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 265/ 339] blk.21.ffn_gate.weight               - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 266/ 339] blk.21.ffn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 267/ 339] blk.21.ffn_up.weight                 - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 268/ 339] blk.22.attn_k.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 269/ 339] blk.22.attn_k.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 270/ 339] blk.22.attn_norm.weight              - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 271/ 339] blk.22.attn_output.weight            - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 272/ 339] blk.22.attn_q.bias                   - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 273/ 339] blk.22.attn_q.weight                 - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 274/ 339] blk.22.attn_v.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 275/ 339] blk.22.attn_v.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 276/ 339] blk.22.ffn_down.weight               - [ 18944,   3584,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 277/ 339] blk.22.ffn_gate.weight               - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 278/ 339] blk.22.ffn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 279/ 339] blk.22.ffn_up.weight                 - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 280/ 339] blk.23.attn_k.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 281/ 339] blk.23.attn_k.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 282/ 339] blk.23.attn_norm.weight              - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 283/ 339] blk.23.attn_output.weight            - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 284/ 339] blk.23.attn_q.bias                   - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 285/ 339] blk.23.attn_q.weight                 - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 286/ 339] blk.23.attn_v.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 287/ 339] blk.23.attn_v.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q6_K .. size =     3.50 MiB ->     1.44 MiB
+[ 288/ 339] blk.23.ffn_down.weight               - [ 18944,   3584,      1,      1], type =    f16, converting to q6_K .. size =   129.50 MiB ->    53.12 MiB
+[ 289/ 339] blk.23.ffn_gate.weight               - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 290/ 339] blk.23.ffn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 291/ 339] blk.23.ffn_up.weight                 - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 292/ 339] blk.24.attn_k.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 293/ 339] blk.24.attn_k.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 294/ 339] blk.24.attn_norm.weight              - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 295/ 339] blk.24.attn_output.weight            - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 296/ 339] blk.24.attn_q.bias                   - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 297/ 339] blk.24.attn_q.weight                 - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 298/ 339] blk.24.attn_v.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 299/ 339] blk.24.attn_v.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q6_K .. size =     3.50 MiB ->     1.44 MiB
+[ 300/ 339] blk.24.ffn_down.weight               - [ 18944,   3584,      1,      1], type =    f16, converting to q6_K .. size =   129.50 MiB ->    53.12 MiB
+[ 301/ 339] blk.24.ffn_gate.weight               - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 302/ 339] blk.24.ffn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 303/ 339] blk.24.ffn_up.weight                 - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 304/ 339] blk.25.attn_k.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 305/ 339] blk.25.attn_k.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 306/ 339] blk.25.attn_norm.weight              - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 307/ 339] blk.25.attn_output.weight            - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 308/ 339] blk.25.attn_q.bias                   - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 309/ 339] blk.25.attn_q.weight                 - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 310/ 339] blk.25.attn_v.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 311/ 339] blk.25.attn_v.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q6_K .. size =     3.50 MiB ->     1.44 MiB
+[ 312/ 339] blk.25.ffn_down.weight               - [ 18944,   3584,      1,      1], type =    f16, converting to q6_K .. size =   129.50 MiB ->    53.12 MiB
+[ 313/ 339] blk.25.ffn_gate.weight               - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 314/ 339] blk.25.ffn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 315/ 339] blk.25.ffn_up.weight                 - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 316/ 339] blk.26.attn_k.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 317/ 339] blk.26.attn_k.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 318/ 339] blk.26.attn_norm.weight              - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 319/ 339] blk.26.attn_output.weight            - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 320/ 339] blk.26.attn_q.bias                   - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 321/ 339] blk.26.attn_q.weight                 - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 322/ 339] blk.26.attn_v.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 323/ 339] blk.26.attn_v.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q6_K .. size =     3.50 MiB ->     1.44 MiB
+[ 324/ 339] blk.26.ffn_down.weight               - [ 18944,   3584,      1,      1], type =    f16, converting to q6_K .. size =   129.50 MiB ->    53.12 MiB
+[ 325/ 339] blk.26.ffn_gate.weight               - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 326/ 339] blk.26.ffn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 327/ 339] blk.26.ffn_up.weight                 - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 328/ 339] blk.27.attn_k.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 329/ 339] blk.27.attn_k.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q4_K .. size =     3.50 MiB ->     0.98 MiB
+[ 330/ 339] blk.27.attn_norm.weight              - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 331/ 339] blk.27.attn_output.weight            - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 332/ 339] blk.27.attn_q.bias                   - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 333/ 339] blk.27.attn_q.weight                 - [  3584,   3584,      1,      1], type =    f16, converting to q4_K .. size =    24.50 MiB ->     6.89 MiB
+[ 334/ 339] blk.27.attn_v.bias                   - [   512,      1,      1,      1], type =    f32, size =    0.002 MiB
+[ 335/ 339] blk.27.attn_v.weight                 - [  3584,    512,      1,      1], type =    f16, converting to q6_K .. size =     3.50 MiB ->     1.44 MiB
+[ 336/ 339] blk.27.ffn_down.weight               - [ 18944,   3584,      1,      1], type =    f16, converting to q6_K .. size =   129.50 MiB ->    53.12 MiB
+[ 337/ 339] blk.27.ffn_gate.weight               - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+[ 338/ 339] blk.27.ffn_norm.weight               - [  3584,      1,      1,      1], type =    f32, size =    0.014 MiB
+[ 339/ 339] blk.27.ffn_up.weight                 - [  3584,  18944,      1,      1], type =    f16, converting to q4_K .. size =   129.50 MiB ->    36.42 MiB
+llama_model_quantize_impl: model size  = 14526.27 MiB (16.00 BPW)
+llama_model_quantize_impl: quant size  =  4460.45 MiB (4.91 BPW)
+
+llama_quantize: quantize time = 66192.57 ms
+llama_quantize:    total time = 66192.57 ms
+-rw-rw-rw- 1 unsloth runtimeusers 4683071328 Aug 19 11:35 mcorch_model.q4_k_m.gguf
+✅ GGUF pronto: mcorch_model.q4_k_m.gguf  (sha256: 93490c73858a3908)
+   Agora mande de volta:  runpodctl send mcorch_model.q4_k_m.gguf
+unsloth@096e73fca7cc:/workspace$ runpodctl send mcorch_model.q4_k_m.gguf
+Runpod config file not found, please run `runpodctl config` to create it
+6620-mono-senator-java-5
+Sending 'mcorch_model.q4_k_m.gguf' (4.4 GB)
+Code is: 6620-mono-senator-java-5
+On the other computer run
+
+runpodctl receive 6620-mono-senator-java-5
+
+## 🤖 Claude *(11:46:16)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The export finished with a new gguf hash that's correctly different from v3's, confirming it's the new model. I'll send it over with the transfer code, then on the host side verify the checksum, replace the old corrupted gguf, recreate the ollama model, and test it through the API — kicking off the receive now into the model-engine directory to overwrite the garbage v3 file.
+
+</details>
+
+
+## 🤖 Claude *(11:46:16)*
+
+Export perfeito: novo gguf **`sha256:93490c73858a3908`** (diferente do v3 corrompido `80d8f449…`, como esperado) e chat template ChatML baked. Recebendo no host — o arquivo vai **sobrescrever** o gguf corrompido da v3 no mesmo caminho:
+
+## 🤖 Claude *(11:46:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/ubuntu/.mcorch/model-engine && rm -f /home/ubuntu/.mcorch-recv-v5.log && /home/ubuntu/.local/bin/runpodctl receive 6620-mono-senator-java-5 > /home/ubuntu/.mcorch-recv-v5.log 2>&1 && echo \"RECV_EXIT_0\"",
+  "description": "Recebe o gguf v5 no host (background, ~4.7GB)",
+  "run_in_background": true,
+  "dangerouslyDisableSandbox": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bojgdp6fn. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/af72f1dc-2f27-4017-8f14-9eb47ecbaff8/tasks/bojgdp6fn.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> Session cwd remains /home/gcrUX/htdocs/constellation-orchestra; directory changes made by the backgrounded command do not apply to subsequent commands.
+> ```
+
+## 🤖 Claude *(11:46:24)*
+
+Transferência rodando (a barra deve estar subindo no seu `send`). Quando completar, eu automaticamente: confiro o sha `93490c73858a3908` → recrio o `mcorch_model` no Ollama (por cima da v3) → teste final via API com a pergunta de doutrina + uma técnica. **Segure o pod** até eu dar o veredito do Ollama — se o teste passar, aí sim Terminate e eu sigo com o fio do RAG. Te aviso assim que aterrissar.
+
+## 👤 User *(11:47:33)*
+
+<task-notification>
+<task-id>bojgdp6fn</task-id>
+<tool-use-id>toolu_01Jizq6WNcCAQdSr1fkNFQ3a</tool-use-id>
+<output-file>/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/af72f1dc-2f27-4017-8f14-9eb47ecbaff8/tasks/bojgdp6fn.output</output-file>
+<status>completed</status>
+<summary>Background command "Recebe o gguf v5 no host (background, ~4.7GB)" completed (exit code 0)</summary>
+</task-notification>
+
+## 🤖 Claude *(11:47:41)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+GGUF v5 is in, so now I need to verify the checksum, recreate the Ollama model, and test it through the API, keeping the output minimal by grepping for what matters instead of dumping the full progress bar.
+
+</details>
+
+
+## 🤖 Claude *(11:47:41)*
+
+Chegou (exit 0). Verificando o sha e recriando o modelo no Ollama:
+
+## 🤖 Claude *(11:47:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "GGUF=/home/ubuntu/.mcorch/model-engine/mcorch_model.q4_k_m.gguf\nls -la \"$GGUF\" | awk '{print \"size:\", $5}'\nSHA=$(sha256sum \"$GGUF\" | cut -c1-16); echo \"sha=$SHA (esperado 93490c73858a3908)\"\nif [ \"$SHA\" = \"93490c73858a3908\" ]; then\n  ollama rm mcorch_model >/dev/null 2>&1; ollama rm mcorch_bare >/dev/null 2>&1\n  ollama create mcorch_model -f /home/ubuntu/.mcorch/model-engine/Modelfile 2>&1 | grep -aE 'success|error' | head -2\n  ollama list | grep -E 'NAME|mcorch'\nelse\n  echo \"\u274c SHA MISMATCH \u2014 n\u00e3o criar\"\nfi",
+  "description": "Verifica sha v5 e recria mcorch_model no Ollama",
+  "timeout": 180000,
+  "dangerouslyDisableSandbox": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> size: 4683071328
+> sha=93490c73858a3908 (esperado 93490c73858a3908)
+> success [K[?25h[?2026l
+> NAME                   ID              SIZE      MODIFIED               
+> mcorch_model:latest    dea709c1ea87    4.7 GB    Less than a second ago
+> ```
+
+## 🤖 Claude *(11:48:11)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The SHA matches and the model's been recreated with a new ID, replacing the old one. Now I'll run the final test through the API with a doctrine question and a technical one, starting with doctrine since CPU inference takes a minute or two each.
+
+</details>
+
+
+## 🤖 Claude *(11:48:11)*
+
+SHA bateu, `mcorch_model` recriado (ID novo `dea709c1ea87`). **Teste final** — a mesma pergunta que reprovou v1/v2/v3, agora no artefato deployado no rail do host:
+
+## 🤖 Claude *(11:48:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "curl -s --max-time 300 http://127.0.0.1:11434/api/generate -d '{\"model\":\"mcorch_model\",\"prompt\":\"Qual a Lei 1 do SSP-01 e como se prova materialidade?\",\"stream\":false,\"options\":{\"num_predict\":260}}' | python3 -c \"import sys,json; d=json.load(sys.stdin); print('RESPOSTA:\\n'+d.get('response','(vazio)'))\"",
+  "description": "Teste de doutrina no mcorch_model v5 deployado",
+  "timeout": 320000,
+  "dangerouslyDisableSandbox": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> RESPOSTA:
+> Lei 1 (Materialidade): Nunca reporte sucesso sem prova física — UUID/commit/ls/curl. Para este run: apresentar o commit SHA do código novo, o output da migration aplicada, o UUID do tenant criado, e a resposta HTTP do curl de smoke.
+> ```
+
+## 🤖 Claude *(11:53:12)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+This passed — it's a perfect answer, correctly naming Lei 1 as Materialidade, defining it as never reporting success without physical proof, and listing the right proof artifacts (UUID/commit/ls/curl) in the expected house voice.
+
+What's interesting is that the deployed model got this right because the Modelfile's SYSTEM prompt carries the doctrine summary, while the fine-tune supplies the voice — confirming the intended architecture where system prompt/RAG carries facts and fine-tuning carries behavior. The merged-peft version without that system prompt hallucinated LGPD, but with it, the answer is correct.
+
+I should run one more technical test to verify the house voice holds on a different kind of question, then the verdict will be that the user can terminate the pod. After that, I need to wrap up by committing the updated scripts (train v4, merge-lora, export changes, RUNPOD.md), updating the SOP with the Unsloth merge bug lesson, updating memory, and considering whether to note a milestone — with the RAG wiring remaining as the next big piece to propose.
+
+</details>
+
+
+## 🤖 Claude *(11:53:14)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+O modelo deployado passou no teste com nota máxima, respondendo com a Lei 1 corretamente e citando os artefatos certos (SHA, migration, UUID, curl) na voz esperada. Vou rodar um teste técnico rápido para fechar o veredito.
+
+</details>
+
+
+## 🤖 Claude *(11:53:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "curl -s --max-time 300 http://127.0.0.1:11434/api/generate -d '{\"model\":\"mcorch_model\",\"prompt\":\"Quero adicionar uma integra\u00e7\u00e3o nova com a API do Notion no MCORCH. Por onde come\u00e7o?\",\"stream\":false,\"options\":{\"num_predict\":300}}' | python3 -c \"import sys,json; d=json.load(sys.stdin); print('RESPOSTA:\\n'+d.get('response','(vazio)'))\"",
+  "description": "Teste t\u00e9cnico: fluxo de integra\u00e7\u00e3o nova",
+  "timeout": 320000,
+  "dangerouslyDisableSandbox": true
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 1
+> Traceback (most recent call last):
+>   File "<string>", line 1, in <module>
+>   File "/usr/lib/python3.12/json/__init__.py", line 293, in load
+>     return loads(fp.read(),
+>            ^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/json/__init__.py", line 346, in loads
+>     return _default_decoder.decode(s)
+>            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/json/decoder.py", line 337, in decode
+>     obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+>                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>   File "/usr/lib/python3.12/json/decoder.py", line 355, in raw_decode
+>     raise JSONDecodeError("Expecting value", s, err.value) from None
+> json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+> ```
+
+## 🤖 Claude *(11:58:24)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The curl request came back empty, likely a timeout since CPU inference for 300 tokens after a model reload can be slow. I'll retry with a longer timeout since the expected generation time should still be reasonable.
+
+Though it's possible the model had to reload since keep-alive wasn't set and the default 5-minute window had just expired. Let me retry and capture the raw output to a file to see what actually happened.
+
+</details>
+
+
+## 🤖 Claude *(11:58:24)*
+
+Resposta vazia — provavelmente o curl estourou ou o Ollama recarregou o modelo. Repetindo com diagnóstico:
+
+## 🤖 Claude *(11:58:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "curl -sS --max-time 420 -o /tmp/mcorch-t2.json -w \"http=%{http_code} time=%{time_total}s\\n\" http://127.0.0.1:11434/api/generate -d '{\"model\":\"mcorch_model\",\"prompt\":\"Quero adicionar uma integra\u00e7\u00e3o nova com a API do Notion no MCORCH. Por onde come\u00e7o?\",\"stream\":false,\"options\":{\"num_predict\":280}}'; echo \"---\"; python3 -c \"import json; d=json.load(open('/tmp/mcorch-t2.json')); print(d.get('response','(vazio)'))\" 2>&1 | head -30",
+  "description": "Reteste t\u00e9cnico com diagn\u00f3stico de HTTP/tempo",
+  "timeout": 450000,
+  "dangerouslyDisableSandbox": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> http=200 time=327.640833s
+> ---
+> Para adicionar uma integração com a API do Notion no MCORCH, siga os passos abaixo:
+> 
+> 1. **Verifique se o módulo já existe**: Antes de começar, verifique se não há um módulo existente para a integração com o Notion. Você pode fazer isso consultando a Knowledge Mesh ou a lista de módulos do MCORCH.
+> 
+> 2. **Crie uma família BoK (MRD/BRD/PRD/FRD/SDD)**: Se este for um novo módulo, crie a família BoK completa antes de escrever qualquer código. Isso inclui o MRD (Market Requirements Document), BRD (Business Requirements Document), PRD (Product Requirements Document), FRD (Functional Requirements Document) e SDD (System Design Document).
+> 
+> 3. **Pattern Conformance Declaration**: Antes do código, declare a conformidade com os padrões de arquitetura do MCORCH em um arquivo `PATTERNS.md` dentro da pasta do módulo.
+> 
+> 4. **Implemente o código**: Escreva o código para a integração com a API do Notion. Isso pode incluir endpoints de API, lógica de negócio e qualquer outra coisa que seja necessária para a integração.
+> 
+> 5. **Teste automat
+> ```
+
+## 🤖 Claude *(12:04:29)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+The user confirmed the transfer finished at 100%. Test 2 came back with HTTP 200 and an excellent answer — it correctly knows the Closed-Loop BoK gate and the Pattern Conformance Declaration, with only a minor naming drift.
+
+Final verdict: the model is approved and deployed, so I should tell the user to terminate the pod now to stop billing. The 327s response time on CPU reflects cold-load overhead, not a real performance issue.
+
+My wrap-up plan: first tell the user to kill the pod, then seal the learnings by committing the updated training scripts, doctrine flashcards, and RUNPOD.md, amend the SOP with the Unsloth merge bug antibody, update the memory file, and add a mesh milestone node with proof. After that, propose RAG wiring as the next step.
+
+I'll do everything in this turn — lead with the verdict and termination instruction, then handle the sealing work. For the SOP amendment, I'm drafting a new section documenting the material lessons from the first training run: the Unsloth merge corruption bug and its fix via a clean-process peft merge, the need to run the post-merge gate in a separate process, the insight that SFT shapes voice while facts belong in RAG/system prompts, and the sudo-less GGUF export approach.
+
+I'm noting the v5 final sha, confirming it's deployed and passed the doctrine test, and deciding to keep this as an amendment section rather than rewriting the whole status table. I also need to update the project memory file with the v5 outcome, lessons learned, shas, and the next step toward RAG, then commit the relevant script changes — checking which files like merge-lora.py, doctrine-flashcards.json, and export-gguf.sh were already committed versus still pending.
+
+Several files remain uncommitted: export-gguf.sh, doctrine-flashcards.json, merge-lora.py, and the dataset build script edits for doctrine sections and flashcards. I'll run a git status check and commit everything on the feat/mcorch-model-factory branch, then insert a mesh node milestone via PostgREST documenting the v1 training and deployment with proof artifacts per SOP step 9 — keeping the final reply organized despite the amount of ground to cover.
+
+</details>
+
+
+## 🤖 Claude *(12:04:30)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Modelo aprovado e confirmado vivo no host — dois testes de inferência passaram, gguf e ollama list validados, então o pod pode ser terminado agora. Vou registrar os aprendizados (Lei 2) e os artefatos na branch.
+
+</details>
+
+
+## 🤖 Claude *(12:04:44)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/docs/processes/mcorch-model-pipeline.md",
+  "old_string": "## 8. Refer\u00eancias",
+  "new_string": "## 8. Li\u00e7\u00f5es materiais do primeiro treino (2026-08-18/19 \u2014 anticorpos permanentes)\n\nO primeiro ciclo completo (5 runs, ~US$ 3 total, RTX 4090 RunPod) produziu o `mcorch_model` v5 VIVO no\nOllama do host (`sha256:93490c73858a3908` \u00b7 ollama ID `dea709c1ea87`) e quatro anticorpos:\n\n| FM | Li\u00e7\u00e3o | Anticorpo |\n|----|-------|-----------|\n| **FM-TRAIN-01** | `save_pretrained_merged` da **Unsloth 2026.5.9 CORROMPE o merge** \u2014 provado por A/B: v3 E v4 coerentes in-training, salada p\u00f3s-merge; merge peft do MESMO adapter saiu limpo. | NUNCA usar o merge da Unsloth. Treino salva S\u00d3 o adapter (`mcorch_lora/`); merge can\u00f4nico via `scripts/ai/merge-lora.py` (transformers+peft `merge_and_unload`, base fp16). |\n| **FM-TRAIN-02** | Gate p\u00f3s-merge no MESMO processo do treino quebra (`'Qwen2Attention' has no attribute 'apply_qkv'`) \u2014 o monkey-patch da Unsloth vaza para o load do transformers. | O sanity do artefato final SEMPRE roda em **processo separado e limpo** (o merge-lora.py j\u00e1 embute). |\n| **FM-TRAIN-03** | **SFT = VOZ, n\u00e3o enciclop\u00e9dia.** O fato derivou em TODAS as receitas (v1 \"self-healing\", v2 \"LGPD\", v3 drift de defini\u00e7\u00e3o); e o cram de fato (flashcards 15\u00d7 + r=32 + 2 epochs, v3) causou **overfit catastr\u00f3fico**. A receita que serve \u00e9 a SUAVE: r=16/\u03b1=16, 1 epoch, doutrina leve (~4\u00d7), sem cram. | Fatos v\u00eam do **SYSTEM prompt** (c\u00e2none no Modelfile \u2014 o teste da Lei 1 passou por isso) e do **RAG da mesh** (fase 2). O fine-tune entrega registro, formato e comportamento. |\n| **FM-TRAIN-04** | `save_pretrained_gguf` da Unsloth roda `sudo apt-get` e TRAVA em imagem sem sudo (prendeu a v1 no prompt de senha). | Export GGUF desacoplado: `scripts/ai/export-gguf.sh` (build userspace do llama.cpp, `convert_hf_to_gguf.py` + `llama-quantize`). |\n\nFluxo selado do treino: `train-mcorch-qlora.py` (adapter-only) \u2192 `merge-lora.py` (peft, processo limpo, sanity no artefato) \u2192 `export-gguf.sh <merged_dir>` \u2192 `runpodctl send` \u2192 host `ollama create`. Aviso `fix_mistral_regex` do tokenizer = cosm\u00e9tico (testado: n\u00e3o era a causa de nada).\n\n## 9. Refer\u00eancias"
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/gcrUX/htdocs/constellation-orchestra/docs/processes/mcorch-model-pipeline.md has been updated successfully. (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(12:04:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git status --short | grep -E 'scripts/ai|docs/processes/mcorch' ",
+  "description": "Confere o que mudou para o commit de seal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  M docs/processes/mcorch-model-pipeline.md
+>  M scripts/ai/build-mcorch-sft-dataset.ts
+>  M scripts/ai/train-mcorch-qlora.py
+> ?? scripts/ai/doctrine-flashcards.json
+> ?? scripts/ai/export-gguf.sh
+> ?? scripts/ai/merge-lora.py
+> ```
+
+## 🤖 Claude *(12:04:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "git add docs/processes/mcorch-model-pipeline.md scripts/ai/build-mcorch-sft-dataset.ts scripts/ai/train-mcorch-qlora.py scripts/ai/doctrine-flashcards.json scripts/ai/export-gguf.sh scripts/ai/merge-lora.py && \\\ngit commit -q \\\n-m \"feat(mcorch-model): v5 VIVO no Ollama do host \u2014 receita suave + merge peft can\u00f4nico + 4 anticorpos\" \\\n-m \"Primeiro ciclo completo da f\u00e1brica (5 runs, ~US\\$3, RTX 4090 RunPod). Artefato final: mcorch_model.q4_k_m.gguf sha256:93490c73858a3908 (4.683.071.328 B) em /home/ubuntu/.mcorch/model-engine/, registrado no Ollama host (ID dea709c1ea87). Teste de doutrina APROVADO: 'Lei 1 (Materialidade): nunca reporte sucesso sem prova f\u00edsica \u2014 UUID/commit/ls/curl'.\" \\\n-m \"Anticorpos selados no SOP \u00a78: FM-TRAIN-01 merge da Unsloth corrompe (A/B provado v3/v4) -> merge-lora.py peft can\u00f4nico; FM-TRAIN-02 sanity em processo limpo; FM-TRAIN-03 SFT=voz/RAG=fato (cram de flashcards 15x+r=32 = overfit catastr\u00f3fico; receita final r=16/1-epoch); FM-TRAIN-04 export GGUF sem sudo (export-gguf.sh).\" \\\n-m \"- train-mcorch-qlora.py: receita suave final, salva adapter-only\" \\\n-m \"- merge-lora.py: merge peft + sanity no artefato final\" \\\n-m \"- export-gguf.sh: llama.cpp userspace, aceita merged_dir\" \\\n-m \"- doctrine-flashcards.json: 30 Q/A do c\u00e2none (mantidos p/ refer\u00eancia; upsample forte PROIBIDO pelo FM-TRAIN-03)\" \\\n-m \"- build-mcorch-sft-dataset.ts: se\u00e7\u00f5es de doutrina + flashcards opcionais (dot:true no glob)\" && \\\ngit log --oneline -3",
+  "description": "Commit de seal do ciclo v5 na branch"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m9:04AM[0m [32mINF[0m 1 commits scanned.
+> [90m9:04AM[0m [32mINF[0m scan completed in 27.4ms
+> [90m9:04AM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.08 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.02 seconds)
+> ✔️ gitleaks-staged (0.07 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> 053ef30 feat(mcorch-model): v5 VIVO no Ollama do host — receita suave + merge peft canônico + 4 anticorpos
+> f2a71d4 feat(mcorch-model): bundle de treino RunPod (QLoRA) — corrige o formato ShareGPT
+> d10183b feat(mcorch-model): fábrica do LLM especialista — SOP, extrator SFT sanitizado e inferência Ollama
+> ```
+
+## 🤖 Claude *(12:05:05)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+That commit is done (053ef30). Next I need to add the mesh milestone node and update memory, then move on to the final report.
+
+</details>
+
+
+## 🤖 Claude *(12:05:05)*
+
+Commit `053ef30` selado. Agora o **milestone na malha** (Mesh Connection Mandate — o SOP §5 step 9) e a memória:
+
+## 🤖 Claude *(12:05:19)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "bun -e '\nimport {readFileSync} from \"fs\";\nconst env={}; for(const l of readFileSync(\".env\",\"utf8\").split(\"\\n\")){const m=l.match(/^([^#=\\s][^=]*)=(.*)$/); if(m) env[m[1].trim()]=m[2].trim().replace(/^[\"\\x27]|[\"\\x27]$/g,\"\");}\nconst U=env.SUPABASE_URL, K=env.SB_SECRET_KEY;\nconst body=[{\n  name:\"mcorch_model v5 TREINADO e VIVO no Ollama do host \u2014 1\u00ba LLM especialista self-host da Sovereign\",\n  node_type:\"milestone\",\n  content:\"Ciclo completo da MCORCH Model Specialist Factory (2026-08-17..19, 5 runs QLoRA RTX 4090 RunPod, ~US$3 total). Artefato: mcorch_model.q4_k_m.gguf sha256:93490c73858a3908 (4.683.071.328 B) em /home/ubuntu/.mcorch/model-engine/, ollama ID dea709c1ea87, rail CPU do host (US$0 inferencia). Teste de doutrina APROVADO: cita Lei 1=Materialidade+prova fisica (UUID/commit/ls/curl); teste tecnico cita gate Closed-Loop BoK. Receita final: Qwen2.5-Coder-7B + LoRA r16/a16 1 epoch dataset v1.1 (3895 pares sanitizados gate G-SANITIZE) -> adapter-only -> merge peft canonico (merge-lora.py) -> export-gguf.sh userspace. 4 anticorpos no SOP \u00a78 (FM-TRAIN-01..04): merge Unsloth corrompe (A/B provado), sanity em processo limpo, SFT=voz/RAG=fato (cram=overfit catastrofico), export sem sudo. Commits d10183b/f2a71d4/053ef30 branch feat/mcorch-model-factory. Proximo: RAG da mesh na inferencia (fase 2 do Ambos).\",\n  metadata:{source:\"mcorch-model-factory\",session:\"2026-08-19\",gguf_sha256_16:\"93490c73858a3908\",ollama_id:\"dea709c1ea87\",commits:[\"d10183b\",\"f2a71d4\",\"053ef30\"],cost_usd:3,recipe:\"qwen2.5-coder-7b r16 1epoch peft-merge\",doctrine_test:\"PASSED\",antibodies:[\"FM-TRAIN-01\",\"FM-TRAIN-02\",\"FM-TRAIN-03\",\"FM-TRAIN-04\"]}\n}];\nconst r=await fetch(`${U}/rest/v1/mcorch_nodes`,{method:\"POST\",headers:{apikey:K,Authorization:`Bearer ${K}`,\"Content-Type\":\"application/json\",Prefer:\"return=representation\"},body:JSON.stringify(body)});\nconst j=JSON.parse(await r.text());\nconsole.log(\"HTTP\",r.status,\"| NODE UUID:\",j?.[0]?.id);\n'",
+  "description": "Insere o milestone do mcorch_model v5 na mesh",
+  "dangerouslyDisableSandbox": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HTTP 201 | NODE UUID: 6f86800c-0e95-454b-bd70-bb574dc30e87
+> ```
+
+## 🤖 Claude *(12:05:31)*
+
+
+🛠️ **Tool Call**: `Edit`
+```json
+{
+  "replace_all": false,
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_mcorch_model_specialist_factory.md",
+  "old_string": "**Pr\u00f3ximos passos GATED (m\u00e3o do Sovereign):** (1) revisar amostra do JSONL; (2) treino QLoRA 4-bit Unsloth em RunPod RTX 4090/L40S, base Qwen2.5-7B-Instruct (fallback Llama-3.1-8B), or\u00e7amento <US$ 4; (3) quantizar GGUF `q4_k_m`; (4) `ollama create mcorch_model -f docker/mcorch-model/Modelfile` no host; (5) opcional `docker compose up -d mcorch-model-inference`. Doutrina [[feedback_opensource_first_zero_cost_equity]]: infer\u00eancia US$ 0. Se `SB_SECRET_KEY` rotacionar, reler `.env` [[reference_supabase_secret_key_rotation_silent_kill]].",
+  "new_string": "**\u2705 TREINADO E VIVO (2026-08-19):** `mcorch_model` v5 no Ollama do host (`sha256:93490c73858a3908` \u00b7 ID `dea709c1ea87` \u00b7 gguf em `/home/ubuntu/.mcorch/model-engine/`). 5 runs RTX 4090 RunPod ~US$ 3. Teste de doutrina APROVADO (Lei 1=Materialidade+prova f\u00edsica). Milestone node inserido. Commits `d10183b`/`f2a71d4`/`053ef30`.\n\n**\u26a0\ufe0f 4 ANTICORPOS do treino (SOP \u00a78 \u2014 NUNCA repetir):** (1) `save_pretrained_merged` da Unsloth CORROMPE (A/B provado v3/v4: coerente in-training\u2192salada p\u00f3s-merge) \u2192 merge SEMPRE via `scripts/ai/merge-lora.py` (peft `merge_and_unload`, processo limpo); (2) sanity do artefato final em processo SEPARADO (monkey-patch da Unsloth vaza); (3) **SFT=VOZ, RAG=FATO** \u2014 cram de fato (flashcards 15\u00d7+r=32) = overfit catastr\u00f3fico; receita que funciona = r=16/1 epoch/doutrina leve; fatos entram pelo SYSTEM prompt+RAG; (4) `save_pretrained_gguf` trava em sudo \u2192 `export-gguf.sh` userspace. Pods RunPod spot s\u00e3o reclamados/migrados \u2014 `/workspace` sobrevive.\n\n**Pr\u00f3ximo (fase 2 do \"Ambos\"):** fiar RAG da mesh na infer\u00eancia do `mcorch_model` (fatos precisos da malha; a voz o fine-tune j\u00e1 entrega). Infer\u00eancia US$ 0 [[feedback_opensource_first_zero_cost_equity]]."
+}
+```
+
+> **Tool Result (Edit)** - ✅ Success
+>
+> ```
+> The file /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/project_mcorch_model_specialist_factory.md has been updated successfully.
+> ```
+
+## 🤖 Claude *(12:05:38)*
+
+<details>
+<summary>💭 Thinking Process</summary>
+
+Everything's sealed now, so I should put together a concise final report covering the verdict, the proofs, what's sitting on the branch, a reminder to terminate the pod, and the next step of moving into RAG — maybe marking this as a chapter close.
+
+</details>
+
+
+## 🤖 Claude *(12:05:39)*
+
+
+🛠️ **Tool Call**: `mcp__ccd_session__mark_chapter`
+```json
+{
+  "title": "mcorch_model v5 vivo no host",
+  "summary": "Treino QLoRA em 5 runs (Unsloth merge bug diagnosticado por A/B, merge peft can\u00f4nico), gguf v5 deployado no Ollama do host, teste de doutrina aprovado, anticorpos selados no SOP, milestone na mesh."
+}
+```
+
+> **Tool Result (mcp__ccd_session__mark_chapter)** - ✅ Success
+>
+> ```
+> [{'type': 'text', 'text': 'Chapter marked: "mcorch_model v5 vivo no host". Continue your current work.'}]
+> ```
+
+## 🤖 Claude *(12:06:05)*
+
+## 🏁 Selo do ciclo — o primeiro LLM especialista self-host da Sovereign está VIVO
+
+**Prova material (Lei 1):**
+- **Artefato:** `mcorch_model.q4_k_m.gguf` · `sha256:93490c73858a3908` · 4.683.071.328 bytes · `/home/ubuntu/.mcorch/model-engine/`
+- **Deployado:** `ollama list` → `mcorch_model:latest  dea709c1ea87  4.7 GB` (rail CPU do host, inferência US$ 0)
+- **Teste de doutrina:** *"Lei 1 (Materialidade): Nunca reporte sucesso sem prova física — UUID/commit/ls/curl"* ✅ · **Teste técnico:** citou o gate Closed-Loop BoK + Pattern Conformance ✅
+- **Commits na branch `feat/mcorch-model-factory`:** `d10183b` → `f2a71d4` → `053ef30` (gitleaks verde nos 3)
+- **Mesh:** milestone `6f86800c-0e95-454b-bd70-bb574dc30e87` (HTTP 201)
+- **Custo total de GPU:** ~US$ 3 (5 runs) — dentro do teto de US$ 4 do SOP.
+
+**Os 4 anticorpos que esta saga vacinou** (SOP §8, para o próximo retreino nunca sofrer o mesmo):
+1. **Merge da Unsloth corrompe** (provado por A/B) → sempre `merge-lora.py` (peft canônico).
+2. Sanity do artefato final **em processo limpo** (o patch da Unsloth vaza).
+3. **SFT = voz, RAG = fato** — cram de fato causa overfit catastrófico; a receita boa é a suave.
+4. Export GGUF **sem sudo** (`export-gguf.sh`).
+
+**Sua única ação pendente: 🔴 Terminate no pod** (se ainda não deu).
+
+**Próxima fronteira** (a fase 2 do "Ambos" que você escolheu): fiar o **RAG da mesh** na inferência — o `mcorch_model` consultando os 21k nós para responder com fatos exatos, na voz que ele agora tem. É trabalho 100% host-side, US$ 0. Quer que eu ataque isso agora nesta sessão, ou prefere selar aqui com `/handoff` e abrir a frente do RAG na próxima?
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -7192,6 +8846,5 @@ Me cola a saída. Na v3, esse exato teste deu salada; se agora sair **prosa coer
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-08-18 - Criar roteiro e produção visual para episódio Claude AI]]
-> * **Próxima Sessão**: [[2026-08-19 - Setup mcorch model specialist factory infrastructure]]
+> * **Sessão Anterior**: [[2026-08-18 - Setup mcorch model specialist factory infrastructure]]
 %% --- TIMELINE END --- %%

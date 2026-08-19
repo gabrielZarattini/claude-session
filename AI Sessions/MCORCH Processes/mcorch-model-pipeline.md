@@ -213,7 +213,21 @@ Como tooling interno, a declaração é leve (não os 21 padrões cheios). Padr�
 
 ---
 
-## 8. Referências
+## 8. Lições materiais do primeiro treino (2026-08-18/19 — anticorpos permanentes)
+
+O primeiro ciclo completo (5 runs, ~US$ 3 total, RTX 4090 RunPod) produziu o `mcorch_model` v5 VIVO no
+Ollama do host (`sha256:93490c73858a3908` · ollama ID `dea709c1ea87`) e quatro anticorpos:
+
+| FM | Lição | Anticorpo |
+|----|-------|-----------|
+| **FM-TRAIN-01** | `save_pretrained_merged` da **Unsloth 2026.5.9 CORROMPE o merge** — provado por A/B: v3 E v4 coerentes in-training, salada pós-merge; merge peft do MESMO adapter saiu limpo. | NUNCA usar o merge da Unsloth. Treino salva SÓ o adapter (`mcorch_lora/`); merge canônico via `scripts/ai/merge-lora.py` (transformers+peft `merge_and_unload`, base fp16). |
+| **FM-TRAIN-02** | Gate pós-merge no MESMO processo do treino quebra (`'Qwen2Attention' has no attribute 'apply_qkv'`) — o monkey-patch da Unsloth vaza para o load do transformers. | O sanity do artefato final SEMPRE roda em **processo separado e limpo** (o merge-lora.py já embute). |
+| **FM-TRAIN-03** | **SFT = VOZ, não enciclopédia.** O fato derivou em TODAS as receitas (v1 "self-healing", v2 "LGPD", v3 drift de definição); e o cram de fato (flashcards 15× + r=32 + 2 epochs, v3) causou **overfit catastrófico**. A receita que serve é a SUAVE: r=16/α=16, 1 epoch, doutrina leve (~4×), sem cram. | Fatos vêm do **SYSTEM prompt** (cânone no Modelfile — o teste da Lei 1 passou por isso) e do **RAG da mesh** (fase 2). O fine-tune entrega registro, formato e comportamento. |
+| **FM-TRAIN-04** | `save_pretrained_gguf` da Unsloth roda `sudo apt-get` e TRAVA em imagem sem sudo (prendeu a v1 no prompt de senha). | Export GGUF desacoplado: `scripts/ai/export-gguf.sh` (build userspace do llama.cpp, `convert_hf_to_gguf.py` + `llama-quantize`). |
+
+Fluxo selado do treino: `train-mcorch-qlora.py` (adapter-only) → `merge-lora.py` (peft, processo limpo, sanity no artefato) → `export-gguf.sh <merged_dir>` → `runpodctl send` → host `ollama create`. Aviso `fix_mistral_regex` do tokenizer = cosmético (testado: não era a causa de nada).
+
+## 9. Referências
 
 - Auditoria material Fase 1: esta sessão (2026-08-17).
 - `docs/architecture/agentic-vision.md` — 21 padrões (SSOT da Pattern Conformance).
