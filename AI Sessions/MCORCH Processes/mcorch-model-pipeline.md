@@ -227,7 +227,30 @@ Ollama do host (`sha256:93490c73858a3908` · ollama ID `dea709c1ea87`) e quatro 
 
 Fluxo selado do treino: `train-mcorch-qlora.py` (adapter-only) → `merge-lora.py` (peft, processo limpo, sanity no artefato) → `export-gguf.sh <merged_dir>` → `runpodctl send` → host `ollama create`. Aviso `fix_mistral_regex` do tokenizer = cosmético (testado: não era a causa de nada).
 
-## 9. Referências
+## 9. RAG da Knowledge Mesh (fase 2 do "Ambos" — fato vem da malha, voz vem do fine-tune)
+
+**Ferramenta:** `scripts/ai/mcorch-ask.ts` — pergunta → embedding da query (OpenRouter
+`openai/text-embedding-3-small` `dimensions:768`, o MESMO espaço em que a mesh foi embedada) →
+RPC `match_mcorch_nodes` (threshold **0.3** — calibração selada; 0.45 zerava tudo) → top-K nós
+injetados como CONTEXTO no prompt → `mcorch_model` responde na voz treinada citando as fontes.
+
+```bash
+bun run scripts/ai/mcorch-ask.ts "Por que o EP07 foi reprovado?"
+bun run scripts/ai/mcorch-ask.ts --k 6 --show-context "<pergunta>"   # inspeciona o contexto
+bun run scripts/ai/mcorch-ask.ts --no-rag "<pergunta>"               # baseline sem mesh (A/B)
+```
+
+Regras de projeto (aprendidas em teste live no host):
+- **Transporte = curl subprocess, nunca fetch do Bun:** no CPU a prompt-eval leva minutos sem emitir
+  byte, e o fetch do Bun tem idle-timeout interno (~300s) que mata a conexão antes do 1º token.
+- **`keep_alive: "30m"`** na chamada — evita recarregar 4,7 GB do disco entre perguntas.
+- **Contexto enxuto** (K=4 × 800 chars default) — cada token de contexto custa prompt-eval no CPU;
+  `num_ctx=4096` do Modelfile é o teto duro.
+- **Fallback keyword** (`ilike` PostgREST) quando o embedding falhar — degrada, não quebra.
+- O prompt declara o contexto como fonte da verdade que **vence a memória do modelo** — é isso que
+  corrige o drift factual residual do SFT (FM-TRAIN-03).
+
+## 10. Referências
 
 - Auditoria material Fase 1: esta sessão (2026-08-17).
 - `docs/architecture/agentic-vision.md` — 21 padrões (SSOT da Pattern Conformance).
