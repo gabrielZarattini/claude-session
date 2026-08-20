@@ -125,3 +125,10 @@ Um `NEXT-STEPS.md` fresco na raiz do repo que, para o estado atual, (a) lista to
 ---
 
 **Skill:** `.claude/skills/pmo-curator/SKILL.md` · **Agent:** `.claude/agents/pmo-curator.md` · **Irmão de confiabilidade:** o guardião — **laço em cron** `scripts/qa/guardian-tick.ts` + SOP [[autonomic-loop-mape-k]] (não é subagente) · **Curadores:** `docs-curator`/`bok-curator` (governança de docs). Doutrina: [[feedback_recurring_actions_become_skills]].
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

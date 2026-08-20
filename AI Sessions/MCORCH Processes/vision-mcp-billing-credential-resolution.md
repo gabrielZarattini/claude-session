@@ -61,3 +61,10 @@ Hoje o débito de mcoCoins é feito pelos edge fns (`orchestrate-content`, `lead
 - ❌ Usar env global de provider em fluxo user-facing **sem** tentar BYOK primeiro (viola resolução 2→1).
 - ❌ Confiar em `user_id` do input em vez do `sub` verificado.
 - ❌ Reportar sucesso com refund silenciosamente falho.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

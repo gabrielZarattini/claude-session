@@ -93,3 +93,10 @@ Anticorpo re-executável: **`scripts/qa/smoke-face-aware-zone.ts`** — **RODAR 
 - **SOP irmão:** `docs/processes/motion-graphics-zone-saliency.md` (Fatia 1 — a base que esta fatia enriquece).
 - **Runtime vendorizado:** `scripts/video-repurpose/face-assets/README.md` (proveniência + refresh).
 - **Sem migration:** `zone` continua dentro do jsonb `video_renders.composition` (migration `20260624120000`) — nenhuma alteração de schema. `/security-review` incide sobre o **motor** (spawn com array; filtergraph sem dado do caller; runtime air-gapped).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

@@ -128,3 +128,10 @@ Não precisa mais abrir a rede social para conferir se aconteceu.
   continua sendo a vista focada no tempo. Um post existe em ambas as vistas — e as ações de
   Cancelar em qualquer uma delas se propagam pela mesma FK via o trigger.
 - **Não muda o comportamento do `auto-publish` cron.** Só a UI de acompanhamento.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

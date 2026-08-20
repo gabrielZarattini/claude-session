@@ -144,3 +144,10 @@ Fatia 1 está **pronta** quando, TODOS provados no MESMO turno (Lei 1):
 ---
 
 _Law 2 SOP para a Fatia 1 do `predictive-swarm`. SSOT: `docs/bok/predictive-swarm/{04-frd,05-sdd,07-process-flow,08-quality-metrics}.md`. Nenhum passo, custo, threshold ou superfície inventado fora do BoK selado (Lei 1). Código só começa após este SOP + BoK 9/9 selada + GO Sovereign._
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

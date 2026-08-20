@@ -61,3 +61,10 @@ Ver [`11-api-surface-map.md §6`](../bok/youtube-studio/11-api-surface-map.md) �
 ## Mesh Connection Mandate
 
 Sync bem-sucedido → nó de observação em `mcorch_nodes` (`node_type='observation'`, `service='youtube-studio'`) na primeira leitura de um canal; falhas → `infra_health_logs`; traceability → FR/Fatia deste SOP + Pattern Conformance.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

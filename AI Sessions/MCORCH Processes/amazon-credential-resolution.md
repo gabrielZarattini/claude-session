@@ -39,3 +39,10 @@ The **tenant** (User 0 first) is an approved Amazon Associate. They:
 ## Success signal (materially observable)
 
 `resolve-affiliate-link` returns **HTTP 200** with `affiliate_url` carrying `?tag=<tenant's own Tracking ID>`, `attribution:'sale'`, `cloaked:false`, and a `SELECT` confirms the tag came from that tenant's `affiliate_config` row — proven by the smoke `scripts/qa/smoke-amazon-tag-append.ts` (own-tag-only 402, `?tag=` present, 0 `/go`, host-validated, tenant-bound).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

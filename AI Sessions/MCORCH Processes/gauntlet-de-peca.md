@@ -145,3 +145,10 @@ mais o contact sheet aberto na Biblioteca com a vencedora escolhida **por um olh
   sucesso sem olhar o artefato servido"
 - [`docs/roadmap/regua-de-cinema-higgsfield-2026-08-14.md`](../roadmap/regua-de-cinema-higgsfield-2026-08-14.md) §L7 — a lacuna que originou este SOP
 - [`scripts/lib/gemini-image.ts`](../../scripts/lib/gemini-image.ts) — o rail de imagem canônico
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

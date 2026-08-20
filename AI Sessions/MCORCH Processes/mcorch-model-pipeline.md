@@ -257,3 +257,10 @@ Regras de projeto (aprendidas em teste live no host):
 - `.claude/rules/survival.md` — Leis 1–4.
 - `supabase/functions/_shared/sentinel.ts` — prior art de injeção.
 - Precedente de OOM: `.claude/context/host-capacity-and-oom-2026-08-05.md`.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

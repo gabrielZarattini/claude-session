@@ -731,3 +731,10 @@ escreve partitura em **duas** linguagens, e a primeira decisão de toda cena é 
 
 Nada é "pronto" sem **olho** (contact sheet no tamanho real) **e** ouvido (transcrição contra
 roteiro). Nenhum número prova que o quadro lê como documentário.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

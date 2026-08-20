@@ -95,3 +95,10 @@ ignorar o `error` é como este defeito sobreviveu meses.
 
 A aba "Em processamento" fica **vazia** quando não há geração em curso, e um vídeo gerado aparece
 nela e sai dela sozinho ao ficar pronto — sem ninguém tocar no banco.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

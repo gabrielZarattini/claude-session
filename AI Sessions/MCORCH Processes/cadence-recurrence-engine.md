@@ -199,3 +199,10 @@ O ciclo de cadência está **materialmente** funcionando quando, para um plano `
 ---
 
 _SOP fiel a `docs/bok/spaces-cadence/{04-frd,05-sdd,06-data-model,07-process-flow}.md` (Lei 1 — SSOT). Nenhuma coluna/RPC inventada além da BoK; dois `TODO` explícitos (contrato do sink `scheduled_posts` vs Amendment 22; fonte do contador de janela do frequency-cap) deixados para a implementação selar contra a SDD/schema vivo. Convenções MCORCH: lógica/vars em inglês, UI/toasts pt-BR; BYOK per-user fail-closed 402/501; cobrança só via `deduct_mco_coins`/`begin`/`finalize` atômico (nunca client-side); `verify_jwt=false` → ES256 JWKS (nunca `atob` cego); RLS default-deny owner-scoped; idempotência por índice único parcial. A Cadência ENCAIXA nos trilhos vivos (autopilot · scheduled_posts · channel_profiles · profiles) — nenhum job pg_cron novo (FR-CAD-004)._
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

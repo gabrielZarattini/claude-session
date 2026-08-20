@@ -55,3 +55,10 @@ If any issues arise during or after implementation:
 - **Anonymous Handles**: Creating a `Handle` component without an explicit `id` property or using empty/null string.
 - **Implicit Mapping assumptions**: Hardcoding index-based lookups in DAG sorting instead of using the node kind mapping defined in `src/lib/canvas-handles.ts`.
 - **Bypassing the schema validation**: Mutating `graph` rows in `vm_canvas_projects` directly without validating them against the handle ID convention.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

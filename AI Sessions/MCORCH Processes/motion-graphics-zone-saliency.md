@@ -100,3 +100,10 @@ O sinal de que o SOP está vivo é duplo: (a) o smoke `scripts/qa/smoke-zone-sal
 - **OTD aberta:** **OTD-VR-016** (Fatia 2 — composição dividida consciente do rosto via MediaPipe WASM in-Chromium; DEFERIDA, gated).
 - **OTDs relacionadas:** OTD-VR-014 (frames-in-browser — o veículo técnico da Fatia 2) · OTD-VR-015 (legibilidade adaptativa ao fundo).
 - **Sem migration:** `zone` é campo dentro do jsonb existente `video_renders.composition` (migration `20260624120000`) — nenhuma alteração de schema disparada por esta feature.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

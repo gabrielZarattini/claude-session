@@ -2378,3 +2378,15 @@ Let me confirm whether 0.5.55 is still within the affected range of the unpatche
 >    ranges: [{'type': 'SEMVER', 'events': [{'introduced': '0'}, {'last_affected': '0.4.55'}]}]
 >    last_affected/versions: n/a
 > ```
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%
+
+%% --- TIMELINE START --- %%
+> [!info] Linha do Tempo (Handoff)
+> * **Sessão Anterior**: [[2026-08-20 - agent-a4dfd48db2ebbfbb2]]
+%% --- TIMELINE END --- %%

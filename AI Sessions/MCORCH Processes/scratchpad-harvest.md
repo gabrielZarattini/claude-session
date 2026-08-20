@@ -59,3 +59,10 @@ O `/handson` seguinte consegue retomar a produção SEM arqueologia: os runners 
 `scripts/<módulo>/`, os entregáveis na Biblioteca, e o Record diz onde está cada coisa.
 Prova viva: sessão 2026-08-03b remontou o master EP05 (A6) em minutos porque o A5 local +
 speech + segs sobreviveram — com este SOP, isso deixa de depender de sorte.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

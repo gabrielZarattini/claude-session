@@ -128,3 +128,10 @@ deliberada. O param `?devLogin` continua ligando ambos (comportamento legado pre
 `public_app_settings` é **legível pelo mundo inteiro por design**. Nunca colocar segredo, chave, token,
 endpoint interno ou PII nela. A allowlist do `CHECK` existe justamente para tornar isso impossível por
 acidente: uma chave nova exige uma migration — e a migration exige `/security-review`.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

@@ -29,3 +29,10 @@
 - Nó `image_to_video` com char ref e sem first-frame só permite gerar em 8s (UI trava · server 422 se burlar).
 - `src/test/veo-refs-guard.test.ts` verde no CI.
 - Zero linhas `mco_coins_ledger` para combinações inválidas (`refs && dur≠8 && !firstFrame`).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

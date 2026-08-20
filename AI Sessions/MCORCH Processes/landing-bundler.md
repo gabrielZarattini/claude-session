@@ -67,3 +67,10 @@ bundláveis remanescentes; (c) render offline idêntico (Vision QA); (d) relató
 - ❌ Confiar no `Content-Type` do server para o `data:` URI (magic-bytes mandam).
 - ❌ Corromper o documento por falha de UMA ref (fail-open por ref, fail-closed estrutural).
 - ❌ Puxar `guizang-ppt` do upstream (AGPL) — NOTICE cobre só o vendorizado MIT (OTD-LF-010).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

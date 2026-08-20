@@ -86,3 +86,10 @@ short com hook_rate alto → sinal p/ o detector (OTD-VR-008b, padrão agêntico
 - [ ] Ordem de produção dos próximos: ep02 → ep03 → ep04 (footage) ou minerar ep05 novo?
 
 **Cross-links:** `docs/bok/video-repurpose/10-frd-sdd-viral-quality.md` · `docs/bok/spaces-evolution/20-amendment-multikey-byok-vertex.md` · `docs/processes/autopilot-cron-identity.md` (recorrência) · [[project_viral_autopilot]] · [[project_revenue_funnel_repair]].
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

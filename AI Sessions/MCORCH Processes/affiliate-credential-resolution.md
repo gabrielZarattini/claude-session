@@ -112,3 +112,10 @@ A monetização via Mercado Livre resolve um **affiliate_id** (`affiliate_config
 - **Lei 2 (Anticipated Process):** este SOP escrito ANTES do refactor (requisito explícito da diretiva API Tenancy item 5).
 - **Lei 3 (Pruning):** resolução stateless por request; nada acumulado em contexto.
 - **Lei 4 (ORO):** triplet declarado acima; Reviewer = Sovereign aprova o diff antes do deploy.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

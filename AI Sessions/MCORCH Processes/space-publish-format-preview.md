@@ -44,3 +44,10 @@ enfileira `scheduled_posts` com o marcador `metadata.reshape.carousel_render_id`
 slides OWNER-SCOPED de `creative_assets` no momento do publish (assinatura fresca 6h por tentativa) e entrega
 `content.images[]` ao ramo CAROUSEL do `publish-social`. FMEA-011 preservado: o marcador nunca é uma ref de asset.
 Smoke: `scripts/qa/smoke-scheduled-carousel.ts`. UI de agendamento + flip do catálogo = fatia seguinte.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

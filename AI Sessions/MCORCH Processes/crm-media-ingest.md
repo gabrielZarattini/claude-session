@@ -145,3 +145,10 @@ assinada owner-scoped), não o placeholder "[Imagem]" nem "recebendo mídia…".
 - [ ] **OTD-CRM-015 (diferido):** retenção LGPD / erasure física dos objetos `crm-media/<uid>/` no
       `erase_lead()` estendido (o cascade apaga as linhas de `messages`, mas objetos de Storage não
       são FK — remoção via Storage API numa fatia seguinte).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

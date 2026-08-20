@@ -48,3 +48,10 @@ nenhuma ação de monetização é executada automaticamente.
 O Sovereign abre a pauta e vê criativos reais ranqueados com status de monetização correto
 (provado por browser-verify + conferência de 1 linha contra o DB). A decisão de monetizar
 continua sendo dele — a superfície só elimina a garimpagem manual de métricas.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

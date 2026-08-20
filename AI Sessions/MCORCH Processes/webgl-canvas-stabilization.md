@@ -67,3 +67,10 @@ quando mensagens eram enviadas ou quando o nível de intensidade de som se alter
 ## Anti-patterns
 - ❌ Reintroduzir `backdrop-blur` em elementos flutuantes acima do WebGL para "ficar bonito" (causa quebra de performance e piscadas).
 - ❌ Atualizar uniforms de alta frequência via `useEffect` puro sem passar pelo easing do loop de animação `useFrame`.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

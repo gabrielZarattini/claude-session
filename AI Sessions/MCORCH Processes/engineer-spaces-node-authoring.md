@@ -42,3 +42,10 @@ Ferramentas: editor de código (`src/`), `bun run build`, `npx tsc -p tsconfig.a
 O nó novo: (a) aparece e conecta no Canvas vivo (E2E 1920×1080), (b) despacha e produz output real
 (job UUID / render MP4 ≥100KB / asset assinado 200), (c) cobra o valor exato server-side (ou grátis),
 (d) `tsc` sem erro novo e `build` verde, (e) Vision QA ocular aprovado. Só então "pronto".
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

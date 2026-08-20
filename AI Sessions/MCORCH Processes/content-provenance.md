@@ -106,3 +106,10 @@ Estes gates são **externos** e **jurídicos/de-infra** — pertencem ao Soverei
 - **Runbook operacional irmão:** `docs/processes/content-provenance-marking.md` (instalação · contrato empírico c2patool 0.27 · cert · daemon · witnesses).
 - **Código VIVO (Fatia 0-1) / DORMENTE (Fatia 2):** migration `supabase/migrations/20260716230000_content_provenance_columns.sql` · `src/lib/provenance.ts` · `scripts/provenance/embed-iptc-core.ts` · `scripts/provenance/embed-c2pa-core.ts` (cert-gated) · `scripts/provenance-bridge.ts` · `scripts/systemd/provenance-bridge.service` (NÃO habilitado = gate Sovereign) · `scripts/qa/smoke-provenance-iptc.ts`.
 - **Doutrina:** SSP-01 Lei 1 (Materialidade) + Lei 2 (Processo Antecipado); MCORCH Master Execution Protocol §1 (Closed-Loop) + §3.5 (Pattern Conformance).
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

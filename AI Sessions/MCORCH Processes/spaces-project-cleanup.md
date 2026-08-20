@@ -16,3 +16,10 @@
 **Regras invioláveis:** allowlist nunca vira denylist (mídia paga é INAPAGÁVEL por esta rota) ·
 `dry_run` é o default da fn (execute exige `dry_run:false` explícito) · deleção de fila só pela fn
 (`RLS RESTRICTIVE no-delete` continua para o cliente) · sweep agendado só com opt-in futuro.
+
+---
+
+%% --- PROJECT METADATA START --- %%
+> [!meta] Informações do Projeto
+> * **Projeto**: [[MCORCH]]
+%% --- PROJECT METADATA END --- %%

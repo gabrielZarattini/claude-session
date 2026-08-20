@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3710
-> * **Sessões do Claude**: 3657
+> * **Total de Sessões Registradas**: 3718
+> * **Sessões do Claude**: 3665
 > * **Sessões do Gemini**: 53
 
 ---
@@ -40,6 +40,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-02 - Fix TTS bridge and resolve critical production issues]]` - *2026-05-02*
 
 ### Orchestration & Agent System (MCORCH/Constellation)
+*   `[[2026-08-20 - 9router integração no MCORCH]]` - *2026-08-20*
 *   `[[2026-08-19 - Setup mcorch model specialist factory infrastructure]]` - *2026-08-19*
 *   `[[2026-08-18 - Setup mcorch model specialist factory infrastructure]]` - *2026-08-18*
 *   `[[2026-07-07 - MCORCH autonomous loop execution com charter e handoff]]` - *2026-07-07*
@@ -51,8 +52,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-02 - Executar loop autônomo MCORCH com charter]]` - *2026-07-02*
 *   `[[2026-07-01 - Execução autônoma MCORCH com ciclo fechado]]` - *2026-07-01*
 *   `[[2026-07-01 - Executar loop autônomo MCORCH com charter]]` - *2026-07-01*
-*   `[[2026-06-27 - Clarificar essência e tom do MCORCH]]` - *2026-06-27*
-*   *... e mais 9 sessões nessa categoria.*
+*   *... e mais 10 sessões nessa categoria.*
 
 ### UI Extensions & Layouts
 *   `[[2026-07-21 - Refinar canvas mobile e corrigir execução de nós]]` - *2026-07-21*
@@ -75,19 +75,19 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-08-20 - agent-ac0cf41abdefb27b7]]` - *2026-08-20*
+*   `[[2026-08-20 - agent-a4dfd48db2ebbfbb2]]` - *2026-08-20*
+*   `[[2026-08-20 - agent-a48488aa1c384277d]]` - *2026-08-20*
+*   `[[2026-08-20 - agent-a427774f1073d45ce]]` - *2026-08-20*
+*   `[[2026-08-20 - agent-a422c6d76c27809b0]]` - *2026-08-20*
+*   `[[2026-08-20 - agent-a1ab94ff51817cae4]]` - *2026-08-20*
+*   `[[2026-08-20 - agent-a15c2eff261e45ce9]]` - *2026-08-20*
 *   `[[2026-08-19 - agent-a7e6996a9859b547c]]` - *2026-08-19*
 *   `[[2026-08-18 - Criar roteiro e produção visual para episódio Claude AI]]` - *2026-08-18*
 *   `[[2026-08-17 - agent-aebd2ac5290172677]]` - *2026-08-17*
 *   `[[2026-08-17 - agent-adb4c8b7ec2bfe40e]]` - *2026-08-17*
 *   `[[2026-08-17 - agent-ad5b5cfe21a0ae158]]` - *2026-08-17*
-*   `[[2026-08-17 - agent-acd549d2b0e66e520]]` - *2026-08-17*
-*   `[[2026-08-17 - agent-ac7c35a050fbde99b]]` - *2026-08-17*
-*   `[[2026-08-17 - agent-ac1d9434ef4c3de82]]` - *2026-08-17*
-*   `[[2026-08-17 - agent-aa90049a5bc0b2c85]]` - *2026-08-17*
-*   `[[2026-08-17 - agent-aa0c0c093940be368]]` - *2026-08-17*
-*   `[[2026-08-17 - agent-a62f1c7881e7d5f78]]` - *2026-08-17*
-*   `[[2026-08-17 - agent-a592522c8a5b14fab]]` - *2026-08-17*
-*   *... e mais 3650 sessões nessa categoria.*
+*   *... e mais 3657 sessões nessa categoria.*
 
 ---
 
@@ -3314,6 +3314,14 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-01 - Configurar loop autônomo e definir fila soberana]]` (ClaudeSessions)
 
 ### Agosto 2026
+*   `[[2026-08-20 - agent-ac0cf41abdefb27b7]]` (ClaudeSessions)
+*   `[[2026-08-20 - agent-a4dfd48db2ebbfbb2]]` (ClaudeSessions)
+*   `[[2026-08-20 - agent-a48488aa1c384277d]]` (ClaudeSessions)
+*   `[[2026-08-20 - agent-a427774f1073d45ce]]` (ClaudeSessions)
+*   `[[2026-08-20 - agent-a422c6d76c27809b0]]` (ClaudeSessions)
+*   `[[2026-08-20 - agent-a1ab94ff51817cae4]]` (ClaudeSessions)
+*   `[[2026-08-20 - agent-a15c2eff261e45ce9]]` (ClaudeSessions)
+*   `[[2026-08-20 - 9router integração no MCORCH]]` (ClaudeSessions)
 *   `[[2026-08-19 - agent-a7e6996a9859b547c]]` (ClaudeSessions)
 *   `[[2026-08-19 - Setup mcorch model specialist factory infrastructure]]` (ClaudeSessions)
 *   `[[2026-08-18 - Setup mcorch model specialist factory infrastructure]]` (ClaudeSessions)
