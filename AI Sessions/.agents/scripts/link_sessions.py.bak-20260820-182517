@@ -204,8 +204,7 @@ def run_linking(note_catalog, dry_run=True):
         pattern_escaped = re.escape(pattern)
         # Using custom word boundary to support Portuguese accent letters
         pattern_re = re.compile(rf'(?<!\w)({pattern_escaped})(?!\w)', re.IGNORECASE)
-        # 4o campo: literal em minúsculas para o pre-filtro barato do laço quente.
-        compiled_patterns.append((pattern_re, dest_title, dest_path, pattern.lower()))
+        compiled_patterns.append((pattern_re, dest_title, dest_path))
         
     # Group notes by folder to build separate chronological chains
     folder_groups = {}
@@ -231,8 +230,6 @@ def run_linking(note_catalog, dry_run=True):
     
     links_created_count = 0
     modified_files_count = 0
-    # Compilado UMA vez: antes era recompilado dentro do laço a cada substituição.
-    wikilink_re = re.compile(r'\[\[[\s\S]*?\]\]')
     timeline_re = re.compile(r'\n*%% --- TIMELINE START --- %%.*?%% --- TIMELINE END --- %%', re.DOTALL)
     project_re = re.compile(r'\n*%% --- PROJECT METADATA START --- %%.*?%% --- PROJECT METADATA END --- %%', re.DOTALL)
     
@@ -302,21 +299,11 @@ def run_linking(note_catalog, dry_run=True):
             
         masked_content, placeholders = mask_text(updated_content)
         original_masked = masked_content
-        # Espelho em minúsculas: recalculado SÓ quando o conteúdo muda.
-        masked_lower = masked_content.lower()
         
         # Apply replacement patterns using pre-compiled regexes
-        for pattern_re, dest_title, dest_path, pattern_lower in compiled_patterns:
+        for pattern_re, dest_title, dest_path in compiled_patterns:
             # Do not link a note to itself
             if dest_path == file_path:
-                continue
-
-            # PRE-FILTRO LITERAL (lossless). O regex de fronteira de palavra
-            # (?<!\w)(literal)(?!\w) só pode casar ONDE o literal ocorre. Se o
-            # substring nem existe, o regex NÃO teria casado — pular aqui não
-            # descarta nenhum acerto real, só evita a varredura cara.
-            # `in` de string é busca C-level; subn() é a máquina de regex.
-            if pattern_lower not in masked_lower:
                 continue
                 
             # Perform regex substitution and count replacements
@@ -328,8 +315,8 @@ def run_linking(note_catalog, dry_run=True):
                     placeholders.append(match.group(0))
                     return f"___MASKED_BLOCK_{idx}___"
                 
-                masked_content = wikilink_re.sub(mask_new_links, new_content)
-                masked_lower = masked_content.lower()  # só aqui: mudou de fato
+                wikilink_pattern = re.compile(r'\[\[[\s\S]*?\]\]')
+                masked_content = wikilink_pattern.sub(mask_new_links, new_content)
                 links_created_count += count
                 
         # Write back if either the semantic links changed or the metadata blocks changed
