@@ -101,10 +101,3 @@ detecta a linha deletada e **mata o ffmpeg** — sem ele o ✕ só teria efeito 
   v3. O export garante apenas **não somar a terceira**.
 - **A primeira geração de perda.** As cenas já nasceram em crf 18; o export re-encoda a partir
   delas. O conserto é OTD-SPACES-049 (intermediário a `-crf 12 -preset veryfast`), e exige bench.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

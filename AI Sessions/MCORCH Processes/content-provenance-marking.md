@@ -1,4 +1,4 @@
-# SOP — Marcação de Proveniência (AI Act Art. 50) · [[content-provenance|content-provenance]] Fatia 0-1
+# SOP — Marcação de Proveniência (AI Act Art. 50) · content-provenance Fatia 0-1
 
 > **Status:** ATIVA v1.0 · 2026-07-16 · Lei 2. **BoK SSOT:** `docs/bok/content-provenance/` (FR-CP-006/007/009/010/012/013).
 > **Escopo desta SOP:** camada **C3 (IPTC/XMP)** — o marcador machine-readable "gerado por IA" que Meta/LinkedIn/X leem, embutido em imagem/vídeo via ExifTool, USD=0, zero cert/modelo — **e** camada **C1 (C2PA Content Credentials)** — Fatia 2 (§Fatia 2 abaixo), embutida via `c2patool`, cobre imagem/vídeo **e voz** (áudio), **dormente sem cert** (safe-by-default). C2 (watermark) é Fatia 3 (gated).
@@ -128,10 +128,3 @@ Um asset REAL (imagem/vídeo/voz) baixado do bucket, quando lido por `c2patool` 
 - **Fatia 3 (watermark)** embute o `creative_assets.id` opaco (nunca PII, OTD-CP-013) — gated em OTD-CP-009 (compute).
 - **Upload-teste Meta/LinkedIn/X** que prova o rótulo VISÍVEL (não só embutido) = próximo witness quando as contas estiverem conectadas (o rótulo IPTC→auto-label é MEDIUM confidence, §10 blueprint — validar por upload real).
 - **Injection point ideal** (marcar ANTES de `register_creative_asset` finalizar) vs o sweep atual (marca pós-registro): o sweep é o MVP; o inline no render é hardening.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

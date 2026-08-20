@@ -233,10 +233,3 @@ maior curso de câmera, logo maior raio de blur), **não** para a camada de víd
 **NÃO foi isolada**. Nota separada: o md5 do arquivo entregue difere entre renders idênticos **mesmo
 sem clipe** (~356 bytes de metadados do carimbo de proveniência) — determinismo aqui se mede por
 `framemd5`, não por `md5` do container.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

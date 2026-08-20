@@ -101,10 +101,3 @@ sem buraco, e cada entrada carrega a data real de execução. Nenhuma auditoria 
   é perder a capacidade de detectar deriva. Ver o irmão [`handoff-pruning-gate.md`](handoff-pruning-gate.md).
 - **CLAUDE.md §5 (Obstacle → Synthesis):** *se o mesmo erro pode reincidir, ele ainda não foi resolvido
   — só adiado.* O bloco de entrega + o gate G4 são o anticorpo.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

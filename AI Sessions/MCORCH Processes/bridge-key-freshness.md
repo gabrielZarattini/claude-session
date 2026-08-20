@@ -120,10 +120,3 @@ Onde os jobs leem o cofre (para achar de novo):
   declarada fica com quem tem a chave na mão.
 - **Outros crons do host.** O `auto-publish` acumulou 634 ticks 401 no mesmo incidente e continua sem
   sentinela própria: ele loga em arquivo, não em `infra_health_logs`.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

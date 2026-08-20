@@ -78,10 +78,3 @@ escrita; `/security-review` limpo em qualquer migration futura desta camada (reg
 **A verificar no banco vivo (suposições, não fabricar):** owner das views = `postgres`; RLS
 `ENABLE`d nas `*_table` como defense-in-depth (não confirmado no grep — recomendado habilitar
 default-deny mesmo com SELECT revogado); `user_id` `NOT NULL` nas tabelas-base.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

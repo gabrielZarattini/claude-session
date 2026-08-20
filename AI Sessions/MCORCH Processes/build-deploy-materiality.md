@@ -128,10 +128,3 @@ imortal esperando para acontecer:
 ```bash
 for _ in $(seq 1 120); do <condição> && break; sleep 30; done   # teto de 1h, explícito
 ```
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

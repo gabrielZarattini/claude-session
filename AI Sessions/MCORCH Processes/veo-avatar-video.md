@@ -77,10 +77,3 @@ registrado, saldo debitado **exatamente** pelo valor da âncora — e o rosto do
    `predictLongRunning` via service account retorna `200`+LRO (não o `403` do gate de *API key* do caminho
    Gemini) → enfileira uma operação real (custo). Para provar a role sem gastar, usar **IAM
    `testIamPermissions`** (read-only) ou o próprio `canvas-execute` 403→refund. Nunca um submit poison-pill no SA.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

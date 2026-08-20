@@ -253,10 +253,3 @@ Sovereign; o Agent prepara e verifica, não habilita.
 | Painel da UI | `src/components/youtube/YouTubeUploadPanel.tsx` (em `/dashboard/youtube/studio-yt`) |
 | Precedente do mesmo molde | `scripts/video-bridge.ts` · `docs/processes/video-repurpose-worker.md` |
 | Rotação das credenciais envolvidas | `docs/processes/credential-rotation-runbook.md` |
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

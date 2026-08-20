@@ -109,10 +109,3 @@ Enquanto os três não forem observados juntos (Lei 1), a Fatia não está "pron
 ---
 
 _Anticorpo permanente (Mandato Obstáculo→Síntese): a armadilha de "confiar no cliente para o estado da janela" foi fechada por design — `window_expires_at` é server-authoritative (trigger-guard) e reavaliada no envio. Nunca mover essa decisão para a UI._
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

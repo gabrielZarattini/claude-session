@@ -77,10 +77,3 @@ bordas — 37% da largura vai embora.
   foi por render entregue (mesma semântica das demais falhas de conteúdo).
 - Corte 16:9 saiu com legenda queimada indevida → veio de spec com `caption_mode` explícito; o default correto
   para célula de grid é `caption_mode:'none'`.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

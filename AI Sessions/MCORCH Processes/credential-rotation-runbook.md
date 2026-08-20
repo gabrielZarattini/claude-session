@@ -480,10 +480,3 @@ Sovereign; o Agent prepara e verifica, não executa.
 | Tier global de credenciais de app (admin) | `docs/processes/admin-global-app-credentials.md` |
 | Materialidade de build/deploy (gates de deploy de function) | `docs/processes/build-deploy-materiality.md` |
 | Banner de lembretes | `src/components/admin/AdminRemindersBanner.tsx` · `src/hooks/useAdminReminders.ts` |
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

@@ -86,10 +86,3 @@ scripts/qa/smoke-asset-owner-signing.ts`; exit 1 = regressão). Substitui o prob
 Usuário Zero abre Biblioteca, Canvas Studio (projeto salvo) e um Space e **vê todas as mídias** (imagens/vídeos/áudio),
 com URLs `/object/sign/...` (nunca `/object/public/...` em bucket privado), e um segundo tenant **não** consegue
 assinar/ver os objetos do primeiro (G6). Provado por browser real + Vision-QA + probe de assinatura cross-tenant.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

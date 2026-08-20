@@ -64,10 +64,3 @@ com `project_id`, registrando na spine, criando os nós e conectando. Precedente
 
 O usuário abre o projeto no Spaces e **vê a mídia no nó** — sem que ninguém tenha rodado um segundo
 script para colocá-la lá.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

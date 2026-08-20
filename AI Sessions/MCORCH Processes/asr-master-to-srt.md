@@ -64,10 +64,3 @@ O agente (ou o Sovereign) no host, usuário `ubuntu`.
 3. EN opcional (`-l en` ou tradução) — fatia posterior.
 
 **Cross-links:** `docs/bok/video-repurpose/10-frd-sdd-viral-quality.md` (OTD-VR-012) · [[project_video_repurpose_engine]] · `docs/processes/voice-clone-selfhost-engine.md` (irmão de engine self-host).
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

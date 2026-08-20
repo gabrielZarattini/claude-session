@@ -77,10 +77,3 @@ verdes + resumo ao Sovereign com os vereditos que mudam decisão (ex.: bifurcaç
 ---
 
 _Anticorpo do padrão repetido 2× (Obstacle→Synthesis Mandate). Skill: `.claude/skills/deepsearch-blueprint/SKILL.md` · Agent: `.claude/agents/deepsearch-blueprint.md`._
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

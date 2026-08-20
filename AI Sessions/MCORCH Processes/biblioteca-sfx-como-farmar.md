@@ -404,10 +404,3 @@ Dois artefatos, ambos versionados:
 8. **Sessão de Foley (3 h, à noite):** gravar os 20 objetos × 10–20 takes em WAV/PCM sem denoise nem AGC, celular apoiado, pico −12 a −6 dBFS, + **60 s de room tone ao fim** (inegociável — é a cola que faz as camadas casarem). Depois: cadeia `highpass=80,afftdn=nr=18:nf=-45:tn=1,deesser=i=0.3,acompressor,alimiter` (nunca `arnndn` — repo dos modelos sem LICENSE), cortar, nomear UCS (`FOLYKeyboard_KeyboardMechSingle_MCORCH_FOLEY01_Take07.wav`), brutos para `_RAW/`. Gate: ~150 arquivos limpos + queda medida de rumble sub-80 Hz no `volumedetect` antes/depois.
 9. **Wallah pt-BR + ambiências (1 h):** gerar 3 vozes distintas de ~2 min no `voice-engine` local (Qwen3-TTS), rodar a receita de 6 camadas (`asetrate` k ∈ {0.87,0.92,0.95,1.08,1.14,1.21} · `adelay` primos {0,370,810,1240,1730,2150} · `lowpass=3200` · `highpass=180` · `aecho 60|110|180` · `loudnorm I=-28`) e o empilhamento de 3 blocos para multidão grande, mais `acrossfade=d=2` em todas as ambiências para loop sem clique. Gate: `ffprobe` + `loudnorm` reportando ≈ −28/−30 LUFS e o loop com duração exata `2N−2`. **Nenhum modelo do mercado entrega isto em português.**
 10. **Selar a v1 e só então avaliar IA:** rodar `norm-lib.sh` na lib inteira, regenerar `LIBRARY.csv` (zero campo `license` vazio = gate mecânico), commitar `scripts/sfx/` + `assets/sfx/` + SOP, registrar a entrada na Key Files Reference do CLAUDE.md e um nó de observação na Knowledge Mesh. **Só depois** abrir a Fatia opcional: sondar o Stable Audio 3 Small-SFX em CPU no host e **medir** (estimativa honesta: 20–90 s/clipe de 10 s) — se ≤60 s, virar worker no molde `video-bridge` (fila `video_renders`, `charged_mco: 0`), **exclusivamente para ambiência/textura**, nunca para hard SFX. E manter o corpus Sonniss fora de qualquer pipeline de treino/clone de voz (cláusula anti-IA).
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

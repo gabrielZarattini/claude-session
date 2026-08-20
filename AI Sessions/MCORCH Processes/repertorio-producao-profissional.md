@@ -1512,10 +1512,3 @@ whisper-cli -m models/ggml-large-v3-turbo-q5_0.bin -f /tmp/ep-audio.wav -l pt -o
 16. Master de episódio sai com loudnorm em DOIS passes (medir → aplicar linear=true) em I=−16 LUFS, TP=−1,5 dBTP, LRA=11 — passe único não acerta o alvo.
 17. Offsets de timeline vêm de ffprobe dos arquivos reais, nunca da duração planejada; quando congelam, é picture lock — mix, legenda e shorts só depois, e quebrar o lock invalida tudo em cascata.
 18. Nada é 'pronto' sem Visão E Audição na mesma timeline (contact sheet no Vision + whisper timestampado + ebur128); e onde a capacidade não existe (lip-sync com voz clonada, roto neural, 3D, outpainting, separação de stems), declare o GAP em vez de prometer.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

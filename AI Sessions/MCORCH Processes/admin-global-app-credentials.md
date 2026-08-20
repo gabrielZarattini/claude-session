@@ -60,10 +60,3 @@ Connect Pinterest E2E do Usuário Zero **usando a credencial global colada pela 
 
 - **OTD-PE-GLOBAL-OTHER-SECRETS** — segredos globais não-OAuth (Telegram bot, chaves de sistema `MESH_EMBED_*`) seguem em env; cobertos operacionalmente pelo lembrete de rotação, migração de leitura é fatia futura.
 - Webhooks Meta (verify token / HMAC) são system-level por definição — permanecem env (não é violação do Tenancy Model).
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

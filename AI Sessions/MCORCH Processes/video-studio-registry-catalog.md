@@ -179,10 +179,3 @@ nada mais.
   revisto na **mesma sessão** (mesma regra do "hotfix vira migration na mesma sessão").
 - Template removido do motor → item removido do `registry.json` no mesmo commit.
 - O gate C3 (fail-closed por existência de arquivo) é a rede de segurança, não a fonte da verdade.
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%

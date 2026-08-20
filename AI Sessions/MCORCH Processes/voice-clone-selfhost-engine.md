@@ -106,10 +106,3 @@ em `creative_assets` — mesmo contrato do rail `video-bridge`.
   422 · clone→profile · synth→WAV 259KB · saldo intacto · cross-tenant 404; throwaways limpos).
   RODAR antes de qualquer mudança no rail de voz.
 - Monetizar depois = recalibrar via `mcoin-cost-calibration.md` (OTD-VOICE-002).
-
----
-
-%% --- PROJECT METADATA START --- %%
-> [!meta] Informações do Projeto
-> * **Projeto**: [[MCORCH]]
-%% --- PROJECT METADATA END --- %%
