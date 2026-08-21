@@ -3683,6 +3683,814 @@ Ficou parado de propósito e nada bloqueia: a porta 52022 está viva nas cinco c
 
 Enquanto você decide o 1 e o 2, começo a escrever os 20 prompts na gramática Keemfinity (1 evento/s, câmera contínua, hard-cut #111212, negativos declarados) com a mesma linha de humanos hiper-realistas — isso não custa nada e é o gargalo do resto.
 
+## 👤 User *(22:04:10)*
+
+1. Verifique quanto ainda temos de creditos de teste do google vertex que colocamos como service e byok tambem. Sim sempre 1080p 
+2. Quando for clip gerado em full screen com falas como parte do roteiro temos que cortar a narração e deixar original do clip. Quando fo narração com clips sem audio é por que deve conter a narração do eleven labs, então provavelmente tem que fazer camadas / blocos. Pois os videos com libsinc é melhor e tem audio proprio fica bom e o canal ja tem videos com essa voz. Vamos mudar a voz da narração somente, gerando videos com somente efeitos sonoros da cena sempre sem voz quando tiver narração e vice e versa, sem narração com clip libsinc veo. Isso que faria uma faixa de audio na nossa composição 100%. Sincronizada com os efeitos e tambem trilha sonora para dar sensação de continuidade
+3.  Pode ser precisamos criar algo novo complementar então para isso. Vamos em frente faça tudo.
+
+
+
+Sobre o 9router é exatamente isso eu preciso que seja facil recuperavel para quando terminar de postar esse video vou voltar para esse assunto, quero o resultado do recon do 9router para continuar aquela sessão até conseguir desenvolvimento 24/7 sem depender de nós aqui para ao que realmente interessa, estrategias, processos e projetos são coisa de claude code.
+Legal continue.
+
+## 🤖 Claude *(22:04:50)*
+
+
+## 🤖 Claude *(22:04:51)*
+
+Recebido. Três frentes — vou fechar as duas factuais primeiro e já deixar o 9router recuperável, que é o que você pediu para não perder.
+
+## 🤖 Claude *(22:04:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== credenciais Google/Vertex presentes (SO NOMES, sem valores) ===\"\ngrep -oE '^[A-Z0-9_]*(VERTEX|GOOGLE|GEMINI|GCP)[A-Z0-9_]*' .env 2>/dev/null | sort -u\necho \"--- service account json no host? ---\"\nls -la /home/ubuntu/.config/gcloud/ 2>/dev/null | head -6 || echo \"(sem ~/.config/gcloud)\"\nfind /home/gcrUX/htdocs/constellation-orchestra -maxdepth 2 -name '*vertex*' -o -maxdepth 2 -name '*service-account*.json' 2>/dev/null | head\necho; echo \"=== gcloud CLI disponivel? ===\"; which gcloud 2>/dev/null || echo \"(gcloud ausente)\"\necho; echo \"=== o canvas-execute usa Vertex ou Gemini API? ===\"\ngrep -nE 'vertex|VERTEX|aiplatform|generativelanguage' supabase/functions/canvas-execute/index.ts 2>/dev/null | head -12",
+  "description": "Verifica credenciais e caminho Vertex"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === credenciais Google/Vertex presentes (SO NOMES, sem valores) ===
+> --- service account json no host? ---
+> 
+> === gcloud CLI disponivel? ===
+> (gcloud ausente)
+> 
+> === o canvas-execute usa Vertex ou Gemini API? ===
+> 81:const VEO_VERTEX_PER_SEC_USD: Record<string, Record<string, number>> = {
+> 85:const VEO_VERTEX_API_MODEL: Record<string, string> = {
+> 93: *  `vertex` picks the Vertex price table (0,15/s fast) instead of the Gemini API table (0,10/s). */
+> 94:function veoCost(model: string, resolution: string, duration: number, vertex = false): number {
+> 95:  const table = vertex ? VEO_VERTEX_PER_SEC_USD : VEO_PER_SEC_USD;
+> 101:function veoApiModel(model: string, vertex: boolean): string | undefined {
+> 102:  return (vertex ? VEO_VERTEX_API_MODEL : VEO_API_MODEL)[model];
+> 236:      // Amendment 26 (FR-SPACES-093): auth path of the resolved google credential — 'vertex-sa' means
+> 1059:  veo: { apiModel: string; duration: number; aspectRatio: string; resolution: string; vertex: boolean; generateAudio: boolean };
+> 1113:  if (veo.vertex) {
+> 1118:  // Amendment 26 (FR-SPACES-093): o custo já foi calculado para `veo.vertex`. Só tento candidatos do
+> 1120:  const targetType: "vertex-sa" | "gemini-api" = veo.vertex ? "vertex-sa" : "gemini-api";
+> ```
+
+## 🤖 Claude *(22:05:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "T=/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra--claude-worktrees-handson-02136e/251db3ca-abc6-4279-9483-283dd4a34d0d.jsonl\npython3 - \"$T\" <<'PY'\nimport json,sys,re\np=sys.argv[1]\npat=re.compile(r'9router|9\\s*router', re.I)\nhits=[]\nwith open(p,encoding='utf-8',errors='replace') as f:\n    for i,line in enumerate(f):\n        try: d=json.loads(line)\n        except: continue\n        m=d.get('message') or {}\n        c=m.get('content'); role=m.get('role') or d.get('type')\n        parts=[]\n        if isinstance(c,str): parts=[c]\n        elif isinstance(c,list):\n            for b in c:\n                if not isinstance(b,dict): continue\n                if b.get('type')=='text': parts.append(b.get('text',''))\n                elif b.get('type')=='tool_result':\n                    x=b.get('content')\n                    if isinstance(x,str): parts.append(x)\n                    elif isinstance(x,list): parts.append('\\n'.join(y.get('text','') for y in x if isinstance(y,dict)))\n        txt='\\n'.join(parts)\n        if txt and pat.search(txt): hits.append((i,role,len(txt)))\nprint(f\"mensagens citando 9router: {len(hits)}\")\nif hits:\n    print(f\"faixa de linhas: {hits[0][0]} .. {hits[-1][0]}\")\n    for i,role,n in hits[:25]: print(f\"  linha {i:5d} [{role:9s}] {n} chars\")\nPY",
+  "description": "Localiza o recon do 9router no transcript"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> mensagens citando 9router: 29
+> faixa de linhas: 66 .. 445
+>   linha    66 [user     ] 6898 chars
+>   linha    73 [user     ] 1205 chars
+>   linha    78 [user     ] 3383 chars
+>   linha    82 [assistant] 134 chars
+>   linha    85 [user     ] 2000 chars
+>   linha    86 [user     ] 1926 chars
+>   linha    93 [assistant] 4241 chars
+>   linha    97 [user     ] 2555 chars
+>   linha   112 [user     ] 1464 chars
+>   linha   126 [user     ] 931 chars
+>   linha   129 [assistant] 100 chars
+>   linha   133 [user     ] 553 chars
+>   linha   147 [user     ] 552 chars
+>   linha   151 [user     ] 345 chars
+>   linha   163 [assistant] 253 chars
+>   linha   165 [user     ] 2311 chars
+>   linha   170 [user     ] 733 chars
+>   linha   179 [user     ] 80 chars
+>   linha   183 [user     ] 991 chars
+>   linha   186 [assistant] 141 chars
+>   linha   197 [user     ] 702 chars
+>   linha   202 [user     ] 457 chars
+>   linha   218 [user     ] 582 chars
+>   linha   230 [user     ] 1464 chars
+>   linha   232 [user     ] 353 chars
+> ```
+
+## 🤖 Claude *(22:05:20)*
+
+
+## 🤖 Claude *(22:05:22)*
+
+Dois achados. Vou detalhar depois; primeiro extraio o 9router para não depender mais do transcript.
+
+## 🤖 Claude *(22:05:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "T=/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra--claude-worktrees-handson-02136e/251db3ca-abc6-4279-9483-283dd4a34d0d.jsonl\nOUT=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee72a767-c699-4c5c-bf74-f27b5bf10c38/scratchpad/9router-raw.md\npython3 - \"$T\" \"$OUT\" <<'PY'\nimport json,sys,re\np,out=sys.argv[1],sys.argv[2]\npat=re.compile(r'9router|9\\s*router', re.I)\nrows=[]\nwith open(p,encoding='utf-8',errors='replace') as f:\n    for i,line in enumerate(f):\n        try: d=json.loads(line)\n        except: continue\n        m=d.get('message') or {}\n        c=m.get('content'); role=m.get('role') or d.get('type')\n        parts=[]\n        if isinstance(c,str): parts=[c]\n        elif isinstance(c,list):\n            for b in c:\n                if not isinstance(b,dict): continue\n                if b.get('type')=='text': parts.append(b.get('text',''))\n                elif b.get('type')=='tool_result':\n                    x=b.get('content')\n                    if isinstance(x,str): parts.append(x)\n                    elif isinstance(x,list): parts.append('\\n'.join(y.get('text','') for y in x if isinstance(y,dict)))\n        txt='\\n'.join(parts).strip()\n        if txt: rows.append((i,role,d.get('timestamp',''),txt))\n# janela 60..450 = onde o recon vive, mas so o que cita 9router OU e assistente longo na faixa\nsel=[r for r in rows if 60<=r[0]<=450 and (pat.search(r[3]) or (r[1]=='assistant' and len(r[3])>1200))]\nwith open(out,'w',encoding='utf-8') as f:\n    f.write(f\"# 9router \u2014 recon bruto extraido da sessao 251db3ca ({len(sel)} mensagens)\\n\\n\")\n    for i,role,ts,txt in sel:\n        f.write(f\"\\n\\n---\\n## linha {i} \u00b7 {role} \u00b7 {ts}\\n\\n{txt}\\n\")\nprint(f\"mensagens: {len(sel)}\")\nPY\nwc -c \"$OUT\"; echo; head -c 2500 \"$OUT\"",
+  "description": "Extrai o recon do 9router para arquivo"
+}
+```
+
+## 🤖 Claude *(22:05:33)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== como o canvas-execute resolve a credencial Google (vertex-sa x gemini-api) ===\"\nsed -n '1105,1145p' supabase/functions/canvas-execute/index.ts",
+  "description": "L\u00ea a resolu\u00e7\u00e3o de credencial Google"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> mensagens: 30
+> 49009 /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee72a767-c699-4c5c-bf74-f27b5bf10c38/scratchpad/9router-raw.md
+> 
+> # 9router — recon bruto extraido da sessao 251db3ca (30 mensagens)
+> 
+> 
+> 
+> ---
+> ## linha 62 · assistant · 2026-08-20T01:20:29.484Z
+> 
+> ```
+> ═══════════════════════════════════════════════════════════
+>   HANDSON — EP07 REPROVADO · PIVÔ VIDEO-MODELS (seal 2026-08-16)
+>   + frente paralela selada em branch (2026-08-19)
+> ═══════════════════════════════════════════════════════════
+> ```
+> 
+> 🏁 **ESTADO ATUAL**
+> 
+> **Fase selada (main):** *EP07 reprovado e arquivado · pivô video-models · fortaleza SSH* — 9 commits `8b9ec18..9e6cabd`, malha **21.020**, nó `e72cec04`.
+> 
+> ```
+> b46d7bd  chore(audit): 4Cs weekly snapshot — 2026-08-17   ← HEAD = origin/main
+> 631c06d  chore(sprint): registra o seal de 2026-08-16
+> df284cd  docs(handoff): seal EP07 reprovado e arquivado — pivô video-models
+> 9e6cabd  docs(readme): v6.143.0 — pivô video-models, gates de legibilidade, fortaleza SSH
+> 9030dd4  chore(handoff): arquiva records ≤2026-08-13
+> ```
+> 
+> **Frente paralela viva FORA da main** — `origin/feat/mcorch-model-factory` (`6062cf0`, 10 commits): `mcorch_model` self-host (Qwen2.5-Coder-7B + LoRA v5, GGUF q4_k_m) **VIVO no Ollama** (verificado agora: `ollama` responde, digest `dea709c1ea87`, 4,68 GB) + RAG da malha (`scripts/ai/mcorch-ask.ts`) + skill `mcorch-ask`. **Merge → main GATED** (PR + validação Sovereign).
+> 
+> 📂 **MUDANÇAS PENDENTES** (neste worktree)
+> 
+> | Arquivo | Conteúdo |
+> |---|---|
+> | `M .claude/context/audit-log.md` | ⚠️ **REMOVE 41 linhas** — apaga o snapshot 4Cs de 2026-08-17 que está no HEAD. Commitar assim regride o log de cadência. |
+> | `M .claude/context/sprint-priorities.md` | +4 linhas: nota do seal 2026-08-19 (Model Factory branch-only) |
+> | `?? .claude/skills/mcorch-ask/` | SKILL.md (3,4 KB) — cópia da skill que já está commitada na branch `feat/mcorch-model-factory` |
+> 
+> Local `main` está **1 commit atrás** de `origin/main`.
+> 
+> 🏗️ **INFRA** — tudo verde (3 dias de uptime)
+> ```
+> mcorch_chroma      Up 3 days (healthy)   ·  API v2 heartbeat OK
+> mcorch_claude_mem  Up 3 days (healthy)
+> mcorch_vision_mcp  Up 3 days (healthy)
+> mega-brain-{daemon,webhook,dashboard}  Up 3 days
+> Ollama :11434      mcorch_model:latest + gemma4 respondendo
+> ```
+> 
+> 🧠 **KNOWLEDGE MESH** — 21.020 nós (fonte: Task State 2026-08-16)
+> 
+> 🔧 **T
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === como o canvas-execute resolve a credencial Google (vertex-sa x gemini-api) ===
+>     aspectRatio: veo.aspectRatio,
+>     resolution: veo.resolution,
+>   };
+>   // Veo 3 gera fala/áudio por padrão; só emitimos o flag para DESLIGAR (direção segura — nunca introduz um
+>   // parâmetro que poderia 422 quando o áudio é desejado). Silencia a fala inesperada em pt-BR do POV.
+>   if (!veo.generateAudio) parameters.generateAudio = false;
+>   // Amendment 26: o Vertex EXIGE personGeneration=allow_adult quando há referências/first-frame de
+>   // pessoa; sem elas, allow_all (paridade com gerar_cenas_qa.py). Sem storageUri → vídeo inline base64.
+>   if (veo.vertex) {
+>     parameters.personGeneration = (effectiveRefs.length > 0 || firstFrame) ? "allow_adult" : "allow_all";
+>   }
+>   const payload = { instances: [instance], parameters };
+> 
+>   // Amendment 26 (FR-SPACES-093): o custo já foi calculado para `veo.vertex`. Só tento candidatos do
+>   // MESMO caminho de auth — cruzar Gemini↔Vertex mudaria o preço e quebraria G7 (quote == charge).
+>   const targetType: "vertex-sa" | "gemini-api" = veo.vertex ? "vertex-sa" : "gemini-api";
+>   const queue = candidates.filter((c) => c.authType === targetType);
+> 
+>   // FR-SPACES-091: failover por EXAUSTÃO de crédito. Um 429 não enfileira job nem cobra, então tentar
+>   // a seguinte é grátis. Um pool cujo topo está sem crédito não pode derrubar toda geração.
+>   if (queue.length === 0) {
+>     return await refundNow("Nenhuma credencial Google disponível para este caminho — o valor foi estornado.", 402, "google_not_configured");
+>   }
+> 
+>   /** Submete a UM candidato. Retorna {op} | {retry:true} (429/credito) | {fatal:msg}. Never leaks the key. */
+>   const submitOne = async (candidate: ResolvedKey): Promise<{ op?: string; retry?: boolean; fatal?: string }> => {
+>     let url: string;
+>     const headers: Record<string, string> = { "Content-Type": "application/json" };
+>     if (candidate.authType === "vertex-sa") {
+>       // Vertex: SA JSON → OAuth token → Bearer; endpoint regional com project/location.
+>       const sa = parseServiceAccount(candidate.apiKey);
+>       if (!sa) return { fatal: "Credencial de service account inválida." };
+>       const project = (candidate.metadata?.vertex_project as string) || sa.project_id || "";
+>       const location = (candidate.metadata?.vertex_location as string) || "us-central1";
+>       // Anti-SSRF (review 2026-07-15): project/location vêm de metadata owner-writable e caem no HOST
+>       // da URL — buildVertexUrl rejeita qualquer coisa fora da gramática GCP ANTES de qualquer fetch.
+>       const builtUrl = buildVertexUrl(project, location, veo.apiModel, "predictLongRunning");
+>       if (!builtUrl) return { fatal: "Projeto ou região Vertex inválidos na credencial (ex.: us-central1)." };
+>       let token: string;
+>       try { token = await getServiceAccountToken(sa); }
+>       catch { return { retry: false, fatal: "vertex_auth_failed" }; }
+> ```
+
+## 🤖 Claude *(22:05:49)*
+
+
+## 🤖 Claude *(22:05:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== de onde vem o pool de candidatos Google ===\"\ngrep -nE 'candidates\\s*=|authType|vertex_project|resolveGoogle|google_credentials' supabase/functions/canvas-execute/index.ts | head -20\necho; echo \"=== tabelas com vertex/google no schema ===\"\ngrep -rlnE 'vertex_project|authType|auth_type' supabase/migrations/*.sql 2>/dev/null | tail -5",
+  "description": "Localiza a tabela do pool de credenciais Google"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === de onde vem o pool de candidatos Google ===
+> 238:      gemini_auth_type: googlePool?.authType || "gemini-api",
+> 1121:  const queue = candidates.filter((c) => c.authType === targetType);
+> 1133:    if (candidate.authType === "vertex-sa") {
+> 1137:      const project = (candidate.metadata?.vertex_project as string) || sa.project_id || "";
+> 1215:          vertex_project: (used.metadata?.vertex_project as string) || null,
+> 1731:    const candidates = await listProviderKeyCandidates(admin, user.id, "google", body.provider_key_id);
+> 
+> === tabelas com vertex/google no schema ===
+> ```
+
+## 🤖 Claude *(22:05:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "F=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee72a767-c699-4c5c-bf74-f27b5bf10c38/scratchpad/9router-raw.md\necho \"=== o que o recon do 9router concluiu \u2014 trechos-chave ===\"\ngrep -nE '9router|9 router' \"$F\" | head -30\necho; echo \"=== ha secoes de veredito/conclusao? ===\"\ngrep -nE '^#{1,4} |^\\*\\*(Veredito|Conclus|Resultado|Achado|Estado)' \"$F\" | head -40",
+  "description": "Mapeia o conte\u00fado do recon do 9router"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === o que o recon do 9router concluiu — trechos-chave ===
+> 1:# 9router — recon bruto extraido da sessao 251db3ca (30 mensagens)
+> 87:fiz algumas oerguntas e o genini com o notebook com um handoff atrazado disse isso.: O 9router (desenvolvido pela comunidade / decolua e conhecido também na linhagem NymRouter/OrcaFlow) é uma aquisição tática de altíssimo valor para o ecossistema MCORCH, especificamente para atuar como o Gateway de Roteamento e Blindagem FinOps do nosso Córtex Motor (The Hands & Background Workers).
+> 88:Se avaliarmos o 9router sob a ótica do nosso Harness Engineering e da nossa política de Soberania Digital / Zero-Token Waste, ele resolve de forma nativa vários gargalos que antes tínhamos de contornar com scripts manuais e proxies pontuais (como o fcc-server).
+> 90:1. O que o 9router traz de concreto para a nossa infraestrutura
+> 111:   * O 9router comprime as saídas de ferramentas antes de as despachar para o LLM, economizando entre 20% e 40% de tokens de entrada por chamada.
+> 113:   * Elimina o bloqueio de desenvolvimento quando os limites do Claude Pro ou Gemini esgotam. Se a quota do Claude Code bater no teto de 5 horas, o 9router faz o transbordo suave para modelos de baixo custo (DeepSeek V4/Coder, MiniMax) ou para o pool gratuito (OpenRouter Free / Qwen Code / Ollama local), mantendo os loops do MAPE-K a correr 24/7 sem interrupção.
+> 120:2. Onde o 9router DEVE e NÃO DEVE entrar no MCORCH
+> 122:| Camada | Função do 9router | Veredicto Arquitetural |
+> 126:| SaaS Multi-tenant (Utilizadores Externos / Vision MCP) | NÃO DEVE intermediar o gateway principal dos utilizadores do SaaS. | ISOLAMENTO RESTRITO: O SaaS cliente exige a nossa tabela per-tenant decrypted_user_api_keys, verificação ES256 JWKS fail-closed e dedução atómica via RPC deduct_mco_coins no Supabase. O 9router é uma ferramenta de infraestrutura/orquestração, não o nosso billing engine de tenancy. |
+> 128:A adoção do 9router exige os seguintes cuidados de segurança e engenharia:
+> 135:   As credenciais e sessões OAuth integradas no 9router devem ser as nossas chaves de desenvolvimento/agentes, nunca as service_role keys ou master tokens do Supabase.
+> 138:   * Adicionar o serviço mcorch_9router ao docker-compose.yml (sem alterar a tag name: constellation-orchestra), com limites de memória e política restart: unless-stopped.
+> 149:Vale a pena implantar de imediato para a nossa esteira de desenvolvimento. O 9router é o componente que faltava para unificar e baratear o consumo dos nossos agentes operários no servidor Oracle, permitindo sessões de refatoração contínuas sem risco de interrupção por limites de API.
+> 174:=== 9router instalado? ===
+> 181:Web search results for query: "9router LLM gateway claude code router token compression"
+> 183:Links: [{"title":"One endpoint, 40+ AI providers: 9router unifies Claude Code / Codex / Cursor behind a local router | 9router","url":"https://www.x-cmd.com/install/9router/"},{"title":"9Router: Free AI LLM Gateway for Claude Code & Cursor | DEV.co","url":"https://dev.co/ai/frameworks/9router"},{"title":"GitHub - decolua/9router: Unlimited FREE AI coding. Connect Claude Code, Codex, Cursor, Cline, Copilot, Antigravity to FREE Claude/GPT/Gemini via 40+ providers. Auto-fallback, RTK -40% tokens, never hit limits. · GitHub","url":"https://github.com/decolua/9router"},{"title":"9Router Setup Guide: Cut AI Coding Costs with Smart LLM Routing | Agus Narestha | Agus Narestha","url":"https://agusnarestha.dev/blog/9router-setup"},{"title":"GitHub - nightwalker89/n9router: Connect All AI Code Tools (Claude Code, Cursor, Antigravity, Copilot, Codex, Gemini, OpenCode, Cline, OpenClaw...) to 40+ AI Providers & 100+ Models · GitHub","url":"https://github.com/nightwalker89/n9router"},{"title":"9Router: The Smart AI API Router That Saves You Money | Agus Narestha | Agus Narestha","url":"https://agusnarestha.dev/blog/9router"},{"title":"9Router Setup Guide: Route Claude Code, Codex, and Cursor with Fallback","url":"https://knightli.com/en/2026/05/08/9router-ai-coding-router-token-saver/"},{"title":"9Router (2026): Honest Review & Alternatives - AI Gear Base","url":"https://aigearbase.com/tool/9router"},{"title":"9Router Deep Dive: Free AI Routing, Token Saving, and Provider Fallback for Coding Agents","url":"https://agentpedia.codes/blog/9router-free-ai-router-token-saver-guide"},{"title":"9Router - Free AI Router | Smart Fallback for Claude, Codex & More","url":"https://9router.com/"}]
+> 185:Based on the search results, here's what I found about 9router LLM gateway, Claude Code, router token compression:
+> 189:9router is an open-source local AI gateway that aggregates 40+ providers and 100+ models. Claude Code, Codex, Cursor, Cline and other coding tools point at http://localhost:20128/v1 to switch backends.
+> 210:9router **existe de verdade** — corrijo minha suspeita inicial. Verificando as duas afirmações que mais pesam: a CVE e o risco de ToS.
+> 222:CVE-2026-56676 affects 9router, where prior to version 0.5.2, the tool validates image URLs by resolving the host before fetching, but performs a separate DNS resolution during the later server-side image fetch. An authenticated attacker with access to the LLM proxy can use a vision-capable model and an attacker-controlled DNS name that first resolves to a public IP and then rebinds to an internal address, allowing server-side requests to internal-only HTTP services.
+> 279:Verifiquei antes de opinar. **Minha suspeita inicial estava errada e eu a corrijo: o 9router existe, é real e o Gemini acertou o produto** — inclusive a CVE, que eu esperava ser confabulação e é verdadeira, com o número certo.
+> 285:| 9router existe, MIT, gateway local `:20128`, 40+ provedores | ✅ Real — [decolua/9router](https://github.com/decolua/9router) |
+> 324:**Sources:** [decolua/9router](https://github.com/decolua/9router) · [CVE-2026-56676](https://cve.threatint.eu/CVE/CVE-2026-56676) · [x-cmd/9router](https://www.x-cmd.com/install/9router/)
+> 341:2. A relação do fcc-server com o 9router
+> 343: * 9router: É a evolução direta dessa camada de gateway. Substitui o fcc-server trazendo compressão nativa de tokens (RTK), suporte multi-contas em round-robin, tradução bidirecional mais robusta e menor latência dentro da nossa malha Docker (mcorch-sovereign-net).
+> 352:Summary: Recon + design fundamentado para adotar o 9router como gateway free-tier 24/7 dos agentes de background do MCORCH
+> 354:Script file: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra--claude-worktrees-handson-02136e/edd22b35-2750-433a-95f0-6c0f13d077e4/workflows/scripts/9router-adoption-spike-wf_e5410882-ba5.js
+> 355:(Edit this file with Write/Edit and re-invoke Workflow with {scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra--claude-worktrees-handson-02136e/edd22b35-2750-433a-95f0-6c0f13d077e4/workflows/scripts/9router-adoption-spike-wf_e5410882-ba5.js"} to iterate without resending the script.)
+> 357:To resume after editing the script: Workflow({scriptPath: "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra--claude-worktrees-handson-02136e/edd22b35-2750-433a-95f0-6c0f13d077e4/workflows/scripts/9router-adoption-spike-wf_e5410882-ba5.js", resumeFromRunId: "wf_e5410882-ba5"}) — completed agents return cached results (cached results may themselves be empty — inspect journal.jsonl before assuming there is something to recover).
+> 372:=== teste: 9router disponível no npm? ===
+> 
+> === ha secoes de veredito/conclusao? ===
+> 1:# 9router — recon bruto extraido da sessao 251db3ca (30 mensagens)
+> 6:## linha 62 · assistant · 2026-08-20T01:20:29.484Z
+> 85:## linha 66 · user · 2026-08-20T01:21:36.344Z
+> 155:## linha 73 · user · 2026-08-20T01:22:01.387Z
+> 179:## linha 78 · user · 2026-08-20T01:22:16.524Z
+> 187:## Overview
+> 191:## Token Compression
+> 197:## Key Features
+> 208:## linha 82 · assistant · 2026-08-20T01:22:24.778Z
+> 214:## linha 85 · user · 2026-08-20T01:22:30.404Z
+> 231:## linha 86 · user · 2026-08-20T01:22:36.854Z
+> 233:# 9Router Analysis
+> 235:## (1) Provider Connections & "Free" Access Methods
+> 252:## (2) Security Notices & CVEs
+> 256:## (3) Telemetry & Cloud Sync
+> 264:## (4) License & Version
+> 269:## (5) Terms of Service Warnings
+> 277:## linha 93 · assistant · 2026-08-20T01:23:55.326Z
+> 281:## O que confirmei materialmente
+> 295:## As três objeções que ele não levantou
+> 306:## Onde ele acertou em cheio
+> 310:## Minha recomendação
+> 328:## linha 97 · user · 2026-08-20T01:44:00.334Z
+> 349:## linha 112 · user · 2026-08-20T01:46:33.483Z
+> 363:## linha 126 · user · 2026-08-20T01:47:07.378Z
+> 405:## linha 129 · assistant · 2026-08-20T01:47:27.138Z
+> 411:## linha 133 · user · 2026-08-20T01:47:42.498Z
+> 438:## linha 147 · user · 2026-08-20T01:48:11.181Z
+> 450:## linha 151 · user · 2026-08-20T01:48:18.018Z
+> 460:## linha 163 · assistant · 2026-08-20T01:48:47.554Z
+> 466:## linha 165 · user · 2026-08-20T01:48:59.697Z
+> 518:## linha 170 · user · 2026-08-20T01:49:19.952Z
+> 542:## linha 179 · user · 2026-08-20T01:49:53.909Z
+> 550:## linha 183 · user · 2026-08-20T01:49:58.637Z
+> 572:## linha 186 · assistant · 2026-08-20T01:50:03.782Z
+> 578:## linha 197 · user · 2026-08-20T01:50:28.463Z
+> 598:## linha 202 · user · 2026-08-20T01:50:42.763Z
+> 614:## linha 218 · user · 2026-08-20T02:29:30.827Z
+> 625:## linha 230 · user · 2026-08-20T02:29:40.803Z
+> 639:## linha 232 · user · 2026-08-20T02:29:45.900Z
+> ```
+
+## 🤖 Claude *(22:06:13)*
+
+
+## 🤖 Claude *(22:06:16)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "F=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee72a767-c699-4c5c-bf74-f27b5bf10c38/scratchpad/9router-raw.md\nsed -n '231,330p' \"$F\"",
+  "description": "L\u00ea o veredito do recon do 9router"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ## linha 86 · user · 2026-08-20T01:22:36.854Z
+> 
+> # 9Router Analysis
+> 
+> ## (1) Provider Connections & "Free" Access Methods
+> 
+> **How it obtains free access:**
+> 
+> 9Router connects to legitimate free tiers offered by providers themselves:
+> - **Kiro AI**: "50 credits/month free" via "AWS Builder ID, AWS IAM Identity Center, Google, or GitHub" OAuth
+> - **OpenCode Free**: "No-auth passthrough proxy" that "auto-fetch[es] models"
+> - **Vertex AI**: "$300 free credits for new GCP accounts"
+> 
+> The mechanism is **NOT** reusing stolen subscriptions. Instead, it:
+> - Routes requests through OAuth connections users authenticate themselves
+> - Supports "multi-account" per provider for "load balancing + redundancy"
+> - Implements "round-robin" routing between accounts
+> - Tracks quota per provider to "maximize subscription value"
+> 
+> No evidence of session hijacking or unauthorized credential reuse.
+> 
+> ## (2) Security Notices & CVEs
+> 
+> The README contains **no disclosed CVEs, SSRF vulnerabilities, or v0.5.2 patch notes**. No security advisories appear in this documentation.
+> 
+> ## (3) Telemetry & Cloud Sync
+> 
+> **Cloud Sync is enabled by default:**
+> - "Cloud Sync" listed as a feature: "Sync config across devices"
+> - Environment variables reference: `CLOUD_URL`, `BASE_URL` for cloud sync
+> 
+> **Disable method:** Set `CLOUD_URL` to empty or null; however, explicit disable instructions are absent from this page.
+> 
+> ## (4) License & Version
+> 
+> - **License**: "MIT License"
+> - **Current version**: npm badge shows active publishing; no explicit version string provided in README (check `package.json`)
+> 
+> ## (5) Terms of Service Warnings
+> 
+> **No explicit warnings appear.** The FAQ states: "9Router is free, open-source software" and "never charges you anything," but contains **no language cautioning about provider ToS violations or account ban risks**.
+> 
+> The closest statement: Users "only pay" to "subscription providers…pay them directly" — implying terms enforcement is the provider's responsibility, not 9Router's.
+> 
+> 
+> ---
+> ## linha 93 · assistant · 2026-08-20T01:23:55.326Z
+> 
+> Verifiquei antes de opinar. **Minha suspeita inicial estava errada e eu a corrijo: o 9router existe, é real e o Gemini acertou o produto** — inclusive a CVE, que eu esperava ser confabulação e é verdadeira, com o número certo.
+> 
+> ## O que confirmei materialmente
+> 
+> | Afirmação do Gemini | Veredito |
+> |---|---|
+> | 9router existe, MIT, gateway local `:20128`, 40+ provedores | ✅ Real — [decolua/9router](https://github.com/decolua/9router) |
+> | RTK comprime saída de ferramenta (git diff, grep, tree, log) −20/−40% | ✅ Confirmado no README |
+> | Fallback 3 níveis + round-robin multi-conta + tradução de protocolo | ✅ Confirmado |
+> | **CVE-2026-56676**, SSRF + DNS rebinding, corrigido em **0.5.2** | ✅ **Real** — SSRF+TOCTOU, **CVSS 7.4 HIGH** ([THREATINT](https://cve.threatint.eu/CVE/CVE-2026-56676)) |
+> | Cloud Sync ligado por padrão (`CLOUD_URL`) | ✅ Confirmado — a cautela dele procede |
+> | Ollama local em `127.0.0.1:11435` | ✅ Existe (responde `mcorch_model`) |
+> | *"Substitui o `fcc-server`"* | ❌ **Premissa fabricada** — `fcc-server`: **0 ocorrências** no repo, 0 containers, 0 units. Não existe na nossa stack. |
+> 
+> Ele também não sabe que **já temos o Nível 3**: `mcorch_model` self-host no Ollama (US$ 0, selado 2026-08-19 na branch). Isso na verdade *fortalece* o caso dele.
+> 
+> ## As três objeções que ele não levantou
+> 
+> **1. RTK contra a Lei 1 — esta é a objeção que mata o "implantar de imediato".**
+> O RTK reescreve a saída da ferramenta **entre o tool e o modelo**, com filtros `dedup-log` e `smart-truncate`. Nosso harness inteiro se apoia em prova literal: hash de commit, `ls -la` byte-exato, `916 passed`, bytes de `ffprobe`. Um roteador que trunca `git diff` e deduplica log **corrompe a cadeia de evidência da Materialidade** — e da forma mais perigosa: em silêncio, com o gate verde. É exatamente a família dos quatro defeitos que reprovaram o EP07.
+> 
+> **2. Caveman Mode / Ponytail injetam system prompt.** Eles brigam com o Master Execution Protocol, com as 4 Leis e com o registro executivo PT-BR. Para o main-loop, é não.
+> 
+> **3. Fallback silencioso = falso-sucesso de qualidade.** Se a quota estoura no meio da sessão e ele cai para o tier grátis, a sessão continua, mas ninguém registra qual modelo produziu qual commit. Só é aceitável se o modelo efetivo for carimbado na telemetria.
+> 
+> E um ponto de negócio que ele não tocou: **round-robin multi-conta para drenar quota** é o padrão que provedores tratam como contorno de rate limit. Usar o *free tier próprio* de cada um via OAuth seu é uma coisa; rotacionar contas é outra. A conta em risco é a sua — vale ler os termos antes de apontar o Claude Code para lá.
+> 
+> ## Onde ele acertou em cheio
+> 
+> A **fronteira** — e é a melhor parte da análise: plano de dev/worker ✅, plano SaaS multi-tenant ❌. `decrypted_user_api_keys` per-tenant + ES256 JWKS fail-closed + `deduct_mco_coins` atômico não são negociáveis, e um roteador de infra não é billing engine. Loopback-only, rede isolada, ≥0.5.2, `CLOUD_URL` vazio, chaves de dev e nunca `service_role` — tudo correto.
+> 
+> ## Minha recomendação
+> 
+> **Não é "implantar de imediato" — é probe-first com escopo cirúrgico.** O valor é real (crons e MAPE-K rodando 24/7 em tier grátis sem queimar saldo), mas as duas features que geram o valor são as que brigam com a Lei 1.
+> 
+> - **Escopo:** agentes de background/cron **apenas**. Fora do main-loop que faz claim de materialidade.
+> - **RTK desligado** em qualquer caminho que alimente prova material.
+> - **Modelo efetivo carimbado** em `infra_health_logs` a cada chamada.
+> - **Teto de memória no container** — [[reference_host_capacity_and_agent_oom]]: um agente já derrubou este host a 15,6 GB.
+> - **Lei 2:** SOP antes do código. É tooling interno, então não puxa BoK 9/9 — mas puxa `docs/processes/<slug>.md` com sequência e recovery.
+> 
+> *(De passagem: o Ollama de `:11434` escuta em todas as interfaces, mas o ufw está ativo liberando só 22/tcp — a fortaleza da sessão passada está segurando.)*
+> 
+> Quer que eu escreva o SOP e monte o spike sandboxed para medirmos o ganho real de token nos crons antes de qualquer decisão?
+> 
+> **Sources:** [decolua/9router](https://github.com/decolua/9router) · [CVE-2026-56676](https://cve.threatint.eu/CVE/CVE-2026-56676) · [x-cmd/9router](https://www.x-cmd.com/install/9router/)
+> 
+> 
+> ---
+> ## linha 97 · user · 2026-08-20T01:44:00.334Z
+> 
+> fcc-server ela existe se eu usar  ou voce como ubuntu usar claude  fcc-server (so nao lembro se tem - antes) ou -fcc-server em algum momento o gemini me ajudou a implantar ele no sistema.: O fcc-server é o servidor/proxy do projeto open-source Free Claude Code (free-claude-code, originalmente criado por Alishahryar1).
+> ```
+
+## 🤖 Claude *(22:06:26)*
+
+
+## 🤖 Claude *(22:06:27)*
+
+Recon completo recuperado. Vou selar num documento e checar duas pontas que ficaram abertas.
+
+## 🤖 Claude *(22:06:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 9router instalado hoje? ===\"; which 9router 2>/dev/null; ls /home/ubuntu/.9router 2>/dev/null; ss -tlnp 2>/dev/null | grep -E ':20128' || echo \"(nao ha nada na 20128)\"\necho; echo \"=== fcc-server existe no host? (ficou em aberto no recon) ===\"\nwhich fcc-server free-claude-code 2>/dev/null; ls -d /home/ubuntu/*fcc* /home/ubuntu/*free-claude* 2>/dev/null; systemctl --user list-units --all --plain --no-pager 2>/dev/null | grep -iE 'fcc|claude-code' | head -5 || true\ndocker ps -a --format '{{.Names}}' 2>/dev/null | grep -iE 'fcc|9router|free' || echo \"(nenhum container fcc/9router)\"\necho; echo \"=== o script do spike ainda existe? ===\"\nls -la /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra--claude-worktrees-handson-02136e/edd22b35-2750-433a-95f0-6c0f13d077e4/workflows/scripts/9router-adoption-spike-wf_e5410882-ba5.js 2>/dev/null || echo \"(script do workflow AUSENTE)\"",
+  "description": "Verifica estado atual do 9router e fcc-server"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 9router instalado hoje? ===
+> db
+> jwt-secret
+> logs
+> runtime
+> (nao ha nada na 20128)
+> 
+> === fcc-server existe no host? (ficou em aberto no recon) ===
+> /home/ubuntu/.local/bin/fcc-server
+> /home/ubuntu/.local/bin/free-claude-code
+> /home/ubuntu/free-claude-code
+> var-lib-docker-overlay2-5e5343d5a0a6872b81e6e1d468291b4cfccca66ce6d3c2fbd063ecaf9857ff26-merged.mount                  loaded    active   mounted   /var/lib/docker/overlay2/5e5343d5a0a6872b81e6e1d468291b4cfccca66ce6d3c2fbd063ecaf9857ff26/merged
+> (nenhum container fcc/9router)
+> 
+> === o script do spike ainda existe? ===
+> -rw------- 1 ubuntu ubuntu 14202 Aug 19 22:46 /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra--claude-worktrees-handson-02136e/edd22b35-2750-433a-95f0-6c0f13d077e4/workflows/scripts/9router-adoption-spike-wf_e5410882-ba5.js
+> ```
+
+## 🤖 Claude *(22:06:45)*
+
+
+## 🤖 Claude *(22:06:47)*
+
+Dois achados que **corrigem o recon**: `/home/ubuntu/.9router/` já existe (db, jwt-secret, logs, runtime) — ele foi instalado — e o `fcc-server` **existe mesmo**, você estava certo: está em `/home/ubuntu/.local/bin/`, fora do repo (por isso o grep anterior deu zero).
+
+## 🤖 Claude *(22:06:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "echo \"=== 9router: versao instalada (a CVE exige >= 0.5.2) ===\"\nls /home/ubuntu/.9router/ -la 2>/dev/null\nnpm ls -g --depth=0 2>/dev/null | grep -iE '9router|router' || echo \"(nao esta no npm global do node padrao)\"\nfind /home/ubuntu/.9router -maxdepth 2 -name 'package.json' 2>/dev/null | head -3\necho \"--- logs (ultima atividade) ---\"; ls -la /home/ubuntu/.9router/logs/ 2>/dev/null | head -5\necho; echo \"=== fcc-server: o que e ===\"; ls -la /home/ubuntu/free-claude-code/ 2>/dev/null | head -8\nhead -5 /home/ubuntu/.local/bin/fcc-server 2>/dev/null",
+  "description": "Detalha a instala\u00e7\u00e3o do 9router e do fcc-server"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 9router: versao instalada (a CVE exige >= 0.5.2) ===
+> total 24
+> drwxrwxr-x  5 ubuntu ubuntu 4096 Aug 19 22:50 .
+> drwxr-x--- 77 ubuntu ubuntu 4096 Aug 21 18:42 ..
+> drwxrwxr-x  3 ubuntu ubuntu 4096 Aug 19 22:50 db
+> -rw-------  1 ubuntu ubuntu   64 Aug 19 22:49 jwt-secret
+> drwxrwxr-x  3 ubuntu ubuntu 4096 Aug 19 22:49 logs
+> drwxrwxr-x  4 ubuntu ubuntu 4096 Aug 19 22:49 runtime
+> (nao esta no npm global do node padrao)
+> /home/ubuntu/.9router/runtime/package.json
+> --- logs (ultima atividade) ---
+> total 12
+> drwxrwxr-x 3 ubuntu ubuntu 4096 Aug 19 22:49 .
+> drwxrwxr-x 5 ubuntu ubuntu 4096 Aug 19 22:50 ..
+> drwxrwxr-x 2 ubuntu ubuntu 4096 Aug 19 22:49 mitm
+> 
+> === fcc-server: o que e ===
+> total 536
+> drwxrwxr-x 15 ubuntu ubuntu   4096 Jul  2 18:20 .
+> drwxr-x--- 77 ubuntu ubuntu   4096 Aug 21 18:42 ..
+> -rw-rw-r--  1 ubuntu ubuntu   6814 Jul  2 17:45 AGENTS.md
+> drwxrwxr-x  7 ubuntu ubuntu   4096 Jul  2 17:45 api
+> -rw-rw-r--  1 ubuntu ubuntu  38354 Jul  2 17:45 ARCHITECTURE.md
+> drwxrwxr-x  2 ubuntu ubuntu   4096 Jul  2 17:45 assets
+> -rw-rw-r--  1 ubuntu ubuntu   6814 Jul  2 17:45 CLAUDE.md
+> #!/home/ubuntu/.local/share/uv/tools/free-claude-code/bin/python
+> # -*- coding: utf-8 -*-
+> import sys
+> from cli.entrypoints import serve
+> if __name__ == "__main__":
+> ```
+
+## 🤖 Claude *(22:07:02)*
+
+
+## 🤖 Claude *(22:07:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nVER=$(python3 -c \"import json;d=json.load(open('/home/ubuntu/.9router/runtime/package.json'));print(d.get('name','?'),d.get('version','?'))\" 2>/dev/null || echo \"ilegivel\")\necho \"versao instalada: $VER\"\nmkdir -p docs/roadmap\ncat > docs/roadmap/9router-recon-2026-08-20.md <<EOF\n# 9router \u2014 recon e decis\u00e3o de ado\u00e7\u00e3o (2026-08-20)\n\n> **Por que este documento existe:** o recon inteiro vivia **apenas no transcript da sess\u00e3o \\`251db3ca\\`**, que ficou \u00f3rf\u00e3 quando a porta SSH migrou. Diretiva Sovereign 2026-08-21: *\"preciso que seja f\u00e1cil recuper\u00e1vel\"*. Extrato bruto das 30 mensagens: \\`scripts/../.claude/context/9router-recon-raw.md\\`.\n>\n> **Objetivo por tr\u00e1s disto:** desenvolvimento **24/7** dos agentes de fundo sem queimar saldo \u2014 deixando o Claude Code para o que interessa (estrat\u00e9gia, processo, projeto).\n\n## 1. O que \u00e9\n\n[decolua/9router](https://github.com/decolua/9router) \u2014 gateway LLM **local**, MIT, escuta em \\`:20128/v1\\`. Agrega 40+ provedores / 100+ modelos atr\u00e1s de um endpoint s\u00f3; Claude Code, Codex, Cursor, Cline e OpenClaw apontam para ele.\n\n## 2. O que foi verificado materialmente (2026-08-20)\n\n| Afirma\u00e7\u00e3o | Veredito |\n|---|---|\n| Existe, MIT, gateway local \\`:20128\\`, 40+ provedores | \u2705 Real |\n| **RTK** comprime sa\u00edda de ferramenta (git diff, grep, tree, log) \u221220/\u221240% | \u2705 Confirmado no README |\n| Fallback em 3 n\u00edveis + round-robin multi-conta + tradu\u00e7\u00e3o de protocolo | \u2705 Confirmado |\n| **CVE-2026-56676** \u2014 SSRF + DNS rebinding (TOCTOU), **CVSS 7.4 HIGH**, corrigido em **0.5.2** | \u2705 Real ([THREATINT](https://cve.threatint.eu/CVE/CVE-2026-56676)) |\n| Cloud Sync **ligado por padr\u00e3o** (\\`CLOUD_URL\\`) | \u2705 Confirmado |\n| Acesso gr\u00e1tis = free tiers leg\u00edtimos via OAuth do pr\u00f3prio usu\u00e1rio (Kiro 50 cr\u00e9ditos/m\u00eas, OpenCode passthrough, Vertex US\\$300 de trial) | \u2705 N\u00e3o h\u00e1 reuso de credencial roubada |\n| *\"Substitui o \\`fcc-server\\`\"* | \u26a0\ufe0f **ver \u00a73** |\n\n## 3. Corre\u00e7\u00f5es apuradas em 2026-08-21\n\nO recon original concluiu que o \\`fcc-server\\` era **premissa fabricada** (\"0 ocorr\u00eancias no repo\"). **Estava errado** \u2014 o Sovereign tinha raz\u00e3o. Ele existe, s\u00f3 que **fora do reposit\u00f3rio**, no n\u00edvel do usu\u00e1rio:\n\n\\`\\`\\`\n/home/ubuntu/free-claude-code/          projeto (AGENTS.md \u00b7 ARCHITECTURE.md \u00b7 api/)\n/home/ubuntu/.local/bin/fcc-server      entrypoint Python (uv tool)\n/home/ubuntu/.local/bin/free-claude-code\n\\`\\`\\`\n\n\u00c9 o *Free Claude Code* (Alishahryar1), instalado em 2026-07-02. **Li\u00e7\u00e3o:** \\`grep\\` no repo n\u00e3o prova aus\u00eancia no host \u2014 a mesma fam\u00edlia do que motivou o runbook \\`docs/ops/host-hardening-2026-08.md\\`.\n\nE o **9router j\u00e1 foi instalado**: \\`/home/ubuntu/.9router/\\` (db \u00b7 jwt-secret \u00b7 logs/mitm \u00b7 runtime) datado de **2026-08-19 22:49**. Runtime: \\`$VER\\`. **N\u00e3o est\u00e1 rodando** \u2014 nada escutando na 20128 em 2026-08-21.\n\n## 4. As tr\u00eas obje\u00e7\u00f5es que travam o \"implantar de imediato\"\n\n1. **RTK \u00d7 Lei 1 (Materialidade) \u2014 a que mais pesa.** O RTK reescreve a sa\u00edda da ferramenta *entre o tool e o modelo* (\\`dedup-log\\`, \\`smart-truncate\\`). O harness inteiro se apoia em prova literal: hash de commit, \\`ls -la\\` byte-exato, \\`916 passed\\`, bytes do \\`ffprobe\\`. Um roteador que trunca \\`git diff\\` **corrompe a cadeia de evid\u00eancia em sil\u00eancio, com o gate verde**.\n2. **Caveman Mode / Ponytail injetam system prompt** \u2014 brigam com o Master Execution Protocol, as Leis e o registro PT-BR. Para o main-loop, n\u00e3o.\n3. **Fallback silencioso = falso-sucesso de qualidade.** Se a quota estoura no meio da sess\u00e3o e cai para o tier gr\u00e1tis, ningu\u00e9m registra qual modelo produziu qual commit.\n\n**Risco de ToS (de neg\u00f3cio, n\u00e3o t\u00e9cnico):** usar o *free tier pr\u00f3prio* de cada provedor via OAuth seu \u00e9 uma coisa; **round-robin multi-conta para drenar quota** \u00e9 o padr\u00e3o que provedores tratam como contorno de rate limit. A conta em risco \u00e9 a do Sovereign.\n\n## 5. A fronteira (a melhor parte da an\u00e1lise)\n\n| Camada | 9router |\n|---|---|\n| Agentes de fundo / cron / MAPE-K / worker | \u2705 **DEVE** \u2014 \u00e9 onde o valor est\u00e1 |\n| Main-loop que faz claim de materialidade | \u274c n\u00e3o |\n| **SaaS multi-tenant (usu\u00e1rios externos, Vision MCP)** | \u274c **NUNCA** \u2014 exige \\`decrypted_user_api_keys\\` per-tenant, ES256 JWKS fail-closed e \\`deduct_mco_coins\\` at\u00f4mico. Roteador de infra n\u00e3o \u00e9 billing engine. |\n\n## 6. Gates para qualquer spike\n\n- Vers\u00e3o **\u2265 0.5.2** (CVE-2026-56676)\n- \\`CLOUD_URL\\` **vazio** (mata o Cloud Sync)\n- **Loopback-only**, rede Docker isolada\n- **RTK DESLIGADO** em qualquer caminho que alimente prova material\n- **Modelo efetivo carimbado** em \\`infra_health_logs\\` a cada chamada\n- **Teto de mem\u00f3ria no container** \u2014 um agente j\u00e1 derrubou este host a 15,6 GB\n- Chaves de **dev**, nunca \\`service_role\\` nem master token do Supabase\n- **Lei 2:** SOP em \\`docs/processes/9router-gateway.md\\` antes do c\u00f3digo (tooling interno \u2192 n\u00e3o puxa BoK 9/9)\n\n## 7. Recomenda\u00e7\u00e3o registrada\n\n**N\u00e3o \u00e9 \"implantar de imediato\" \u2014 \u00e9 probe-first com escopo cir\u00fargico.** O valor \u00e9 real (crons e MAPE-K 24/7 em tier gr\u00e1tis), mas as duas features que geram o valor (RTK e fallback silencioso) s\u00e3o exatamente as que brigam com a Lei 1. Medir o ganho real de token nos crons **antes** de qualquer decis\u00e3o.\n\n## 8. Como retomar\n\n\\`\\`\\`\nWorkflow({ scriptPath: \"/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra--claude-worktrees-handson-02136e/edd22b35-2750-433a-95f0-6c0f13d077e4/workflows/scripts/9router-adoption-spike-wf_e5410882-ba5.js\",\n           resumeFromRunId: \"wf_e5410882-ba5\" })\n\\`\\`\\`\n\n\u26a0\ufe0f Resume por \\`scriptPath\\` **n\u00e3o recarrega \\`args\\`** \u2014 repassar verbatim. E conferir \\`journal.jsonl\\` antes de supor que h\u00e1 resultado em cache.\n\n**Pend\u00eancias abertas:** (a) medir o ganho de token com RTK ligado \u00d7 desligado nos crons; (b) decidir se o \\`fcc-server\\` j\u00e1 instalado sai de cena ou coexiste; (c) ler os termos dos provedores antes de apontar o Claude Code para o pool.\nEOF\nmkdir -p .claude/context\ncp /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee72a767-c699-4c5c-bf74-f27b5bf10c38/scratchpad/9router-raw.md .claude/context/9router-recon-raw.md\nwc -l docs/roadmap/9router-recon-2026-08-20.md .claude/context/9router-recon-raw.md",
+  "description": "Sela o recon do 9router em documento dur\u00e1vel"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> versao instalada: 9router-runtime 1.0.0
+>    77 docs/roadmap/9router-recon-2026-08-20.md
+>   730 .claude/context/9router-recon-raw.md
+>   807 total
+> ```
+
+## 🤖 Claude *(22:08:03)*
+
+
+## 🤖 Claude *(22:08:05)*
+
+Regra recebida e ela **reprova meu próprio protótipo** — o Luhmann do v4 é Ken Burns sobre still, não vídeo. Em quadro cheio ele expõe justamente a imobilidade. Vou confirmar quais clipes são Veo de verdade antes de realocar.
+
+## 🤖 Claude *(22:08:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit\necho \"=== manifesto: quem e Veo real, quem e Ken Burns ===\"\npython3 - <<'PY'\nimport json,glob\nfor f in [\"manifest-pilot.json\",\"manifest-fleet.json\"]:\n    try: d=json.load(open(f))\n    except Exception as e: print(f\"{f}: {e}\"); continue\n    print(f\"\\n--- {f} \u00b7 aspect={d.get('aspect')} \u00b7 {len(d.get('clips',[]))} clipes ---\")\n    for c in d.get(\"clips\",[]):\n        print(f\"  {c.get('id','?'):22s} family={str(c.get('family')):10s} model={str(c.get('model')):16s} dur={c.get('duration','8')} audio={c.get('audio')}\")\nPY\necho; echo \"=== e os kb_*? aparecem em algum manifesto? ===\"\ngrep -o '\"id\"[^,]*' manifest-fleet.json manifest-pilot.json 2>/dev/null | grep -i 'kb_' || echo \"(nenhum kb_ nos manifestos \u2192 gerados por outro caminho = Ken Burns local)\"",
+  "description": "Distingue definitivamente Veo real de Ken Burns"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === manifesto: quem e Veo real, quem e Ken Burns ===
+> 
+> --- manifest-pilot.json · aspect=16:9 · 2 clipes ---
+>   b1_bell                family=keyframe   model=None             dur=8 audio=True
+>   b1_maos                family=refs       model=None             dur=8 audio=True
+> 
+> --- manifest-fleet.json · aspect=16:9 · 10 clipes ---
+>   b2_luhmann             family=keyframe   model=None             dur=8 audio=True
+>   b2_payoff              family=keyframe   model=None             dur=8 audio=True
+>   b3_valla               family=keyframe   model=None             dur=8 audio=True
+>   b3_payoff              family=keyframe   model=None             dur=8 audio=True
+>   b4_alfinetes           family=keyframe   model=None             dur=8 audio=True
+>   b5_papin               family=keyframe   model=None             dur=8 audio=True
+>   b5_payoff              family=keyframe   model=None             dur=8 audio=True
+>   b6_apollo              family=keyframe   model=None             dur=8 audio=True
+>   b7_petrov              family=keyframe   model=None             dur=8 audio=True
+>   outro_presenter        family=refs       model=None             dur=8 audio=True
+> 
+> === e os kb_*? aparecem em algum manifesto? ===
+> (nenhum kb_ nos manifestos → gerados por outro caminho = Ken Burns local)
+> ```
+
+## 🤖 Claude *(22:08:31)*
+
+
+## 🤖 Claude *(22:08:33)*
+
+**Achado material que muda a prioridade dos 20 clipes.** Os manifestos provam que `b2_luhmann`, `b4_alfinetes`, `b6_apollo` e `b7_petrov` foram **encomendados como Veo** (`family=keyframe`) — mas no disco só existem como `kb_*`. Ou seja: **as quatro gerações falharam e viraram Ken Burns sobre still.** São justamente os quatro planos históricos-âncora do episódio.
+
+Vou fechar a pergunta do Vertex.
+
+## 🤖 Claude *(22:08:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== de onde vem o pool de chaves do provider ===\"\ngrep -rn \"listProviderKeyCandidates\" supabase/functions/_shared/*.ts 2>/dev/null | head -3\ngrep -rnA12 \"export async function listProviderKeyCandidates\" supabase/functions/_shared/*.ts 2>/dev/null | grep -E 'from\\(|select\\(|eq\\(|auth_type|provider' | head -12",
+  "description": "Localiza a tabela do pool de chaves"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === de onde vem o pool de chaves do provider ===
+> supabase/functions/_shared/provider-keys.ts:115:export async function listProviderKeyCandidates(
+> supabase/functions/_shared/provider-keys.ts:181:  const candidates = await listProviderKeyCandidates(admin, userId, provider, stored.keyId ?? undefined);
+> supabase/functions/_shared/provider-keys.test.ts:13:import { listProviderKeyCandidates, resolveStoredKey, resolveProviderKey } from "./provider-keys";
+> supabase/functions/_shared/provider-keys.ts:115:export async function listProviderKeyCandidates(
+> supabase/functions/_shared/provider-keys.ts-116-  admin: AdminClientLike,
+> supabase/functions/_shared/provider-keys.ts-117-  userId: string,
+> supabase/functions/_shared/provider-keys.ts-118-  provider: ProviderName,
+> supabase/functions/_shared/provider-keys.ts-119-  keyId?: string | null,
+> supabase/functions/_shared/provider-keys.ts-120-): Promise<ResolvedKey[]> {
+> supabase/functions/_shared/provider-keys.ts-121-  const out: ResolvedKey[] = [];
+> supabase/functions/_shared/provider-keys.ts-122-  const seen = new Set<string>();
+> supabase/functions/_shared/provider-keys.ts-123-  const push = (k: ResolvedKey) => {
+> supabase/functions/_shared/provider-keys.ts-124-    if (!k.apiKey || seen.has(k.apiKey)) return;   // dedup: legado costuma ser a mesma chave do pool
+> supabase/functions/_shared/provider-keys.ts-125-    seen.add(k.apiKey);
+> supabase/functions/_shared/provider-keys.ts-126-    out.push(k);
+> ```
+
+## 🤖 Claude *(22:08:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsed -n '126,175p' supabase/functions/_shared/provider-keys.ts | grep -nE 'from\\(|select|eq\\(|auth_type|is_active|label|metadata' ",
+  "description": "Extrai a tabela e colunas do pool"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 7:      .from("decrypted_user_provider_keys")
+> 8:      .select("id, api_key, label, is_active, metadata")
+> 9:      .eq("id", keyId)
+> 10:      .eq("user_id", userId)
+> 11:      .eq("provider", provider)
+> 13:    if (data?.is_active && data.api_key) {
+> 14:      push({ apiKey: data.api_key as string, keyId: data.id as string, source: "pool-explicit", label: data.label as string, metadata: data.metadata as Record<string, unknown>, authType: authTypeOf(data.metadata) });
+> 20:    .from("decrypted_user_provider_keys")
+> 21:    .select("id, api_key, label, metadata")
+> 22:    .eq("user_id", userId)
+> 23:    .eq("provider", provider)
+> 24:    .eq("is_active", true)
+> 26:  for (const row of (pool ?? []) as Array<{ id: string; api_key: string; label: string; metadata: Record<string, unknown> }>) {
+> 27:    push({ apiKey: row.api_key, keyId: row.id, source: "pool-priority", label: row.label, metadata: row.metadata, authType: authTypeOf(row.metadata) });
+> 33:    .from("decrypted_user_api_keys")
+> 34:    .select(col)
+> 35:    .eq("user_id", userId)
+> 39:    push({ apiKey: legacyKey, keyId: null, source: "legacy", label: "chave legada", authType: "gemini-api" });
+> ```
+
+## 🤖 Claude *(22:08:42)*
+
+
+## 🤖 Claude *(22:08:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ncat > /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee72a767-c699-4c5c-bf74-f27b5bf10c38/scratchpad/q-google-keys.ts <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nconst sb = createClient(process.env.VITE_SUPABASE_URL!, process.env.SB_SECRET_KEY!, { auth: { persistSession: false } });\nconst USER = \"ada39fae-67e1-4e53-af1c-5a18e1c108e8\";\nconst { data, error } = await sb.from(\"decrypted_user_provider_keys\")\n  .select(\"id, provider, label, is_active, metadata, created_at\").eq(\"user_id\", USER).eq(\"provider\", \"google\");\nif (error) { console.error(\"erro:\", error.message); process.exit(1); }\nconsole.log(`credenciais google do User 0: ${data?.length ?? 0}\\n`);\nfor (const r of data ?? []) {\n  const m = (r.metadata ?? {}) as any;\n  console.log(`  ${r.label ?? \"(sem r\u00f3tulo)\"}`);\n  console.log(`     auth_type      : ${m.auth_type ?? \"(ausente \u2192 gemini-api)\"}`);\n  console.log(`     vertex_project : ${m.vertex_project ?? \"\u2014\"}`);\n  console.log(`     vertex_location: ${m.vertex_location ?? \"\u2014\"}`);\n  console.log(`     ativa          : ${r.is_active}   criada: ${String(r.created_at).slice(0,10)}\\n`);\n}\nEOF\nbun run /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee72a767-c699-4c5c-bf74-f27b5bf10c38/scratchpad/q-google-keys.ts 2>&1 | tail -25",
+  "description": "Consulta as credenciais Google configuradas"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> erro: column decrypted_user_provider_keys.created_at does not exist
+> ```
+
+## 🤖 Claude *(22:08:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nS=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee72a767-c699-4c5c-bf74-f27b5bf10c38/scratchpad\nsed -i 's/, created_at//; s/   criada: \\${String(r.created_at).slice(0,10)}//' \"$S/q-google-keys.ts\"\nbun run \"$S/q-google-keys.ts\" 2>&1 | tail -25",
+  "description": "Reexecuta a consulta sem a coluna inexistente"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> credenciais google do User 0: 2
+> 
+>   GabrielAI
+>      auth_type      : (ausente → gemini-api)
+>      vertex_project : —
+>      vertex_location: —
+>      ativa          : true
+> 
+>   gabrielai-veo · Vertex
+>      auth_type      : vertex-sa
+>      vertex_project : project-a302ace9-d9f9-4801-b7d
+>      vertex_location: us-central1
+>      ativa          : true
+> ```
+
+## 🤖 Claude *(22:09:18)*
+
+
+## 🤖 Claude *(22:09:47)*
+
+Tudo apurado. Quatro coisas, e uma delas corrige o que eu te disse antes.
+
+## A regra nova reprova meu protótipo — e com razão
+
+O Luhmann que você viu em quadro cheio é **Ken Burns sobre imagem parada**. Em cartão de 52% a imobilidade passava; em quadro cheio ela aparece. Sua regra está certa e fica valendo: **caixa cheia só para vídeo real; cartão para imagem estática**, salvo pedido explícito.
+
+E eu te disse antes que dava para "economizar clipe" usando Ken Burns em quadro cheio. **Estava errado** — e o motivo é pior do que eu imaginava.
+
+## O achado que reorganiza os 20 clipes
+
+Os manifestos provam que `b2_luhmann`, `b4_alfinetes`, `b6_apollo` e `b7_petrov` foram **encomendados como Veo** (`family=keyframe`, `audio=true`). No disco só existem como `kb_*`, feitos a partir dos stills em `keyframes/`.
+
+**As quatro gerações falharam e viraram imagem parada.** E são exatamente os quatro planos históricos-âncora: o Zettelkasten, a oficina de alfinetes de 1776, a Apollo 11 e o Petrov. O episódio inteiro se apoia neles — e nenhum é vídeo.
+
+Isso não é detalhe de acabamento. É a causa raiz do "amador": metade dos momentos-âncora do EP08 são fotografias.
+
+## Vertex — o que dá e o que não dá para saber
+
+Duas credenciais suas, ambas ativas:
+
+| Rótulo | Caminho | Projeto | Preço 1080p |
+|---|---|---|---|
+| **GabrielAI** | `gemini-api` (BYOK) | — | US$ 0,12/s → **US$ 0,96** por clipe de 8s |
+| **gabrielai-veo · Vertex** | `vertex-sa` | `project-a302ace9-…` · us-central1 | US$ 0,15/s → **US$ 1,20** por clipe |
+
+**O saldo dos créditos de teste eu não consigo ler daqui** — cérebro sem mãos: não há `gcloud` no host, a service account está cifrada no banco, e o saldo de trial do GCP não é exposto por API; só aparece no Console (Faturamento → Créditos).
+
+Mas há um teste que responde melhor que o console: **disparar um clipe pelo caminho Vertex.** Se passar, os créditos estão vivos e os 20 saem de graça; se voltar 429, acabaram e migramos para o Gemini API. Custa no máximo US$ 1,20 para descobrir. É o que vou fazer primeiro.
+
+Cenário fechado, em 1080p como você pediu: **US$ 0 se o trial cobrir · US$ 19,20 pelo Gemini API · US$ 24 pelo Vertex pago.**
+
+## 9router — selado e recuperável
+
+`docs/roadmap/9router-recon-2026-08-20.md` (77 linhas) com o veredito completo, mais o extrato bruto das 30 mensagens em `.claude/context/9router-recon-raw.md`. Inclui o comando de resume do workflow (`wf_e5410882-ba5`).
+
+Duas correções que apurei hoje: **o `fcc-server` existe mesmo** — você estava certo. Está em `/home/ubuntu/free-claude-code/` e `/home/ubuntu/.local/bin/`, fora do repo (por isso o grep da sessão anterior deu zero e concluiu "premissa fabricada"). E o **9router já foi instalado** em 19/08 às 22:49 — `/home/ubuntu/.9router/` com db, jwt-secret e runtime 1.0.0. Não está rodando.
+
+O gate que trava: o RTK comprime a saída das ferramentas, e é exatamente disso que a Lei 1 vive. Para agente de fundo serve; para o loop que declara prova, não.
+
+## Os 20 clipes, realocados
+
+| Prioridade | Qtd | O quê |
+|---|---|---|
+| **1 — refazer o que falhou** | 4 | Luhmann · oficina 1776 · Apollo · Petrov, agora como Veo de verdade |
+| **2 — payoffs que nunca existiram** | 3 | b4 (o alfinete torto) · b6 (o polegar) · b7 (empurra o fone) |
+| **3 — gancho** | 2 | a tigela transbordando × o alfinete torto, sem palavra |
+| **4 — fala com lip-sync** | 3 | cold · CTA · outro, na sua identidade travada por referências |
+| **5 — adensar os blocos** | 8 | segundo plano de cada bloco, para o clipe herói não segurar 24s sozinho |
+
+Sobre o áudio, como você desenhou: clipe com fala → **narração cortada, áudio nativo do Veo manda**. Clipe sob narração → **gerado sem voz, só foley da cena**. Isso vira quatro faixas na composição: narração ElevenLabs · voz nativa dos clipes de fala · foley diegético contínuo · trilha por baixo para costurar. A voz da narração troca; o texto fica.
+
+E a verificação de posição entra como gate: colisão conferida **por aritmética ao longo do tempo**, não só no frame parado — elemento que entra em movimento tem que ser checado no percurso inteiro. Já há precedente disso no Encenador.
+
+Vou começar pelo probe do Vertex, que destrava o orçamento, e em seguida escrever os 20 prompts.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
