@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3718
-> * **Sessões do Claude**: 3665
+> * **Total de Sessões Registradas**: 3719
+> * **Sessões do Claude**: 3666
 > * **Sessões do Gemini**: 53
 
 ---
@@ -40,6 +40,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-02 - Fix TTS bridge and resolve critical production issues]]` - *2026-05-02*
 
 ### Orchestration & Agent System (MCORCH/Constellation)
+*   `[[2026-08-21 - 9router integração no MCORCH]]` - *2026-08-21*
 *   `[[2026-08-20 - 9router integração no MCORCH]]` - *2026-08-20*
 *   `[[2026-08-19 - Setup mcorch model specialist factory infrastructure]]` - *2026-08-19*
 *   `[[2026-08-18 - Setup mcorch model specialist factory infrastructure]]` - *2026-08-18*
@@ -51,8 +52,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-02 - Executor mestre MCORCH em malha fechada autônoma]]` - *2026-07-02*
 *   `[[2026-07-02 - Executar loop autônomo MCORCH com charter]]` - *2026-07-02*
 *   `[[2026-07-01 - Execução autônoma MCORCH com ciclo fechado]]` - *2026-07-01*
-*   `[[2026-07-01 - Executar loop autônomo MCORCH com charter]]` - *2026-07-01*
-*   *... e mais 10 sessões nessa categoria.*
+*   *... e mais 11 sessões nessa categoria.*
 
 ### UI Extensions & Layouts
 *   `[[2026-07-21 - Refinar canvas mobile e corrigir execução de nós]]` - *2026-07-21*
@@ -3314,6 +3314,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-01 - Configurar loop autônomo e definir fila soberana]]` (ClaudeSessions)
 
 ### Agosto 2026
+*   `[[2026-08-21 - 9router integração no MCORCH]]` (ClaudeSessions)
 *   `[[2026-08-20 - agent-ac0cf41abdefb27b7]]` (ClaudeSessions)
 *   `[[2026-08-20 - agent-a4dfd48db2ebbfbb2]]` (ClaudeSessions)
 *   `[[2026-08-20 - agent-a48488aa1c384277d]]` (ClaudeSessions)
