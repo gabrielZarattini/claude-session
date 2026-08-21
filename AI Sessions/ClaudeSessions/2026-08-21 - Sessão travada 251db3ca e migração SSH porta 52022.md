@@ -1474,6 +1474,458 @@ E uma proposta que **não executei** porque mexe em IAM da tenancy: o serviço d
 
 Sources: [npmjs.com/package/@mcpcn/ssh-mcp-server](https://www.npmjs.com/package/@mcpcn/ssh-mcp-server) · [github.com/shaike1/mcp-server-ssh](https://github.com/shaike1/mcp-server-ssh) · [github.com/AiondaDotCom/mcp-ssh](https://github.com/aiondadotcom/mcp-ssh)
 
+## 👤 User *(20:54:45)*
+
+PS C:\Users\gabri> Get-Command mcp-server-ssh | Format-List Source
+
+
+Source : C:\Users\gabri\AppData\Roaming\npm\mcp-server-ssh.ps1
+
+talvez então podemos continuar e tentar isso.: E uma proposta que não executei porque mexe em IAM da tenancy: o serviço de metadados responde, então a instância pode autenticar na OCI por instance_principal. Um Dynamic Group + uma policy sua, uma vez, e os pendentes 2 e 3 deixam de ser cliques arriscados no console e viram comando auditável. Foi o clique que abortou a limpeza ontem.
+
+Ou então organizar para terminar depois pois queria posta o próximo video no youtube amanhã que é sabado pois não pois na ultima semana depois de manter a consistencia por 5 videos. E nosso ep esta quasepronto
+
+## 🤖 Claude *(20:55:21)*
+
+
+## 🤖 Claude *(20:55:23)*
+
+`.ps1` no `AppData\Roaming\npm` = pacote npm global — o shim que o npm cria. Isso pina o ecossistema. Vou confirmar o pacote e, em paralelo, olhar o estado real do episódio, porque a sua segunda frase é a que decide a prioridade.
+
+## 🤖 Claude *(20:55:25)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://registry.npmjs.org/mcp-server-ssh",
+  "prompt": "Does a package named exactly \"mcp-server-ssh\" exist? If yes, report: its description, latest version, its \"bin\" entries, its dependencies (especially whether it depends on an SSH library like ssh2/node-ssh, or instead spawns the system ssh binary via child_process), and its repository URL. If it does not exist (404 / error), say clearly that it does not exist."
+}
+```
+
+## 🤖 Claude *(20:55:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== scripts/ep08/ ===\"; ls -la scripts/ep08/ 2>/dev/null || echo \"(ausente)\"\necho; echo \"=== roteiro EP08 \u2014 cabecalho ===\"; head -60 docs/roadmap/ep08-roteiro-v01-2026-08-16.md 2>/dev/null\necho; echo \"=== tamanho ===\"; wc -l docs/roadmap/ep08-roteiro-v01-2026-08-16.md 2>/dev/null",
+  "description": "Inspeciona o estado do EP08"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === scripts/ep08/ ===
+> total 104
+> drwxrwxr-x  2 ubuntu ubuntu  4096 Aug 17 15:26 .
+> drwxrwxr-x 20 gcrUX  gcrUX  12288 Aug 17 22:21 ..
+> -rw-rw-r--  1 ubuntu ubuntu 12787 Aug 17 11:20 assemble-ep08.ts
+> -rw-rw-r--  1 ubuntu ubuntu  5110 Aug 17 15:02 assemble-v3.ts
+> -rw-rw-r--  1 ubuntu ubuntu  4089 Aug 16 22:25 build-project.ts
+> -rw-rw-r--  1 ubuntu ubuntu  9417 Aug 17 00:06 gen-clips.ts
+> -rw-rw-r--  1 ubuntu ubuntu  1528 Aug 17 11:06 layout.ts
+> -rw-rw-r--  1 ubuntu ubuntu 19792 Aug 17 11:35 montar-blocks.ts
+> -rw-rw-r--  1 ubuntu ubuntu 22272 Aug 17 18:48 montar-blocks-v3.ts
+> 
+> === roteiro EP08 — cabecalho ===
+> <!-- EP08 · Roteiro v0.1 · 2026-08-16 · Selado da síntese de 3 drafts (painel wf_7418d19e) + curadoria.
+>      Outlier estrutural: "Learn 97% of Claude in Under 16 Minutes" (Dan Martell, 2M+ views — fato-diretiva).
+>      Conteúdo: 7 padrões agênticos (livro Agentic Design Patterns, A. Gulli) × âncoras históricas verificadas.
+>      PRODUÇÃO: gramática Keemfinity (1 evento/s · hard-cut #111212 · áudio só na edição) sobre Veo 3.1
+>      (famílias: keyframe Nano Banana XOR kit de 3 refs em repurpose-inbox/<uid>/ep08-kit/refs/) +
+>      Higgsfield 5s payoffs + interstícios MONTAR (G-LEG/G-HONESTIDADE). 16:9 · cat. 28 · título-tese.
+>      TÍTULO RECOMENDADO: "Hacks Expiram | Os 7 Padrões Por Trás de Toda IA Que Funciona"
+>      (molde tese comprovado do canal; thumbnail = tigela de alfinetes transbordando vs alfinete torto). -->
+> # EP08 — ROTEIRO COMPLETO · Canal Gabriel AI (PT-BR · 16:9 · alvo 7m30s · narração ≤ 1.250 palavras)
+> 
+> **Tese do episódio:** Hack de IA é commodity que expira a cada versão de modelo; padrão de engenharia é alavanca permanente. Tudo o que funciona em IA hoje já foi provado por décadas — ou séculos — de engenharia humana.
+> 
+> ---
+> 
+> ## 1. TÍTULOS-TESE (3 opções) + THUMBNAIL
+> 
+> | # | Título | Conceito de thumbnail (1 frase) |
+> |---|--------|--------------------------------|
+> | T1 | **Os 7 Padrões Secretos Por Trás de Toda IA Que Funciona** | O frame da tigela de madeira TRANSBORDANDO de alfinetes ao lado de UM alfinete torto solitário (bloco 4), com a headline caixa-alta "O SEGREDO NÃO É O MODELO". |
+> | T2 | **A Engenharia Invisível da IA \| O Que os Hacks Não Te Contam** | Rosto do oficial soviético banhado em luz vermelha pulsante (bloco 7), mão pairando sobre o telefone de baquelite, headline "A MÁQUINA TINHA CERTEZA. ELE NÃO." |
+> | T3 | **Hack Expira, Padrão Não: A Tese de 1964 Que Já Explicava a IA de Hoje** | Mãos de 1964 rosqueando segmentos de mangueira de latão sobre a escrivaninha da Bell Labs (bloco 1), headline "ISTO É UM PROMPT. DE 1964." |
+> 
+> ---
+> 
+> ## 2. COLD OPEN (0:00–0:20 · ~52 palavras)
+> 
+> > **NARRAÇÃO:**
+> > "Você não precisa de mais um truque de IA. Truque expira a cada versão de modelo — é como decorar atalhos de um programa que muda todo mês. Eu construo com IA todos os dias. E o que funciona são sete padrões de engenharia, provados há décadas — alguns, há séculos. O primeiro tem sessenta anos. Vamos."
+> 
+> **Direção visual do open:** headline caixa-alta alto-contraste nos primeiros 1,5–2s ("O SEGREDO NÃO É O MODELO" — passa o mute test em celular); pattern-break cut aos ~2,5–3s com swoosh direto para o clipe da Bell Labs. Zero vinheta, zero "nesse vídeo", zero pedido de inscrição.
+> 
+> ---
+> 
+> ## 3. OS 7 BLOCOS
+> 
+> ### BLOCO 1 — Padrão nº 1: ENCADEAMENTO (Prompt Chaining) · ~0:20–1:20
+> 
+> **(a) Narração (~112 palavras):**
+> 
+> > "Padrão número um. Você já pediu tudo de uma vez pra IA — relatório, análise e e-mail num prompt só — e recebeu uma sopa genérica? O erro não é o modelo: é pedir um bolo pronto a quem trabalha por etapas. O padrão chama-se encadeamento: quebre a tarefa em elos — resumir, extrair, redigir — e a saída de um vira a entrada do próximo. Errou? Você conserta um elo, não a obra inteira. Essa ideia foi datilografada em 1964, no memorando de Doug McIlroy na Bell Labs: programas acoplados 'como mangueira de jardim'. Esperou nove anos até Ken Thompson implementar o pipe do Unix, em 1973 [fonte: https://www.nokia.com/bell-labs/about/dennis-m-ritchie/mdmpipe.html]. Aplicação imediata: pegue hoje sua tarefa mais travada e divida em três prompts encadeados."
+> 
+> **(b) Conceito visual:** Clipe Veo 8s hiper-realista, push-in lento contínuo, escritório Bell Labs 1964 — luz de fim de tarde pela persiana, engenheiro de camisa branca e gravata fina finaliza uma tecla na máquina de escrever ("ding" da alavanca), olha para segmentos de mangueira de latão na mesa e os rosqueia um no outro formando uma linha; água límpida corre pelo interior translúcido, ganha velocidade na junção, gotas no contraluz; meio-sorriso em close — hard cut para near-black #111212 (últimos 4 frames). Um evento por segundo, câmera única. Negativos: sem texto legível na folha, sem líquido irreal, sem cartoon, sem jitter. Payoff moderno: segundo clipe curto (Higgsfield 5s) — mãos atuais em mesa escura deslizando três cartões físicos em fila, cada cartão "acendendo" o próximo ao encostar; hard cut #111212.
+> 
+> **(c) Interstício data-viz (FORMA pura):** Linha do tempo minimalista com dois pontos — "1964" e "1973" — e uma barra que se estica entre eles enquanto a narração diz "nove anos"; única legenda de rodapé: "fonte: Nokia Bell Labs — memorando McIlroy". Nenhum outro dígito.
+> 
+> ---
+> 
+> ### BLOCO 2 — Padrão nº 2: MEMÓRIA EXTERNA · ~1:20–2:20
+> 
+> **(a) Narração (~113 palavras):**
+> 
+> > "Padrão número dois. Toda segunda-feira você reexplica seu negócio pra IA, do zero. É um estagiário genial com amnésia: brilhante às nove, esquecido ao meio-dia. A cura é separar a conversa — curta e cara — de uma memória externa permanente, pesquisável por significado, que a IA consulta antes de responder. O sociólogo Niklas Luhmann fez isso em papel, a partir de 1952: o Zettelkasten — 90.000 fichas numeradas e interligadas em caixas de madeira [fonte: https://www.uni-bielefeld.de/fakultaeten/soziologie/forschung/luhmann-archiv/]. Ele perguntava, e a caixa respondia com conexões que ele mesmo tinha esquecido: cerca de 70 livros e mais de 400 artigos saíram dali. Aplicação imediata: crie um documento-mestre do seu negócio — e cole no início de toda conversa importante."
+> 
+> **(b) Conceito visual:** Clipe Veo 8s — escritório alemão anos 1970, luz de fim de tarde, poeira suspensa; professor de cardigã diante de armário de madeira do chão ao teto; dolly lento único: gaveta pesada desliza, dedos caminham sobre milhares de fichas amareladas, uma ficha erguida contra a luz (caligrafia fora de foco), giro de corpo para o segundo armário, segunda gaveta, segunda ficha, as duas deitadas lado a lado na escrivaninha, leve sorriso de reencontro — corte seco #111212. Profundidade de campo rasa mantém toda escrita ilegível. Negativos: sem texto denso legível, sem rostos deformados, sem jitter. Payoff moderno: clipe 5s de uma única gaveta se abrindo sozinha em câmera macro e uma ficha "flutuando" para a mão de alguém de camiseta — o mesmo gesto, 70 anos depois; hard cut.
+> 
+> **(c) Interstício data-viz:** Grafo de nós nascendo um a um e se conectando por arestas finas até formar uma constelação densa — pura forma, sem números; ao final, um único nó pulsa e "puxa" três vizinhos para o centro (a recuperação por associação encenada, não explicada).
+> 
+> ---
+> 
+> ### BLOCO 3 — Padrão nº 3: O CÉTICO EMBUTIDO (Agentic RAG) · ~2:20–3:20
+> 
+> === tamanho ===
+> 156 docs/roadmap/ep08-roteiro-v01-2026-08-16.md
+> ```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> # mcp-server-ssh Package Report
+> 
+> **Package exists:** Yes
+> 
+> **Description:**
+> "MCP server for SSH remote access: execute commands, transfer files via SFTP, generate SSH key pairs"
+> 
+> **Latest Version:** 1.0.2
+> 
+> **Bin Entries:**
+> - `mcp-server-ssh`: build/index.js
+> 
+> **Dependencies:**
+> The package depends on `ssh2` (^1.17.0), a pure JavaScript SSH library. It does NOT spawn the system SSH binary via child_process. Additional dependencies include `@modelcontextprotocol/sdk` and `zod`.
+> 
+> **Repository URL:**
+> https://github.com/bacarrdy/mcp-ssh-server
+> ```
+
+## 🤖 Claude *(20:55:48)*
+
+
+## 🤖 Claude *(20:55:50)*
+
+Os dois achados chegaram, e um deles **mata a minha sugestão anterior**: o pacote é `mcp-server-ssh` v1.0.2 e depende de **`ssh2`** — biblioteca JS pura, não invoca o `ssh` do sistema. Logo **ele ignora o `~/.ssh/config`**. O `-p` tem que estar na config dele. Vou buscar o formato exato.
+
+## 🤖 Claude *(20:55:53)*
+
+
+🛠️ **Tool Call**: `WebFetch`
+```json
+{
+  "url": "https://github.com/bacarrdy/mcp-ssh-server",
+  "prompt": "Show verbatim the README's MCP client configuration example (the JSON with \"command\" and \"args\", or env vars). What exactly does this server accept for host, port, username and private key \u2014 command-line arguments, environment variables, or per-tool-call parameters? Does it accept a positional \"user@host\" argument and an \"-i\" flag? How is a NON-DEFAULT SSH port (not 22) specified? Quote the relevant README sections exactly."
+}
+```
+
+## 🤖 Claude *(20:55:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== onde fica o repurpose-inbox (do SOP) ===\"\ngrep -nE 'repurpose-inbox' docs/processes/repurpose-host-infra-provisioning.md 2>/dev/null | head -6\necho; echo \"=== artefatos EP08 no host ===\"\nfor d in /home/gcrUX/htdocs/*/repurpose-inbox /home/ubuntu/repurpose-inbox; do\n  [ -d \"$d\" ] && echo \">>> $d\" && ls -la \"$d\" 2>/dev/null | head -8\ndone\necho; echo \"=== git log recente do EP08 ===\"; git log --oneline --since='2026-08-15' -- scripts/ep08 docs/roadmap/ep08-roteiro-v01-2026-08-16.md 2>/dev/null | head",
+  "description": "Localiza os artefatos do EP08"
+}
+```
+
+> **Tool Result (WebFetch)** - ✅ Success
+>
+> ```
+> # MCP SSH Server Configuration
+> 
+> ## Standard MCP Client Configuration
+> 
+> The README shows this JSON configuration format:
+> 
+> ```json
+> {
+>   "mcpServers": {
+>     "ssh": {
+>       "command": "npx",
+>       "args": ["-y", "mcp-server-ssh"]
+>     }
+>   }
+> }
+> ```
+> 
+> ## Authentication Method
+> 
+> The server does **not** accept command-line arguments, environment variables, or positional arguments like `user@host`. Instead, it states: **"No environment variables are required. Authentication is provided per-connection via tool calls."**
+> 
+> Credentials are passed through the `ssh_connect` tool call itself, not at startup.
+> 
+> ## Connection Parameters
+> 
+> According to the README, the `ssh_connect` tool accepts:
+> - Host and credentials (key or password)
+> - Returns a `connectionId` for subsequent operations
+> 
+> However, the README does **not explicitly document** the exact parameter names for host, port, username, or private key paths within the tool call interface. The documentation emphasizes that "All commands executed via `ssh_exec` must be non-interactive" but omits specific port specification syntax.
+> 
+> The server supports optional environment variables like `SSH_MCP_DEFAULT_USERNAME` and `SSH_MCP_DEFAULT_KEY` (defaulting to `~/.ssh/id_ed25519`), but these are fallback defaults, not primary configuration methods.
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === onde fica o repurpose-inbox (do SOP) ===
+> 17:| Inbox no disco | — | `<repo>/repurpose-inbox/<uid>/` (gitignored; dados) |
+> 38:3. **Inbox no disco**: `mkdir -p <repo>/repurpose-inbox` (o server cria `<uid>/` sob demanda; realpath-contido).
+> 146:Um upload real (admin, via UI `/dashboard/repurpose`) grava `repurpose-inbox/<uid>/<file>.mp4` no disco (`ls -la` com size ≈ o master) **e** o `ingest-external-asset provider=local` registra o `creative_assets bucket=local`, consumível pelo `video-repurpose-run`. Prova no seal 2026-07-13: EP01 1,3 GB → 5 shorts.
+> 
+> === artefatos EP08 no host ===
+> >>> /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox
+> total 20
+> drwxrwsr-x  5 gcrUX  gcrUX 4096 Aug  7 13:22 .
+> drwxrwx--- 33 gcrUX  gcrUX 4096 Aug 19 13:24 ..
+> drwxrwsr-x  8 gcrUX  gcrUX 4096 Aug 16 21:35 ada39fae-67e1-4e53-af1c-5a18e1c108e8
+> drwxrwsr-x  3 ubuntu gcrUX 4096 Aug  6 19:30 ada39fae-motion-spike
+> drwxrwsr-x  3 ubuntu gcrUX 4096 Aug  7 13:22 ep06-fe479105
+> 
+> === git log recente do EP08 ===
+> ```
+
+## 🤖 Claude *(20:56:18)*
+
+
+## 🤖 Claude *(20:56:19)*
+
+Dois achados que mudam o quadro. Vou fechar a leitura do episódio, que é onde está o prazo real.
+
+## 🤖 Claude *(20:56:22)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8\necho \"=== conteudo do inbox do User 0 ===\"; ls -la\necho; echo \"=== procurando artefatos ep08 (escopado, 2 niveis) ===\"\nfind . -maxdepth 2 -iname '*ep08*' 2>/dev/null | head -20\necho; echo \"=== mp4 mais recentes (top 12 por data) ===\"\nfind . -maxdepth 3 -name '*.mp4' -printf '%TY-%Tm-%Td %TH:%TM  %10s  %p\\n' 2>/dev/null | sort -r | head -12",
+  "description": "Inspeciona os artefatos de v\u00eddeo do EP08"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === conteudo do inbox do User 0 ===
+> total 23596
+> drwxrwsr-x  8 gcrUX  gcrUX      4096 Aug 16 21:35 .
+> drwxrwsr-x  5 gcrUX  gcrUX      4096 Aug  7 13:22 ..
+> drwxrwxr-x  7 ubuntu ubuntu     4096 Aug  8 02:04 ep06-montar-harvest
+> drwxrwsr-x 12 ubuntu gcrUX      4096 Aug 16 20:33 ep07-kit
+> drwxrwsr-x 13 ubuntu gcrUX      4096 Aug 17 21:56 ep08-kit
+> -rw-r--r--  1 gcrUX  gcrUX  11650409 Jul 15 22:43 GraphoEnterprise-pt1.mp4
+> -rw-r--r--  1 gcrUX  gcrUX  12473383 Jul 15 22:45 GraphoEnterprise-pt2.mp4
+> drwxrwsr-x  2 ubuntu gcrUX      4096 Aug 14 00:51 motor-benchmarks
+> drwxrwsr-x  3 ubuntu gcrUX      4096 Aug 14 01:47 regua-cinema-higgsfield
+> drwxrwsr-x  2 gcrUX  gcrUX      4096 Jul 20 00:36 .uploads
+> 
+> === procurando artefatos ep08 (escopado, 2 niveis) ===
+> ./ep08-kit
+> 
+> === mp4 mais recentes (top 12 por data) ===
+> 2026-08-17 21:58    45880424  ./ep08-kit/master/ep08-preview-720p.mp4
+> 2026-08-17 21:56   233443347  ./ep08-kit/master/ep08-master-v3.mp4
+> 2026-08-17 21:48    23631337  ./ep08-kit/montar3/outro.mp4
+> 2026-08-17 21:28    22572309  ./ep08-kit/montar3/b7.mp4
+> 2026-08-17 21:18     7107352  ./ep08-kit/montar3/cta.mp4
+> 2026-08-17 21:03    23695702  ./ep08-kit/montar3/b6.mp4
+> 2026-08-17 20:54    27058283  ./ep08-kit/montar3/b5.mp4
+> 2026-08-17 20:22    32471182  ./ep08-kit/montar3/b4.mp4
+> 2026-08-17 20:08    22484488  ./ep08-kit/montar3/b3.mp4
+> 2026-08-17 19:44    21942075  ./ep08-kit/montar3/b2.mp4
+> 2026-08-17 19:33    20795889  ./ep08-kit/montar3/b1.mp4
+> 2026-08-17 19:05    10520472  ./ep08-kit/montar3/cold.mp4
+> ```
+
+## 🤖 Claude *(20:56:28)*
+
+
+## 🤖 Claude *(20:56:30)*
+
+**EP08 tem master.** `ep08-master-v3.mp4`, 233 MB, de 17/08 — com os 7 blocos, cold open, CTA e outro renderizados. Vou medir o que existe antes de opinar.
+
+## 🤖 Claude *(20:56:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit\necho \"=== estrutura do kit ===\"; ls -la\necho; echo \"=== notas/QA no kit? ===\"; find . -maxdepth 2 \\( -name '*.md' -o -name '*.txt' -o -name '*.json' \\) -printf '%TY-%Tm-%Td %TH:%TM  %8s  %p\\n' 2>/dev/null | sort -r | head -12\necho; echo \"=== MASTER v3 \u2014 specs ===\"\nffprobe -v error -show_entries format=duration,size,bit_rate -show_entries stream=codec_type,codec_name,width,height,r_frame_rate,channels,sample_rate -of default=noprint_wrappers=1 master/ep08-master-v3.mp4 2>&1 | head -30",
+  "description": "Mede o master do EP08"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === estrutura do kit ===
+> total 80
+> drwxrwsr-x 13 ubuntu gcrUX  4096 Aug 17 21:56 .
+> drwxrwsr-x  8 gcrUX  gcrUX  4096 Aug 16 21:35 ..
+> drwxrwsr-x  2 ubuntu gcrUX  4096 Aug 17 15:29 clips
+> drwxrwsr-x  2 ubuntu gcrUX  4096 Aug 17 01:03 fleet
+> drwxrwsr-x  2 ubuntu gcrUX  4096 Aug 16 22:40 keyframes
+> -rw-rw-r--  1 ubuntu gcrUX 16343 Aug 16 23:44 manifest-fleet.json
+> -rw-rw-r--  1 ubuntu gcrUX  4175 Aug 16 23:25 manifest-pilot.json
+> drwxrwsr-x  2 ubuntu gcrUX  4096 Aug 17 18:17 master
+> drwxrwsr-x  2 ubuntu gcrUX  4096 Aug 17 13:08 montar
+> drwxrwsr-x  2 ubuntu gcrUX  4096 Aug 17 21:46 montar3
+> -rw-rw-r--  1 ubuntu gcrUX  3243 Aug 17 18:48 montar3-scenes-meta.json
+> drwxrwsr-x  2 ubuntu gcrUX  4096 Aug 17 21:49 montar3-work
+> drwxrwsr-x  2 ubuntu gcrUX  4096 Aug 17 13:09 montar-work
+> drwxrwsr-x  4 ubuntu gcrUX  4096 Aug 17 15:10 narracao
+> drwxrwsr-x  4 ubuntu gcrUX  4096 Aug 17 21:59 qa
+> drwxrwsr-x  2 ubuntu gcrUX  4096 Aug 16 21:36 refs
+> 
+> === notas/QA no kit? ===
+> 2026-08-17 18:48      3243  ./montar3-scenes-meta.json
+> 2026-08-17 15:10       192  ./narracao/09_outro.mp3.onsets.json
+> 2026-08-17 15:09       214  ./narracao/08_b7.mp3.onsets.json
+> 2026-08-17 15:08       208  ./narracao/07_b6.mp3.onsets.json
+> 2026-08-17 15:06       192  ./narracao/06_b5.mp3.onsets.json
+> 2026-08-17 15:05       210  ./narracao/05_b4.mp3.onsets.json
+> 2026-08-17 15:04       124  ./narracao/04_cta.mp3.onsets.json
+> 2026-08-17 15:03       210  ./narracao/03_b3.mp3.onsets.json
+> 2026-08-17 15:02       203  ./narracao/02_b2.mp3.onsets.json
+> 2026-08-17 15:00       232  ./narracao/01_b1.mp3.onsets.json
+> 2026-08-17 14:58       150  ./narracao/00_cold.mp3.onsets.json
+> 2026-08-17 11:21         2  ./fleet/done-manifest-fleet.json
+> 
+> === MASTER v3 — specs ===
+> codec_name=h264
+> codec_type=video
+> width=1920
+> height=1080
+> r_frame_rate=24/1
+> codec_name=aac
+> codec_type=audio
+> sample_rate=96000
+> channels=2
+> r_frame_rate=0/0
+> duration=427.900000
+> size=233443347
+> bit_rate=4364446
+> ```
+
+## 🤖 Claude *(20:56:47)*
+
+
+## 🤖 Claude *(20:56:48)*
+
+Master medido: **1920×1080 · 24 fps · 7m08s** — dentro do alvo do roteiro. Há uma pasta `qa/` criada *depois* do master; é lá que estaria o veredito. Vou ver.
+
+## 🤖 Claude *(20:56:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit\necho \"=== qa/ ===\"; find qa -maxdepth 2 -printf '%TY-%Tm-%Td %TH:%TM  %8s  %p\\n' 2>/dev/null | sort -r | head -25\necho; echo \"=== master/ ===\"; ls -la master/\necho; echo \"=== thumbnail? ===\"; find . -maxdepth 2 \\( -iname '*thumb*' -o -iname '*capa*' \\) 2>/dev/null | head",
+  "description": "Procura o veredito de QA do EP08"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === qa/ ===
+> 2026-08-17 21:59     98347  qa/sweep2/f033.jpg
+> 2026-08-17 21:59     98150  qa/sweep2/f032.jpg
+> 2026-08-17 21:59     97975  qa/sweep2/f030.jpg
+> 2026-08-17 21:59     97960  qa/sweep2/f080.jpg
+> 2026-08-17 21:59     97184  qa/sweep2/f107.jpg
+> 2026-08-17 21:59     96900  qa/sweep2/f045.jpg
+> 2026-08-17 21:59     96739  qa/sweep2/sheet10.jpg
+> 2026-08-17 21:59     96650  qa/sweep2/f077.jpg
+> 2026-08-17 21:59     96592  qa/sweep2/f043.jpg
+> 2026-08-17 21:59     95880  qa/sweep2/f105.jpg
+> 2026-08-17 21:59     94984  qa/sweep2/sheet7.jpg
+> 2026-08-17 21:59     94144  qa/sweep2/f028.jpg
+> 2026-08-17 21:59     91382  qa/sweep2/f031.jpg
+> 2026-08-17 21:59     91123  qa/sweep2/f085.jpg
+> 2026-08-17 21:59     89609  qa/sweep2/sheet2.jpg
+> 2026-08-17 21:59     89512  qa/sweep2/sheet1.jpg
+> 2026-08-17 21:59     89019  qa/sweep2/f084.jpg
+> 2026-08-17 21:59     88760  qa/sweep2/sheet0.jpg
+> 2026-08-17 21:59     88725  qa/sweep2/f072.jpg
+> 2026-08-17 21:59     87942  qa/sweep2/f071.jpg
+> 2026-08-17 21:59     86575  qa/sweep2/sheet11.jpg
+> 2026-08-17 21:59     85053  qa/sweep2/f020.jpg
+> 2026-08-17 21:59     84931  qa/sweep2/f022.jpg
+> 2026-08-17 21:59     84681  qa/sweep2/f086.jpg
+> 2026-08-17 21:59     84417  qa/sweep2/sheet9.jpg
+> 
+> === master/ ===
+> total 508088
+> drwxrwsr-x  2 ubuntu gcrUX      4096 Aug 17 18:17 .
+> drwxrwsr-x 13 ubuntu gcrUX      4096 Aug 17 21:56 ..
+> -rw-rw-r--  1 ubuntu gcrUX 240933017 Aug 17 13:23 ep08-master-v1.mp4
+> -rw-rw-r--  1 ubuntu gcrUX 233443347 Aug 17 21:56 ep08-master-v3.mp4
+> -rw-rw-r--  1 ubuntu gcrUX  45880424 Aug 17 21:58 ep08-preview-720p.mp4
+> 
+> === thumbnail? ===
+> ```
+
+## 🤖 Claude *(20:57:24)*
+
+
+## 🤖 Claude *(20:57:42)*
+
+Agora tenho o quadro completo. **Recomendação: parar a frente de SSH agora e ir para o EP08.** E não é só pelo prazo — o pendente 1 acabou de ficar *maior*, não menor.
+
+## Por que parar a frente de SSH
+
+O `mcp-server-ssh` **não aceita argumento nenhum**. O README é explícito: *"No environment variables are required. Authentication is provided per-connection via tool calls."* Host, porta e chave vão dentro da chamada da ferramenta `ssh_connect`, não na config.
+
+Ou seja: os args que estão lá — `ubuntu@137.131.243.179`, `-i`, o caminho da chave — **nunca foram lidos por nada**. Pôr `"-p", "52022"` não faria efeito algum. O MCP não quebrou com a migração; ele já estava assim. Isso deixa de ser um ajuste de 2 minutos.
+
+E o pendente 3 estava atrelado ao 1 por desenho da sessão anterior. As três regras da Oracle são pura defesa em profundidade: nada escuta na 22 localmente, e ufw + firewalld + fail2ban a bloqueiam. Aquelas regras sozinhas não deixam ninguém entrar — só servem de escada de incêndio. **Mantê-las não custa nada.**
+
+Quanto ao `instance_principal`: ele exige a sua mão no console de qualquer jeito (Dynamic Group + policy). Não economiza a viagem de hoje — economiza as futuras. Zero urgência. Está tudo escrito em §8 do runbook; nada se perde.
+
+## O EP08, medido
+
+| | |
+|---|---|
+| Roteiro | ✅ completo — 7 blocos, cold open, 3 títulos, conceitos de thumbnail |
+| Narração + onsets | ✅ 10 faixas com marcação de batida |
+| Clipes + interstícios MONTAR | ✅ `montar3/` com os 7 blocos, cold, CTA, outro |
+| Master | ✅ `ep08-master-v3.mp4` — 1920×1080 · 24 fps · **7m08s** · 233 MB |
+| QA visual | ⚠️ folhas de contato **geradas às 21:59 e nunca olhadas** |
+| Thumbnail | ❌ não existe — só conceito no roteiro |
+| Título final | ❌ 3 opções, nenhuma escolhida |
+| Upload | ❌ não feito |
+
+"Quase pronto" está correto. O que falta é uma sessão de acabamento, não de produção.
+
+Um detalhe técnico para anotar: o áudio do master está a **96 kHz**. O YouTube padroniza 48 kHz — não bloqueia o upload, mas é anômalo e o conserto é um reencode só de áudio, rápido.
+
+## O que proponho fazer agora
+
+O passo que falta e que é **grátis e meu**: olhar as folhas de contato. Elas existem justamente para isso e a sessão do dia 17 acabou antes de alguém ver. É o que decide se o master está postável ou se algum bloco precisa refazer — e é melhor descobrir isso hoje à noite do que amanhã de manhã.
+
+Se você concordar, eu sigo agora nesta ordem: **QA visual do master → veredito por bloco → título escolhido → thumbnail → descrição/tags**, deixando tudo pronto para você subir amanhã (privado primeiro, como é a doutrina). Se aparecer um bloco reprovado, você fica sabendo hoje, com tempo de decidir entre refazer ou cortar.
+
+Quer que eu comece pelo QA visual?
+
 ---
 
 %% --- PROJECT METADATA START --- %%
