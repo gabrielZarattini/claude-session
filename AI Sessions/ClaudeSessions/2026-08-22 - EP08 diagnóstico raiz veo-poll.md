@@ -6316,6 +6316,502 @@ b7 **aprovado** — e justifica a recuperação: o bunker vermelho de 1983, o al
 
 Resta só o `outro` (versão descartável) — quando sair, disparo a sequência final: re-render das 4 → ASR → meta → assemble.
 
+## 👤 User *(03:50:08)*
+
+<task-notification>
+<task-id>bm1kv5cvm</task-id>
+<summary>Monitor event: "render das 9 cenas do EP08 (cada linha = 1 cena concluída)"</summary>
+<event>outro: 55.3s · 1328f · 1581s · br=4.1M · uniq=100%</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+## 🤖 Claude *(03:50:18)*
+
+
+## 🤖 Claude *(03:50:19)*
+
+Fila esvaziando. Confirmando o fim do processo e disparando o re-render das 4 cenas com o código novo:
+
+## 🤖 Claude *(03:50:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sleep 15; tail -3 /tmp/claude-1001/render-all.log; pgrep -f \"montar-blocks-v[4]\" >/dev/null && echo \"run ainda vivo\" || echo \"run ENCERRADO \u2705\"",
+  "description": "Confirmar fim do run",
+  "timeout": 30000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> b7: 47.0s · 1127f · 2037s · br=6.3M · uniq=100%
+> outro: 55.3s · 1328f · 1581s · br=4.1M · uniq=100%
+> ✅ 9 cenas v4 verdes em /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit/montar4 · meta em /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit/montar4-scenes-meta.json
+> run ENCERRADO ✅
+> ```
+
+## 🤖 Claude *(03:50:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "KIT=/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit && rm -v $KIT/montar4/{b2,cold,cta,outro}.mp4 && cd /home/gcrUX/htdocs/constellation-orchestra && nohup bun run scripts/ep08/montar-blocks-v4.ts --only=b2,cold,cta,outro > /tmp/claude-1001/render-final4.log 2>&1 & echo \"re-render das 4 disparado (PID=$!)\"",
+  "description": "Deletar as 4 velhas e re-renderizar"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> re-render das 4 disparado (PID=782353)
+> ```
+
+## 🤖 Claude *(03:50:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sleep 20 && head -8 /tmp/claude-1001/render-final4.log && ls /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit/montar4/",
+  "description": "Confirmar o rm e o arranque do re-render",
+  "timeout": 40000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ G-COLISAO-T: 4 cenas amostradas a 0,1 s, nenhuma cobertura acima de 8%
+> b1.mp4
+> b3.mp4
+> b4.mp4
+> b5.mp4
+> b6.mp4
+> b7.mp4
+> ```
+
+## 🤖 Claude *(03:51:12)*
+
+
+## 🤖 Claude *(03:51:12)*
+
+Velhas removidas, re-render arrancou com gates verdes. Trocando o monitor para o log novo:
+
+## 🤖 Claude *(03:51:12)*
+
+
+🛠️ **Tool Call**: `TaskStop`
+```json
+{
+  "task_id": "bm1kv5cvm"
+}
+```
+
+> **Tool Result (TaskStop)** - ✅ Success
+>
+> ```
+> {"message":"Successfully stopped task: bm1kv5cvm (tail -f /tmp/claude-1001/render-all.log | grep -E --line-buffered \"br=|❌|GATES|error:|Error|verdes em\")","task_id":"bm1kv5cvm","task_type":"local_bash","command":"tail -f /tmp/claude-1001/render-all.log | grep -E --line-buffered \"br=|❌|GATES|error:|Error|verdes em\""}
+> ```
+
+## 🤖 Claude *(03:51:17)*
+
+
+🛠️ **Tool Call**: `Monitor`
+```json
+{
+  "command": "tail -f /tmp/claude-1001/render-final4.log | grep -E --line-buffered \"br=|\u274c|GATES|error:|Error|verdes em\"",
+  "description": "re-render final (b2/cold/cta/outro) do EP08",
+  "timeout_ms": 3600000,
+  "persistent": true
+}
+```
+
+> **Tool Result (Monitor)** - ✅ Success
+>
+> ```
+> Monitor started (task bzfj3rruv, persistent — runs until TaskStop or session end). You will be notified on each event. Keep working — do not poll or sleep. Events may arrive while you are waiting for the user — an event is not their reply.
+> ```
+
+## 🤖 Claude *(03:51:30)*
+
+
+## 🤖 Claude *(03:51:30)*
+
+Monitor armado. Durante o re-render (~1h), trabalho leve de rede: sondar a rota da **trilha** (lyria-002 no Vertex, crédito de teste — zero CPU local). Primeiro, como o edge autentica a SA Vertex:
+
+## 🤖 Claude *(03:51:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && grep -n \"vertex\\|service_account\\|sa_json\\|project\" supabase/functions/_shared/provider-keys.ts 2>/dev/null | head -12; ls supabase/functions/_shared/ | grep -i \"google\\|vertex\"",
+  "description": "Como a SA Vertex \u00e9 resolvida"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 35:  // Amendment 26 (FR-SPACES-093): metadata da linha do pool — carrega auth_type/vertex_project/
+> 36:  // vertex_location. `authType` derivado: 'vertex-sa' (a apiKey é um SA JSON) vs 'gemini-api' (default,
+> 39:  authType: "gemini-api" | "vertex-sa";
+> 42:function authTypeOf(metadata: unknown): "gemini-api" | "vertex-sa" {
+> 44:  return m.auth_type === "vertex-sa" ? "vertex-sa" : "gemini-api";
+> google-sa-auth.test.ts
+> google-sa-auth.ts
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(03:51:35)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && grep -n \"from(\\|table\\|provider_ai_keys\\|user_api_keys\\|pool\" supabase/functions/_shared/provider-keys.ts | head -8",
+  "description": "Tabela do pool de provider keys"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 4:// ao caller (owner-scoped) e estiver is_active; (2) a chave de menor `priority` ativa do pool do provider;
+> 5:// (3) a coluna legada `user_api_keys.<provider>_api_key` (fallback single-key); (4) null → o caller devolve 402.
+> 14:// `.from()`, então a forma estrutural é suficiente e destrava o gate de tipos nos dois lados.
+> 17:  from(table: string): any;
+> 32:  keyId: string | null;           // uuid da linha do pool, ou null quando veio da coluna legada
+> 33:  source: "pool-explicit" | "pool-priority" | "legacy";
+> 35:  // Amendment 26 (FR-SPACES-093): metadata da linha do pool — carrega auth_type/vertex_project/
+> 56:      .from("decrypted_user_provider_keys")
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(03:51:45)*
+
+
+## 🤖 Claude *(03:51:45)*
+
+
+## 🤖 Claude *(03:51:47)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && sed -n '1,50p' supabase/functions/_shared/google-sa-auth.ts | grep -nE \"scope|aud|token_uri|assertion|function\" | head -8",
+  "description": "Contrato do SA auth"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 5:// troca-se por um access_token OAuth2 (scope cloud-platform). Deno tem WebCrypto (RSASSA-PKCS1-v1_5
+> 15:  token_uri?: string;       // default https://oauth2.googleapis.com/token
+> 19:// O token endpoint do Google é FIXO — nunca confiar no `token_uri` do JSON (um SA JSON forjado
+> 30:export function isValidVertexLocation(loc: unknown): loc is string {
+> 33:export function isValidGcpProject(proj: unknown): proj is string {
+> 41:export function buildVertexUrl(
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(03:52:02)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && cat > /tmp/claude-1001/probe-lyria.ts <<'TS'\n// Sonda lyria-002 no Vertex do projeto da SA do pool (User 0). Payload inv\u00e1lido de prop\u00f3sito:\n// 400 de valida\u00e7\u00e3o = modelo EXISTE na regi\u00e3o \u00b7 404 = n\u00e3o existe. Zero custo, zero gera\u00e7\u00e3o.\nimport { createClient } from \"@supabase/supabase-js\";\nimport { createSign } from \"node:crypto\";\n\nconst URL_SB = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;\nconst SVC = process.env.SB_SECRET_KEY!;\nconst U0 = \"ada39fae-67e1-4e53-af1c-5a18e1c108e8\";\nconst sb = createClient(URL_SB, SVC, { auth: { persistSession: false } });\n\nconst { data, error } = await sb.from(\"decrypted_user_provider_keys\")\n  .select(\"id, provider, decrypted_api_key, metadata, is_active\")\n  .eq(\"user_id\", U0).eq(\"is_active\", true);\nif (error) throw error;\nconst row = (data ?? []).find((r: any) => r.metadata?.auth_type === \"vertex-sa\");\nif (!row) { console.log(\"NENHUMA linha vertex-sa ativa no pool\"); process.exit(1); }\nconst sa = JSON.parse(row.decrypted_api_key);\nconst project = row.metadata.vertex_project ?? sa.project_id;\nconst location = row.metadata.vertex_location ?? \"us-central1\";\nconsole.log(`SA: ${sa.client_email} \u00b7 project=${project} \u00b7 location=${location}`);\n\n// JWT RS256 \u2192 access token (token endpoint FIXO, como no _shared)\nconst now = Math.floor(Date.now() / 1000);\nconst b64u = (o: object | Buffer) => (Buffer.isBuffer(o) ? o : Buffer.from(JSON.stringify(o))).toString(\"base64url\");\nconst unsigned = `${b64u({ alg: \"RS256\", typ: \"JWT\" })}.${b64u({\n  iss: sa.client_email, scope: \"https://www.googleapis.com/auth/cloud-platform\",\n  aud: \"https://oauth2.googleapis.com/token\", iat: now, exp: now + 3600 })}`;\nconst signer = createSign(\"RSA-SHA256\"); signer.update(unsigned);\nconst jwt = `${unsigned}.${signer.sign(sa.private_key).toString(\"base64url\")}`;\nconst tokResp = await fetch(\"https://oauth2.googleapis.com/token\", {\n  method: \"POST\", headers: { \"content-type\": \"application/x-www-form-urlencoded\" },\n  body: `grant_type=${encodeURIComponent(\"urn:ietf:params:oauth:grant-type:jwt-bearer\")}&assertion=${jwt}` });\nconst tok = await tokResp.json();\nif (!tok.access_token) { console.log(\"token FALHOU:\", JSON.stringify(tok).slice(0, 200)); process.exit(1); }\nconsole.log(\"access_token OK\");\n\nfor (const loc of [location, \"us-central1\"]) {\n  const url = `https://${loc}-aiplatform.googleapis.com/v1/projects/${project}/locations/${loc}/publishers/google/models/lyria-002:predict`;\n  const r = await fetch(url, { method: \"POST\",\n    headers: { authorization: `Bearer ${tok.access_token}`, \"content-type\": \"application/json\" },\n    body: JSON.stringify({ instances: [{}], parameters: {} }) });\n  const body = await r.text();\n  console.log(`\\n[${loc}] HTTP ${r.status}: ${body.slice(0, 300)}`);\n  if (loc === location && location === \"us-central1\") break;\n}\nTS\ntimeout 60 bun run /tmp/claude-1001/probe-lyria.ts 2>&1 | tail -12",
+  "description": "Sondar lyria-002 no Vertex",
+  "timeout": 80000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> error: column decrypted_user_provider_keys.decrypted_api_key does not exist
+> {
+>   code: "42703",
+>   details: null,
+>   hint: null,
+>   message: "column decrypted_user_provider_keys.decrypted_api_key does not exist",
+> }
+> 
+> Bun v1.3.12 (Linux arm64)
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(03:52:10)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && sed -n '50,70p' supabase/functions/_shared/provider-keys.ts",
+  "description": "Colunas reais da view do pool"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>   provider: ProviderName,
+>   keyId?: string | null,
+> ): Promise<ResolvedKey | null> {
+>   // (1) chave explícita escolhida na UI — re-validada OWNER-SCOPED (nunca confiar no id do cliente).
+>   if (keyId && typeof keyId === "string") {
+>     const { data } = await admin
+>       .from("decrypted_user_provider_keys")
+>       .select("id, api_key, label, is_active, metadata")
+>       .eq("id", keyId)
+>       .eq("user_id", userId)          // ← guarda de tenant: o id tem que ser DELE
+>       .eq("provider", provider)
+>       .maybeSingle();
+>     if (data?.is_active && data.api_key) {
+>       return { apiKey: data.api_key as string, keyId: data.id as string, source: "pool-explicit", label: data.label as string, metadata: data.metadata as Record<string, unknown>, authType: authTypeOf(data.metadata) };
+>     }
+>     // id inválido/de outro tenant/inativo → NÃO cai pro pool alheio; segue a resolução do PRÓPRIO user.
+>   }
+> 
+>   // (2) pool do provider: menor priority ativa.
+>   const { data: pool } = await admin
+>     .from("decrypted_user_provider_keys")
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(03:52:13)*
+
+A coluna é `api_key`. Corrigindo e sondando:
+
+## 🤖 Claude *(03:52:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "sed -i 's/decrypted_api_key/api_key/g' /tmp/claude-1001/probe-lyria.ts && sed -i 's/row\\.api_key/row.api_key/' /tmp/claude-1001/probe-lyria.ts && sed -i 's/JSON.parse(row.api_key)/JSON.parse(row.api_key)/' /tmp/claude-1001/probe-lyria.ts && sed -i 's/const sa = JSON.parse(row\\..*);/const sa = JSON.parse(row.api_key);/' /tmp/claude-1001/probe-lyria.ts && timeout 60 bun run /tmp/claude-1001/probe-lyria.ts 2>&1 | tail -8",
+  "description": "Corrigir coluna e sondar",
+  "timeout": 80000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>                                   ^
+> error: supabaseUrl is required.
+>       at validateSupabaseUrl (/home/ubuntu/.bun/install/cache/@supabase/supabase-js@2.112.3@@@1/dist/index.mjs:384:29)
+>       at new SupabaseClient (/home/ubuntu/.bun/install/cache/@supabase/supabase-js@2.112.3@@@1/dist/index.mjs:627:19)
+>       at createClient (/home/ubuntu/.bun/install/cache/@supabase/supabase-js@2.112.3@@@1/dist/index.mjs:867:9)
+>       at /tmp/claude-1001/probe-lyria.ts:9:12
+> 
+> Bun v1.3.12 (Linux arm64)
+> ```
+
+## 🤖 Claude *(03:52:25)*
+
+
+## 🤖 Claude *(03:52:25)*
+
+O cwd resetou para o worktree (sem `.env`). Rodando do repo principal:
+
+## 🤖 Claude *(03:52:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && timeout 60 bun run /tmp/claude-1001/probe-lyria.ts 2>&1 | tail -8",
+  "description": "Sonda lyria-002 do repo principal",
+  "timeout": 80000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [us-central1] HTTP 400: {
+>   "error": {
+>     "code": 400,
+>     "message": "Request contains an invalid argument.",
+>     "status": "INVALID_ARGUMENT"
+>   }
+> }
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(03:52:48)*
+
+
+## 🤖 Claude *(03:52:48)*
+
+
+## 🤖 Claude *(03:53:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && cat > /tmp/claude-1001/lyria-cue-test.ts <<'TS'\n// 1 cue de teste do lyria-002 (Vertex, cr\u00e9dito de teste) \u2014 valida contrato + WAV material.\nimport { createClient } from \"@supabase/supabase-js\";\nimport { createSign } from \"node:crypto\";\nimport { writeFileSync } from \"node:fs\";\n\nconst sb = createClient(process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!, process.env.SB_SECRET_KEY!, { auth: { persistSession: false } });\nconst U0 = \"ada39fae-67e1-4e53-af1c-5a18e1c108e8\";\nconst { data } = await sb.from(\"decrypted_user_provider_keys\")\n  .select(\"api_key, metadata\").eq(\"user_id\", U0).eq(\"is_active\", true);\nconst row = (data ?? []).find((r: any) => r.metadata?.auth_type === \"vertex-sa\")!;\nconst sa = JSON.parse(row.api_key);\nconst project = row.metadata.vertex_project ?? sa.project_id;\n\nconst now = Math.floor(Date.now() / 1000);\nconst b64u = (o: object) => Buffer.from(JSON.stringify(o)).toString(\"base64url\");\nconst unsigned = `${b64u({ alg: \"RS256\", typ: \"JWT\" })}.${b64u({ iss: sa.client_email, scope: \"https://www.googleapis.com/auth/cloud-platform\", aud: \"https://oauth2.googleapis.com/token\", iat: now, exp: now + 3600 })}`;\nconst signer = createSign(\"RSA-SHA256\"); signer.update(unsigned);\nconst jwt = `${unsigned}.${signer.sign(sa.private_key).toString(\"base64url\")}`;\nconst tok = await (await fetch(\"https://oauth2.googleapis.com/token\", { method: \"POST\", headers: { \"content-type\": \"application/x-www-form-urlencoded\" }, body: `grant_type=${encodeURIComponent(\"urn:ietf:params:oauth:grant-type:jwt-bearer\")}&assertion=${jwt}` })).json();\n\nconst url = `https://us-central1-aiplatform.googleapis.com/v1/projects/${project}/locations/us-central1/publishers/google/models/lyria-002:predict`;\nconst r = await fetch(url, { method: \"POST\", headers: { authorization: `Bearer ${tok.access_token}`, \"content-type\": \"application/json\" },\n  body: JSON.stringify({ instances: [{ prompt: \"understated documentary underscore bed, warm analog pads and soft pulse, curious and focused, minimal, no melody hooks, low intensity, instrumental\", negative_prompt: \"vocals, singing, drums solo, edm drop\", seed: 20260821 }], parameters: {} }) });\nconsole.log(\"HTTP\", r.status);\nconst body = await r.json();\nif (!r.ok) { console.log(JSON.stringify(body).slice(0, 400)); process.exit(1); }\nconst pred = body.predictions?.[0];\nconst b64 = pred?.bytesBase64Encoded ?? pred?.audioContent;\nif (!b64) { console.log(\"shape inesperado:\", JSON.stringify(Object.keys(pred ?? {}))); process.exit(1); }\nconst buf = Buffer.from(b64, \"base64\");\nwriteFileSync(\"/tmp/claude-1001/lyria-cue-test.wav\", buf);\nconsole.log(`WAV: ${buf.length} bytes \u00b7 mime=${pred.mimeType ?? \"?\"}`);\nTS\ntimeout 180 bun run /tmp/claude-1001/lyria-cue-test.ts 2>&1 | tail -4 && ffprobe -v error -show_entries format=duration:stream=sample_rate,channels,codec_name -of default=nw=1 /tmp/claude-1001/lyria-cue-test.wav 2>&1 | head -5 && ffmpeg -i /tmp/claude-1001/lyria-cue-test.wav -af \"volumedetect\" -f null - 2>&1 | grep -E \"mean_volume|max_volume\"",
+  "description": "Gerar 1 cue de teste do Lyria",
+  "timeout": 200000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HTTP 200
+> WAV: 6291544 bytes · mime=?
+> codec_name=pcm_s16le
+> sample_rate=48000
+> channels=2
+> duration=32.768229
+> [Parsed_volumedetect_0 @ 0xaac18c5296a0] mean_volume: -25.0 dB
+> [Parsed_volumedetect_0 @ 0xaac18c5296a0] max_volume: -1.4 dB
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(03:53:48)*
+
+
+## 🤖 Claude *(03:53:48)*
+
+
+## 🤖 Claude *(03:54:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && cat > scripts/ep08/gen-trilha-lyria.ts <<'TS'\n#!/usr/bin/env bun\n/**\n * EP08 \u2014 trilha (a 4\u00aa faixa do desenho de \u00e1udio aprovado 2026-08-21) via lyria-002 no VERTEX.\n *\n * \u2500\u2500 Por que Vertex e n\u00e3o o Lyria RealTime do EP05 \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n * A regra do dia (Sovereign, 2026-08-21): \"Vertex = cr\u00e9dito de TESTE GRATUITO \u00b7 Gemini API =\n * CART\u00c3O\". O RealTime (google.genai) fala com a Gemini API \u2014 cart\u00e3o. O lyria-002 \u00e9 predict no\n * Vertex \u2014 cr\u00e9dito de teste. Sonda de 2026-08-22: HTTP 400 de valida\u00e7\u00e3o em us-central1 = modelo\n * dispon\u00edvel; cue de teste HTTP 200, WAV 48 kHz stereo 32,8 s, max -1,4 dB.\n *\n * Desenho: 6 MOVIMENTOS cobrindo os 10 segmentos (mudar m\u00fasica a cada 45 s soaria picado):\n *   M1 cold+b1 (abertura curiosa) \u00b7 M2 b2+b3 (as dores) \u00b7 M3 cta (a virada) \u00b7\n *   M4 b4+b5 (a alavanca) \u00b7 M5 b6+b7 (o teste de fogo) \u00b7 M6 outro (o chamado)\n * Um cue de ~30 s por movimento, em loop com crossfade de 3 s at\u00e9 cobrir o trecho. A mixagem\n * fica no assemble (EP08_TRILHA) a volume de leito \u2014 a trilha costura, n\u00e3o protagoniza.\n *\n * Uso: bun run scripts/ep08/gen-trilha-lyria.ts [--dry]\n */\nimport { createClient } from \"@supabase/supabase-js\";\nimport { createSign } from \"node:crypto\";\nimport { writeFileSync, mkdirSync, existsSync } from \"node:fs\";\nimport { execFileSync } from \"node:child_process\";\nimport { KIT, durOf } from \"./layout\";\n\nconst U0 = \"ada39fae-67e1-4e53-af1c-5a18e1c108e8\";\nconst OUT = `${KIT}/trilha`;\nconst SEED = 20260822;\nconst dry = process.argv.includes(\"--dry\");\n\n/** Segmentos por movimento \u2014 a MESMA r\u00e9gua de dura\u00e7\u00e3o do assemble (narra\u00e7\u00e3o+0,4). */\nconst MOVIMENTOS: { id: string; narrs: string[]; prompt: string }[] = [\n  { id: \"m1_abertura\", narrs: [\"00_cold\", \"01_b1\"],\n    prompt: \"understated documentary underscore, warm analog pads with a soft curious pulse, subtle string swells, focused and intriguing, minimal, instrumental, low intensity bed\" },\n  { id: \"m2_dores\", narrs: [\"02_b2\", \"03_b3\"],\n    prompt: \"tense quiet documentary bed, low sustained strings and sparse piano notes, unresolved suspense, warm analog texture, minimal, instrumental, low intensity\" },\n  { id: \"m3_virada\", narrs: [\"04_cta\"],\n    prompt: \"gentle uplift transition bed, warm pads opening brighter, hopeful subtle momentum, soft pulse, minimal, instrumental, low intensity\" },\n  { id: \"m4_alavanca\", narrs: [\"05_b4\", \"06_b5\"],\n    prompt: \"confident building documentary underscore, warm strings layering with a steady soft pulse, industrious and optimistic, restrained, instrumental, low intensity bed\" },\n  { id: \"m5_fogo\", narrs: [\"07_b6\", \"08_b7\"],\n    prompt: \"high-stakes restrained documentary bed, low pulsing strings, distant tense drones resolving into calm resolve, cinematic but quiet, instrumental, low intensity\" },\n  { id: \"m6_chamado\", narrs: [\"09_outro\"],\n    prompt: \"warm resolving outro bed, hopeful pads and soft strings settling, invitation and quiet confidence, gentle, instrumental, low intensity\" },\n];\nconst NEGATIVE = \"vocals, singing, choir, edm drop, drum solo, loud percussion, harsh brass\";\n\nmkdirSync(OUT, { recursive: true });\n\nasync function vertexToken(): Promise<{ token: string; project: string }> {\n  const sb = createClient(process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!, process.env.SB_SECRET_KEY!, { auth: { persistSession: false } });\n  const { data, error } = await sb.from(\"decrypted_user_provider_keys\")\n    .select(\"api_key, metadata\").eq(\"user_id\", U0).eq(\"is_active\", true);\n  if (error) throw error;\n  const row = (data ?? []).find((r: any) => r.metadata?.auth_type === \"vertex-sa\");\n  if (!row) throw new Error(\"nenhuma SA vertex-sa ativa no pool\");\n  const sa = JSON.parse(row.api_key as string);\n  const now = Math.floor(Date.now() / 1000);\n  const b64u = (o: object) => Buffer.from(JSON.stringify(o)).toString(\"base64url\");\n  const unsigned = `${b64u({ alg: \"RS256\", typ: \"JWT\" })}.${b64u({ iss: sa.client_email, scope: \"https://www.googleapis.com/auth/cloud-platform\", aud: \"https://oauth2.googleapis.com/token\", iat: now, exp: now + 3600 })}`;\n  const signer = createSign(\"RSA-SHA256\"); signer.update(unsigned);\n  const jwt = `${unsigned}.${signer.sign(sa.private_key).toString(\"base64url\")}`;\n  const tok = await (await fetch(\"https://oauth2.googleapis.com/token\", { method: \"POST\", headers: { \"content-type\": \"application/x-www-form-urlencoded\" }, body: `grant_type=${encodeURIComponent(\"urn:ietf:params:oauth:grant-type:jwt-bearer\")}&assertion=${jwt}` })).json();\n  if (!tok.access_token) throw new Error(`token falhou: ${JSON.stringify(tok).slice(0, 160)}`);\n  return { token: tok.access_token, project: (row.metadata as any).vertex_project ?? sa.project_id };\n}\n\nconst { token, project } = await vertexToken();\nconst url = `https://us-central1-aiplatform.googleapis.com/v1/projects/${project}/locations/us-central1/publishers/google/models/lyria-002:predict`;\n\nlet gerados = 0, pulados = 0;\nfor (const m of MOVIMENTOS) {\n  const alvo = m.narrs.reduce((s, n) => s + durOf(`${KIT}/narracao/${n}.mp3`) + 0.4, 0);\n  const cueWav = `${OUT}/${m.id}.cue.wav`;\n  const bedWav = `${OUT}/${m.id}.wav`;\n  if (dry) { console.log(`[dry] ${m.id}: alvo ${alvo.toFixed(1)}s`); continue; }\n\n  if (!existsSync(cueWav)) {\n    const r = await fetch(url, { method: \"POST\", headers: { authorization: `Bearer ${token}`, \"content-type\": \"application/json\" },\n      body: JSON.stringify({ instances: [{ prompt: m.prompt, negative_prompt: NEGATIVE, seed: SEED }], parameters: {} }) });\n    if (!r.ok) { console.error(`\u274c ${m.id}: HTTP ${r.status} ${(await r.text()).slice(0, 160)}`); process.exit(1); }\n    const body = await r.json();\n    const b64 = body.predictions?.[0]?.bytesBase64Encoded;\n    if (!b64) { console.error(`\u274c ${m.id}: sem bytes na resposta`); process.exit(1); }\n    const buf = Buffer.from(b64, \"base64\");\n    if (buf.length < 500_000) { console.error(`\u274c ${m.id}: WAV suspeito ${buf.length}B`); process.exit(1); }\n    writeFileSync(cueWav, buf);\n    gerados++;\n  } else pulados++;\n\n  // loop com crossfade de 3 s at\u00e9 cobrir o movimento + 1 s de folga (o assemble corta no fim)\n  const cueDur = durOf(cueWav);\n  const loops = Math.max(1, Math.ceil((alvo + 1 - cueDur) / (cueDur - 3)) + 1);\n  if (loops === 1) {\n    execFileSync(\"ffmpeg\", [\"-y\", \"-loglevel\", \"error\", \"-i\", cueWav, \"-t\", String(alvo + 1), \"-c:a\", \"pcm_s16le\", bedWav]);\n  } else {\n    const inputs = Array(loops).fill([\"-i\", cueWav]).flat();\n    let fc = \"\", prev = \"[0:a]\";\n    for (let i = 1; i < loops; i++) {\n      const out = i === loops - 1 ? \"[x]\" : `[c${i}]`;\n      fc += `${prev}[${i}:a]acrossfade=d=3:c1=tri:c2=tri${out};`;\n      prev = out;\n    }\n    execFileSync(\"ffmpeg\", [\"-y\", \"-loglevel\", \"error\", ...inputs, \"-filter_complex\", fc.slice(0, -1), \"-map\", \"[x]\", \"-t\", String(alvo + 1), \"-c:a\", \"pcm_s16le\", bedWav]);\n  }\n  console.log(`\u2705 ${m.id}: cue ${cueDur.toFixed(1)}s \u00d7${loops} \u2192 bed ${durOf(bedWav).toFixed(1)}s (alvo ${alvo.toFixed(1)}s)`);\n}\nconsole.log(`\\ncues gerados: ${gerados} \u00b7 reusados: ${pulados} \u00b7 beds em ${OUT}`);\nTS\ntimeout 60 bun run scripts/ep08/gen-trilha-lyria.ts --dry 2>&1 | tail -8",
+  "description": "Runner da trilha + dry-run",
+  "timeout": 80000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [dry] m1_abertura: alvo 69.5s
+> [dry] m2_dores: alvo 89.9s
+> [dry] m3_virada: alvo 24.5s
+> [dry] m4_alavanca: alvo 93.9s
+> [dry] m5_fogo: alvo 95.0s
+> [dry] m6_chamado: alvo 55.3s
+> 
+> cues gerados: 0 · reusados: 0 · beds em /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit/trilha
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(03:54:31)*
+
+
+## 🤖 Claude *(03:54:31)*
+
+Durações batem com o episódio (428s). Gerando os 6 cues (~US$ 0,36 do crédito de teste):
+
+## 🤖 Claude *(03:54:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && timeout 570 bun run scripts/ep08/gen-trilha-lyria.ts 2>&1 | tail -10",
+  "description": "Gerar os 6 cues da trilha",
+  "timeout": 590000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ m1_abertura: cue 32.8s ×3 → bed 70.5s (alvo 69.5s)
+> ✅ m2_dores: cue 32.8s ×3 → bed 90.9s (alvo 89.9s)
+> ✅ m3_virada: cue 32.8s ×1 → bed 25.5s (alvo 24.5s)
+> ✅ m4_alavanca: cue 32.8s ×4 → bed 94.9s (alvo 93.9s)
+> ✅ m5_fogo: cue 32.8s ×4 → bed 96.0s (alvo 95.0s)
+> ✅ m6_chamado: cue 32.8s ×2 → bed 56.3s (alvo 55.3s)
+> 
+> cues gerados: 6 · reusados: 0 · beds em /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit/trilha
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(03:58:04)*
+
+
+## 🤖 Claude *(03:58:04)*
+
+6 beds prontos, alinhados aos movimentos. Integrando no assemble como faixa opt-in (`EP08_TRILHA=1`), cada bed entrando no offset exato do seu primeiro segmento:
+
+## 🤖 Claude *(03:58:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && python3 - <<'PY'\nimport io\np = \"scripts/ep08/assemble-v3.ts\"\ns = io.open(p, encoding=\"utf-8\").read()\n\nvelho = '''// \u2500\u2500 leito dieg\u00e9tico (voz de personagem j\u00e1 exclu\u00edda via meta.mute) \u2500\u2500\nlet mixed = `${W}/voz.wav`;\nif (diegetic.length) {'''\nnovo = '''// \u2500\u2500 trilha por movimentos (EP08_TRILHA=1 \u00b7 a 4\u00aa faixa do desenho de 2026-08-21) \u2500\u2500\n// Cada bed de ${KIT}/trilha entra no offset ABSOLUTO do primeiro segmento do seu movimento,\n// com fade pr\u00f3prio de 1,5 s \u2014 as pontas vizinhas se sobrep\u00f5em ~1 s e viram crossfade natural.\n// Volume de leito 0.16: a trilha costura, n\u00e3o protagoniza (dieg\u00e9tico fica a 0.32, acima dela).\nconst TRILHA_MOVS: { bed: string; firstSeg: string }[] = [\n  { bed: \"m1_abertura\", firstSeg: \"cold\" }, { bed: \"m2_dores\", firstSeg: \"b2\" },\n  { bed: \"m3_virada\", firstSeg: \"cta\" }, { bed: \"m4_alavanca\", firstSeg: \"b4\" },\n  { bed: \"m5_fogo\", firstSeg: \"b6\" }, { bed: \"m6_chamado\", firstSeg: \"outro\" },\n];\nconst trilha: { src: string; start: number }[] = [];\nif (process.env.EP08_TRILHA) {\n  let acc = 0;\n  const segOffset: Record<string, number> = {};\n  for (const o of ORDER) { segOffset[o.seg] = acc; acc = +(acc + durOf(`${KIT}/narracao/${o.narr}.mp3`) + 0.4).toFixed(3); }\n  for (const m of TRILHA_MOVS) {\n    const bed = `${KIT}/trilha/${m.bed}.wav`;\n    if (!existsSync(bed)) { console.error(`trilha ausente: ${bed} \u2014 rode gen-trilha-lyria.ts`); process.exit(1); }\n    trilha.push({ src: bed, start: segOffset[m.firstSeg] });\n  }\n  console.log(`trilha: ${trilha.length} movimentos mixados a 0.16`);\n}\n\n// \u2500\u2500 leito dieg\u00e9tico (voz de personagem j\u00e1 exclu\u00edda via meta.mute) \u2500\u2500\nlet mixed = `${W}/voz.wav`;\nif (diegetic.length || trilha.length) {'''\nassert velho in s; s = s.replace(velho, novo, 1)\n\n# reescrever o bloco de mixagem para incluir a trilha\nvelho2 = '''  const ins = diegetic.map((d) => `-i \"${d.src}\"`).join(\" \");\n  const fc = diegetic\n    .map((d, i) => `[${i + 1}:a]aformat=sample_rates=44100:channel_layouts=stereo,atrim=0:7.917,adelay=${Math.round(d.start * 1000)}|${Math.round(d.start * 1000)},volume=0.32[d${i}]`)\n    .join(\";\");\n  const labels = diegetic.map((_, i) => `[d${i}]`).join(\"\");\n  sh(`ffmpeg -loglevel error -y -i ${W}/voz.wav ${ins} -filter_complex \"[0:a]aformat=sample_rates=44100:channel_layouts=stereo[n];${fc};[n]${labels}amix=inputs=${diegetic.length + 1}:normalize=0:dropout_transition=0[m];[m]atrim=0:${vtotal.toFixed(3)}[mix]\" -map \"[mix]\" -c:a pcm_s16le ${W}/mix.wav`);\n  mixed = `${W}/mix.wav`;\n  console.log(`leito dieg\u00e9tico: ${diegetic.length} v\u00eddeos embutidos mixados sob a narra\u00e7\u00e3o`);'''\nnovo2 = '''  const extras = [...diegetic.map((d) => ({ ...d, kind: \"d\" as const })), ...trilha.map((t) => ({ ...t, kind: \"t\" as const }))];\n  const ins = extras.map((e) => `-i \"${e.src}\"`).join(\" \");\n  const fc = extras\n    .map((e, i) => {\n      const delay = `adelay=${Math.round(e.start * 1000)}|${Math.round(e.start * 1000)}`;\n      return e.kind === \"d\"\n        ? `[${i + 1}:a]aformat=sample_rates=44100:channel_layouts=stereo,atrim=0:7.917,${delay},volume=0.32[e${i}]`\n        : `[${i + 1}:a]aformat=sample_rates=44100:channel_layouts=stereo,afade=t=in:d=1.5,areverse,afade=t=in:d=1.5,areverse,${delay},volume=0.16[e${i}]`;\n    })\n    .join(\";\");\n  const labels = extras.map((_, i) => `[e${i}]`).join(\"\");\n  sh(`ffmpeg -loglevel error -y -i ${W}/voz.wav ${ins} -filter_complex \"[0:a]aformat=sample_rates=44100:channel_layouts=stereo[n];${fc};[n]${labels}amix=inputs=${extras.length + 1}:normalize=0:dropout_transition=0[m];[m]atrim=0:${vtotal.toFixed(3)}[mix]\" -map \"[mix]\" -c:a pcm_s16le ${W}/mix.wav`);\n  mixed = `${W}/mix.wav`;\n  console.log(`mix: ${diegetic.length} dieg\u00e9ticos (0.32) + ${trilha.length} beds de trilha (0.16) sob a narra\u00e7\u00e3o`);'''\nassert velho2 in s; s = s.replace(velho2, novo2, 1)\nio.open(p, \"w\", encoding=\"utf-8\").write(s)\nprint(\"trilha integrada ao assemble (opt-in EP08_TRILHA)\")\nPY\nnpx tsc -p tsconfig.app.json --noEmit 2>&1 | tail -2; echo \"tsc exit=${PIPESTATUS[0]}\"",
+  "description": "Integrar trilha no assemble",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> trilha integrada ao assemble (opt-in EP08_TRILHA)
+> tsc exit=0
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(03:59:23)*
+
+
+## 🤖 Claude *(03:59:23)*
+
+Commitando a frente da trilha:
+
+## 🤖 Claude *(03:59:31)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && git add scripts/ep08/gen-trilha-lyria.ts scripts/ep08/assemble-v3.ts && git commit -q -m \"feat(ep08): trilha por movimentos via lyria-002 no Vertex \u2014 a 4\u00aa faixa, no cr\u00e9dito de teste\n\nO desenho de \u00e1udio aprovado (2026-08-21) pede trilha por baixo para costurar \u2014 e o\nepis\u00f3dio n\u00e3o tinha nenhuma. A receita Lyria do EP05 (RealTime, google.genai) fala com\na Gemini API = CART\u00c3O do Sovereign, contra a regra do dia. A rota compat\u00edvel \u00e9 o\nlyria-002 predict no VERTEX = cr\u00e9dito de teste: sonda 400-de-valida\u00e7\u00e3o provou o\nmodelo em us-central1, cue de teste saiu WAV 48kHz stereo 32,8s max -1,4dB.\n\ngen-trilha-lyria.ts: 6 MOVIMENTOS cobrindo os 10 segmentos (m1 cold+b1 curiosa \u00b7\nm2 b2+b3 dores \u00b7 m3 cta virada \u00b7 m4 b4+b5 alavanca \u00b7 m5 b6+b7 fogo \u00b7 m6 outro\nchamado), um cue de ~33s por movimento em loop com acrossfade de 3s at\u00e9 cobrir o\ntrecho. Paleta \u00fanica e arco dram\u00e1tico nos prompts; negative trava vocais/edm.\n6 cues gerados \u2248 US\\$ 0,36 do cr\u00e9dito. Beds em <kit>/trilha/.\n\nassemble-v3: faixa opt-in (EP08_TRILHA=1) \u2014 cada bed entra no offset ABSOLUTO do\nprimeiro segmento do seu movimento com fade pr\u00f3prio de 1,5s (pontas vizinhas se\nsobrep\u00f5em ~1s = crossfade natural), volume 0.16 sob o dieg\u00e9tico (0.32): a trilha\ncostura, n\u00e3o protagoniza. Default continua sem trilha.\" 2>&1 | grep -i \"leaks found\"; git log --oneline -1 && git push -q origin main 2>&1 | tail -1 && tail -2 /tmp/claude-1001/render-final4.log",
+  "description": "Commit e push da trilha"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [90m12:59AM[0m [32mINF[0m no leaks found
+> a506c56 feat(ep08): trilha por movimentos via lyria-002 no Vertex — a 4ª faixa, no crédito de teste
+> ✔️ gitleaks-range (0.16 seconds)
+> ✅ G-COLISAO-T: 4 cenas amostradas a 0,1 s, nenhuma cobertura acima de 8%
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(03:59:44)*
+
+
+## 🤖 Claude *(03:59:45)*
+
+Trilha commitada e pushada (`a506c56`). Estado consolidado da rodada:
+
+- **6 beds de trilha prontos** no kit (`m1_abertura` → `m6_chamado`), ~US$ 0,36 do crédito de teste
+- **Assemble** agora sabe montar as 4 faixas: narração + diegético (0.32, com mutes) + trilha (0.16) + loudnorm final
+- **Re-render das 4 travessias** em curso com a câmera calma — monitor avisa
+
+Quando o re-render acabar: varredura ASR dos 8 clipes restantes (CPU livre) → `--gate-only` para o meta fresco → `EP08_GEN=4 EP08_TRILHA=1` assemble → QA A/V do master.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
