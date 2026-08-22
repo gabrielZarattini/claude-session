@@ -7496,5 +7496,5 @@ Uma ressalva: o PDF `Agentic-Design-Patterns.pdf` (19,9 MB) segue fora do git de
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-08-22 - EP08 diagnóstico raiz veo-poll]]
-> * **Próxima Sessão**: [[2026-08-22 - b7378e67-2ea2-4eff-a01b-3d2907f1f838]]
+> * **Próxima Sessão**: [[2026-08-22 - agent-a10b82f01ca67508a]]
 %% --- TIMELINE END --- %%
