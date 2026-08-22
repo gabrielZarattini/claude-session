@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3728
-> * **Sessões do Claude**: 3675
+> * **Total de Sessões Registradas**: 3732
+> * **Sessões do Claude**: 3679
 > * **Sessões do Gemini**: 53
 
 ---
@@ -78,16 +78,16 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-08-22 - b7378e67-2ea2-4eff-a01b-3d2907f1f838]]` - *2026-08-22*
 *   `[[2026-08-22 - agent-ae4f3031d6818d9e1]]` - *2026-08-22*
 *   `[[2026-08-22 - agent-ae446da5d9e4fe447]]` - *2026-08-22*
+*   `[[2026-08-22 - agent-ad889da30ff68eecb]]` - *2026-08-22*
 *   `[[2026-08-22 - agent-acfb814f6b4cb9810]]` - *2026-08-22*
+*   `[[2026-08-22 - agent-a7dd6e04dbc1b8696]]` - *2026-08-22*
+*   `[[2026-08-22 - agent-a53c299c44e61e7a6]]` - *2026-08-22*
+*   `[[2026-08-22 - agent-a22668f71cc9d23ac]]` - *2026-08-22*
 *   `[[2026-08-22 - agent-a10b82f01ca67508a]]` - *2026-08-22*
 *   `[[2026-08-22 - Sessão travada 251db3ca e migração SSH porta 52022]]` - *2026-08-22*
 *   `[[2026-08-22 - EP08 diagnóstico raiz veo-poll]]` - *2026-08-22*
 *   `[[2026-08-21 - ssh-server connector test]]` - *2026-08-21*
-*   `[[2026-08-21 - Sessão travada 251db3ca e migração SSH porta 52022]]` - *2026-08-21*
-*   `[[2026-08-20 - agent-ac0cf41abdefb27b7]]` - *2026-08-20*
-*   `[[2026-08-20 - agent-a4dfd48db2ebbfbb2]]` - *2026-08-20*
-*   `[[2026-08-20 - agent-a48488aa1c384277d]]` - *2026-08-20*
-*   *... e mais 3666 sessões nessa categoria.*
+*   *... e mais 3670 sessões nessa categoria.*
 
 ---
 
@@ -3317,7 +3317,11 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-08-22 - b7378e67-2ea2-4eff-a01b-3d2907f1f838]]` (ClaudeSessions)
 *   `[[2026-08-22 - agent-ae4f3031d6818d9e1]]` (ClaudeSessions)
 *   `[[2026-08-22 - agent-ae446da5d9e4fe447]]` (ClaudeSessions)
+*   `[[2026-08-22 - agent-ad889da30ff68eecb]]` (ClaudeSessions)
 *   `[[2026-08-22 - agent-acfb814f6b4cb9810]]` (ClaudeSessions)
+*   `[[2026-08-22 - agent-a7dd6e04dbc1b8696]]` (ClaudeSessions)
+*   `[[2026-08-22 - agent-a53c299c44e61e7a6]]` (ClaudeSessions)
+*   `[[2026-08-22 - agent-a22668f71cc9d23ac]]` (ClaudeSessions)
 *   `[[2026-08-22 - agent-a10b82f01ca67508a]]` (ClaudeSessions)
 *   `[[2026-08-22 - Sessão travada 251db3ca e migração SSH porta 52022]]` (ClaudeSessions)
 *   `[[2026-08-22 - EP08 diagnóstico raiz veo-poll]]` (ClaudeSessions)
