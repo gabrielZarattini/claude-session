@@ -7066,6 +7066,82 @@ b2 **aprovado** — Luhmann diante da gaveta aberta do Zettelkasten, luz de jane
 
 Falta o `outro` sair do forno (versão descartável) para o re-render final de cta + outro com o layout corrigido.
 
+## 👤 User *(04:46:28)*
+
+<task-notification>
+<task-id>bzfj3rruv</task-id>
+<summary>Monitor event: "re-render final (b2/cold/cta/outro) do EP08"</summary>
+<event>outro: 55.3s · 1328f · 1585s · br=4.1M · uniq=100%
+✅ 4 cenas v4 verdes em /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit/montar4 · meta em /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit/montar4-scenes-meta.json</event>
+If this event is something the user would act on now, send a PushNotification. Routine or benign output doesn't need one.
+</task-notification>
+
+## 🤖 Claude *(04:46:38)*
+
+
+## 🤖 Claude *(04:46:39)*
+
+Fila limpa. Disparando o re-render final das 2 cenas com o layout corrigido (fan-out de agentes não se aplica aqui — o gargalo é CPU de render local e a Lei 5 do host limita a 2 processos pesados; o pipeline é serial por natureza):
+
+## 🤖 Claude *(04:46:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "KIT=/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit && rm -f $KIT/montar4/cta.mp4 $KIT/montar4/outro.mp4 && cd /home/gcrUX/htdocs/constellation-orchestra && nohup bun run scripts/ep08/montar-blocks-v4.ts --only=cta,outro > /tmp/claude-1001/render-final2.log 2>&1 & sleep 15 && head -3 /tmp/claude-1001/render-final2.log",
+  "description": "Re-render final de cta e outro",
+  "timeout": 40000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ✅ G-COLISAO-T: 2 cenas amostradas a 0,1 s, nenhuma cobertura acima de 8%
+> ```
+
+## 🤖 Claude *(04:47:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "until grep -qE \"verdes em|\u274c GATES|error:\" /tmp/claude-1001/render-final2.log 2>/dev/null; do sleep 20; done; tail -4 /tmp/claude-1001/render-final2.log",
+  "description": "Aguardar o re-render final das 2",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: bouf97h7q. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra--claude-worktrees-handson-49d5bc/b7378e67-2ea2-4eff-a01b-3d2907f1f838/tasks/bouf97h7q.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(04:47:07)*
+
+
+## 🤖 Claude *(04:47:07)*
+
+
+🛠️ **Tool Call**: `TaskStop`
+```json
+{
+  "task_id": "bzfj3rruv"
+}
+```
+
+> **Tool Result (TaskStop)** - ✅ Success
+>
+> ```
+> {"message":"Successfully stopped task: bzfj3rruv (tail -f /tmp/claude-1001/render-final4.log | grep -E --line-buffered \"br=|❌|GATES|error:|Error|verdes em\")","task_id":"bzfj3rruv","task_type":"local_bash","command":"tail -f /tmp/claude-1001/render-final4.log | grep -E --line-buffered \"br=|❌|GATES|error:|Error|verdes em\""}
+> ```
+
+## 🤖 Claude *(04:47:12)*
+
+Re-render das 2 últimas em curso (~30 min), com aviso de conclusão armado. Quando saírem, a sequência final é mecânica: varredura ASR dos 8 clipes → mutes extras se houver fala → `--gate-only` para o meta fresco → `EP08_GEN=4 EP08_TRILHA=1` assemble → QA A/V do master → publicação na Biblioteca para seu parecer.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
