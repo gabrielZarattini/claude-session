@@ -11,7 +11,7 @@ Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, conte
 
 > [!info] Métricas
 > * **Total de Processos**: 120
-> * **Total de Sessões**: 3716
+> * **Total de Sessões**: 3717
 
 ---
 
@@ -143,6 +143,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 ## 📂 Sessões do Projeto
 
+*   `[[2026-08-22 - Sessão travada 251db3ca e migração SSH porta 52022]]` (ClaudeSessions) - *2026-08-22*
 *   `[[2026-08-21 - ssh-server connector test]]` (ClaudeSessions) - *2026-08-21*
 *   `[[2026-08-21 - Sessão travada 251db3ca e migração SSH porta 52022]]` (ClaudeSessions) - *2026-08-21*
 *   `[[2026-08-21 - 9router integração no MCORCH]]` (ClaudeSessions) - *2026-08-21*

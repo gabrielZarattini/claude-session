@@ -159,4 +159,5 @@ ou adicionar a entrada em `mcpServers` no [.mcp.json](.mcp.json) do repo. Me dig
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-08-21 - Sessão travada 251db3ca e migração SSH porta 52022]]
+> * **Próxima Sessão**: [[2026-08-22 - Sessão travada 251db3ca e migração SSH porta 52022]]
 %% --- TIMELINE END --- %%
