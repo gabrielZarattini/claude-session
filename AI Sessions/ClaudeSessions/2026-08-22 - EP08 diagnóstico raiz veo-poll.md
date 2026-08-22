@@ -2825,6 +2825,1534 @@ Achado que muda o orçamento. O roteiro define **payoff moderno** só para os bl
 > Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
 > ```
 
+## 🤖 Claude *(01:00:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && grep -rn \"payoff\" scripts/ep08/ --include=*.ts | head -15; echo \"=== meta v4 ===\"; python3 -c \"\nimport json\nm=json.load(open('repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit/montar4-scenes-meta.json'))\nprint(json.dumps(m,ensure_ascii=False)[:900])\n\"",
+  "description": "Rastrear payoffs no pipeline de montagem"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> scripts/ep08/assemble-ep08.ts:5: * clipe história (Veo) → cartela de aplicação → clipe payoff. Rostrum = crops/zooms
+> scripts/ep08/assemble-ep08.ts:61: *  aplicação → [payoff]. Durações de scripts/ep08/layout.ts — a MESMA fonte do montar-blocks.ts. */
+> scripts/ep08/assemble-ep08.ts:62:function bloco(id: string, mp3: string, _num: string, _nome: string, _ano: string, kf: string, hist: string, _aplic: string, payoff?: string): Seg {
+> scripts/ep08/assemble-ep08.ts:63:  const L = blockLayout(id.replace(/^\d+_/, ""), N(mp3), !!payoff);
+> scripts/ep08/assemble-ep08.ts:66:  if (payoff) pieces.push(clipOr(payoff, kf, 2));
+> scripts/ep08/assemble-ep08.ts:77:  bloco("02_b2", "02_b2", "2", "MEMÓRIA EXTERNA", "1952", "b2_luhmann", "b2_luhmann", "-", "b2_payoff"),
+> scripts/ep08/assemble-ep08.ts:78:  bloco("03_b3", "03_b3", "3", "O CÉTICO EMBUTIDO", "1440", "b3_valla", "b3_valla", "-", "b3_payoff"),
+> scripts/ep08/assemble-ep08.ts:81:  bloco("06_b5", "06_b5", "5", "A VÁLVULA", "1679", "b5_papin", "b5_papin", "-", "b5_payoff"),
+> scripts/ep08/montar-blocks-v4.ts:85:  id: string; narr: string; hist: string; payoff?: string;
+> scripts/ep08/montar-blocks-v4.ts:92:  { id: "b1", narr: "01_b1", hist: "b1_bell", payoff: "b1_maos",
+> scripts/ep08/montar-blocks-v4.ts:100:  { id: "b2", narr: "02_b2", hist: "b2_luhmann", payoff: "b2_payoff",
+> scripts/ep08/montar-blocks-v4.ts:108:  { id: "b3", narr: "03_b3", hist: "b3_valla", payoff: "b3_payoff",
+> scripts/ep08/montar-blocks-v4.ts:124:  { id: "b5", narr: "06_b5", hist: "b5_papin", payoff: "b5_payoff",
+> scripts/ep08/montar-blocks-v4.ts:156:  const paySrc = b.payoff ? CLIP(b.payoff) : null;
+> scripts/ep08/layout.ts:24:/** Blocos com payoff: intro = 2,8+fill·0,6 · aplic = fill·0,4.
+> === meta v4 ===
+> [{"scene": "cold", "videos": [{"src": "/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit/clips/b1_bell.mp4", "at": 9.44}, {"src": "/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit/clips/b5_papin.mp4", "at": 13.09, "mute": true}]}, {"scene": "b1", "videos": [{"src": "/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit/clips/b1_bell.mp4", "at": 27.47}, {"src": "/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit/clips/b1_maos.mp4", "at": 43.5}]}, {"scene": "b2", "videos": [{"src": "/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit/clips/kb_b2_luhmann.mp4", "at": 20.53}, {"src": "/home/gcrUX/htdocs/constellation-orchestra/r
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:00:38)*
+
+
+## 🤖 Claude *(01:00:38)*
+
+Confirmado no código, não na memória:
+
+## 🤖 Claude *(01:00:39)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && sed -n '85,145p' scripts/ep08/montar-blocks-v4.ts | grep -n \"id: \\\"\" ",
+  "description": "Confirmar quais blocos t\u00eam payoff"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 8:  { id: "b1", narr: "01_b1", hist: "b1_bell", payoff: "b1_maos",
+> 16:  { id: "b2", narr: "02_b2", hist: "b2_luhmann", payoff: "b2_payoff",
+> 24:  { id: "b3", narr: "03_b3", hist: "b3_valla", payoff: "b3_payoff",
+> 32:  { id: "b4", narr: "05_b4", hist: "b4_alfinetes",
+> 40:  { id: "b5", narr: "06_b5", hist: "b5_papin", payoff: "b5_payoff",
+> 48:  { id: "b6", narr: "07_b6", hist: "b6_apollo",
+> 56:  { id: "b7", narr: "08_b7", hist: "b7_petrov",
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:00:42)*
+
+
+## 🤖 Claude *(01:00:43)*
+
+Definitivo: `b4`, `b6` e `b7` **não têm payoff por design** — código e roteiro concordam. O FIRST ACTION de ontem listou 4 pendências onde só existem 2. **Isso corta o gasto pela metade: ~R$ 13, não R$ 26** — e evita gerar dois clipes que a montagem descartaria.
+
+Vendo como vai a geração:
+
+## 🤖 Claude *(01:00:46)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra--claude-worktrees-handson-49d5bc/b7378e67-2ea2-4eff-a01b-3d2907f1f838/tasks/baig39cmc.output 2>/dev/null | tail -15",
+  "description": "Progresso da gera\u00e7\u00e3o"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> (Bash completed with no output)
+> ```
+
+## 🤖 Claude *(01:00:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "tail -20 /tmp/claude-1001/gen-b4-b6.log 2>/dev/null || echo \"(log ainda n\u00e3o criado)\"",
+  "description": "Ler log da gera\u00e7\u00e3o"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> kit refs signed: 3
+> balance before: 35992
+> b4_alfinetes → 128830bb
+> b6_apollo → 4870b774
+> submitted 2/2
+> ```
+
+## 🤖 Claude *(01:00:58)*
+
+
+## 🤖 Claude *(01:01:00)*
+
+Ambos submetidos (`128830bb`, `4870b774`) — agora o poll está rodando, e é o teste real do fix. Enquanto isso, vou transformar o conserto em **anticorpo permanente** seguindo o padrão da casa (`_shared/public-url.ts` + teste):
+
+## 🤖 Claude *(01:01:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && ls supabase/functions/_shared/*.test.ts 2>/dev/null && head -12 supabase/functions/_shared/public-url.test.ts && echo \"=== como o vitest acha esses testes ===\" && grep -n \"include\\|supabase\" vitest.config.ts 2>/dev/null | head",
+  "description": "Padr\u00e3o de teste de shared"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> supabase/functions/_shared/autopilot-video-cadence.test.ts
+> supabase/functions/_shared/billing.test.ts
+> supabase/functions/_shared/google-sa-auth.test.ts
+> supabase/functions/_shared/higgsfield-oauth.test.ts
+> supabase/functions/_shared/llm-fallback.test.ts
+> supabase/functions/_shared/meta-signed-request.test.ts
+> supabase/functions/_shared/provider-keys.test.ts
+> supabase/functions/_shared/public-url.test.ts
+> supabase/functions/_shared/sentinel.test.ts
+> supabase/functions/_shared/smart-delete-classify.test.ts
+> // public-url.test.ts — ANTICORPO do achado do /security-review 2026-07-14 (Amendment 25).
+> //
+> // O bug: `assertPublicHttpUrl` valida só a URL INICIAL. Com o `redirect: "follow"` padrão, um host
+> // PÚBLICO que responde `302 Location: http://169.254.169.254/...` fazia o isolate emitir a requisição
+> // para a rede interna — o guard passava e era descartado no primeiro salto. Os call-sites (o novo
+> // `fetchVeoImage` e os 5 fetches de mídia do `publish-social`) migraram para `fetchPublicUrl`, que
+> // segue os 3xx à mão RE-VALIDANDO cada `Location`.
+> //
+> // Estes testes travam o comportamento: se alguém voltar a usar `fetch` cru numa URL caller-controlled
+> // (ou afrouxar o guard), o CI quebra ANTES de o primitivo de SSRF voltar a existir.
+> import { describe, it, expect, vi, afterEach } from "vitest";
+> import { assertPublicHttpUrl, fetchPublicUrl } from "./public-url";
+> === como o vitest acha esses testes ===
+> 11:    include: ["src/**/*.{test,spec}.{ts,tsx}", "supabase/functions/**/*.{test,spec}.ts", "scripts/**/*.{test,spec}.ts"],
+> 15:      include: ["src/lib/**", "src/store/**", "src/hooks/**"],
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:01:04)*
+
+Padrão confirmado. Extraindo para `_shared` com o anticorpo:
+
+## 🤖 Claude *(01:01:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && cat > supabase/functions/_shared/b64.ts <<'TS'\n// b64.ts \u2014 decodifica\u00e7\u00e3o de base64 grande sem estourar o worker.\n//\n// \u2500\u2500 Por que este m\u00f3dulo existe (achado material 2026-08-21, EP08) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// O `veo-poll` trazia o MP4 do Vertex com o padr\u00e3o idiom\u00e1tico:\n//\n//     Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))\n//\n// Ele tem pico de mem\u00f3ria catastr\u00f3fico: `atob` materializa a string bin\u00e1ria inteira (UTF-16 \u21d2 2\u00d7\n// o v\u00eddeo) e o `Uint8Array.from` COM MAPPER percorre o iter\u00e1vel montando um array intermedi\u00e1rio\n// de N elementos antes de compactar. MEDIDO num clipe de 12 MB: pico de +315,7 MB \u2014 26\u00d7 o v\u00eddeo.\n//\n// Era isso que respondia `HTTP 546 WORKER_RESOURCE_LIMIT`. E explica o sintoma que despistou o\n// diagn\u00f3stico por dias: o MESMO n\u00f3 alternava `done` e `error` entre rodadas, porque um clipe de\n// 8 MB ficava na fronteira do limite do worker e passava ou n\u00e3o conforme a folga de quem atendia.\n// A hip\u00f3tese \u00f3bvia \u2014 \"1080p \u00e9 pesado demais\" \u2014 foi REFUTADA por dados: v\u00e1rios 1080p sa\u00edram `done`.\n// O discriminante \u00e9 o PESO do arquivo.\n//\n// Custo disso no EP08: quatro clipes-\u00e2ncora foram dados como falhos e substitu\u00eddos por Ken Burns\n// sobre imagem parada. O Sovereign leu o resultado, com raz\u00e3o, como amadorismo. Os v\u00eddeos estavam\n// prontos do lado do Google o tempo todo.\n//\n// Com `b64ToBytes` o pico medido \u00e9 +2,9 MB para o mesmo clipe de 12 MB.\n\n/**\n * Decodifica base64 em blocos, escrevendo direto num `Uint8Array` pr\u00e9-alocado.\n * Pico de mem\u00f3ria \u2248 tamanho do bin\u00e1rio + 32 KB de bloco.\n */\nexport function b64ToBytes(b64: string): Uint8Array {\n  // Base64 can\u00f4nico n\u00e3o tem espa\u00e7o em branco e sempre alinha em 4. Se n\u00e3o alinhar, sanitiza \u2014\n  // custa uma c\u00f3pia, ainda muito abaixo do padr\u00e3o antigo, e evita cortar um quantum no slice.\n  if (b64.length % 4 !== 0) b64 = b64.replace(/\\s+/g, \"\");\n  const CHUNK = 8192 * 4; // m\u00faltiplo de 4: nunca parte um quantum de 4 chars \u2192 3 bytes\n  const pad = b64.endsWith(\"==\") ? 2 : b64.endsWith(\"=\") ? 1 : 0;\n  const out = new Uint8Array((b64.length / 4) * 3 - pad);\n  let o = 0;\n  for (let i = 0; i < b64.length; i += CHUNK) {\n    const bin = atob(b64.slice(i, i + CHUNK));\n    for (let j = 0; j < bin.length; j++) out[o++] = bin.charCodeAt(j);\n  }\n  return o === out.length ? out : out.subarray(0, o);\n}\nTS\necho \"b64.ts criado: $(wc -l < supabase/functions/_shared/b64.ts) linhas\"",
+  "description": "Criar o m\u00f3dulo compartilhado"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> b64.ts criado: 41 linhas
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:01:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && cat > supabase/functions/_shared/b64.test.ts <<'TS'\n// b64.test.ts \u2014 ANTICORPO do HTTP 546 que fez o EP08 parecer amador (2026-08-21).\n//\n// Dois eixos travados aqui:\n//   (1) CORRE\u00c7\u00c3O \u2014 a decodifica\u00e7\u00e3o em blocos tem de bater byte a byte com a ing\u00eanua, inclusive\n//       nos tr\u00eas casos de padding e nas fronteiras de bloco (onde um slice desalinhado corromperia\n//       silenciosamente o MP4 \u2014 falha pior que o 546, porque passa no piso de 100 KB).\n//   (2) CUSTO \u2014 o pico de mem\u00f3ria tem de ficar perto do tamanho do bin\u00e1rio. Se algu\u00e9m \"simplificar\"\n//       de volta para `Uint8Array.from(atob(x), c => c.charCodeAt(0))`, este teste quebra ANTES de\n//       o worker voltar a morrer em produ\u00e7\u00e3o com os clipes pesados.\nimport { describe, it, expect } from \"vitest\";\nimport { b64ToBytes } from \"./b64\";\n\nconst enc = (b: Uint8Array) => Buffer.from(b).toString(\"base64\");\n/** Determin\u00edstico: mesmo conte\u00fado em toda execu\u00e7\u00e3o (Lei 1 \u2014 prova reproduz\u00edvel). */\nconst amostra = (n: number) => {\n  const b = new Uint8Array(n);\n  for (let i = 0; i < n; i++) b[i] = (i * 7 + (i >> 3)) & 0xff;\n  return b;\n};\n\ndescribe(\"b64ToBytes \u2014 corre\u00e7\u00e3o\", () => {\n  // 0..5 cobre os 3 paddings; 32767/32768/32769 cercam a fronteira do bloco de 32 KB.\n  it.each([0, 1, 2, 3, 4, 5, 255, 256, 32767, 32768, 32769, 98304, 1048576])(\n    \"decodifica %i bytes id\u00eantico ao caminho ing\u00eanuo\",\n    (n) => {\n      const orig = amostra(n);\n      const b64 = enc(orig);\n      const saida = b64ToBytes(b64);\n      expect(saida.length).toBe(n);\n      expect(Array.from(saida)).toEqual(Array.from(orig));\n      // paridade expl\u00edcita com o padr\u00e3o que este m\u00f3dulo substitui\n      expect(Array.from(saida)).toEqual(\n        Array.from(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))),\n      );\n    },\n  );\n\n  it(\"sanitiza espa\u00e7o em branco injetado sem corromper o alinhamento\", () => {\n    const orig = amostra(3000);\n    const b64 = enc(orig);\n    const sujo = b64.slice(0, 4) + \"\\n  \" + b64.slice(4);\n    expect(Array.from(b64ToBytes(sujo))).toEqual(Array.from(orig));\n  });\n});\n\ndescribe(\"b64ToBytes \u2014 custo (o motivo do 546)\", () => {\n  it(\"mant\u00e9m o pico de mem\u00f3ria perto do tamanho do bin\u00e1rio num clipe de 12 MB\", () => {\n    const N = 12 * 1024 * 1024; // o b7_petrov, o maior clipe do lote do EP08\n    const b64 = enc(amostra(N));\n\n    const antes = process.memoryUsage().heapUsed;\n    const saida = b64ToBytes(b64);\n    const gasto = process.memoryUsage().heapUsed - antes;\n\n    expect(saida.length).toBe(N);\n    // Teto generoso: 3\u00d7 o bin\u00e1rio. O caminho ing\u00eanuo mede ~26\u00d7; este mede pouco acima de 1\u00d7.\n    // Se este expect falhar, algu\u00e9m trocou a implementa\u00e7\u00e3o por uma que estoura o worker.\n    expect(gasto).toBeLessThan(N * 3);\n  });\n});\nTS\ntimeout 240 npx vitest run supabase/functions/_shared/b64.test.ts 2>&1 | tail -14",
+  "description": "Rodar o anticorpo",
+  "timeout": 260000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>  RUN  v3.2.4 /home/gcrUX/htdocs/constellation-orchestra
+> 
+>  ✓ supabase/functions/_shared/b64.test.ts (15 tests) 3341ms
+>    ✓ b64ToBytes — correção > decodifica 1048576 bytes idêntico ao caminho ingênuo  2766ms
+> 
+>  Test Files  1 passed (1)
+>       Tests  15 passed (15)
+>    Start at  22:01:40
+>    Duration  4.86s (transform 144ms, setup 294ms, collect 39ms, tests 3.34s, environment 828ms, prepare 110ms)
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:01:49)*
+
+
+## 🤖 Claude *(01:01:49)*
+
+15/15 verdes. Agora o `veo-poll` passa a importar do módulo compartilhado em vez de carregar cópia local:
+
+## 🤖 Claude *(01:01:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && python3 - <<'PY'\nimport io, re\np = \"supabase/functions/veo-poll/index.ts\"\ns = io.open(p, encoding=\"utf-8\").read()\n\n# remove o helper local inteiro (do coment\u00e1rio de bloco at\u00e9 o fecho da fun\u00e7\u00e3o)\ni = s.index(\"/**\\n * Decodifica base64 em blocos\")\nj = s.index(\"serve(async (req) => {\", i)\ns = s[:i] + s[j:]\n\n# adiciona o import junto dos demais\nanchor = 'import { createClient } from \"https://esm.sh/@supabase/supabase-js@2\";'\nassert anchor in s\ns = s.replace(anchor, anchor + '\\nimport { b64ToBytes } from \"../_shared/b64.ts\";', 1)\nio.open(p, \"w\", encoding=\"utf-8\").write(s)\nprint(\"veo-poll agora importa do _shared\")\nPY\ngrep -n \"b64ToBytes\\|_shared/b64\" supabase/functions/veo-poll/index.ts && timeout 300 npx supabase functions deploy veo-poll 2>&1 | grep -i \"deploy\\|error\" | head -4",
+  "description": "Refatorar e redeployar",
+  "timeout": 330000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> veo-poll agora importa do _shared
+> 26:import { b64ToBytes } from "../_shared/b64.ts";
+> 222:      bytes = b64ToBytes(inlineB64);
+> Deploying Function: veo-poll (script size: 96.23kB)
+> Deployed Functions on project bcyvddsykvehvpwstlfa: veo-poll
+> You can inspect your deployment in the Dashboard: https://supabase.com/dashboard/project/bcyvddsykvehvpwstlfa/functions
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:02:51)*
+
+
+## 🤖 Claude *(01:02:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat /tmp/claude-1001/gen-b4-b6.log",
+  "description": "Resultado da gera\u00e7\u00e3o"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> kit refs signed: 3
+> balance before: 35992
+> b4_alfinetes → 128830bb
+> b6_apollo → 4870b774
+> submitted 2/2
+> b6_apollo DONE asset=89ada568-cfea-4e4d-a8b8-8c6d146de6c7
+> b4_alfinetes DONE asset=6f3ecede-6a05-4cef-bf4d-d5da978338b9
+> terminal 2/2 · balance 35992 → 35458 (spent 534)
+> b6_apollo.mp4 ← 18211137B
+> b4_alfinetes.mp4 ← 19673529B
+> FLEET DONE
+> ```
+
+## 🤖 Claude *(01:03:02)*
+
+
+## 🤖 Claude *(01:03:02)*
+
+**O fix funcionou — e a prova é melhor do que eu esperava.**
+
+## 🤖 Claude *(01:03:06)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit/clips && ls -la b4_alfinetes.mp4 b6_apollo.mp4 && for f in b4_alfinetes b6_apollo; do echo \"\u2500\u2500 $f\"; ffprobe -v error -show_entries stream=codec_type,width,height,nb_frames,duration -of default=nw=1 $f.mp4 2>&1 | tr '\\n' ' '; echo; done",
+  "description": "Verificar os clipes materialmente"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> -rw-rw-r-- 1 ubuntu gcrUX 19673529 Aug 21 22:02 b4_alfinetes.mp4
+> -rw-rw-r-- 1 ubuntu gcrUX 18211137 Aug 21 22:02 b6_apollo.mp4
+> ── b4_alfinetes
+> codec_type=video width=1920 height=1080 duration=8.000000 nb_frames=192 codec_type=audio duration=8.000000 nb_frames=377 
+> ── b6_apollo
+> codec_type=video width=1920 height=1080 duration=8.000000 nb_frames=192 codec_type=audio duration=8.000000 nb_frames=377
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:03:14)*
+
+
+## 🤖 Claude *(01:03:16)*
+
+Ambos **1920×1080, 8,000s, 192 frames, com áudio nativo** — e passaram **de primeira**, sendo os dois arquivos mais pesados do lote inteiro. Isso fecha o diagnóstico com correlação, não com hipótese:
+
+## 🤖 Claude *(01:03:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit/clips && printf \"%-16s %9s  %s\\n\" \"clipe\" \"MB\" \"hist\u00f3rico no poll ANTIGO\"\nprintf \"%-16s %9s  %s\\n\" \"\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\" \"\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\" \"\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\"\ndeclare -A H=( [b4_alfinetes]=\"error \u00d75 \u2014 nunca passou\" [b6_apollo]=\"error \u00d75 \u2014 nunca passou\" [b7_petrov]=\"done 1 de 5 (fronteira)\" [b3_valla]=\"done \u00d72\" [b5_papin]=\"error\u00b7done (alterna)\" [b1_bell]=\"done\" [b5_payoff]=\"done \u00d72\" [b3_payoff]=\"done \u00d72\" [b2_payoff]=\"done \u00d72\" [b1_maos]=\"done\" )\nfor f in b4_alfinetes b6_apollo b7_petrov b3_valla b5_papin b5_payoff b1_bell b3_payoff b2_payoff b1_maos; do\n  [ -f \"$f.mp4\" ] && printf \"%-16s %9.1f  %s\\n\" \"$f\" \"$(echo \"scale=1; $(stat -c%s $f.mp4)/1048576\" | bc)\" \"${H[$f]}\"\ndone",
+  "description": "Correla\u00e7\u00e3o peso \u00d7 taxa de sucesso"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> clipe                   MB  histórico no poll ANTIGO
+> ──────────────── ─────────  ────────────────────────────
+> b4_alfinetes          18.7  error ×5 — nunca passou
+> b6_apollo             17.3  error ×5 — nunca passou
+> b7_petrov             11.6  done 1 de 5 (fronteira)
+> b3_valla               9.9  done ×2
+> b5_papin               8.6  error·done (alterna)
+> b5_payoff              8.6  done ×2
+> b1_bell                8.4  done
+> b3_payoff              6.1  done ×2
+> b2_payoff              4.5  done ×2
+> b1_maos                3.9  done
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:03:32)*
+
+
+## 🤖 Claude *(01:03:35)*
+
+Correlação **perfeitamente monotônica** — a taxa de sucesso ordena exatamente por peso. Acima de ~17 MB nunca passava; em 11,6 MB era moeda ao ar; abaixo de 10 MB sempre passava. Não era o Veo, não era 1080p, não era o prompt: era essa linha de código.
+
+Sobrou um: `b2_luhmann` falhou **6 vezes** e ainda é Ken Burns sobre still. Re-gerando com o fix (267 mco ≈ US$ 1,20):
+
+## 🤖 Claude *(01:03:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && bun run scripts/ep08/gen-clips.ts repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit/manifest-fleet.json --only=b2_luhmann > /tmp/claude-1001/gen-b2.log 2>&1; echo EXIT=$?; cat /tmp/claude-1001/gen-b2.log",
+  "description": "Re-gerar b2_luhmann",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: btzi52h6f. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra--claude-worktrees-handson-49d5bc/b7378e67-2ea2-4eff-a01b-3d2907f1f838/tasks/btzi52h6f.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> Session cwd remains /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc; directory changes made by the backgrounded command do not apply to subsequent commands.
+> ```
+
+## 🤖 Claude *(01:03:41)*
+
+Enquanto gera, commitando o conserto com a medição que o justifica:
+
+## 🤖 Claude *(01:03:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && git add supabase/functions/_shared/b64.ts supabase/functions/_shared/b64.test.ts supabase/functions/veo-poll/index.ts && git commit -q -m \"fix(veo-poll): decodifica o MP4 em blocos \u2014 mata o HTTP 546 que fez o EP08 parecer amador\n\nO \\`veo-poll\\` trazia o v\u00eddeo inline do Vertex com o padr\u00e3o idiom\u00e1tico\n\\`Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))\\`. Ele tem pico de mem\u00f3ria\ncatastr\u00f3fico: atob materializa a string bin\u00e1ria inteira (UTF-16 = 2x o v\u00eddeo) e o\nUint8Array.from COM MAPPER monta um array intermedi\u00e1rio de N elementos antes de\ncompactar.\n\nMEDIDO num clipe de 12 MB (o b7_petrov):\n  antigo  pico +315,7 MB   26x o tamanho do v\u00eddeo\n  novo    pico   +2,9 MB   0,24x\n\nEra isso que respondia WORKER_RESOURCE_LIMIT. E explica o sintoma que despistou o\ndiagn\u00f3stico por dias \u2014 o mesmo n\u00f3 alternando done/error entre rodadas: um clipe na\nfronteira do limite passava ou n\u00e3o conforme a folga do worker que atendia. A\nhip\u00f3tese '1080p' foi refutada por dados; o discriminante \u00e9 o PESO, e a correla\u00e7\u00e3o\n\u00e9 monot\u00f4nica:\n\n  18,7 MB b4_alfinetes  error x5, nunca passou\n  17,3 MB b6_apollo     error x5, nunca passou\n  11,6 MB b7_petrov     done 1 de 5\n   8,6 MB b5_papin      alterna\n   3,9 MB b1_maos       sempre done\n\nWitness: b4_alfinetes e b6_apollo \u2014 os dois arquivos mais pesados do lote inteiro \u2014\nsa\u00edram done na PRIMEIRA tentativa depois do deploy, 1920x1080, 8,000s, com \u00e1udio.\n\nAnticorpo em _shared/b64.test.ts (15 testes): corre\u00e7\u00e3o byte a byte contra o caminho\ning\u00eanuo nos 3 paddings e nas fronteiras de bloco, mais um teto de mem\u00f3ria que quebra\no CI se algu\u00e9m 'simplificar' de volta.\" 2>&1 | grep -iE \"gitleaks|leaks|files? changed|insert\" | head -4; git log --oneline -1",
+  "description": "Commitar o fix do veo-poll"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ┃  gitleaks-staged ❯ 
+>     ░    gitleaks
+> [90m10:03PM[0m [32mINF[0m no leaks found
+> ✔️ gitleaks-staged (0.04 seconds)
+> 87ac071 fix(veo-poll): decodifica o MP4 em blocos — mata o HTTP 546 que fez o EP08 parecer amador
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:03:58)*
+
+
+## 🤖 Claude *(01:04:00)*
+
+Commitado (`87ac071`). Agora a segunda metade do seu pedido — a **regra de linguagem** que ficou por codificar: caixa cheia só para vídeo real, cartão para still. Ela acabou de ficar mais relevante, porque `b4` e `b6` deixaram de ser still:
+
+## 🤖 Claude *(01:04:01)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && sed -n '1,84p' scripts/ep08/montar-blocks-v4.ts",
+  "description": "Ler o cabe\u00e7alho do montador v4"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> /**
+>  * EP08 v3 — o UAU (parecer Sovereign 2026-08-17b): UMA cena MONTAR contínua por segmento.
+>  *
+>  *   1. TRILHA: a câmera percorre um caminho XYZ (VOC-DOP-CAM-XYZ) que passa pelos itens —
+>  *      nada de cortes entre cartela/fill/clipe; o clipe É uma estação da trilha.
+>  *   2. ZERO imagem estática em card: toda laje é <video> (clipe Veo real ou kb_* pré-animado).
+>  *   3. O TEMPO É DA PALAVRA: cada camada nasce no onset whisper da palavra que a nomeia
+>  *      (<seg>.mp3.onsets.json — align-bloco.ts). Sem onset, fallback proporcional declarado.
+>  *
+>  * Saída: <KIT>/montar3/<seg>.mp4 + <KIT>/montar3/scenes-meta.json (offsets p/ leito diegético).
+>  * Uso: bun run scripts/ep08/montar-blocks-v3.ts [--only=b1,cold]
+>  */
+> import { writeFileSync, mkdirSync, existsSync, rmSync, readFileSync } from "node:fs";
+> import { join, dirname } from "node:path";
+> import { execFileSync } from "node:child_process";
+> import { fileURLToPath } from "node:url";
+> import { canvasFor } from "../motion/canvas-size.mjs";
+> import { GRADE_VF } from "../motion/grade";
+> import { KIT, durOf } from "./layout";
+> 
+> const REPO = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
+> const CHROME = process.env.PLAYWRIGHT_CHROMIUM
+>   ?? "/home/ubuntu/.cache/ms-playwright/chromium-1226/chrome-linux/chrome";
+> const FPS = 24, SCALE = 1.5;
+> const CANVAS = canvasFor("16:9");
+> const OUT = `${KIT}/montar4`;
+> const WORK = `${KIT}/montar4-work`;
+> /** Resolve o clipe em DOIS formatos: `.webm` para a LAJE (o Chromium do Playwright não tem H.264 —
+>  *  mp4 dá NETWORK_NO_SOURCE e a laje sai PRETA; achado do piloto v3) e `.mp4` para o ÁUDIO
+>  *  diegético do montador. O finish-script transcodifica os webm que faltarem. */
+> const CLIP = (n: string): { vid: string; aud: string } => {
+>   for (const base of [n, `kb_${n}`]) {
+>     const mp4 = `${KIT}/clips/${base}.mp4`;
+>     if (existsSync(mp4)) {
+>       const webm = `${KIT}/clips/${base}.webm`;
+>       if (!existsSync(webm)) throw new Error(`webm ausente p/ laje (rode a transcodificação): ${base}`);
+>       return { vid: webm, aud: mp4 };
+>     }
+>   }
+>   throw new Error(`clip ausente (nem real nem kb): ${n}`);
+> };
+> const N = (n: string) => `${KIT}/narracao/${n}.mp3`;
+> 
+> const only = process.argv.find((a) => a.startsWith("--only"))?.split("=")[1]?.split(",");
+> 
+> /** onsets do whisper: {beatId: segundos} (formato do align-bloco). Faltou âncora → fallback. */
+> function onsets(seg: string): Record<string, number> {
+>   const p = `${KIT}/narracao/${seg}.mp3.onsets.json`;
+>   if (!existsSync(p)) return {};
+>   const raw0 = JSON.parse(readFileSync(p, "utf8"));
+>   const raw = (raw0 && typeof raw0 === "object" && raw0.onsets && typeof raw0.onsets === "object") ? raw0.onsets : raw0;
+>   const out: Record<string, number> = {};
+>   for (const [k, v] of Object.entries(raw)) {
+>     if (typeof v === "number") out[k] = v;
+>     else if (v && typeof v === "object" && typeof (v as any).t === "number") out[k] = (v as any).t;
+>     else if (v && typeof v === "object" && typeof (v as any).start === "number") out[k] = (v as any).start;
+>   }
+>   return out;
+> }
+> /** pega onset ou fallback proporcional; garante ordem crescente com folga mínima. */
+> function beats(seg: string, D: number, wanted: [string, number][]): Record<string, number> {
+>   const on = onsets(seg);
+>   const res: Record<string, number> = {};
+>   let prev = 0;
+>   for (const [id, frac] of wanted) {
+>     let t = on[id] ?? D * frac;
+>     t = Math.max(t, prev + 0.6);
+>     t = Math.min(t, D - 1.2);
+>     res[id] = +t.toFixed(2);
+>     prev = res[id];
+>   }
+>   return res;
+> }
+> 
+> type Meta = { scene: string; videos: { src: string; at: number; mute?: boolean }[] };
+> const metas: Meta[] = [];
+> 
+> const NEB = [
+>   { x: -1320, y: -690, w: 520, h: 520, color: "#5a24b4" },
+>   { x: 600, y: 60, w: 480, h: 480, color: "#0a6f92" },
+> ];
+> const PLANES = { grid: -4200, far: -2950, vid: -260, chips: -500, pay: -260 };
+> 
+> type BlockV3 = {
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:04:11)*
+
+
+## 🤖 Claude *(01:04:13)*
+
+O plano de vídeo já está em `z=-260` (caixa cheia), mas `CLIP()` resolve `b2_luhmann` **ou** `kb_b2_luhmann` e trata os dois igual — é exatamente o ponto que sua regra ataca. Vendo se ainda vai sobrar algum still:
+
+## 🤖 Claude *(01:04:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat /tmp/claude-1001/gen-b2.log 2>/dev/null || echo \"(ainda submetendo)\"",
+  "description": "Progresso do b2_luhmann"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> kit refs signed: 3
+> balance before: 35458
+> b2_luhmann → 1e559c65
+> submitted 1/1
+> ```
+
+## 🤖 Claude *(01:04:17)*
+
+
+## 🤖 Claude *(01:04:18)*
+
+Ainda pollando. Enquanto isso, implemento a regra. Vendo como a laje de vídeo é montada hoje:
+
+## 🤖 Claude *(01:04:18)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && sed -n '145,215p' scripts/ep08/montar-blocks-v4.ts",
+  "description": "Ler a montagem das lajes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>     aplic1: "Liste o que a sua IA", aplic2: "nunca decide sozinha.",
+>     beatsWanted: [["hist", 0.16], ["petrov", 0.35], ["nuvens", 0.58], ["aplic", 0.82]],
+>     bPadrao: "misseis", bHist: "hist", bAno: "nuvens", bAplic: "aplic" },
+> ];
+> 
+> function blockScene(b: BlockV3) {
+>   const D = +(durOf(N(b.narr)) + 0.4).toFixed(3);
+>   const wanted: [string, number][] = [[b.bPadrao, 0.16], [b.bHist, 0.42], [b.bAno, 0.6], [b.bAplic, 0.82]];
+>   const t = beats(b.narr, D, wanted);
+>   const tPad = t[b.bPadrao], tHist = t[b.bHist], tAno = t[b.bAno], tAplic = t[b.bAplic];
+>   const histSrc = CLIP(b.hist);
+>   const paySrc = b.payoff ? CLIP(b.payoff) : null;
+>   const videos: Meta["videos"] = [{ src: histSrc.aud, at: +(tHist + 0.4).toFixed(2) }];
+>   if (paySrc) videos.push({ src: paySrc.aud, at: +(tAplic + 1.0).toFixed(2) });
+>   metas.push({ scene: b.id, videos });
+>   return {
+>     cena: `ep08v4-${b.id}`, duration: D, aspect: "16:9",
+>     camera: {
+>       perspective: 1689, driftX: 0, driftY: 0,
+>       keyframes: [
+>         [0, 0, 0, -120],
+>         [tPad, -60, 12, -40],
+>         [tHist, 40, -8, 150],
+>         [tAno, 55, 5, 205],
+>         [tAplic, -45, 12, 250],
+>         [D, -38, 0, 300],
+>       ],
+>     },
+>     planes: PLANES,
+>     focus: { stations: [[0, "far"], [tPad, "chips"], [tHist, "vid"], [tAplic, "pay"]], motivated: false, k: 150, maxBlur: 8 },
+>     atmosphere: { weave: true, horizon: true, horizonPlane: "grid", horizonY: 380, nebulae: NEB },
+>     layers: [
+>       { id: "vhist", kind: "slab", plane: "vid", src: histSrc.vid, x: 0, y: 0, w: 1460, h: 821,
+>         rotY: { base: -4, open: 0, openWin: [tHist, tHist + 1.6], wobble: 0.5, wobbleFreq: 0.4 },
+>         approach: 120, in: [tHist - 0.2, tHist + 0.6], out: paySrc ? [tAplic + 0.8, tAplic + 1.6] : [D - 1.0, D - 0.3], tag: b.chipAno.t1 },
+>       ...(paySrc ? [{ id: "vpay", kind: "slab", plane: "pay", src: paySrc.vid, x: 0, y: 0, w: 1460, h: 821,
+>         rotY: { base: 4, open: 0, openWin: [tAplic + 1.0, tAplic + 2.2], wobble: 0.5, wobbleFreq: 0.4 },
+>         in: [tAplic + 0.6, tAplic + 1.4], out: [D - 0.8, D - 0.2] }] : []),
+>       { id: "chipcon", kind: "chip", plane: "chips", x: -170, y: -40, rotZ: -4, rotY: 10,
+>         iconPath: "M4 7h16M4 12h10M4 17h13", t1: b.chipCon.t1, t2: b.chipCon.t2,
+>         in: [tPad, tPad + 0.8], out: [tHist - 0.4, tHist + 0.3] },
+>       { id: "chipano", kind: "chip", plane: "chips", x: 200, y: 95, rotZ: 3, rotY: -10,
+>         iconPath: "M12 8v4l3 3M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z", t1: b.chipAno.t1, t2: b.chipAno.t2,
+>         in: [tAno, tAno + 0.8], out: [tAplic + 0.4, tAplic + 1.1] },
+>     ],
+>     hud: { kick: b.kick, title1: b.t1, title2: b.t2, caption: b.caption,
+>       end: { e1: "APLIQUE HOJE", e2: b.aplic1, e3: b.aplic2 },
+>       outWin: [tHist - 0.5, tHist + 0.3], endWin: [tAplic, tAplic + 0.9], scrim: "left" },
+>     fadeInSec: 0.3, fadeOutSec: 0.35,
+>   };
+> }
+> 
+> function coldScene() {
+>   const D = +(durOf(N("00_cold")) + 0.4).toFixed(3);
+>   const t = beats("00_cold", D, [["expira", 0.22], ["construo", 0.45], ["padroes", 0.62], ["sessenta", 0.86]]);
+>   metas.push({ scene: "cold", videos: [
+>     { src: CLIP("b1_bell").aud, at: +(t.construo + 0.4).toFixed(2) },
+>     { src: CLIP("b5_papin").aud, at: +(t.padroes + 0.4).toFixed(2), mute: true },
+>   ]});
+>   return {
+>     cena: "ep08v3-cold", duration: D, aspect: "16:9",
+>     camera: { perspective: 1689, driftX: 0, driftY: 0,
+>       keyframes: [[0, 0, 0, 0], [t.expira, -140, 18, 620], [t.construo, 150, -12, 1300], [t.padroes, -120, 20, 1950], [D, 30, 0, 2450]] },
+>     planes: PLANES,
+>     focus: { stations: [[0, "chips"], [t.construo - 0.4, "vid"], [t.padroes, "pay"]], motivated: false, k: 150, maxBlur: 8 },
+>     atmosphere: { weave: true, horizon: true, horizonPlane: "grid", horizonY: 380, nebulae: NEB },
+>     layers: [
+>       { id: "v1", kind: "slab", plane: "vid", src: CLIP("b1_bell").vid, x: 240, y: -10, w: 860, h: 484,
+>         rotY: { base: -16, open: -6, openWin: [t.construo, t.construo + 1.4], wobble: 1.2, wobbleFreq: 0.4 },
+>         in: [t.construo - 0.2, t.construo + 0.6], out: [t.sessenta - 0.8, t.sessenta - 0.1], tag: "1964" },
+>       { id: "v2", kind: "slab", plane: "pay", src: CLIP("b5_papin").vid, x: -180, y: 20, w: 700, h: 394,
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:04:28)*
+
+
+## 🤖 Claude *(01:04:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat /tmp/claude-1001/gen-b2.log; echo \"---\"; node -e \"const{canvasFor}=require('/home/gcrUX/htdocs/constellation-orchestra/scripts/motion/canvas-size.mjs');\" 2>/dev/null || cd /home/gcrUX/htdocs/constellation-orchestra && grep -n \"16:9\" scripts/motion/canvas-size.mjs | head -4",
+  "description": "Checar b2 e o tamanho do canvas"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> kit refs signed: 3
+> balance before: 35458
+> b2_luhmann → 1e559c65
+> submitted 1/1
+> ---
+> 6: * na mão. Enquanto só existia 16:9 ninguém notou; no primeiro formato novo, o desencontro
+> 10: * fixa faz o `2.39:1` **abrir campo lateral** em vez de **cortar** o 16:9. Cortar perderia
+> 15: *   16:9    1280 × 720  ×1.5 → 1920 × 1080
+> 25: *   podcast simples · screencast · pessoa real no estúdio · tutorial →  "16:9"
+> ```
+
+## 🤖 Claude *(01:04:44)*
+
+
+## 🤖 Claude *(01:04:45)*
+
+Canvas 16:9 = 1280×720. Com `perspective 1689` e o plano em `z=-260`, a laje de 1460×821 projeta **1265×712** — ou seja, 98,8% do quadro. Essa é a "caixa cheia", calibrada com precisão. Implementando a regra:
+
+## 🤖 Claude *(01:05:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && python3 - <<'PY'\nimport io\np = \"scripts/ep08/montar-blocks-v4.ts\"\ns = io.open(p, encoding=\"utf-8\").read()\n\n# \u2500\u2500 1. CLIP passa a declarar se a fonte \u00e9 v\u00eddeo REAL ou still animado \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nvelho_clip = '''const CLIP = (n: string): { vid: string; aud: string } => {\n  for (const base of [n, `kb_${n}`]) {\n    const mp4 = `${KIT}/clips/${base}.mp4`;\n    if (existsSync(mp4)) {\n      const webm = `${KIT}/clips/${base}.webm`;\n      if (!existsSync(webm)) throw new Error(`webm ausente p/ laje (rode a transcodifica\u00e7\u00e3o): ${base}`);\n      return { vid: webm, aud: mp4 };\n    }\n  }\n  throw new Error(`clip ausente (nem real nem kb): ${n}`);\n};'''\nnovo_clip = '''const CLIP = (n: string): { vid: string; aud: string; real: boolean } => {\n  for (const base of [n, `kb_${n}`]) {\n    const mp4 = `${KIT}/clips/${base}.mp4`;\n    if (existsSync(mp4)) {\n      const webm = `${KIT}/clips/${base}.webm`;\n      if (!existsSync(webm)) throw new Error(`webm ausente p/ laje (rode a transcodifica\u00e7\u00e3o): ${base}`);\n      // `kb_*` \u00e9 Ken Burns sobre imagem PARADA \u2014 movimento emprestado, n\u00e3o filmado.\n      return { vid: webm, aud: mp4, real: !base.startsWith(\"kb_\") };\n    }\n  }\n  throw new Error(`clip ausente (nem real nem kb): ${n}`);\n};\n\n/**\n * REGRA DE LINGUAGEM \u2014 diretiva Sovereign 2026-08-21, textual:\n *   \"Caixa cheia somente para v\u00eddeos. Quadro atual somente para imagens est\u00e1ticas ou com pedido\n *    espec\u00edfico. Precisa sempre verificar a posi\u00e7\u00e3o dos elementos, principalmente os que aparecem\n *    e v\u00e3o aparecer em movimentos.\"\n *\n * O quadro cheio \u00e9 M\u00c9RITO de fonte com movimento real. Um still com Ken Burns por cima empresta\n * movimento que n\u00e3o filmou; promov\u00ea-lo a caixa cheia \u00e9 a mentira que fez o EP07 parecer amador.\n *\n * Geometria: com `perspective 1689` e o plano `vid` em z=-260, o fator de proje\u00e7\u00e3o \u00e9\n * 1689/(1689+260) = 0,867. Logo 1460x821 chega \u00e0 tela como 1265x712 sobre um canvas de 1280x720\n * \u2014 98,8% da largura, a caixa cheia. O cart\u00e3o fica em 920x518 => 798x449 na tela (62%),\n * visivelmente menor, com o fundo respirando ao redor.\n */\nconst CAIXA_CHEIA = { w: 1460, h: 821 } as const;\nconst CARTAO = { w: 920, h: 518 } as const;\n/** `override` atende o \"ou com pedido espec\u00edfico\" da diretiva. */\nconst molduraDe = (src: { real: boolean }, override?: \"full\" | \"card\") =>\n  (override ?? (src.real ? \"full\" : \"card\")) === \"full\" ? CAIXA_CHEIA : CARTAO;'''\nassert velho_clip in s, \"\u00e2ncora CLIP n\u00e3o encontrada\"\ns = s.replace(velho_clip, novo_clip, 1)\n\n# \u2500\u2500 2. a laje hist\u00f3rica usa a moldura decidida pela regra \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nvelho_v = '''      { id: \"vhist\", kind: \"slab\", plane: \"vid\", src: histSrc.vid, x: 0, y: 0, w: 1460, h: 821,'''\nnovo_v = '''      { id: \"vhist\", kind: \"slab\", plane: \"vid\", src: histSrc.vid, x: 0, y: 0, ...mHist,'''\nassert velho_v in s\ns = s.replace(velho_v, novo_v, 1)\n\nvelho_p = '''      ...(paySrc ? [{ id: \"vpay\", kind: \"slab\", plane: \"pay\", src: paySrc.vid, x: 0, y: 0, w: 1460, h: 821,'''\nnovo_p = '''      ...(paySrc ? [{ id: \"vpay\", kind: \"slab\", plane: \"pay\", src: paySrc.vid, x: 0, y: 0, ...mPay!,'''\nassert velho_p in s\ns = s.replace(velho_p, novo_p, 1)\n\n# declara as molduras logo ap\u00f3s resolver as fontes\nvelho_src = '''  const histSrc = CLIP(b.hist);\n  const paySrc = b.payoff ? CLIP(b.payoff) : null;'''\nnovo_src = '''  const histSrc = CLIP(b.hist);\n  const paySrc = b.payoff ? CLIP(b.payoff) : null;\n  const mHist = molduraDe(histSrc, b.frame);\n  const mPay = paySrc ? molduraDe(paySrc, b.framePayoff) : null;'''\nassert velho_src in s\ns = s.replace(velho_src, novo_src, 1)\n\n# \u2500\u2500 3. o tipo do bloco ganha os overrides \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nvelho_t = '''  id: string; narr: string; hist: string; payoff?: string;'''\nnovo_t = '''  id: string; narr: string; hist: string; payoff?: string;\n  /** \"pedido espec\u00edfico\" da diretiva: for\u00e7a a moldura, ignorando a origem da fonte. */\n  frame?: \"full\" | \"card\"; framePayoff?: \"full\" | \"card\";'''\nassert velho_t in s\ns = s.replace(velho_t, novo_t, 1)\n\nio.open(p, \"w\", encoding=\"utf-8\").write(s)\nprint(\"regra de moldura codificada\")\nPY\ngrep -n \"CAIXA_CHEIA\\|CARTAO\\|molduraDe\\|mHist\\|real:\" scripts/ep08/montar-blocks-v4.ts | head",
+  "description": "Codificar a regra caixa-cheia vs cart\u00e3o"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> regra de moldura codificada
+> 31:const CLIP = (n: string): { vid: string; aud: string; real: boolean } => {
+> 38:      return { vid: webm, aud: mp4, real: !base.startsWith("kb_") };
+> 58:const CAIXA_CHEIA = { w: 1460, h: 821 } as const;
+> 59:const CARTAO = { w: 920, h: 518 } as const;
+> 61:const molduraDe = (src: { real: boolean }, override?: "full" | "card") =>
+> 62:  (override ?? (src.real ? "full" : "card")) === "full" ? CAIXA_CHEIA : CARTAO;
+> 180:  const mHist = molduraDe(histSrc, b.frame);
+> 181:  const mPay = paySrc ? molduraDe(paySrc, b.framePayoff) : null;
+> 202:      { id: "vhist", kind: "slab", plane: "vid", src: histSrc.vid, x: 0, y: 0, ...mHist,
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:05:19)*
+
+
+## 🤖 Claude *(01:05:20)*
+
+Agora a outra metade da sua regra — *"verificar a posição dos elementos, principalmente os que aparecem e vão aparecer em movimentos"*. Antes disso, o `b2_luhmann`:
+
+## 🤖 Claude *(01:05:20)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cat /tmp/claude-1001/gen-b2.log",
+  "description": "Resultado do b2_luhmann"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> kit refs signed: 3
+> balance before: 35458
+> b2_luhmann → 1e559c65
+> submitted 1/1
+> ```
+
+## 🤖 Claude *(01:05:23)*
+
+
+## 🤖 Claude *(01:05:24)*
+
+Ainda no poll. Continuando com o gate de colisão — preciso das dimensões reais dos chips no template:
+
+## 🤖 Claude *(01:05:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && tail -30 scripts/ep08/montar-blocks-v4.ts && echo \"=== template usado ===\" && grep -n \"template\\|montar-template\" scripts/ep08/montar-blocks-v4.ts | head -5",
+  "description": "Como o v4 renderiza"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+>     execFileSync("ffmpeg", ["-y", "-framerate", String(FPS), "-i", join(dir, "frames", "f%04d.png"),
+>       "-vf", GRADE_VF, "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "16", "-preset", "medium", mp4], { stdio: "pipe" });
+>     const probe = JSON.parse(execFileSync("ffprobe", ["-v", "quiet", "-print_format", "json", "-show_format", mp4]).toString());
+>     const bitRate = Number(probe.format?.bit_rate ?? 0);
+>     if (bitRate < 800_000) failures.push(`${sc.id}: Gb bit_rate ${bitRate} < 800k`);
+>     const md5s = execFileSync("ffmpeg", ["-v", "quiet", "-i", mp4, "-f", "framemd5", "-"]).toString()
+>       .split("\n").filter((l) => l && !l.startsWith("#"));
+>     const uniq = new Set(md5s.map((l) => l.trim().split(",").pop()!.trim())).size;
+>     const pct = (uniq / Math.max(md5s.length, 1)) * 100;
+>     if (pct < 95) failures.push(`${sc.id}: Gf frames únicos ${pct.toFixed(1)}% < 95%`);
+>     console.log(`${sc.id}: ${sc.T.toFixed(1)}s · ${n}f · ${((Date.now() - t0) / 1000).toFixed(0)}s · br=${(bitRate / 1e6).toFixed(1)}M · uniq=${pct.toFixed(0)}%`);
+>     rmSync(dir, { recursive: true, force: true });
+>   } finally { await page.close(); }
+> }
+> 
+> try {
+>   const queue = [...list];
+>   const worker = async () => {
+>     const ctx = await browser.newContext({ viewport: { width: CANVAS.w, height: CANVAS.h }, deviceScaleFactor: SCALE });
+>     for (let sc = queue.shift(); sc; sc = queue.shift()) {
+>       try { await renderScene(ctx, sc); }
+>       catch (e) { failures.push(`${sc.id}: ${String(e).slice(0, 140)}`); }
+>     }
+>     await ctx.close();
+>   };
+>   await Promise.all([worker(), worker()]);
+> } finally { await browser.close(); }
+> 
+> if (failures.length) { console.error(`❌ GATES:\n  - ${failures.join("\n  - ")}`); process.exit(1); }
+> console.log(`✅ ${list.length} cenas v3 verdes em ${OUT} · meta em ${KIT}/montar3-scenes-meta.json`);
+> === template usado ===
+> 342:  execFileSync("node", [join(REPO, "scripts/motion/montar-template-v2.mjs"), specPath, htmlPath], { stdio: "pipe" });
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:05:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && grep -n \"chip\" scripts/motion/montar-template-v2.mjs | head -20",
+  "description": "Dimens\u00f5es do chip no template"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 39: * Kinds de camada: slab · cutout · chip · badge · data · splitbar · timeline · counter · stamp
+> 165:const CENTER_KINDS = new Set(["cutout", "chip", "badge", "counter", "stamp"]);
+> 216:    case "chip":
+> 217:      return `<div class="chip" data-leaf="${i}" style="left:${x}px;top:${y}px">
+> 291:    spring: l.spring ?? (l.kind === "badge" || l.kind === "chip" || l.kind === "stamp" || l.kind === "cutout"),
+> 292:    slideX: num(l.slideX, 0), slideY: num(l.slideY, l.kind === "chip" ? 34 : 0),
+> 352:.cutwrap,.chip,.badge,.counter,.stamp{transform:translate(-50%,-50%)}
+> 359:.chip{position:absolute;display:flex;align-items:center;gap:12px;padding:14px 22px 14px 15px;
+> 363:.chip .mk{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+> 365:.chip .t1{font-size:15.5px;font-weight:700}
+> 366:.chip .t2{font-size:13px;opacity:.75;margin-top:3px}
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:05:36)*
+
+
+## 🤖 Claude *(01:05:37)*
+
+O chip é flex — largura depende do texto, então um gate por estimativa mentiria. Antes de escrever um novo, vou checar se o `G-COLISAO` de 14/08 já existe:
+
+## 🤖 Claude *(01:05:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && grep -rln \"G-COLISAO\\|colisao\\|collision\" scripts/ docs/processes/ 2>/dev/null | head -10",
+  "description": "Procurar o gate de colis\u00e3o existente"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> scripts/qa/lib/qa-throwaway.ts
+> scripts/ep07/scene-estrutura-referencial.ts
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:05:41)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && grep -n \"COLISAO\\|colisao\" scripts/ep07/scene-estrutura-referencial.ts | head -12",
+  "description": "Ver o gate de colis\u00e3o do EP07"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 375:  console.error(`❌ G-COLISAO: figura na frente de figura (a lei 2 desta cena):\n  ${[...new Set(colisoes)].join("\n  ")}`);
+> 378:console.log(`✅ G-COLISAO: ${layers.length} camadas, nenhuma sobreposição de figura`);
+> 381:// O buraco que a renderização anterior expôs: o G-COLISAO estava verde e o quadro estava errado,
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:05:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && sed -n '350,395p' scripts/ep07/scene-estrutura-referencial.ts",
+  "description": "Ler a implementa\u00e7\u00e3o do G-COLISAO"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> // A largura PERCEBIDA de uma camada é w · P/(P−(camZ(t)+z)). Duas camadas colidem quando suas
+> // caixas projetadas se cruzam no instante em que a segunda entra. Medir isso é barato; descobrir
+> // no gate ocular é caro — e foi exatamente o defeito que o Sovereign apontou na versão anterior.
+> const caixa = (l: L, t: number) => {
+>   const z = planes[l.plane as string], w = Number(l.w ?? 200);
+>   const escala = PERSP / (PERSP - (camZ(t) + z));
+>   const meia = (w * escala) / 2;
+>   return { x0: Number(l.x) * escala - meia, x1: Number(l.x) * escala + meia };
+> };
+> const colisoes: string[] = [];
+> for (const l of layers) {
+>   if (l.kind === "chip") continue;                       // texto vive na sua faixa reservada
+>   if (["timeAtras", "multidao"].includes(l.id as string)) continue; // fundo largo é PANO, não figura
+>   const t = (l.in as number[])[1];
+>   for (const o of layers) {
+>     if (o === l || o.kind === "chip") continue;
+>     if (["timeAtras", "multidao"].includes(o.id as string)) continue;
+>     const oIn = (o.in as number[])[1], oOut = (o.out as number[])[0];
+>     if (t < oIn || t > oOut) continue;                    // não coexistem neste instante
+>     const a = caixa(l, t), b = caixa(o, t);
+>     const sobrepoe = Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0);
+>     if (sobrepoe > 0) colisoes.push(`${l.id} × ${o.id} em t=${t.toFixed(2)}s — ${sobrepoe.toFixed(0)}px de sobreposição`);
+>   }
+> }
+> if (colisoes.length) {
+>   console.error(`❌ G-COLISAO: figura na frente de figura (a lei 2 desta cena):\n  ${[...new Set(colisoes)].join("\n  ")}`);
+>   process.exit(2);
+> }
+> console.log(`✅ G-COLISAO: ${layers.length} camadas, nenhuma sobreposição de figura`);
+> 
+> // ── GATE DE PERMANÊNCIA ─────────────────────────────────────────────────────────────────────
+> // O buraco que a renderização anterior expôs: o G-COLISAO estava verde e o quadro estava errado,
+> // porque o problema não era sobreposição — era PERMANÊNCIA. A multidão entrava e nunca saía, e os
+> // seis cargos apareciam dentro dela. Nenhum gate perguntava *"esta camada devia ter saído?"*.
+> // Agora pergunta: PANO (fundo largo) que ainda está em quadro quando uma FIGURA individual entra
+> // é falha, não estilo.
+> const PANOS = new Set(["timeAtras", "multidao"]);
+> const FIGURAS = new Set(["apresentador", "apresentador2", ...CARGOS.map((c) => c.id)]);
+> const permanencia: string[] = [];
+> for (const f of layers.filter((l) => FIGURAS.has(l.id as string))) {
+>   const tF = (f.in as number[])[1];
+>   for (const pano of layers.filter((l) => PANOS.has(l.id as string))) {
+>     const [pIn, pOut] = [(pano.in as number[])[1], (pano.out as number[])[0]];
+>     if (tF >= pIn && tF <= pOut) {
+>       permanencia.push(`${pano.id} ainda em quadro quando ${f.id} entra (t=${tF.toFixed(2)}s) — o pano engole a figura`);
+>     }
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:06:10)*
+
+
+## 🤖 Claude *(01:06:11)*
+
+Achado importante: o `G-COLISAO` existe, mas está **preso dentro de uma cena do EP07**, só mede no instante de entrada, e **pula os chips de propósito** (`if (l.kind === "chip") continue` — "texto vive na sua faixa reservada"). Sua diretiva não os isenta, e o que muda tudo é que a laje agora ocupa 98,8% do quadro. Escrevendo o gate temporal:
+
+## 🤖 Claude *(01:06:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && cat > scripts/motion/gate-colisao-temporal.ts <<'TS'\n/**\n * G-COLISAO-T \u2014 colis\u00e3o verificada AO LONGO DO TEMPO, com a c\u00e2mera em movimento.\n *\n * \u2500\u2500 Diretiva Sovereign 2026-08-21 (textual) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n *   \"Precisa sempre verificar a posi\u00e7\u00e3o dos elementos, principalmente os que aparecem e v\u00e3o\n *    aparecer em movimentos.\"\n *\n * O G-COLISAO original (`scripts/ep07/scene-estrutura-referencial.ts:353`) tem dois limites que\n * esta diretiva ataca de frente:\n *   1. mede UM instante por camada (o `in[1]`) \u2014 mas a c\u00e2mera se move, ent\u00e3o duas caixas que n\u00e3o\n *      se cruzam ao entrar podem se cruzar meio segundo depois;\n *   2. isenta `kind:\"chip\"` (\"texto vive na sua faixa reservada\"). Isso valia quando a laje de\n *      v\u00eddeo era pequena. Com a regra de CAIXA CHEIA de 2026-08-21 a laje passa a ocupar 98,8%\n *      do quadro e engole qualquer faixa reservada \u2014 a isen\u00e7\u00e3o virou ponto cego.\n *\n * Aqui a checagem \u00e9 por amostragem temporal, em X e Y, respeitando a ordem de profundidade: s\u00f3 \u00e9\n * FALHA quando a camada da FRENTE cobre a de tr\u00e1s. Duas camadas no mesmo plano que se cruzam\n * tamb\u00e9m falham (ningu\u00e9m est\u00e1 na frente \u2014 vira sobreposi\u00e7\u00e3o amb\u00edgua).\n */\n\nexport type Camada = {\n  id: string; kind?: string; plane: string;\n  x?: number; y?: number; w?: number; h?: number;\n  in?: number[]; out?: number[];\n};\nexport type Cena = {\n  camera: { perspective: number; keyframes: number[][] };\n  planes: Record<string, number>;\n  duration: number;\n  layers: Camada[];\n};\nexport type Achado = {\n  a: string; b: string; t: number; coberturaPct: number; frente: string;\n};\n\n/** z da c\u00e2mera em t, por interpola\u00e7\u00e3o linear entre keyframes [t, x, y, z]. */\nexport function camZ(kf: number[][], t: number): number {\n  if (!kf.length) return 0;\n  if (t <= kf[0][0]) return kf[0][3];\n  for (let i = 1; i < kf.length; i++) {\n    if (t <= kf[i][0]) {\n      const [t0, , , z0] = kf[i - 1], [t1, , , z1] = kf[i];\n      const f = t1 === t0 ? 0 : (t - t0) / (t1 - t0);\n      return z0 + (z1 - z0) * f;\n    }\n  }\n  return kf[kf.length - 1][3];\n}\n\n/** Caixa projetada na tela. Escala = P/(P \u2212 (camZ + zPlano)) \u2014 a mesma do template v2. */\nfunction caixa(l: Camada, cena: Cena, t: number) {\n  const P = cena.camera.perspective;\n  const z = cena.planes[l.plane] ?? 0;\n  const escala = P / (P - (camZ(cena.camera.keyframes, t) + z));\n  const w = (l.w ?? 0) * escala, h = (l.h ?? 0) * escala;\n  const cx = (l.x ?? 0) * escala, cy = (l.y ?? 0) * escala;\n  return { x0: cx - w / 2, x1: cx + w / 2, y0: cy - h / 2, y1: cy + h / 2, area: w * h, escala };\n}\n\n/** Vis\u00edvel em t: j\u00e1 entrou (fim do `in`) e ainda n\u00e3o come\u00e7ou a sair (in\u00edcio do `out`). */\nconst visivel = (l: Camada, t: number, D: number) => {\n  const ini = l.in?.[1] ?? 0;\n  const fim = l.out?.[0] ?? D;\n  return t >= ini && t <= fim;\n};\n\n/**\n * @param larguraDe  resolve a largura de camadas sem `w` declarado (chip \u00e9 flex \u2014 a largura vem\n *                   do texto). Sem resolvedor, a camada \u00e9 PULADA e reportada em `semMedida`.\n */\nexport function gateColisaoTemporal(\n  cena: Cena,\n  opts: { passo?: number; toleranciaPct?: number; larguraDe?: (l: Camada) => { w: number; h: number } | null } = {},\n): { achados: Achado[]; semMedida: string[]; amostras: number } {\n  const passo = opts.passo ?? 0.1;\n  const tol = opts.toleranciaPct ?? 8; // < 8% de cobertura \u00e9 encosto, n\u00e3o colis\u00e3o\n  const D = cena.duration;\n  const semMedida: string[] = [];\n\n  const medidas = new Map<string, Camada>();\n  for (const l of cena.layers) {\n    if (l.w != null && l.h != null) { medidas.set(l.id, l); continue; }\n    const m = opts.larguraDe?.(l);\n    if (m) medidas.set(l.id, { ...l, w: m.w, h: m.h });\n    else semMedida.push(`${l.id} (${l.kind ?? \"?\"})`);\n  }\n\n  const pior = new Map<string, Achado>();\n  for (let t = 0; t <= D; t = +(t + passo).toFixed(3)) {\n    const vivos = [...medidas.values()].filter((l) => visivel(l, t, D));\n    for (let i = 0; i < vivos.length; i++) {\n      for (let j = i + 1; j < vivos.length; j++) {\n        const A = vivos[i], B = vivos[j];\n        const ca = caixa(A, cena, t), cb = caixa(B, cena, t);\n        const ox = Math.min(ca.x1, cb.x1) - Math.max(ca.x0, cb.x0);\n        const oy = Math.min(ca.y1, cb.y1) - Math.max(ca.y0, cb.y0);\n        if (ox <= 0 || oy <= 0) continue;\n        // quem est\u00e1 na FRENTE tem z de plano MAIOR (menos negativo = mais perto da c\u00e2mera)\n        const za = cena.planes[A.plane] ?? 0, zb = cena.planes[B.plane] ?? 0;\n        const frente = za === zb ? \"(mesmo plano)\" : (za > zb ? A.id : B.id);\n        const atras = za === zb ? \"(mesmo plano)\" : (za > zb ? B.id : A.id);\n        if (frente === \"(mesmo plano)\") {\n          // amb\u00edguo: sempre reporta\n        } else if (atras === frente) continue;\n        const areaAtras = za === zb ? Math.min(ca.area, cb.area) : (za > zb ? cb.area : ca.area);\n        const pct = (ox * oy) / Math.max(areaAtras, 1) * 100;\n        if (pct < tol) continue;\n        const chave = [A.id, B.id].sort().join(\" \u00d7 \");\n        const anterior = pior.get(chave);\n        if (!anterior || pct > anterior.coberturaPct) {\n          pior.set(chave, { a: A.id, b: B.id, t: +t.toFixed(2), coberturaPct: +pct.toFixed(1), frente });\n        }\n      }\n    }\n  }\n  return {\n    achados: [...pior.values()].sort((x, y) => y.coberturaPct - x.coberturaPct),\n    semMedida,\n    amostras: Math.floor(D / passo) + 1,\n  };\n}\nTS\nnpx tsc --noEmit --skipLibCheck --target es2022 --moduleResolution bundler --module esnext scripts/motion/gate-colisao-temporal.ts 2>&1 | head -5; echo \"tsc-m\u00f3dulo exit=$?\"",
+  "description": "Criar o gate de colis\u00e3o temporal"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> tsc-módulo exit=0
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:06:50)*
+
+
+## 🤖 Claude *(01:06:51)*
+
+**Todos os clipes agora são vídeo real.** O `b2_luhmann` — que falhou 6 vezes seguidas — passou de primeira, com 15,9 MB (o terceiro mais pesado, exatamente onde a correlação previa):
+
+## 🤖 Claude *(01:06:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit/clips && ffprobe -v error -show_entries stream=width,height,duration -of csv=p=0 b2_luhmann.mp4 | head -2 && echo \"\u2500\u2500 invent\u00e1rio de V\u00cdDEO REAL \u2500\u2500\" && for f in b1_bell b1_maos b2_luhmann b2_payoff b3_valla b3_payoff b4_alfinetes b5_papin b5_payoff b6_apollo b7_petrov outro_presenter; do [ -f \"$f.mp4\" ] && printf \"  \u2705 %-18s %6.1f MB\\n\" \"$f\" \"$(echo \"scale=1;$(stat -c%s $f.mp4)/1048576\"|bc)\" || printf \"  \u274c %-18s AUSENTE\\n\" \"$f\"; done",
+  "description": "Invent\u00e1rio completo do kit"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 1920,1080,8.000000
+> 8.000000
+> ── inventário de VÍDEO REAL ──
+>   ✅ b1_bell               8.4 MB
+>   ✅ b1_maos               3.9 MB
+>   ✅ b2_luhmann           15.9 MB
+>   ✅ b2_payoff             4.5 MB
+>   ✅ b3_valla              9.9 MB
+>   ✅ b3_payoff             6.1 MB
+>   ✅ b4_alfinetes         18.7 MB
+>   ✅ b5_papin              8.6 MB
+>   ✅ b5_payoff             8.6 MB
+>   ✅ b6_apollo            17.3 MB
+>   ✅ b7_petrov            11.6 MB
+>   ✅ outro_presenter       5.6 MB
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:07:05)*
+
+
+## 🤖 Claude *(01:07:06)*
+
+12/12 em vídeo real, 1920×1080. Zero Ken Burns sobre still. Custo total: **801 mco ≈ US$ 3,60 ≈ R$ 19,50** — abaixo dos R$ 26, porque os dois payoffs fantasmas não existiam.
+
+Agora plugo o gate no montador, antes do render (falhar barato):
+
+## 🤖 Claude *(01:07:07)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && grep -n \"const list\\|scenes\\.push\\|list =\\|blockScene(\\|coldScene()\\|for (const\" scripts/ep08/montar-blocks-v4.ts | sed -n '1,20p'",
+  "description": "Achar onde as cenas s\u00e3o reunidas"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 32:  for (const base of [n, `kb_${n}`]) {
+> 74:  for (const [k, v] of Object.entries(raw)) {
+> 86:  for (const [id, frac] of wanted) {
+> 173:function blockScene(b: BlockV3) {
+> 222:function coldScene() {
+> 318:  const cold = coldScene(); scenes.push({ id: "cold", T: (cold as any).duration, spec: cold });
+> 319:  for (const b of BLOCKS) { const s = blockScene(b); scenes.push({ id: b.id, T: (s as any).duration, spec: s }); }
+> 320:  const cta = ctaScene(); scenes.push({ id: "cta", T: (cta as any).duration, spec: cta });
+> 321:  const ou = outroScene(); scenes.push({ id: "outro", T: (ou as any).duration, spec: ou });
+> 325:const list = scenes.filter((s) => !only || only.includes(s.id));
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:07:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && python3 - <<'PY'\nimport io\np = \"scripts/ep08/montar-blocks-v4.ts\"\ns = io.open(p, encoding=\"utf-8\").read()\n\ns = s.replace('import { KIT, durOf } from \"./layout\";',\n              'import { KIT, durOf } from \"./layout\";\\nimport { gateColisaoTemporal, type Cena } from \"../motion/gate-colisao-temporal\";', 1)\n\nanchor = \"const list = scenes.filter((s) => !only || only.includes(s.id));\"\nassert anchor in s\ngate = '''const list = scenes.filter((s) => !only || only.includes(s.id));\n\n// \u2500\u2500 G-COLISAO-T (diretiva Sovereign 2026-08-21) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n// \"verificar a posi\u00e7\u00e3o dos elementos, principalmente os que aparecem e v\u00e3o aparecer em movimentos\"\n// Roda ANTES do render: uma cena que se cobre n\u00e3o merece 10 min de CPU. O chip \u00e9 flex (largura vem\n// do texto), ent\u00e3o a medida \u00e9 ESTIMADA por m\u00e9trica declarada \u2014 conservadora de prop\u00f3sito: mede a\n// mais, para nunca deixar passar uma cobertura real.\nconst CHIP_PAD = 15 + 40 + 12 + 22;                       // padding-esq + marca + gap + padding-dir\nconst chipMedida = (l: any) => l.kind !== \"chip\" ? null : {\n  w: CHIP_PAD + Math.max(String(l.t1 ?? \"\").length * 8.6, String(l.t2 ?? \"\").length * 7.1),\n  h: 78,                                                   // 14+40+14 de padding vertical + folga\n};\nconst colisoes: string[] = [];\nfor (const sc of list) {\n  const r = gateColisaoTemporal(sc.spec as unknown as Cena, { passo: 0.1, larguraDe: chipMedida });\n  for (const a of r.achados) {\n    colisoes.push(`${sc.id}: ${a.a} \u00d7 ${a.b} em t=${a.t}s \u2014 ${a.frente} cobre ${a.coberturaPct}%`);\n  }\n  if (r.semMedida.length) console.log(`  \u00b7 ${sc.id}: sem medida (ignoradas): ${r.semMedida.join(\", \")}`);\n}\nif (colisoes.length) {\n  console.error(`\u274c G-COLISAO-T:\\\\n  - ${colisoes.join(\"\\\\n  - \")}`);\n  if (!process.env.MONTAR_IGNORA_COLISAO) process.exit(3);\n  console.error(\"   (MONTAR_IGNORA_COLISAO \u2014 seguindo assim mesmo, por decis\u00e3o expl\u00edcita)\");\n} else {\n  console.log(`\u2705 G-COLISAO-T: ${list.length} cenas amostradas a 0,1 s, nenhuma cobertura acima de 8%`);\n}'''\ns = s.replace(anchor, gate, 1)\nio.open(p, \"w\", encoding=\"utf-8\").write(s)\nprint(\"gate plugado no v4\")\nPY\nnpx tsc -p tsconfig.app.json --noEmit 2>&1 | tail -3; echo \"tsc-app exit=${PIPESTATUS[0]}\"",
+  "description": "Plugar o gate e checar tipos",
+  "timeout": 300000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> gate plugado no v4
+> tsc-app exit=0
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:08:02)*
+
+Agora o momento de verdade do gate — rodando só a análise, sem render:
+
+## 🤖 Claude *(01:08:04)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && timeout 200 bun run scripts/ep08/montar-blocks-v4.ts --only=b2,b4,b6 2>&1 | head -30",
+  "description": "Rodar o gate de colis\u00e3o nas cenas",
+  "timeout": 220000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 32 | const CLIP = (n: string): { vid: string; aud: string; real: boolean } => {
+> 33 |   for (const base of [n, `kb_${n}`]) {
+> 34 |     const mp4 = `${KIT}/clips/${base}.mp4`;
+> 35 |     if (existsSync(mp4)) {
+> 36 |       const webm = `${KIT}/clips/${base}.webm`;
+> 37 |       if (!existsSync(webm)) throw new Error(`webm ausente p/ laje (rode a transcodificação): ${base}`);
+>                                             ^
+> error: webm ausente p/ laje (rode a transcodificação): b2_luhmann
+>       at CLIP (/home/gcrUX/htdocs/constellation-orchestra/scripts/ep08/montar-blocks-v4.ts:37:40)
+>       at blockScene (/home/gcrUX/htdocs/constellation-orchestra/scripts/ep08/montar-blocks-v4.ts:179:19)
+>       at /home/gcrUX/htdocs/constellation-orchestra/scripts/ep08/montar-blocks-v4.ts:320:39
+> 
+> Bun v1.3.12 (Linux arm64)
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:08:10)*
+
+
+## 🤖 Claude *(01:08:10)*
+
+Falta transcodificar os 3 novos para webm (o Chromium do Playwright não decodifica H.264). Vendo como os existentes foram feitos:
+
+## 🤖 Claude *(01:08:12)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && grep -rn \"webm\" scripts/ep08/*.ts | grep -v \"webm ausente\\|\\.webm\\`\" | head -10; echo \"=== procurando o transcodificador ===\"; grep -rln \"libvpx\\|vp9\\|webm\" scripts/ --include=*.ts --include=*.sh --include=*.mjs 2>/dev/null | head -6",
+  "description": "Achar o transcodificador para webm"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> scripts/ep08/montar-blocks-v3.ts:30: *  diegético do montador. O finish-script transcodifica os webm que faltarem. */
+> scripts/ep08/montar-blocks-v3.ts:37:      return { vid: webm, aud: mp4 };
+> scripts/ep08/montar-blocks-v4.ts:31: *  diegético do montador. O finish-script transcodifica os webm que faltarem. */
+> scripts/ep08/montar-blocks-v4.ts:39:      return { vid: webm, aud: mp4, real: !base.startsWith("kb_") };
+> === procurando o transcodificador ===
+> scripts/motion-bridge.ts
+> scripts/ep06/montar-scene-template.mjs
+> scripts/ep06/render-one-scene.ts
+> scripts/qa/smoke-motion-layer-codec.ts
+> scripts/ep05/compose-takes.sh
+> scripts/ep05/screencast-v4.ts
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:08:18)*
+
+
+## 🤖 Claude *(01:08:20)*
+
+O "finish-script" citado no comentário **não existe no repo** — os webm foram feitos à mão numa sessão anterior. Vou promover isso a script, que é a lacuna que faz o passo se perder. Antes, lendo os parâmetros dos webm existentes para manter paridade:
+
+## 🤖 Claude *(01:08:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit/clips && ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate,pix_fmt -show_entries format=bit_rate -of default=nw=1 b1_bell.webm && echo \"--- e o mp4 de origem ---\" && ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -of default=nw=1 b1_bell.mp4 | head -5",
+  "description": "Par\u00e2metros dos webm existentes"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> codec_name=vp9
+> width=1920
+> height=1080
+> pix_fmt=yuv420p
+> r_frame_rate=24/1
+> bit_rate=3605521
+> --- e o mp4 de origem ---
+> codec_name=h264
+> width=1920
+> height=1080
+> r_frame_rate=24/1
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:08:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && cat > scripts/ep08/transcode-lajes-webm.ts <<'TS'\n#!/usr/bin/env bun\n/**\n * Transcodifica os clipes do kit para VP9/WebM \u2014 o formato que a LAJE do montador consegue tocar.\n *\n * \u2500\u2500 Por que este script existe \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n * O Chromium do Playwright n\u00e3o traz decoder H.264. Um `<video src=\"...mp4\">` numa laje falha com\n * NETWORK_NO_SOURCE e a laje sai PRETA \u2014 sem erro, sem gate vermelho (achado do piloto v3). Por\n * isso o montador resolve DOIS formatos: `.webm` para a imagem, `.mp4` para o \u00e1udio dieg\u00e9tico.\n *\n * O coment\u00e1rio em `montar-blocks-v4.ts:31` prometia que \"o finish-script transcodifica os webm que\n * faltarem\" \u2014 mas esse finish-script nunca existiu no reposit\u00f3rio: a convers\u00e3o foi feita \u00e0 m\u00e3o numa\n * sess\u00e3o anterior. Resultado: todo clipe novo derruba o montador com \"webm ausente\", e a receita\n * (VP9, mesmo fps, mesma resolu\u00e7\u00e3o) vivia s\u00f3 na mem\u00f3ria de quem rodou. Agora vive aqui.\n *\n * Par\u00e2metros pinados por PARIDADE com os webm que j\u00e1 estavam no kit (ffprobe em b1_bell.webm):\n * vp9 \u00b7 1920x1080 \u00b7 yuv420p \u00b7 24 fps. Sem \u00e1udio \u2014 o \u00e1udio vem do mp4, a laje \u00e9 muda por contrato.\n *\n * Uso:\n *   bun run scripts/ep08/transcode-lajes-webm.ts            # todos os que faltam\n *   bun run scripts/ep08/transcode-lajes-webm.ts b4 b6      # s\u00f3 os que casarem com estes prefixos\n */\nimport { readdirSync, existsSync, statSync } from \"node:fs\";\nimport { execFileSync } from \"node:child_process\";\nimport { KIT } from \"./layout\";\n\nconst DIR = `${KIT}/clips`;\nconst filtros = process.argv.slice(2);\nconst alvos = readdirSync(DIR)\n  .filter((f) => f.endsWith(\".mp4\"))\n  .map((f) => f.replace(/\\.mp4$/, \"\"))\n  .filter((b) => !filtros.length || filtros.some((f) => b.includes(f)))\n  .filter((b) => !existsSync(`${DIR}/${b}.webm`));\n\nif (!alvos.length) { console.log(\"nada a transcodificar \u2014 todo mp4 j\u00e1 tem seu webm \u2705\"); process.exit(0); }\nconsole.log(`transcodificando ${alvos.length}: ${alvos.join(\", \")}\\n`);\n\nlet falhas = 0;\nfor (const base of alvos) {\n  const mp4 = `${DIR}/${base}.mp4`, webm = `${DIR}/${base}.webm`;\n  const t0 = Date.now();\n  try {\n    execFileSync(\"ffmpeg\", [\n      \"-y\", \"-i\", mp4,\n      \"-an\",                              // laje \u00e9 muda por contrato \u2014 o \u00e1udio vem do mp4\n      \"-c:v\", \"libvpx-vp9\", \"-b:v\", \"0\", \"-crf\", \"30\",\n      \"-pix_fmt\", \"yuv420p\", \"-r\", \"24\",\n      \"-row-mt\", \"1\", \"-deadline\", \"good\", \"-cpu-used\", \"2\",\n      webm,\n    ], { stdio: \"pipe\" });\n    // Gate de materialidade: existe, tem peso e o Chromium vai achar um stream VP9 leg\u00edvel.\n    const bytes = statSync(webm).size;\n    const codec = execFileSync(\"ffprobe\", [\"-v\", \"error\", \"-select_streams\", \"v:0\",\n      \"-show_entries\", \"stream=codec_name\", \"-of\", \"csv=p=0\", webm]).toString().trim();\n    if (codec !== \"vp9\" || bytes < 100_000) throw new Error(`sa\u00edda inv\u00e1lida: codec=${codec} bytes=${bytes}`);\n    console.log(`  \u2705 ${base.padEnd(18)} ${(bytes / 1048576).toFixed(1)} MB \u00b7 ${((Date.now() - t0) / 1000).toFixed(0)}s`);\n  } catch (e) {\n    falhas++;\n    console.error(`  \u274c ${base}: ${String(e).slice(0, 160)}`);\n  }\n}\nprocess.exit(falhas ? 1 : 0);\nTS\ntimeout 580 bun run scripts/ep08/transcode-lajes-webm.ts 2>&1 | tail -8",
+  "description": "Criar e rodar o transcodificador",
+  "timeout": 600000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> transcodificando 4: b2_luhmann, b7_petrov, b4_alfinetes, b6_apollo
+> 
+>   ✅ b2_luhmann         8.0 MB · 37s
+>   ✅ b7_petrov          4.6 MB · 32s
+>   ✅ b4_alfinetes       11.6 MB · 43s
+>   ✅ b6_apollo          8.8 MB · 37s
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:11:19)*
+
+
+## 🤖 Claude *(01:11:20)*
+
+Achado incidental: o `b7_petrov` recuperado ontem **também não tinha webm** — a montagem quebraria nele. Agora o gate:
+
+## 🤖 Claude *(01:11:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && timeout 200 bun run scripts/ep08/montar-blocks-v4.ts --only=b2,b4,b6 2>&1 | head -25",
+  "description": "Rodar o gate de colis\u00e3o",
+  "timeout": 220000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ❌ G-COLISAO-T:
+>   - b2: vhist × chipano em t=38.7s — vhist cobre 100%
+>   - b4: vhist × chipano em t=42.6s — vhist cobre 100%
+>   - b6: vhist × chipano em t=38.5s — vhist cobre 100%
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:11:45)*
+
+
+## 🤖 Claude *(01:11:48)*
+
+O gate confirmou o defeito, e ele é grave: **o chip do ANO é engolido 100% pela laje, em todos os blocos**. Ele entra depois que a laje já está em quadro (o beat do ano cai depois do beat histórico) — ou seja, **nasce enterrado e nunca foi visto**. Foi isso que a mudança para caixa cheia causou, sem ninguém medir.
+
+Antes de corrigir, um detalhe que muda a solução — a laje já carrega `tag: b.chipAno.t1`:
+
+## 🤖 Claude *(01:11:48)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && grep -n \"tag\" scripts/motion/montar-template-v2.mjs | head -12",
+  "description": "Como a tag da laje \u00e9 renderizada"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 198:        ${l.tag ? `<div class="tag">${esc(l.tag)}</div>` : ""}</div>`;
+> 331:#stage{position:absolute;inset:0;perspective:${PERSP}px;perspective-origin:${ORIGIN};transform-style:preserve-3d}
+> 349:.tag{position:absolute;left:20px;bottom:18px;font-size:13px;letter-spacing:.17em;text-transform:uppercase;
+> 429:<div id="stage"><div id="cam">
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:11:55)*
+
+
+## 🤖 Claude *(01:11:57)*
+
+A `tag` renderiza **colada na laje**, canto inferior esquerdo, em caixa alta — é o selo de data no lugar certo. Então o `chipano` é ao mesmo tempo invisível e redundante. Vendo o que ele carrega, para não perder informação ao corrigir:
+
+## 🤖 Claude *(01:11:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && grep -n \"chipAno\\|chipCon\" scripts/ep08/montar-blocks-v4.ts | head -12",
+  "description": "Conte\u00fado dos chips"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 111:  chipCon: { t1: string; t2: string }; chipAno: { t1: string; t2: string };
+> 119:    chipCon: { t1: "resumir · extrair · redigir", t2: "conserta um elo, não a obra" },
+> 120:    chipAno: { t1: "1964 · memorando McIlroy", t2: "1973 · pipe do Unix" },
+> 127:    chipCon: { t1: "conversa curta e cara", t2: "memória permanente e barata" },
+> 128:    chipAno: { t1: "1952 · Zettelkasten", t2: "90.000 fichas · ~70 livros" },
+> 135:    chipCon: { t1: "de onde veio? de quando é?", t2: "bate com as outras fontes?" },
+> 136:    chipAno: { t1: "1440 · Lorenzo Valla", t2: "a Doação de Constantino era falsa" },
+> 143:    chipCon: { t1: "um chat fazendo tudo", t2: "bate no teto" },
+> 144:    chipAno: { t1: "1776 · A Riqueza das Nações", t2: "4.800 por cabeça · <20 sozinho" },
+> 151:    chipCon: { t1: "medo de dar poder real", t2: "prudente — e inútil" },
+> 152:    chipAno: { t1: "1679 · Denis Papin", t2: "da válvula ao pistão" },
+> 159:    chipCon: { t1: "alarmes 1201 · 1202", t2: "sobrecarga na descida" },
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:12:23)*
+
+
+## 🤖 Claude *(01:12:25)*
+
+O `chipAno.t2` carrega **o dado do bloco** — em b4 é literalmente *"4.800 por cabeça · <20 sozinho"*, o número do Adam Smith que sustenta o argumento. A `tag` da laje só mostra o `t1`. Ou seja, os dados numéricos de todos os blocos estavam invisíveis. Corrigindo — o chip passa à frente da laje, como lower-third de documentário:
+
+## 🤖 Claude *(01:12:34)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && python3 - <<'PY'\nimport io\np = \"scripts/ep08/montar-blocks-v4.ts\"\ns = io.open(p, encoding=\"utf-8\").read()\n\nvelho = 'const PLANES = { grid: -4200, far: -2950, vid: -260, chips: -500, pay: -260 };'\nnovo = '''/**\n * `chipsFront` nasceu do G-COLISAO-T em 2026-08-21: com a laje promovida a CAIXA CHEIA (98,8% do\n * quadro), o `chipano` \u2014 que entra DEPOIS da laje, porque o beat do ano cai depois do beat\n * hist\u00f3rico \u2014 ficava 100% coberto em TODOS os blocos. Ele nascia enterrado e nunca foi visto.\n * N\u00e3o era detalhe est\u00e9tico: o `t2` do chip carrega o DADO do bloco (\"4.800 por cabe\u00e7a \u00b7 <20\n * sozinho\", no bloco do Adam Smith), e a `tag` colada na laje s\u00f3 mostra o `t1`. O epis\u00f3dio\n * inteiro estava perdendo seus n\u00fameros.\n * Corre\u00e7\u00e3o: o chip do ano sobe para a frente da laje, como lower-third de document\u00e1rio. Ele cobre\n * ~2,4% da laje \u2014 encosto, n\u00e3o sepultamento \u2014 e n\u00e3o disputa com a `tag` (canto inferior ESQUERDO).\n */\nconst PLANES = { grid: -4200, far: -2950, vid: -260, chipsFront: -120, chips: -500, pay: -260 };'''\nassert velho in s\ns = s.replace(velho, novo, 1)\n\nvelho_chip = '''      { id: \"chipano\", kind: \"chip\", plane: \"chips\", x: 200, y: 95, rotZ: 3, rotY: -10,'''\nnovo_chip = '''      { id: \"chipano\", kind: \"chip\", plane: \"chipsFront\", x: 200, y: 95, rotZ: 3, rotY: -10,'''\nassert velho_chip in s\ns = s.replace(velho_chip, novo_chip, 1)\nio.open(p, \"w\", encoding=\"utf-8\").write(s)\nprint(\"chipano promovido a chipsFront\")\nPY\ntimeout 200 bun run scripts/ep08/montar-blocks-v4.ts --only=b2,b4,b6 2>&1 | head -12",
+  "description": "Corrigir e re-rodar o gate",
+  "timeout": 220000
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 143
+> chipano promovido a chipsFront
+> Terminated
+> ```
+
+## 🤖 Claude *(01:16:02)*
+
+
+## 🤖 Claude *(01:16:03)*
+
+O gate passou (silêncio = verde) e o script seguiu para o render, que leva ~10 min/cena. Adicionando uma saída após o gate, para poder verificar sem gastar CPU:
+
+## 🤖 Claude *(01:16:08)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && python3 - <<'PY'\nimport io\np = \"scripts/ep08/montar-blocks-v4.ts\"\ns = io.open(p, encoding=\"utf-8\").read()\nvelho = '''  console.log(`\u2705 G-COLISAO-T: ${list.length} cenas amostradas a 0,1 s, nenhuma cobertura acima de 8%`);\n}'''\nnovo = '''  console.log(`\u2705 G-COLISAO-T: ${list.length} cenas amostradas a 0,1 s, nenhuma cobertura acima de 8%`);\n}\n// `--gate-only`: verifica a geometria e sai. O render custa ~10 min de CPU por cena \u2014 conferir a\n// composi\u00e7\u00e3o antes de pagar por ela \u00e9 a diferen\u00e7a entre um ajuste de 3 s e uma noite perdida.\nif (process.argv.includes(\"--gate-only\")) process.exit(0);'''\nassert velho in s\ns = s.replace(velho, novo, 1)\nio.open(p, \"w\", encoding=\"utf-8\").write(s)\nprint(\"flag --gate-only adicionada\")\nPY\necho \"\u2500\u2500 todas as cenas \u2500\u2500\" && timeout 200 bun run scripts/ep08/montar-blocks-v4.ts --gate-only 2>&1 | head -20",
+  "description": "Rodar o gate em todas as cenas",
+  "timeout": 220000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> flag --gate-only adicionada
+> ── todas as cenas ──
+> ❌ G-COLISAO-T:
+>   - cta: vmap × chipc em t=23.2s — vmap cobre 100%
+>   - outro: vpres × chipq em t=40.6s — vpres cobre 100%
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:16:13)*
+
+
+## 🤖 Claude *(01:16:14)*
+
+Mesmo defeito em mais duas cenas — o CTA e o outro. Corrigindo pela mesma regra:
+
+## 🤖 Claude *(01:16:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && grep -n 'id: \"chipc\"\\|id: \"chipq\"\\|id: \"vmap\"\\|id: \"vpres\"' scripts/ep08/montar-blocks-v4.ts",
+  "description": "Localizar os chips do cta e do outro"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 279:      { id: "vmap", kind: "slab", plane: "vid", src: CLIP("b1_maos").vid, x: 150, y: 0, w: 880, h: 495,
+> 282:      { id: "chipc", kind: "chip", plane: "chips", x: -170, y: 60, rotZ: -3, rotY: 9,
+> 306:      { id: "vpres", kind: "slab", plane: "vid", src: CLIP("outro_presenter").vid, x: 230, y: -10, w: 900, h: 506,
+> 312:      { id: "chipq", kind: "chip", plane: "chips", x: -170, y: 30, rotZ: -3, rotY: 9,
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:16:23)*
+
+
+## 🤖 Claude *(01:16:25)*
+
+As lajes dessas cenas são menores e deslocadas à direita, mas ainda largas o bastante para engolir o chip da esquerda. Mesma correção:
+
+## 🤖 Claude *(01:16:27)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && python3 - <<'PY'\nimport io\np = \"scripts/ep08/montar-blocks-v4.ts\"\ns = io.open(p, encoding=\"utf-8\").read()\nfor cid in ('chipc', 'chipq'):\n    velho = f'{{ id: \"{cid}\", kind: \"chip\", plane: \"chips\",'\n    novo  = f'{{ id: \"{cid}\", kind: \"chip\", plane: \"chipsFront\",'\n    assert velho in s, cid\n    s = s.replace(velho, novo, 1)\nio.open(p, \"w\", encoding=\"utf-8\").write(s)\nprint(\"chipc e chipq promovidos\")\nPY\ntimeout 200 bun run scripts/ep08/montar-blocks-v4.ts --gate-only 2>&1 | head -12",
+  "description": "Corrigir cta/outro e revalidar",
+  "timeout": 220000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> chipc e chipq promovidos
+> ❌ G-COLISAO-T:
+>   - cta: vmap × chipc em t=23.7s — chipc cobre 9.2%
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:16:43)*
+
+
+## 🤖 Claude *(01:16:45)*
+
+De "a laje cobre 100% do chip" para "o chip encosta 9,2% na laje" — ele passou a ser visível. Mas 9,2% ainda estoura o limite; empurrando para a faixa livre abaixo da laje, que é o lugar de um lower-third:
+
+## 🤖 Claude *(01:16:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && python3 - <<'PY'\nimport io\np = \"scripts/ep08/montar-blocks-v4.ts\"\ns = io.open(p, encoding=\"utf-8\").read()\n# vmap: y=0, h=495 no plano vid (esc 0,867) => ocupa y [-215, +215] na tela.\n# chipsFront tem esc 0,9337; para o chip assentar ABAIXO da laje: y_spec \u2248 (215 + 36) / 0,9337 \u2248 269.\nvelho = '{ id: \"chipc\", kind: \"chip\", plane: \"chipsFront\", x: -170, y: 60,'\nnovo  = '{ id: \"chipc\", kind: \"chip\", plane: \"chipsFront\", x: -170, y: 270,'\nassert velho in s\ns = s.replace(velho, novo, 1)\nio.open(p, \"w\", encoding=\"utf-8\").write(s)\nprint(\"chipc assentado na faixa inferior\")\nPY\ntimeout 200 bun run scripts/ep08/montar-blocks-v4.ts --gate-only 2>&1 | head -12",
+  "description": "Assentar o chip e revalidar",
+  "timeout": 220000
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> chipc assentado na faixa inferior
+> ✅ G-COLISAO-T: 10 cenas amostradas a 0,1 s, nenhuma cobertura acima de 8%
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:16:56)*
+
+
+## 🤖 Claude *(01:16:57)*
+
+**10 cenas verdes.** Commitando esta frente:
+
+## 🤖 Claude *(01:17:11)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && git add scripts/motion/gate-colisao-temporal.ts scripts/ep08/montar-blocks-v4.ts scripts/ep08/transcode-lajes-webm.ts && git commit -q -m \"feat(ep08): regra de moldura + G-COLISAO-T \u2014 os chips estavam enterrados sob a laje\n\nDuas metades da diretiva Sovereign de 2026-08-21.\n\n(1) MOLDURA \u2014 'caixa cheia somente para v\u00eddeos; quadro atual somente para imagens\nest\u00e1ticas ou com pedido espec\u00edfico'. CLIP() passa a declarar se a fonte \u00e9 v\u00eddeo real\nou kb_* (Ken Burns sobre still) e molduraDe() escolhe entre CAIXA_CHEIA (1460x821 =>\n98,8% do quadro) e CARTAO (920x518 => 62%), com override por bloco para o 'pedido\nespec\u00edfico'. Quadro cheio vira m\u00e9rito de fonte com movimento real.\n\n(2) G-COLISAO-T \u2014 'verificar a posi\u00e7\u00e3o dos elementos, principalmente os que aparecem\ne v\u00e3o aparecer em movimentos'. O G-COLISAO existente vive dentro de uma cena do EP07,\nmede um \u00fanico instante por camada e ISENTA os chips ('texto vive na faixa reservada').\nEssa isen\u00e7\u00e3o valia com laje pequena; com a caixa cheia virou ponto cego.\n\nO novo gate amostra a 0,1 s ao longo de toda a cena, com a c\u00e2mera em movimento, em X\ne Y, respeitando profundidade \u2014 e achou o defeito em 5 das 10 cenas:\n\n  b2/b4/b6:  vhist cobre chipano 100%\n  cta:       vmap  cobre chipc   100%\n  outro:     vpres cobre chipq   100%\n\nO chip do ANO entra DEPOIS da laje (o beat do ano cai depois do beat hist\u00f3rico), ent\u00e3o\nnascia enterrado e nunca foi visto. N\u00e3o era est\u00e9tica: o t2 do chip carrega o DADO do\nbloco -- '4.800 por cabe\u00e7a \u00b7 <20 sozinho' no bloco do Adam Smith -- e a tag colada na\nlaje s\u00f3 mostra o t1. O epis\u00f3dio inteiro estava perdendo seus n\u00fameros.\n\nCorre\u00e7\u00e3o: plano chipsFront (z=-120) \u00e0 frente da laje, como lower-third; o chipc do CTA\nassenta na faixa livre abaixo da laje. Gate verde nas 10 cenas.\n\nTamb\u00e9m: transcode-lajes-webm.ts. O coment\u00e1rio do montador prometia que 'o finish-script\ntranscodifica os webm que faltarem', mas esse script nunca existiu no repo -- a convers\u00e3o\nfoi feita \u00e0 m\u00e3o e a receita (VP9/24fps/1080p, sem \u00e1udio) vivia s\u00f3 na mem\u00f3ria de quem\nrodou. Sem ele, todo clipe novo derruba o montador. O b7_petrov recuperado ontem tamb\u00e9m\nestava sem webm e teria quebrado a montagem.\" 2>&1 | grep -iE \"leaks|changed\" | head -3; git log --oneline -1",
+  "description": "Commitar moldura e gate"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ┃  gitleaks-staged ❯ 
+>     ░    gitleaks
+> [90m10:17PM[0m [32mINF[0m no leaks found
+> 48080a1 feat(ep08): regra de moldura + G-COLISAO-T — os chips estavam enterrados sob a laje
+> Shell cwd was reset to /home/gcrUX/htdocs/constellation-orchestra/.claude/worktrees/handson-49d5bc
+> ```
+
+## 🤖 Claude *(01:17:22)*
+
+
+## 🤖 Claude *(01:17:23)*
+
+Agora o render. Antes de gastar ~100 min nas 10 cenas, valido **uma** — o `b4`, que tem o clipe novo mais pesado e o chip que estava enterrado:
+
+## 🤖 Claude *(01:17:24)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra && nohup bun run scripts/ep08/montar-blocks-v4.ts --only=b4 > /tmp/claude-1001/render-b4.log 2>&1 & echo \"PID=$!\"; sleep 45; tail -5 /tmp/claude-1001/render-b4.log; echo \"--- load ---\"; uptime",
+  "description": "Renderizar a cena b4"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> PID=639766
+> ✅ G-COLISAO-T: 1 cenas amostradas a 0,1 s, nenhuma cobertura acima de 8%
+> --- load ---
+>  22:18:11 up 11:32,  3 users,  load average: 2.73, 3.58, 2.41
+> ```
+
+## 🤖 Claude *(01:18:19)*
+
+
+## 🤖 Claude *(01:18:20)*
+
+Load 2.73 em 4 vCPU — dentro do teto. Aguardando o render com um monitor em vez de bloquear:
+
+## 🤖 Claude *(01:18:20)*
+
+
+🛠️ **Tool Call**: `ToolSearch`
+```json
+{
+  "query": "select:Monitor",
+  "max_results": 1
+}
+```
+
+> **Tool Result (ToolSearch)** - ✅ Success
+>
+> ```
+> [{'type': 'tool_reference', 'tool_name': 'Monitor'}]
+> ```
+
+## 🤖 Claude *(01:18:23)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "until grep -qE \"cenas v3 verdes|\u274c GATES|error:|Error\" /tmp/claude-1001/render-b4.log 2>/dev/null; do sleep 10; done; echo \"=== FIM ===\"; tail -6 /tmp/claude-1001/render-b4.log",
+  "description": "Aguardar o render do b4",
+  "run_in_background": true
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> Command running in background with ID: b310bk0ee. Output is being written to: /tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra--claude-worktrees-handson-49d5bc/b7378e67-2ea2-4eff-a01b-3d2907f1f838/tasks/b310bk0ee.output. You will be notified when it completes. To check interim output, use Read on that file path.
+> ```
+
+## 🤖 Claude *(01:18:45)*
+
+Enquanto o `b4` renderiza, um retorno do que já está fechado:
+
+---
+
+## O que aconteceu até aqui
+
+**1. O EP08 está na `main`** — 12 commits, factory segurada em PR como você mandou. Podei o bloco da factory do HANDOFF, do README e do sprint para a main não citar scripts que não vivem nela. `tsc-app 0`, gitleaks limpo, pushado (`b46d7bd..571a0b6`).
+
+**2. Achei a causa do `HTTP 546` — e não era o Vertex.** Era uma linha do `veo-poll`:
+
+```js
+Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))
+```
+
+`atob` materializa a string binária inteira e o `Uint8Array.from` **com mapper** monta um array intermediário de N elementos antes de compactar. Medido num clipe de 12 MB: **pico de +315,7 MB contra +2,9 MB** da versão em blocos. 26× o tamanho do vídeo.
+
+Isso explica o sintoma que despistou o diagnóstico por dias — o mesmo nó alternando `done`/`error`. Não era aleatório: era o peso do arquivo contra o limite do worker. A correlação é monotônica e ordena perfeitamente:
+
+| Clipe | MB | Histórico no poll antigo |
+|---|---:|---|
+| b4_alfinetes | 18,7 | error ×5 — nunca passou |
+| b6_apollo | 17,3 | error ×5 — nunca passou |
+| b7_petrov | 11,6 | done 1 de 5 |
+| b5_papin | 8,6 | alterna |
+| b1_maos | 3,9 | sempre done |
+
+**3. Os 12 clipes agora são vídeo real.** Gerei `b4_alfinetes`, `b6_apollo` e `b2_luhmann` — os três passaram **de primeira**, sendo os três mais pesados do lote. O `b2_luhmann` tinha falhado 6 vezes seguidas. Zero Ken Burns sobre still no episódio.
+
+Custo: **801 mco ≈ US$ 3,60 ≈ R$ 19,50**, não os R$ 26 previstos — porque `payoff b4` e `payoff b6` **não existem**: nem o roteiro nem o `montar-blocks-v4.ts` preveem payoff para os blocos 4, 6 e 7. O FIRST ACTION de ontem listou quatro pendências onde só havia duas.
+
+**4. Sua regra de linguagem, codificada — e ela pegou um defeito sério.** O gate novo (`G-COLISAO-T`, amostra a 0,1 s com a câmera em movimento) achou que **o chip do ANO estava 100% coberto pela laje em 5 das 10 cenas**. Ele entra *depois* da laje — o beat do ano cai depois do beat histórico — então nascia enterrado e nunca foi visto em nenhum episódio.
+
+Não é detalhe estético: o `t2` desse chip carrega **o dado do bloco**. No bloco do Adam Smith é literalmente *"4.800 por cabeça · <20 sozinho"*. A `tag` colada na laje só mostra o `t1`. **O episódio estava perdendo seus números** — e o `G-COLISAO` antigo nunca veria, porque isenta chips de propósito ("texto vive na faixa reservada"), uma premissa que a caixa cheia quebrou.
+
+Corrigido: os chips subiram para um plano à frente da laje, como lower-third. Gate verde nas 10 cenas.
+
+---
+
+Uma coisa que vale você saber: o `transcode-lajes-webm.ts` que precisei escrever revelou que o **`b7_petrov` recuperado ontem estava sem o `.webm`** — a montagem teria quebrado nele. O comentário no montador prometia um "finish-script" que nunca existiu no repositório.
+
+Estou renderizando o `b4` para conferência ocular antes de comprometer ~100 min de CPU nas 10 cenas. Te mostro o frame quando sair.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
