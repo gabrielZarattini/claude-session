@@ -10,8 +10,8 @@ tags:
 Este é o núcleo central do projeto **MCORCH (Constellation Orchestra)**, contendo as especificações de processos e sessões de pair-programming.
 
 > [!info] Métricas
-> * **Total de Processos**: 120
-> * **Total de Sessões**: 3718
+> * **Total de Processos**: 119
+> * **Total de Sessões**: 3719
 
 ---
 
@@ -73,7 +73,6 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 *   `[[mco-topup]]` - *Processo*
 *   `[[mcoin-cost-calibration]]` - *Processo*
 *   `[[mcoins-ledger-reconciliation]]` - *Processo*
-*   `[[mcorch-model-pipeline]]` - *Processo*
 *   `[[media-state-lifecycle]]` - *Processo*
 *   `[[meta-credential-resolution]]` - *Processo*
 *   `[[meta-reels-publish]]` - *Processo*
@@ -145,6 +144,7 @@ Especificações, fluxos de decisão e manuais de processos do ecossistema.
 
 *   `[[2026-08-22 - b7378e67-2ea2-4eff-a01b-3d2907f1f838]]` (ClaudeSessions) - *2026-08-22*
 *   `[[2026-08-22 - Sessão travada 251db3ca e migração SSH porta 52022]]` (ClaudeSessions) - *2026-08-22*
+*   `[[2026-08-22 - EP08 diagnóstico raiz veo-poll]]` (ClaudeSessions) - *2026-08-22*
 *   `[[2026-08-21 - ssh-server connector test]]` (ClaudeSessions) - *2026-08-21*
 *   `[[2026-08-21 - Sessão travada 251db3ca e migração SSH porta 52022]]` (ClaudeSessions) - *2026-08-21*
 *   `[[2026-08-21 - 9router integração no MCORCH]]` (ClaudeSessions) - *2026-08-21*

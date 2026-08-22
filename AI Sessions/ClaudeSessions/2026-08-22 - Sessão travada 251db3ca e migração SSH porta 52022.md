@@ -7495,6 +7495,6 @@ Uma ressalva: o PDF `Agentic-Design-Patterns.pdf` (19,9 MB) segue fora do git de
 
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
-> * **Sessão Anterior**: [[2026-08-21 - ssh-server connector test]]
+> * **Sessão Anterior**: [[2026-08-22 - EP08 diagnóstico raiz veo-poll]]
 > * **Próxima Sessão**: [[2026-08-22 - b7378e67-2ea2-4eff-a01b-3d2907f1f838]]
 %% --- TIMELINE END --- %%
