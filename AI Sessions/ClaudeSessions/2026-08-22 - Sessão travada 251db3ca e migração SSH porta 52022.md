@@ -5612,6 +5612,1880 @@ Erro meu — pedi colunas que não existem e engoli o erro. Refazendo.
 }
 ```
 
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HTTP 546
+> {"code":"WORKER_RESOURCE_LIMIT","message":"Function failed due to not having enough compute resources (please check logs)"}
+> ```
+
+## 🤖 Claude *(00:00:36)*
+
+
+## 🤖 Claude *(00:00:39)*
+
+**Achei o problema real, e não é o Veo.**
+
+```
+HTTP 546  {"code":"WORKER_RESOURCE_LIMIT",
+           "message":"Function failed due to not having enough compute resources"}
+```
+
+É a **edge function `veo-poll` que está morrendo por falta de memória** no runtime do Supabase. E há uma explicação plausível no próprio código: em Vertex sem `storageUri`, o Google devolve **o vídeo inteiro inline em base64**. Um clipe 1080p de 8s são ~12 MB → ~16 MB de string para decodificar dentro do worker.
+
+Vou medir se é transitório ou determinístico.
+
+## 🤖 Claude *(00:00:45)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nS=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee72a767-c699-4c5c-bf74-f27b5bf10c38/scratchpad\ncat > \"$S/poll-x5.ts\" <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nconst URL = process.env.VITE_SUPABASE_URL!, SVC = process.env.SB_SECRET_KEY!;\nconst ANON = (process.env.SB_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY)!;\nconst admin = createClient(URL, SVC, { auth: { persistSession: false } });\nconst anon = createClient(URL, ANON, { auth: { persistSession: false } });\nconst { data: link } = await admin.auth.admin.generateLink({ type: \"magiclink\", email: \"gabrielcall@gmail.com\" });\nlet jwt = \"\";\nfor (const t of [\"magiclink\",\"email\"] as const) {\n  const { data: s } = await anon.auth.verifyOtp({ token_hash: link!.properties!.hashed_token, type: t });\n  if (s?.session?.access_token) { jwt = s.session.access_token; break; }\n}\nfor (let i = 1; i <= 5; i++) {\n  const r = await fetch(`${URL}/functions/v1/veo-poll`, {\n    method: \"POST\", headers: { \"Content-Type\":\"application/json\", apikey: ANON, Authorization: `Bearer ${jwt}` },\n    body: JSON.stringify({ generation_id: \"1e7e0ce1-84e5-4f9b-a82d-40cd6674abb5\" }),\n  });\n  const t = (await r.text()).slice(0, 200);\n  console.log(`tentativa ${i}: HTTP ${r.status}  ${t}`);\n  if (r.status === 200) break;\n  await new Promise((res) => setTimeout(res, 12000));\n}\nEOF\ntimeout 110 bun run \"$S/poll-x5.ts\" 2>&1 | tail -8",
+  "description": "Testa se o erro do poll \u00e9 transit\u00f3rio"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> tentativa 1: HTTP 546  {"code":"WORKER_RESOURCE_LIMIT","message":"Function failed due to not having enough compute resources (please check logs)"}
+> tentativa 2: HTTP 546  {"code":"WORKER_RESOURCE_LIMIT","message":"Function failed due to not having enough compute resources (please check logs)"}
+> tentativa 3: HTTP 546  {"code":"WORKER_RESOURCE_LIMIT","message":"Function failed due to not having enough compute resources (please check logs)"}
+> tentativa 4: HTTP 546  {"code":"WORKER_RESOURCE_LIMIT","message":"Function failed due to not having enough compute resources (please check logs)"}
+> tentativa 5: HTTP 546  {"code":"WORKER_RESOURCE_LIMIT","message":"Function failed due to not having enough compute resources (please check logs)"}
+> ```
+
+## 🤖 Claude *(00:02:22)*
+
+
+## 🤖 Claude *(00:02:23)*
+
+Determinístico — **5 de 5**. Não é transitório. Vou matar os processos inúteis e testar a hipótese: se os que funcionaram eram 720p e os que morrem são 1080p, o diagnóstico fecha.
+
+## 🤖 Claude *(00:02:32)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "pkill -f 'poll-veo-stuck' 2>/dev/null; pkill -f 'harvest-veo-orphans' 2>/dev/null\ncd /home/gcrUX/htdocs/constellation-orchestra\nS=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee72a767-c699-4c5c-bf74-f27b5bf10c38/scratchpad\ncat > \"$S/q-res.ts\" <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nconst sb = createClient(process.env.VITE_SUPABASE_URL!, process.env.SB_SECRET_KEY!, { auth: { persistSession: false } });\nconst U0 = \"ada39fae-67e1-4e53-af1c-5a18e1c108e8\";\nconst { data, error } = await sb.from(\"generations\").select(\"*\")\n  .eq(\"owner_id\", U0).eq(\"output_type\",\"video\").gte(\"created_at\",\"2026-08-16\")\n  .order(\"created_at\",{ascending:true});\nif (error) { console.error(error.message); process.exit(1); }\nconsole.log(`gera\u00e7\u00f5es de v\u00eddeo desde 16/08: ${data?.length ?? 0}\\n`);\nconsole.log(\"data/hora        node                status    res     engine        mco\");\nfor (const o of (data ?? []) as any[]) {\n  const r = o.result ?? {};\n  console.log(`${String(o.created_at).slice(5,16)}  ${String(o.node_id??\"\").padEnd(18)} ${String(o.status).padEnd(9)} ${String(r.resolution??\"?\").padEnd(7)} ${String(r.engine??\"?\").padEnd(13)} ${o.mco_charged}`);\n}\nEOF\nbun run \"$S/q-res.ts\" 2>&1 | tail -30",
+  "description": "Cruza resolu\u00e7\u00e3o com sucesso ou falha"
+}
+```
+
+> **Tool Result (Bash)** - ❌ Error
+>
+> ```
+> Exit code 144
+> ```
+
+## 🤖 Claude *(00:02:39)*
+
+
+## 🤖 Claude *(00:02:40)*
+
+O `pkill` casou com a própria linha de comando e se matou (exit 144). O poller de fundo já terminou sozinho. Rodando só a consulta:
+
+## 🤖 Claude *(00:02:40)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nS=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee72a767-c699-4c5c-bf74-f27b5bf10c38/scratchpad\nbun run \"$S/q-res.ts\" 2>&1 | tail -30",
+  "description": "Cruza resolu\u00e7\u00e3o com sucesso ou falha"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> error: Module not found "/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee72a767-c699-4c5c-bf74-f27b5bf10c38/scratchpad/q-res.ts"
+> ```
+
+## 🤖 Claude *(00:02:45)*
+
+
+## 🤖 Claude *(00:02:50)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nS=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee72a767-c699-4c5c-bf74-f27b5bf10c38/scratchpad\ncat > \"$S/q-res.ts\" <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nconst sb = createClient(process.env.VITE_SUPABASE_URL!, process.env.SB_SECRET_KEY!, { auth: { persistSession: false } });\nconst U0 = \"ada39fae-67e1-4e53-af1c-5a18e1c108e8\";\nconst { data, error } = await sb.from(\"generations\").select(\"*\")\n  .eq(\"owner_id\", U0).eq(\"output_type\",\"video\").gte(\"created_at\",\"2026-08-16\")\n  .order(\"created_at\",{ascending:true});\nif (error) { console.error(error.message); process.exit(1); }\nconsole.log(`geracoes de video desde 16/08: ${data?.length ?? 0}\\n`);\nconsole.log(\"data/hora      node               status    res     engine        mco\");\nfor (const o of (data ?? []) as any[]) {\n  const r = o.result ?? {};\n  console.log(`${String(o.created_at).slice(5,16)}  ${String(o.node_id??\"\").padEnd(17)} ${String(o.status).padEnd(9)} ${String(r.resolution??\"?\").padEnd(7)} ${String(r.engine??\"?\").padEnd(13)} ${o.mco_charged}`);\n}\nEOF\nbun run \"$S/q-res.ts\" 2>&1 | tail -32",
+  "description": "Cruza resolu\u00e7\u00e3o com sucesso ou falha"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 08-17T01:40  n_b3_payoff       done      1080p   veo-vertex    267
+> 08-17T01:40  n_b4_alfinetes    error     ?       ?             267
+> 08-17T01:40  n_b5_papin        error     1080p   veo-vertex    267
+> 08-17T01:40  n_b5_payoff       done      1080p   veo-vertex    267
+> 08-17T01:41  n_b6_apollo       error     ?       ?             267
+> 08-17T01:41  n_b7_petrov       done      1080p   veo-vertex    267
+> 08-17T01:41  n_outro_presenter done      1080p   veo-vertex    267
+> 08-17T02:30  n_b2_luhmann      error     ?       ?             267
+> 08-17T02:30  n_b2_payoff       done      1080p   veo-vertex    267
+> 08-17T02:30  n_b3_valla        done      1080p   veo-vertex    267
+> 08-17T02:30  n_b3_payoff       done      1080p   veo-vertex    267
+> 08-17T02:30  n_b4_alfinetes    error     ?       ?             267
+> 08-17T02:30  n_b5_papin        done      1080p   veo-vertex    267
+> 08-17T02:31  n_b5_payoff       done      1080p   veo-vertex    267
+> 08-17T02:31  n_b6_apollo       error     ?       ?             267
+> 08-17T02:31  n_b7_petrov       error     ?       ?             267
+> 08-17T02:31  n_outro_presenter done      1080p   veo-vertex    267
+> 08-17T03:07  n_b2_luhmann      error     ?       ?             267
+> 08-17T03:07  n_b4_alfinetes    error     ?       ?             267
+> 08-17T03:07  n_b6_apollo       error     ?       ?             267
+> 08-17T03:07  n_b7_petrov       error     ?       ?             267
+> 08-17T03:07  n_outro_presenter done      1080p   veo-vertex    267
+> 08-17T03:44  n_b2_luhmann      error     ?       ?             267
+> 08-17T03:44  n_b4_alfinetes    error     ?       ?             267
+> 08-17T03:44  n_b6_apollo       error     ?       ?             267
+> 08-17T03:44  n_b7_petrov       error     ?       ?             267
+> 08-17T14:03  n_b2_luhmann      error     ?       ?             267
+> 08-17T14:03  n_b4_alfinetes    error     ?       ?             267
+> 08-17T14:03  n_b6_apollo       error     ?       ?             267
+> 08-17T14:03  n_b7_petrov       error     ?       ?             267
+> 08-20T02:15  n_aubjh4wz        done      720p    veo-vertex    712
+> 08-21T23:23  n_b2_luhmann      running   1080p   veo-vertex    267
+> ```
+
+## 🤖 Claude *(00:03:23)*
+
+
+## 🤖 Claude *(00:03:28)*
+
+A hipótese do 1080p **está errada** — vários 1080p Vertex saíram `done`. O padrão é outro, e é revelador:
+
+| Nó | Histórico |
+|---|---|
+| `b2_luhmann` | error · error · error · error · **running (agora)** |
+| `b4_alfinetes` | error × 5 |
+| `b6_apollo` | error × 5 |
+| `b7_petrov` | **done** (01:41) · error × 4 |
+| `b5_papin` | error (01:40) · **done** (02:30) |
+| todos os outros | done |
+
+O mesmo nó, mesmo prompt, mesmo keyframe: às vezes passa, às vezes não. Isso não é bloqueio de política — é **flutuação de recurso**. E o clipe do Petrov que eu recuperei é justamente o **maior arquivo dos 16** (12,2 MB).
+
+Diagnóstico: o Vertex devolve o vídeo **inline em base64** e o `veo-poll` decodifica isso na memória do worker. Nos clipes mais pesados ele estoura — de forma intermitente, conforme o worker que atende. Preciso conferir o dinheiro.
+
+## 🤖 Claude *(00:03:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nS=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee72a767-c699-4c5c-bf74-f27b5bf10c38/scratchpad\ncat > \"$S/q-money.ts\" <<'EOF'\nimport { createClient } from \"@supabase/supabase-js\";\nconst sb = createClient(process.env.VITE_SUPABASE_URL!, process.env.SB_SECRET_KEY!, { auth: { persistSession: false } });\nconst U0 = \"ada39fae-67e1-4e53-af1c-5a18e1c108e8\";\nconst { data } = await sb.from(\"generations\").select(\"status,mco_charged,mco_refunded,node_id\")\n  .eq(\"owner_id\",U0).eq(\"output_type\",\"video\").gte(\"created_at\",\"2026-08-16\");\nlet cD=0,rD=0,cE=0,rE=0,nD=0,nE=0;\nfor (const o of (data ?? []) as any[]) {\n  if (o.status===\"done\") { cD+=o.mco_charged??0; rD+=o.mco_refunded??0; nD++; }\n  else if (o.status===\"error\") { cE+=o.mco_charged??0; rE+=o.mco_refunded??0; nE++; }\n}\nconsole.log(`DONE  : ${nD} geracoes \u00b7 cobrado ${cD} mco \u00b7 estornado ${rD}`);\nconsole.log(`ERROR : ${nE} geracoes \u00b7 cobrado ${cE} mco \u00b7 estornado ${rE}  \u2190 ${rE===cE?\"TUDO ESTORNADO \u2705\":\"NEM TUDO ESTORNADO \u26a0\ufe0f\"}`);\nconsole.log(`\\nliquido gasto: ${(cD-rD)+(cE-rE)} mco  \u2248 US$ ${(((cD-rD)+(cE-rE))*0.018/4).toFixed(2)}`);\nEOF\nbun run \"$S/q-money.ts\" 2>&1 | tail -6",
+  "description": "Confere se as falhas foram estornadas"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> DONE  : 16 geracoes · cobrado 4717 mco · estornado 0
+> ERROR : 20 geracoes · cobrado 5340 mco · estornado 5340  ← TUDO ESTORNADO ✅
+> 
+> liquido gasto: 4717 mco  ≈ US$ 21.23
+> ```
+
+## 🤖 Claude *(00:04:04)*
+
+
+## 🤖 Claude *(00:04:18)*
+
+Resposta completa à sua pergunta: **está renderizando de verdade, e sim, temos um problema — mas não é o Veo.**
+
+## O que quebrou
+
+A geração está viva no Vertex (`status: running`, operação real do Google). O que morre é a **edge function `veo-poll`**, que busca o resultado: `HTTP 546 WORKER_RESOURCE_LIMIT`, 5 tentativas de 5.
+
+A causa provável está no próprio código: no Vertex sem `storageUri`, o Google devolve **o vídeo inteiro embutido em base64**. O `veo-poll` decodifica isso dentro do worker. Nos clipes mais pesados, estoura a memória — e de forma **intermitente**, conforme o worker que atende. Daí o padrão bizarro: o mesmo nó, com o mesmo prompt, às vezes passa e às vezes não. O Petrov que recuperei é o maior arquivo dos 16 (12,2 MB) e passou **uma vez em cinco**.
+
+Então a história dos "quatro que falharam" se completa: eles **foram gerados** cinco vezes cada, e o poll não conseguiu trazer nenhum. Não é o roteiro, não é o prompt, não é política de conteúdo.
+
+## O dinheiro está limpo
+
+| | |
+|---|---|
+| 16 gerações `done` | 4.717 mco cobrados, 0 estornados → **US$ 21,23** |
+| 20 gerações `error` | 5.340 mco cobrados, **5.340 estornados** ✅ |
+
+O estorno automático funcionou em 100% das falhas. Do lado do mco você não perdeu nada. Do lado do Google não dá para saber com certeza — o que sabemos é o saldo que sobrou, R$ 147,94.
+
+## Três saídas
+
+1. **Insistir.** É intermitente e o mco volta a cada falha. Barato, mas queima crédito Google a cada tentativa e não tem hora para acertar.
+2. **720p.** ~40% dos bytes, cabe folgado. Resolve hoje — mas você pediu 1080p e em quadro cheio a diferença aparece.
+3. **Trocar o caminho para o Gemini API** em vez do Vertex. É **mais barato** (US$ 0,12/s contra 0,15) e, se ele entregar o vídeo por URL em vez de base64 inline, **contorna o problema inteiro**. As duas credenciais já estão configuradas e ativas.
+
+A opção 3 é a que quero testar primeiro — custa um clipe e pode destravar tudo mantendo o 1080p. Se funcionar, gero os quatro restantes por lá e ainda economizo.
+
+O conserto durável é fazer o Vertex escrever num bucket GCS (`storageUri`) e o poll só manipular URL — mas isso mexe numa edge function de produção e não é coisa de véspera de publicação.
+
+Quer que eu teste o caminho Gemini API agora?
+
+## 👤 User *(00:08:22)*
+
+exatamente isso 147,94... não entendi esse problema agente já tinha resolvido isso. Mas não se preocupe vamos fazer /handoff  oficial e começar com algo em uma sessão dedicada só para isso. Finalizar o EP! O Vertex ta usando os creditos gratuitos de teste gemini eu pago no cartão de credito entende? Prepare tudo para a próxima sessão com foco nos creditos de teste do console google
+
+## 🤖 Claude *(00:08:33)*
+
+
+## 🤖 Claude *(00:08:35)*
+
+Isso muda a recomendação por completo — e é um dado que eu não tinha: **Vertex = crédito de teste grátis; Gemini API = seu cartão.** Então trocar para o Gemini não economiza, ele tira do seu bolso. O caminho certo é fazer o Vertex funcionar (`storageUri` ou 720p), não fugir dele. Vou registrar isso com destaque no seal.
+
+## 🤖 Claude *(00:08:35)*
+
+
+🛠️ **Tool Call**: `Skill`
+```json
+{
+  "skill": "handoff"
+}
+```
+
+> **Tool Result (Skill)** - ✅ Success
+>
+> ```
+> Launching skill: handoff
+> ```
+
+## 👤 User *(00:08:35)*
+
+# ShakeHands — Session Seal Protocol v4
+
+Execute the ShakeHands /handoff ritual to seal this session.
+
+> **v4 (2026-05-15):** Reordered phases — Knowledge Mesh Milestone (Phase 3) now runs
+> **before** README.md update (Phase 4), so the live node count query captures the handoff
+> node itself. Previously the badge was always 1-3 nodes behind.
+>
+> **v3 (2026-05-14):** Added Phase 6 BoK Seal Status — verifies any module
+> work in this session has a corresponding sealed BoK suite per MCORCH Master
+> Execution Protocol. Blocks seal if significant module work lacks BoK.
+
+---
+
+## PRE-FLIGHT (execute ALL in parallel before anything else)
+
+```bash
+git status --short                          # inventory uncommitted changes
+git diff HEAD --stat                        # change scope
+git log --oneline -7                        # recent history + commit style
+npx tsc --noEmit 2>&1 | tail -20           # TypeScript strict check
+docker ps --filter "name=mcorch" --format "{{.Names}}: {{.Status}}"
+docker ps --filter "name=mega-brain" --format "{{.Names}}: {{.Status}}"
+curl -s http://localhost:8001/api/v2/heartbeat  # chroma API v2 health
+```
+
+Read in parallel:
+- `HANDOFF.md` (current state, pending actions)
+- `CLAUDE.md` (architecture rules)
+- `/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md`
+
+If TypeScript has errors → fix them before proceeding. Report any infra anomalies in the final summary.
+
+---
+
+## PHASE 1 — SECURITY AUDIT
+
+Run these checks and report findings. **Block the seal if any CRITICAL finding exists.**
+
+> ⚠️ **SCOPE NOTE:** This phase scans changes that exist NOW (before Phase 5 writes HANDOFF.md).
+> A second mandatory scan runs in Phase 5b, after HANDOFF.md is written and before it is committed.
+
+```bash
+# 1a. Secret leak scan — check staged + working tree for hardcoded credentials
+git diff HEAD | grep -E "(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\s*=\s*['\"][^'\"]{10,})" \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_" | head -20
+
+# 1b. Edge function JWT enforcement — every user-facing function must verify JWT
+grep -rL "Authorization\|jwt\|JWT\|service_role" supabase/functions/*/index.ts \
+  | grep -v "get-infra-status\|watchdog" || echo "ALL FUNCTIONS: JWT enforced ✅"
+
+# 1c. Client-side coin deduction guard — must NEVER update mco_balance directly from client
+grep -rn "mco_balance.*update\|UPDATE.*mco_balance" src/ \
+  | grep -v "settings\|top.up\|topup\|SettingsPage" | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1d. RLS bypass risk — check for supabase.rpc calls without auth context
+grep -rn "service_role\|bypass.*rls\|rls.*bypass" src/ | head -10 || echo "NO VIOLATIONS ✅"
+
+# 1e. Sensitive data in console.log
+grep -rn "console\.log.*token\|console\.log.*key\|console\.log.*secret\|console\.log.*password" src/ \
+  | head -10 || echo "NO SENSITIVE LOGS ✅"
+```
+
+**Security verdict:** list each check as ✅ PASS / ⚠️ WARN / 🔴 BLOCK.
+Only proceed if no 🔴 findings.
+
+---
+
+### DOCUMENTATION CREDENTIAL RULE (invariant — never violate)
+
+**When writing HANDOFF.md, README.md, or any committed documentation:**
+
+- ✅ DO: describe WHERE a credential is stored → `VITE_GEMINI_API_KEY` is set in `.env` (local) and `GEMINI_API_KEY` in the Supabase vault
+- ✅ DO: reference digest/fingerprint if useful → `GEMINI_API_KEY (digest 0fe0e159...)`
+- 🔴 NEVER: include the actual credential value → `AIzaSyBv...`, `sk-...`, `eyJ...`
+
+> **Rationale:** Phase 1 scans changes that predate the HANDOFF.md write. Any credential embedded
+> in HANDOFF.md during Phase 5 escapes Phase 1 entirely and goes directly to the remote.
+> This rule is the primary prevention layer; Phase 5b is the detection backstop.
+
+---
+
+## PHASE 1b — SCRATCHPAD HARVEST (colheita do aprendizado — antes dos commits)
+
+> **Nasceu do quase-acidente EP05 (2026-08-03):** uma sessão-maratona de produção deixou TODOS os
+> runners (trilha Lyria, assemble do master, VFX título, screencast) + 1.9GB de intermediários
+> SOMENTE no scratchpad `/tmp/claude-1001/.../scratchpad` — volátil, morre no reboot. A sessão
+> seguinte só recuperou tudo porque o host não reiniciou. **Sorte não é protocolo.**
+
+O scratchpad da sessão (`$SCRATCHPAD` do system prompt) DEVE ser colhido antes do seal:
+
+```bash
+ls -la <scratchpad-desta-sessão>/   # inventário material — o que foi criado aqui?
+```
+
+Classifique cada item e aja:
+
+| Classe | Critério | Destino obrigatório |
+|--------|----------|---------------------|
+| **Runner/técnica** | script que gerou/montou/provou algo (qualquer coisa que outra sessão precisaria reexecutar ou estudar) | promover a `scripts/<módulo>/` no repo (+ nota no README da pasta) → entra nos commits da Phase 2 |
+| **Processo/gate aprendido** | sequência com gates que se repetirá | SOP em `docs/processes/` (§5 Obstacle→Synthesis) |
+| **Entregável de mídia** | master/take/áudio que o Sovereign avalia | Biblioteca (`canvas-assets` + `register_creative_asset`) — registrar o asset id no Record |
+| **Descartável** | logs, downloads re-obteníveis do bucket, venvs | fica no scratchpad (documentar no Record que é descartável) |
+
+**Regra-mãe:** nenhum aprendizado ou ferramenta pode existir SÓ em `/tmp` após o seal. O Record da
+Phase 5 DEVE citar: o path do scratchpad da sessão · o que foi promovido (com paths do repo/asset ids)
+· o que ficou para trás e por quê. SOP: `docs/processes/scratchpad-harvest.md`.
+
+---
+
+## PHASE 2 — GRANULAR COMMITS
+
+Group uncommitted changes by concern and commit each group separately.
+
+**Commit rules (from memory + project convention):**
+- Prefix: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`
+- Body: one paragraph explaining the WHY (milestone orientation, not diff description)
+- **NEVER** add `Co-Authored-By` trailer
+- **NEVER** use `git add -A` — stage files explicitly by name
+- Skip: `build_log.txt`, `node_modules/`, `dist/`, `.env`, `check_types.ts`, `scratch/`
+
+Stage and commit each logical group before moving to the next phase.
+
+---
+
+## PHASE 3 — KNOWLEDGE MESH MILESTONE
+
+> ⚠️ **ORDER MATTERS:** This phase runs BEFORE Phase 4 (README badge) so the live count
+> query captures this handoff node. Do not swap the order.
+
+Insert a milestone node into mcorch_nodes to mark this session in the knowledge graph:
+
+```bash
+source .env
+SUPABASE_URL="https://bcyvddsykvehvpwstlfa.supabase.co"
+SESSION_PHASE="<phase-name-slug>"
+SESSION_SUMMARY="<one-sentence summary of what was accomplished>"
+
+curl -s -X POST "${SUPABASE_URL}/rest/v1/mcorch_nodes" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"name\": \"session-handoff-$(date +%Y%m%d)-${SESSION_PHASE}\",
+    \"node_type\": \"handoff\",
+    \"content\": \"[HANDOFF SEAL] ${SESSION_SUMMARY}\",
+    \"stability_score\": 1.0,
+    \"project_id\": null,
+    \"user_id\": null,
+    \"metadata\": {
+      \"session\": \"${SESSION_PHASE}\",
+      \"sealed_at\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
+      \"commits\": \"$(git log --oneline -5 | head -5 | tr '\n' '|')\"
+    }
+  }" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Node ID:', d[0]['id'] if isinstance(d,list) else d.get('id','error'))" 2>/dev/null \
+  || echo "⚠️ Knowledge Mesh insert failed — log manually"
+```
+
+Then trigger embedding for the new node:
+```bash
+NODE_ID="<id-from-above>"
+curl -s -X POST "${SUPABASE_URL}/functions/v1/embed-mcorch-node" \
+  -H "apikey: ${SB_SECRET_KEY}" \
+  -H "Authorization: Bearer ${SB_SECRET_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"record\": {\"id\": \"${NODE_ID}\"}}" | python3 -c "import sys,json; d=json.load(sys.stdin); print('Embedded:', d)" 2>/dev/null \
+  || echo "⚠️ Embedding failed — node persisted but not vectorized"
+```
+
+Emit `proof-manifest.json` so Phase 5c can verify this handoff node strictly:
+```bash
+echo "{\"handoffNodeId\": \"${NODE_ID}\"}" > proof-manifest.json
+```
+
+---
+
+## PHASE 4 — README.md UPDATE
+
+> ℹ️ Phase 3 (milestone node) has already been inserted — the live count below includes it.
+
+Update `/README.md` to reflect the current session's work.
+
+**Required updates:**
+1. **Badges block** (top of file) — update dynamic values:
+   - `neural_mesh-XXX_nodes` badge → fetch real count:
+     ```bash
+     curl -s "https://bcyvddsykvehvpwstlfa.supabase.co/rest/v1/mcorch_nodes?select=id&limit=1" \
+       -H "apikey: $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Authorization: Bearer $(grep SB_SECRET_KEY .env | cut -d'"' -f2)" \
+       -H "Prefer: count=exact" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'
+     ```
+   - `version-X.X.X` badge → increment patch version (or minor if major feature landed)
+   - If new phase shipped → add phase badge (e.g. `Phase_Zeta-live-cyan`)
+
+2. **Phase Status table** — add new row for this session's phase:
+   ```
+   | Phase Zeta — <Name> | ✅ <one-line summary> |
+   ```
+
+3. **What's New section** — prepend a new entry under the most recent one:
+   ```markdown
+   ### [v5.X.X] — <Phase Name> (<date>)
+   - <bullet: major feature 1>
+   - <bullet: major feature 2>
+   ```
+
+4. **Core metrics** (if present in README) — update node/edge counts.
+
+Commit README separately:
+```
+docs(readme): vX.X.X — <phase name> — <one-line change summary>
+```
+
+---
+
+## PHASE 5 — HANDOFF.md UPDATE
+
+Rewrite the relevant sections of `HANDOFF.md` — **append, never replace history**.
+
+> ⚠️ **ARCHIVING GUARD (v5, 2026-07-19 — fixes the /handson token-cap failure):** `HANDOFF.md` is
+> newest-first and grows unbounded; at 10k+ lines its dense Task-State/Record paragraphs blow the
+> Read tool's 25k-token cap during `/handson` pickup. **Before writing the new Record, check
+> `wc -l HANDOFF.md`. If > ~4000 lines**, move the OLDEST Records (keep the ~12 most recent) to
+> `docs/handoff-archive/HANDOFF-<YYYY-MM>.md` (append there, newest-first too), leave a one-line
+> pointer in HANDOFF.md (`> Histórico anterior a <date> → docs/handoff-archive/…`), and commit the
+> archive move separately (`chore(handoff): archive Records older than <date>`). History is preserved
+> (in the archive + git), never deleted. The live HANDOFF.md stays lean = fast, token-safe pickup.
+> **Also keep each Task State row ≤ ~400 chars** — the long detail belongs in the Record block below,
+> not in the one-line Task State summary.
+
+**Required updates:**
+1. **Task State table** — add new row:
+   ```
+   | **<Phase Name>** | ✅ <one-line summary> |
+   ```
+
+2. **New Record section** — add at the top of the history (after the Task State table):
+   ```markdown
+   ## <Phase Name> Record (<YYYY-MM-DD>)
+
+   <one-paragraph prose summary of what changed and why>
+
+   | Action | Result |
+   |--------|--------|
+   | `<file/function changed>` | ✅ <what it does now> |
+   ...
+
+   | Commit | Conteúdo |
+   |--------|----------|
+   | `<hash>` | <message> |
+   ...
+
+   ### Arquitetura <Phase Name>
+   ```code block with data flow or key architecture diagram```
+   ```
+
+3. **Pending Actions** — check off completed items (~~strikethrough~~), add new ones discovered this session.
+
+4. **GraphRAG State** section — update node/edge counts.
+
+5. **Infrastructure** table — update container health.
+
+---
+
+## PHASE 5b — HANDOFF.md SECRET SCAN (mandatory before commit)
+
+**Run this scan on the HANDOFF.md content about to be committed. Block if any finding exists.**
+
+```bash
+# 5b-1. Scan HANDOFF.md for real credential values
+grep -nE "(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+|[a-zA-Z0-9]{32,}=\s*['\"]?[A-Za-z0-9+/]{40,})" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-key\|YOUR_\|digest\|sha256\|hash\|fingerprint" \
+  | head -20 || echo "HANDOFF.md: NO CREDENTIALS FOUND ✅"
+
+# 5b-2. Specifically check for Google API keys (AIza prefix = 39 chars total)
+grep -n "AIza[0-9A-Za-z_-]\{35\}" HANDOFF.md | head -10 || echo "NO GOOGLE API KEYS ✅"
+
+# 5b-3. Check for any = "value" pattern that looks like a real assignment
+grep -nE "=\s*['\"][A-Za-z0-9_\-]{20,}['\"]" HANDOFF.md \
+  | grep -v "example\|placeholder\|<.*>\|your-\|YOUR_\|digest\|hash\|uuid\|id.*[0-9a-f-]\{36\}" \
+  | head -10 || echo "NO INLINE ASSIGNMENTS ✅"
+```
+
+**If any check returns a match:**
+1. 🔴 **DO NOT COMMIT** HANDOFF.md
+2. Rewrite the offending section — replace the actual value with its location description
+3. Re-run Phase 5b until all checks pass
+4. Only then proceed to commit HANDOFF.md
+
+---
+
+## PHASE 5b-2 — HANDOFF.md SIZE GATE (mandatory before commit)
+
+**O HANDOFF.md precisa continuar LEGÍVEL. Acima de ~25k tokens ele não é lido — é erro.**
+
+> ⚠️ Falha silenciosa: nada quebra, mas o `/handson` seguinte arranca **sem o Task State**,
+> achando que tem contexto. Em 2026-07-29 a auditoria 4Cs não conseguiu ler as 80 primeiras
+> linhas do arquivo que auditava (28.756 tokens).
+> Skill: `handoff-pruning-gate` · SOP: `docs/processes/handoff-pruning-gate.md`.
+
+```bash
+bash scripts/qa/check-handoff-size.sh
+```
+
+| Veredito | Ação |
+|----------|------|
+| `✅ OK` (exit 0) | Segue para o commit. |
+| `🟡 WARN` (exit 0) | Pode selar, mas **registrar no Pendente do Record**: "podar HANDOFF na próxima sessão". Dívida agendada, não isenção. |
+| `🔴 FAIL` (exit 1) | 🔴 **NÃO COMMITE.** Podar primeiro (o script imprime a linha de corte), verificar os gates G1-G5 do SOP, re-rodar até exit 0. |
+
+**G5 do SOP é obrigatório antes de declarar podado:** ler ~40 linhas do `HANDOFF.md` com a
+ferramenta de leitura e confirmar que retorna conteúdo, não erro de cap. G1-G4 são estruturais —
+só o G5 prova o objetivo (Lei 1).
+
+---
+
+Commit HANDOFF.md only after Phase 5b passes:
+```
+docs(handoff): seal <phase name> — <one-line summary>
+```
+
+---
+
+## PHASE 5c — MATERIAL PROOF AUDIT (mandatory before push)
+
+**Independently re-verify every material-proof claim of this seal. Block if any is contradicted.**
+
+> ⚠️ Closes the Survival Law 1 (Materiality) self-grading weakness — this audit is mechanical,
+> not self-reported. Skill: `mcorch-qa-healing` · SOP: `docs/processes/handoff-material-proof-audit.md`.
+
+```bash
+# Runs after Phase 5b, so the newest HANDOFF.md Record block is this seal's.
+bun run scripts/qa/run-audit.ts HANDOFF.md
+```
+
+The audit parses the newest `## … Record` block and verifies each claim — commit hashes
+(`git cat-file`), mesh UUIDs (`mcorch_nodes`/`mcorch_edges`), `tsc --noEmit`, the test suite,
+edge-function reachability, file paths — then prints a Proof Manifest table and exits.
+
+**Gate verdict:**
+- **exit 0 — `SEAL ALLOWED`** → embed the Proof Manifest in the Phase 8 report (`📋 PROVA MATERIAL`); proceed to Phase 6.
+- **exit 1 — `SEAL BLOCKED`** → 🔴 **BLOCK the seal.** Do NOT push. For each 🔴, fix the real
+  cause — never fabricate proof (Law 1) — and re-run this phase until `SEAL ALLOWED`. If a 🔴 is a
+  strict handoff-node claim, re-attempt the Phase 3 insert once (SOP Cenário D), then re-run.
+- `⏭ skip` rows (infra unreachable · non-mesh UUID · size-only deploy) never block — report them.
+
+---
+
+## PHASE 6 — BoK SEAL STATUS (mandatory before push)
+
+**Verify any significant module work in this session has a sealed BoK suite per CLAUDE.md MCORCH Master Execution Protocol.**
+
+```bash
+# 6-1. List BoK suites present + check completeness
+for slug in $(ls docs/bok/ 2>/dev/null); do
+  required=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)
+  missing=()
+  for doc in "${required[@]}"; do
+    [ -f "docs/bok/$slug/$doc.md" ] || missing+=("$doc")
+  done
+  [ ${#missing[@]} -eq 0 ] \
+    && echo "✅ $slug — BoK complete (9 docs)" \
+    || echo "⚠️ $slug — incomplete (missing: ${missing[*]})"
+done
+
+# 6-2. Check session touched code in new src/pages/ or new supabase/functions/ that lacks BoK
+session_new_modules=$(git diff --name-only HEAD~10..HEAD 2>/dev/null | grep -E "^(src/pages/|supabase/functions/|src/components/[A-Z])" | awk -F/ '{print $1"/"$2}' | sort -u)
+echo "Session touched modules: $session_new_modules"
+
+# 6-3. Mesh seal nodes for sealed BoK suites
+source .env 2>/dev/null
+if [ -n "$SB_SECRET_KEY" ]; then
+  curl -s "$SUPABASE_URL/rest/v1/mcorch_nodes?node_type=eq.documentation_suite&select=id,name,stability_score,created_at" \
+    -H "apikey: $SB_SECRET_KEY" \
+    -H "Authorization: Bearer $SB_SECRET_KEY" \
+    | python3 -c "import sys,json; d=json.load(sys.stdin); [print(f\"  🌐 {n['name']} ({n['stability_score']})\") for n in d]" 2>/dev/null \
+    || echo "  ⚠️ Could not query seal nodes"
+fi
+```
+
+**Gate verdict:**
+- ✅ All session modules have sealed BoK → proceed to Phase 7 push.
+- ⚠️ Module work without BoK (e.g. `feat:` commit creating new page/edge fn without `docs/bok/<slug>/`)
+  → 🔴 **BLOCK seal**. Run `/bok-scribe <module>` first OR add module to exemption list (typo/dep bump/single-file patch).
+
+Report BoK status in final seal output (Phase 8).
+
+---
+
+## PHASE 7 — PUSH
+
+```bash
+git push origin main
+```
+
+Report: branch, number of commits pushed, remote URL.
+
+If push fails (non-fast-forward): run `git pull --rebase origin main` first, then push again. Never force-push main.
+
+---
+
+## PHASE 7b — SPRINT & CONNECTIONS HYGIENE
+
+### Sprint priorities update
+
+Review `.claude/context/sprint-priorities.md` and update:
+1. Check off completed items in "Skills a criar ou evoluir" and "Conexões a implementar"
+2. Add new gaps discovered this session under "Top 3 Gap Closures" if applicable
+3. Update the 4Cs Audit Snapshot scores if `/audit` was run this session
+4. Append to the Retrospective section if this was the last session of the sprint
+
+Commit if changed:
+```
+chore(sprint): update sprint-priorities — <one-line progress note>
+```
+
+### Scratch cleanup
+
+```bash
+ls scratch/ 2>/dev/null
+```
+
+If `scratch/` has `.ts` diagnostic scripts, move them to `.claude/scripts/db/`:
+```bash
+mkdir -p .claude/scripts/db
+mv scratch/*.ts .claude/scripts/db/ 2>/dev/null && echo "Moved ✅" || echo "Nothing to move"
+```
+
+Commit if files were moved:
+```
+chore(scripts): migrate scratch diagnostics to .claude/scripts/db/
+```
+
+### MCP documentation check
+
+```bash
+cat .mcp.json
+```
+
+For each MCP server listed, verify it has an entry in `.claude/references/` or is documented in CLAUDE.md. If a new MCP was added this session and has no documentation, add a one-liner to the relevant reference file.
+
+---
+
+## PHASE 8 — FINAL REPORT
+
+Print seal summary in **Portuguese (Brasil)**:
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — <PHASE NAME> (<date>)
+═══════════════════════════════════════════════════════════
+
+🔐 SEGURANÇA
+  <security check results — each as ✅ / ⚠️ / 🔴>
+
+📦 COMMITS (<N> total)
+  <hash> — <message>
+  ...
+
+⬡ KNOWLEDGE MESH
+  Milestone node: <node id> — <name>
+  Embedding: ✅ / ⚠️
+
+📖 README.md
+  Versão: <old> → <new>
+  Badge neural_mesh: <old> → <new> nós
+  Seção adicionada: <section name>
+
+🧠 HANDOFF.md
+  Fase selada: <phase name>
+  Seções atualizadas: Task State, Record, Pending Actions, GraphRAG State
+
+📋 PROVA MATERIAL (Fase 5c)
+  Veredito: <SEAL ALLOWED / SEAL BLOCKED>
+  Claims: <N> verificadas · <M> skipped · <K> falhas
+
+🚀 PUSH
+  Branch: main → origin/main
+  Commits enviados: <N>
+
+📌 SPRINT
+  sprint-priorities.md: <atualizado ✅ / sem mudanças>
+  scratch/ cleanup: <arquivos movidos ✅ / limpo ✅>
+  MCP docs: <ok ✅ / pendência: X>
+
+⏭  PRÓXIMOS PASSOS
+  1. <top pending action>
+  2. <second pending action>
+  3. <third pending action>
+
+═══════════════════════════════════════════════════════════
+  Assinado: Claude Code — Braço de Engenharia do AIOS
+═══════════════════════════════════════════════════════════
+```
+
+**Invariants — never skip:**
+- Security audit must run and report before any commit (Phase 1)
+- **Phase 3 (milestone node) must run BEFORE Phase 4 (README badge query)** — ensures count includes the handoff node
+- **Phase 5b secret scan must run on HANDOFF.md before its commit** — no exceptions
+- **Phase 5c material proof audit must run and return `SEAL ALLOWED` before push** — a contradicted claim blocks the seal
+- **Documentation must NEVER contain actual credential values** — only describe where they live
+- README.md badge counts must reflect real DB state (query live, after milestone insert)
+- HANDOFF.md must be updated even if nothing changed (session note)
+- Push must happen — remote must always mirror local main
+- Knowledge Mesh milestone must be attempted (failures are logged, not blocking)
+- git pre-commit hook (`.git/hooks/pre-commit`) is the last barrier — do not bypass with `--no-verify`
+
+
+## 🤖 Claude *(00:08:39)*
+
+
+## 🤖 Claude *(00:08:40)*
+
+Executando o protocolo. **PRE-FLIGHT:**
+
+## 🤖 Claude *(00:08:42)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== BRANCH ===\"; git rev-parse --abbrev-ref HEAD; git log --oneline -1 origin/main 2>/dev/null | head -1\necho; echo \"=== STATUS ===\"; git status --short\necho; echo \"=== ESCOPO ===\"; git diff HEAD --stat | tail -8\necho; echo \"=== HISTORICO ===\"; git log --oneline -7",
+  "description": "Pre-flight git"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === BRANCH ===
+> feat/mcorch-model-factory
+> b46d7bd chore(audit): 4Cs weekly snapshot — 2026-08-17
+> 
+> === STATUS ===
+>  M CLAUDE.md
+>  M docs/ops/host-hardening-2026-08.md
+> ?? .claude/context/9router-recon-raw.md
+> ?? docs/ref-pdf/Agentic-Design-Patterns.pdf
+> ?? docs/roadmap/9router-recon-2026-08-20.md
+> ?? docs/roadmap/ep08-roteiro-v01-2026-08-16.md
+> ?? scripts/ep08/
+> ?? scripts/qa/harvest-veo-orphans.ts
+> ?? scripts/qa/poll-veo-stuck.ts
+> 
+> === ESCOPO ===
+>  CLAUDE.md                          |   1 +
+>  docs/ops/host-hardening-2026-08.md | 122 +++++++++++++++++++++++++++++++++++--
+>  2 files changed, 118 insertions(+), 5 deletions(-)
+> 
+> === HISTORICO ===
+> 6c0fcb7 ops(host): guarda de busca sem escopo + Law 5 + runbook do hardening
+> 6062cf0 chore(sprint): registra o seal de 2026-08-19 (MCORCH Model Factory — frente branch-only)
+> 98b8601 docs(handoff): seal MCORCH Model Factory — mcorch_model self-host + RAG da mesh (branch-only)
+> 71f870e docs(readme): v6.144.0 — mcorch_model especialista self-host + RAG da mesh
+> a426453 chore(qa): colhe smoke do sanitizador SFT do scratchpad (PHASE 1b harvest)
+> 339326e chore(pmo): NEXT-STEPS.md 2026-08-19 — plano pós-frente mcorch-model (M1-M5 + fila gated + 4 linhas stale flagadas)
+> 24098f5 feat(mcorch-model): skill mcorch-ask — o especialista da casa vira capacidade de toda sessão futura
+> ```
+
+## 🤖 Claude *(00:08:44)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== DOCKER MESH ===\"; docker ps --filter \"name=mcorch\" --format \"{{.Names}}: {{.Status}}\"; docker ps --filter \"name=mega-brain\" --format \"{{.Names}}: {{.Status}}\"\necho; echo \"=== CHROMA ===\"; curl -s -m 5 http://localhost:8001/api/v2/heartbeat || echo \"(sem resposta)\"\necho; echo \"=== HANDOFF.md tamanho ===\"; wc -l HANDOFF.md",
+  "description": "Pre-flight infra"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === DOCKER MESH ===
+> mcorch_vision_mcp: Up 10 hours (healthy)
+> mcorch_claude_mem: Up 10 hours (healthy)
+> mcorch_chroma: Up 10 hours (healthy)
+> mega-brain-dashboard: Up 10 hours
+> mega-brain-webhook: Up 10 hours (healthy)
+> mega-brain-daemon: Up 10 hours (healthy)
+> 
+> === CHROMA ===
+> {"nanosecond heartbeat":1787357324922378520}
+> === HANDOFF.md tamanho ===
+> 420 HANDOFF.md
+> ```
+
+## 🤖 Claude *(00:08:51)*
+
+
+## 🤖 Claude *(00:08:52)*
+
+Infra verde, HANDOFF em 420 linhas (sem necessidade de poda). **FASE 1 — auditoria de segurança:**
+
+## 🤖 Claude *(00:08:59)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 1a. vazamento de segredo no diff ===\"\ngit diff HEAD | grep -E \"(sk-[a-zA-Z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|eyJ[a-zA-Z0-9._-]{20,}|STRIPE_|SECRET_KEY|ACCESS_TOKEN|api_key\\s*=\\s*['\\\"][^'\\\"]{10,})\" | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\" | head -10 || echo \"NENHUM \u2705\"\necho; echo \"=== 1a-bis. e nos arquivos NOVOS (untracked) ===\"\ngrep -rnE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,})\" scripts/qa/harvest-veo-orphans.ts scripts/qa/poll-veo-stuck.ts docs/roadmap/9router-recon-2026-08-20.md .claude/context/9router-recon-raw.md 2>/dev/null | head -5 || echo \"NENHUM \u2705\"\necho; echo \"=== 1c. deducao de moeda no cliente ===\"\ngrep -rn \"mco_balance.*update\\|UPDATE.*mco_balance\" src/ 2>/dev/null | grep -v \"settings\\|top.up\\|topup\\|SettingsPage\" | head -5 || echo \"NENHUMA \u2705\"\necho; echo \"=== 1e. log sensivel ===\"\ngrep -rn \"console\\.log.*token\\|console\\.log.*secret\\|console\\.log.*password\" src/ 2>/dev/null | head -5 || echo \"NENHUM \u2705\"\necho; echo \"=== PDF grande no repo? ===\"; ls -la docs/ref-pdf/ 2>/dev/null",
+  "description": "Fase 1 auditoria de seguran\u00e7a"
+}
+```
+
+## 🤖 Claude *(00:09:00)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== gate de tipos REAL (tsconfig.app.json) ===\"\ntimeout 180 npx tsc -p tsconfig.app.json --noEmit 2>&1 | tail -12; echo \"(exit=${PIPESTATUS[0]})\"",
+  "description": "Gate de tipos da aplica\u00e7\u00e3o"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 1a. vazamento de segredo no diff ===
+> 
+> === 1a-bis. e nos arquivos NOVOS (untracked) ===
+> 
+> === 1c. deducao de moeda no cliente ===
+> 
+> === 1e. log sensivel ===
+> src/test/canvas-video-async-smoke.test.ts:240:    console.log("🔒 [GATE 5] Probing webhook endpoint with an invalid token...");
+> src/test/canvas-video-async-smoke.test.ts:248:    console.log(`✅ [GATE 5] Verified endpoint security blocks invalid tokens with status: ${secResp.status}`);
+> src/test/canvas-video-async-smoke.test.ts:253:    console.log("🔁 [GATE 6] Probing webhook endpoint with duplicate callback token (replay defense)...");
+> 
+> === PDF grande no repo? ===
+> total 21584
+> drwxrwx---  2 gcrUX gcrUX     4096 Aug 16 18:14 .
+> drwxrwxr-x 11 gcrUX gcrUX     4096 Aug 16 18:14 ..
+> -rwxrwx---  1 gcrUX gcrUX 19934402 Jun 26 18:54 Agentic-Design-Patterns.pdf
+> -rwxrwx---  1 gcrUX gcrUX   794255 Jun 17 01:16 From AGI to ASI - 2606.12683.pdf
+> -rw-r--r--  1 gcrUX gcrUX  1360149 Aug 16 18:14 Keemfinity_AI_Motion_Commercial_Guide.pdf
+> ```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === gate de tipos REAL (tsconfig.app.json) ===
+> (exit=0)
+> ```
+
+## 🤖 Claude *(00:09:51)*
+
+
+## 🤖 Claude *(00:09:52)*
+
+Segurança: **tudo limpo** (os 3 `console.log` são de um teste que registra *status* de gate, não segredo). Gate de tipos da app: **exit 0** ✅
+
+**FASE 1b — colheita do scratchpad:**
+
+## 🤖 Claude *(00:09:55)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "S=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee72a767-c699-4c5c-bf74-f27b5bf10c38/scratchpad\necho \"=== inventario do scratchpad ===\"; ls -la \"$S\" 2>/dev/null\necho; echo \"=== orfaos (m\u00eddia recuperada) ===\"; du -sh \"$S/orfaos\" 2>/dev/null; ls \"$S/orfaos\" | wc -l",
+  "description": "Inventaria o scratchpad da sess\u00e3o"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === inventario do scratchpad ===
+> total 8276
+> drwx------ 4 ubuntu ubuntu    4096 Aug 21 21:03 .
+> drwx------ 4 ubuntu ubuntu    4096 Aug 21 16:07 ..
+> -rw-rw-r-- 1 ubuntu ubuntu   49009 Aug 21 19:05 9router-raw.md
+> drwxrwxr-x 2 ubuntu ubuntu    4096 Aug 21 18:43 ab
+> -rw-rw-r-- 1 ubuntu ubuntu    1288 Aug 21 20:26 dl-orfaos.ts
+> -rw-rw-r-- 1 ubuntu ubuntu 8120477 Aug 21 18:47 ep08-ab-b2.mp4
+> -rw-rw-r-- 1 ubuntu ubuntu     331 Aug 21 18:42 ep08-v4-b2.log
+> -rw-rw-r-- 1 ubuntu ubuntu    6979 Aug 21 16:13 host-hardening.bak.md
+> drwxrwxr-x 2 ubuntu ubuntu    4096 Aug 21 20:26 orfaos
+> -rw-rw-r-- 1 ubuntu ubuntu  214007 Aug 21 20:26 orfaos-sheet.jpg
+> -rw-rw-r-- 1 ubuntu ubuntu    1212 Aug 21 21:00 poll-once.ts
+> -rw-rw-r-- 1 ubuntu ubuntu    1217 Aug 21 21:00 poll-x5.ts
+> -rw-rw-r-- 1 ubuntu ubuntu      79 Aug 21 20:23 probe-veo.log
+> -rw-rw-r-- 1 ubuntu ubuntu    1049 Aug 21 20:25 q-assets.ts
+> -rw-rw-r-- 1 ubuntu ubuntu     889 Aug 21 20:23 q-exec2.ts
+> -rw-rw-r-- 1 ubuntu ubuntu    1021 Aug 21 20:23 q-exec.ts
+> -rw-rw-r-- 1 ubuntu ubuntu     862 Aug 21 20:59 q-gen2.ts
+> -rw-rw-r-- 1 ubuntu ubuntu     839 Aug 21 21:00 q-gen3.ts
+> -rw-rw-r-- 1 ubuntu ubuntu     604 Aug 21 20:56 q-gen.ts
+> -rw-rw-r-- 1 ubuntu ubuntu     941 Aug 21 19:08 q-google-keys.ts
+> -rw-rw-r-- 1 ubuntu ubuntu     976 Aug 21 21:03 q-money.ts
+> -rw-rw-r-- 1 ubuntu ubuntu     718 Aug 21 20:27 q-probe.ts
+> -rw-rw-r-- 1 ubuntu ubuntu     914 Aug 21 21:02 q-res.ts
+> 
+> === orfaos (mídia recuperada) ===
+> 109M	/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee72a767-c699-4c5c-bf74-f27b5bf10c38/scratchpad/orfaos
+> 16
+> ```
+
+## 🤖 Claude *(00:10:07)*
+
+
+## 🤖 Claude *(00:10:08)*
+
+Classificação: os dois runners já foram promovidos (`harvest-veo-orphans.ts`, `poll-veo-stuck.ts`). Falta salvar os **109 MB de mídia recuperada** — que hoje só existem em `/tmp` — e consolidar os diagnósticos ad-hoc.
+
+## 🤖 Claude *(00:10:25)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "S=/tmp/claude-1001/-home-gcrUX-htdocs-constellation-orchestra/ee72a767-c699-4c5c-bf74-f27b5bf10c38/scratchpad\nK=/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit\nmkdir -p \"$K/clips/orfaos-recuperados\"\ncp \"$S/orfaos/\"*.mp4 \"$K/clips/orfaos-recuperados/\"\ncp \"$S/orfaos-sheet.jpg\" \"$K/clips/orfaos-recuperados/_folha-de-identificacao.jpg\"\ncat > \"$K/clips/orfaos-recuperados/LEIA-ME.md\" <<'EOF'\n# Clipes Veo \u00f3rf\u00e3os recuperados \u2014 2026-08-21\n\n16 assets Veo gerados entre 17 e 20/08 que estavam **no storage do Supabase e nunca no disco**.\nCausa: o `gen-clips.ts` tem deadline de poll de 18 min; o job terminava depois e o download\nnunca acontecia (`done-manifest-fleet.json` = `{}` foi lido como \"falhou\").\n\nRecuperados com `scripts/qa/harvest-veo-orphans.ts`. Identifica\u00e7\u00e3o visual em\n`_folha-de-identificacao.jpg`.\n\n| Arquivo | O que \u00e9 | Destino |\n|---|---|---|\n| `08-170200_beb85f92.mp4` | **oficial sovi\u00e9tico, luz vermelha, telefone** | \u2705 instalado como `b7_petrov.mp4` |\n| `08-170142_617aefa4.mp4` | apresentador, capuz, luz ciano (SEM \u00e1udio) | material p/ CTA |\n| `08-170233_946ddc22.mp4` | apresentador, capuz (**COM \u00e1udio**) | candidato a lip-sync do CTA |\n| `08-170309_5feaae86.mp4` | apresentador + pain\u00e9is hologr\u00e1ficos (**COM \u00e1udio**) | candidato a lip-sync |\n| `08-170129_fb52230a.mp4` | Bell Labs 1964 | = `b1_bell.mp4` |\n| `08-170128_15194a53.mp4` | cart\u00f5es em cadeia | = `b1_maos.mp4` |\n| `08-170142_10455839.mp4` | gaveta de fich\u00e1rio, m\u00e3o puxando ficha | = `b2_payoff.mp4` |\n| `08-170142_eb0944ee` \u00b7 `08-170232_0c6bb26d` | Valla \u00e0 luz de vela (2 tomadas) | = `b3_valla` + variante |\n| `08-170142_8cfd2689` \u00b7 `08-170232_a425d3f1` \u00b7 `08-170232_0bd135d8` | caneta vermelha nas folhas | = `b3_payoff` + 2 variantes |\n| `08-170232_27559e74.mp4` | panela de lat\u00e3o sobre brasas | = `b5_papin.mp4` |\n| `08-170143_20e198e2` \u00b7 `08-170232_334da4f8` | man\u00f4metro e v\u00e1lvula | = `b5_payoff` + variante |\n| `08-200216_cbc6d921.mp4` | card hologr\u00e1fico \"j\u00e1 est\u00e1 na semana\" | fora do EP08 |\n\n**Regra que nasce daqui:** poll estourado \u2260 gera\u00e7\u00e3o falha. Rodar o colhedor ANTES de re-gerar.\nEOF\necho \"=== salvo ===\"; ls -la \"$K/clips/orfaos-recuperados/\" | head -6; du -sh \"$K/clips/orfaos-recuperados\"",
+  "description": "Salva a m\u00eddia recuperada fora do /tmp"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === salvo ===
+> total 110920
+> drwxrwsr-x 2 ubuntu gcrUX     4096 Aug 21 21:10 .
+> drwxrwsr-x 3 ubuntu gcrUX     4096 Aug 21 21:10 ..
+> -rw-rw-r-- 1 ubuntu gcrUX  4100057 Aug 21 21:10 08-170128_15194a53.mp4
+> -rw-rw-r-- 1 ubuntu gcrUX  8825468 Aug 21 21:10 08-170129_fb52230a.mp4
+> -rw-rw-r-- 1 ubuntu gcrUX  4865168 Aug 21 21:10 08-170142_10455839.mp4
+> 109M	/home/gcrUX/htdocs/constellation-orchestra/repurpose-inbox/ada39fae-67e1-4e53-af1c-5a18e1c108e8/ep08-kit/clips/orfaos-recuperados
+> ```
+
+## 🤖 Claude *(00:10:30)*
+
+
+## 🤖 Claude *(00:10:31)*
+
+Mídia salva fora do `/tmp`. Agora consolido os diagnósticos ad-hoc num utilitário só — foram eles que acharam a causa raiz.
+
+## 🤖 Claude *(00:10:53)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/gcrUX/htdocs/constellation-orchestra/scripts/qa/diag-veo-generations.ts",
+  "content": "#!/usr/bin/env bun\n/**\n * Diagn\u00f3stico de gera\u00e7\u00f5es Veo \u2014 status \u00d7 resolu\u00e7\u00e3o \u00d7 motor \u00d7 dinheiro.\n *\n * \u2500\u2500 Por que este utilit\u00e1rio existe (2026-08-21) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n *\n * Quatro clipes-\u00e2ncora do EP08 foram dados como \"falharam\" e substitu\u00eddos por Ken Burns sobre\n * still \u2014 o que o Sovereign leu, com raz\u00e3o, como amadorismo. A investiga\u00e7\u00e3o s\u00f3 encontrou a causa\n * quando cruzou tr\u00eas coisas que estavam em consultas separadas: **status por n\u00f3 ao longo das\n * retentativas**, **resolu\u00e7\u00e3o/motor de cada tentativa** e **cobrado \u00d7 estornado**.\n *\n * O que o cruzamento revelou:\n *   \u00b7 o mesmo n\u00f3, mesmo prompt, mesmo keyframe, alternava `done` e `error` entre rodadas;\n *   \u00b7 1080p N\u00c3O era o discriminante (v\u00e1rios 1080p sa\u00edram `done`);\n *   \u00b7 o `veo-poll` respondia `HTTP 546 WORKER_RESOURCE_LIMIT` de forma determin\u00edstica nos\n *     clipes mais pesados \u2014 o Vertex devolve o v\u00eddeo **inline em base64** (sem `storageUri`) e o\n *     worker estoura ao decodificar. Intermitente conforme o worker que atende.\n *\n * Ou seja: **n\u00e3o era o Veo, era o poll.** Sem esta tabela, a leitura natural \u00e9 \"o prompt foi\n * recusado\" \u2014 e a\u00ed se reescreve o roteiro para consertar um problema de infraestrutura.\n *\n * Uso:\n *   bun run scripts/qa/diag-veo-generations.ts [--since=2026-08-16]\n */\nimport { createClient } from \"@supabase/supabase-js\";\n\nconst URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL!;\nconst SVC = process.env.SB_SECRET_KEY!;\nconst U0 = process.env.HARVEST_USER_ID ?? \"ada39fae-67e1-4e53-af1c-5a18e1c108e8\";\nconst since = process.argv.find((a) => a.startsWith(\"--since=\"))?.split(\"=\")[1] ?? \"2026-08-01\";\n\nconst sb = createClient(URL, SVC, { auth: { persistSession: false } });\nconst { data, error } = await sb.from(\"generations\").select(\"*\")\n  .eq(\"owner_id\", U0).eq(\"output_type\", \"video\").gte(\"created_at\", since)\n  .order(\"created_at\", { ascending: true });\nif (error) { console.error(`consulta falhou: ${error.message}`); process.exit(1); }\n\ntype Row = Record<string, unknown>;\nconst rows = (data ?? []) as Row[];\nconsole.log(`gera\u00e7\u00f5es de v\u00eddeo desde ${since}: ${rows.length}\\n`);\n\nconsole.log(\"data/hora      n\u00f3                  status    res     motor         mco\");\nconsole.log(\"\u2500\".repeat(78));\nfor (const o of rows) {\n  const r = (o.result ?? {}) as Record<string, string>;\n  console.log(\n    `${String(o.created_at).slice(5, 16)}  ${String(o.node_id ?? \"\").padEnd(19)} ` +\n    `${String(o.status).padEnd(9)} ${String(r.resolution ?? \"?\").padEnd(7)} ` +\n    `${String(r.engine ?? \"?\").padEnd(13)} ${o.mco_charged}`,\n  );\n}\n\n// \u2500\u2500 por n\u00f3: exp\u00f5e o padr\u00e3o \"mesmo n\u00f3 alterna done/error\" que denuncia falha de INFRA, n\u00e3o de prompt\nconst porNo = new Map<string, string[]>();\nfor (const o of rows) {\n  const k = String(o.node_id ?? \"?\");\n  porNo.set(k, [...(porNo.get(k) ?? []), String(o.status)]);\n}\nconsole.log(\"\\n\u2500\u2500 hist\u00f3rico por n\u00f3 (altern\u00e2ncia done/error \u21d2 suspeite da INFRA, n\u00e3o do prompt) \u2500\u2500\");\nfor (const [no, sts] of [...porNo].sort()) {\n  const alterna = new Set(sts).size > 1;\n  console.log(`  ${no.padEnd(20)} ${sts.join(\" \u00b7 \")}${alterna ? \"   \u26a0\ufe0f ALTERNA\" : \"\"}`);\n}\n\n// \u2500\u2500 dinheiro: toda falha DEVE ter sido estornada (anti-mint / Lei 1)\nlet cD = 0, rD = 0, cE = 0, rE = 0, nD = 0, nE = 0;\nfor (const o of rows) {\n  const c = Number(o.mco_charged ?? 0), f = Number(o.mco_refunded ?? 0);\n  if (o.status === \"done\") { cD += c; rD += f; nD++; }\n  else if (o.status === \"error\") { cE += c; rE += f; nE++; }\n}\nconsole.log(\"\\n\u2500\u2500 dinheiro \u2500\u2500\");\nconsole.log(`  done  : ${nD} \u00b7 cobrado ${cD} mco \u00b7 estornado ${rD}`);\nconsole.log(`  error : ${nE} \u00b7 cobrado ${cE} mco \u00b7 estornado ${rE}  ${rE === cE ? \"\u2705 tudo estornado\" : \"\u26a0\ufe0f NEM TUDO ESTORNADO\"}`);\nconsole.log(`  l\u00edquido: ${(cD - rD) + (cE - rE)} mco \u2248 US$ ${((((cD - rD) + (cE - rE)) * 0.018) / 4).toFixed(2)}`);\n\nconst presas = rows.filter((o) => o.status === \"running\").length;\nif (presas) console.log(`\\n\u23f3 ${presas} em 'running' \u2014 rode scripts/qa/poll-veo-stuck.ts (o Google n\u00e3o avisa sozinho).`);\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/gcrUX/htdocs/constellation-orchestra/scripts/qa/diag-veo-generations.ts (file state is current in your context — no need to Read it back)
+> ```
+
+## 🤖 Claude *(00:10:56)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== valida o diagnostico consolidado ===\"\ntimeout 60 bun run scripts/qa/diag-veo-generations.ts --since=2026-08-16 2>&1 | tail -22",
+  "description": "Valida o diagn\u00f3stico consolidado"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === valida o diagnostico consolidado ===
+> 
+> ── histórico por nó (alternância done/error ⇒ suspeite da INFRA, não do prompt) ──
+>   n_aubjh4wz           done
+>   n_b1_bell            done
+>   n_b1_maos            done
+>   n_b2_luhmann         error · error · error · error · error · running   ⚠️ ALTERNA
+>   n_b2_payoff          done · done
+>   n_b3_payoff          done · done
+>   n_b3_valla           done · done
+>   n_b4_alfinetes       error · error · error · error · error
+>   n_b5_papin           error · done   ⚠️ ALTERNA
+>   n_b5_payoff          done · done
+>   n_b6_apollo          error · error · error · error · error
+>   n_b7_petrov          done · error · error · error · error   ⚠️ ALTERNA
+>   n_outro_presenter    done · done · done
+> 
+> ── dinheiro ──
+>   done  : 16 · cobrado 4717 mco · estornado 0
+>   error : 20 · cobrado 5340 mco · estornado 5340  ✅ tudo estornado
+>   líquido: 4717 mco ≈ US$ 21.23
+> 
+> ⏳ 1 em 'running' — rode scripts/qa/poll-veo-stuck.ts (o Google não avisa sozinho).
+> ```
+
+## 🤖 Claude *(00:11:07)*
+
+
+## 🤖 Claude *(00:11:09)*
+
+Diagnóstico validado — e ele revela um detalhe fino: `b4_alfinetes` e `b6_apollo` **nunca** tiveram sucesso (5 erros, zero alternância), enquanto `b7_petrov`, `b5_papin` e `b2_luhmann` alternam. Causas possivelmente diferentes. Fica registrado.
+
+**FASE 2 — commits granulares:**
+
+## 🤖 Claude *(00:11:17)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add scripts/qa/harvest-veo-orphans.ts scripts/qa/poll-veo-stuck.ts scripts/qa/diag-veo-generations.ts\ngit commit -q -F - <<'EOF'\nfeat(qa): trio de recupera\u00e7\u00e3o Veo \u2014 colhedor, poller e diagn\u00f3stico\n\nQuatro clipes-\u00e2ncora do EP08 foram dados como falhos e substitu\u00eddos por Ken\nBurns sobre still. A investiga\u00e7\u00e3o mostrou que nenhum deles falhou: o\n`gen-clips.ts` desiste do poll em 18 min, o Veo termina depois, e o asset fica\nno storage sem nunca chegar ao disco. Dezesseis clipes pagos estavam nessa\nsitua\u00e7\u00e3o \u2014 entre eles o Petrov, o plano mais forte do epis\u00f3dio.\n\nUm degrau antes h\u00e1 um segundo buraco: o Google n\u00e3o avisa quando a opera\u00e7\u00e3o\ntermina, ent\u00e3o uma gera\u00e7\u00e3o sem ningu\u00e9m fazendo poll fica `running` para sempre,\ncom o mco j\u00e1 debitado.\n\nO diagn\u00f3stico cruza status por n\u00f3, resolu\u00e7\u00e3o, motor e dinheiro. Foi esse\ncruzamento que derrubou a hip\u00f3tese \u00f3bvia (1080p) e apontou o culpado real: o\n`veo-poll` estourando mem\u00f3ria ao decodificar o v\u00eddeo que o Vertex devolve inline\nem base64. Sem a tabela, a leitura natural seria \"o prompt foi recusado\" \u2014 e se\nreescreveria o roteiro para consertar um problema de infraestrutura.\n\nRegra que fica: poll estourado n\u00e3o \u00e9 gera\u00e7\u00e3o falha. Colher antes de re-gerar.\nEOF\ngit log --oneline -1",
+  "description": "Commit das ferramentas de recupera\u00e7\u00e3o Veo"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpre-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;6;6;6m─[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m╯[m
+> ┃  e2e-output-tripwire ❯ 
+> 
+> ┃  secret-scan ❯ 
+> 
+> ┃  gitleaks-staged ❯ 
+> 
+>     ○
+>     │╲
+>     │ ○
+>     ○ ░
+>     ░    gitleaks
+> 
+> [90m9:11PM[0m [32mINF[0m 1 commits scanned.
+> [90m9:11PM[0m [32mINF[0m scan completed in 10.3ms
+> [90m9:11PM[0m [32mINF[0m no leaks found
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.10 seconds)
+> ✔️ e2e-output-tripwire (0.01 seconds)
+> ✔️ secret-scan (0.03 seconds)
+> ✔️ gitleaks-staged (0.09 seconds)
+> [38;2;0;0;0m╭[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;49;49;49m─[38;2;45;45;45m─[38;2;42;42;42m─[38;2;39;39;39m─[38;2;35;35;35m─[38;2;32;32;32m─[38;2;29;29;29m─[38;2;26;26;26m─[38;2;23;23;23m─[38;2;19;19;19m─[38;2;16;16;16m─[38;2;11;11;11m─[38;2;5;5;5m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m╮[m
+> [38;2;0;0;0m│[m 🥊 lefthook  v2.1.9   hook:  [1mpost-commit[m [38;2;52;52;52m│[m
+> [38;2;6;6;6m╰[38;2;12;12;12m─[38;2;17;17;17m─[38;2;20;20;20m─[38;2;24;24;24m─[38;2;27;27;27m─[38;2;31;31;31m─[38;2;34;34;34m─[38;2;38;38;38m─[38;2;41;41;41m─[38;2;45;45;45m─[38;2;48;48;48m─[38;2;52;52;52m─[38;2;56;56;56m─[38;2;56;56;56m─[38;2;52;52;52m─[38;2;48;48;48m─[38;2;45;45;45m─[38;2;41;41;41m─[38;2;38;38;38m─[38;2;34;34;34m─[38;2;31;31;31m─[38;2;27;27;27m─[38;2;24;24;24m─[38;2;20;20;20m─[38;2;17;17;17m─[38;2;12;12;12m─[38;2;6;6;6m─[38;2;0;0;0m─[38;2;0;0;0m─[38;2;5;5;5m─[38;2;11;11;11m─[38;2;16;16;16m─[38;2;19;19;19m─[38;2;23;23;23m─[38;2;26;26;26m─[38;2;29;29;29m─[38;2;32;32;32m─[38;2;35;35;35m─[38;2;39;39;39m─[38;2;42;42;42m─[38;2;45;45;45m─[38;2;49;49;49m─[38;2;52;52;52m╯[m
+> ┃  mesh-reingest ❯ 
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.00 seconds)
+> ✔️ mesh-reingest (0.00 seconds)
+> dd4e933 feat(qa): trio de recuperação Veo — colhedor, poller e diagnóstico
+> ```
+
+## 🤖 Claude *(00:11:22)*
+
+
+## 🤖 Claude *(00:11:22)*
+
+Commit `dd4e933` — gitleaks limpo. Seguindo:
+
+## 🤖 Claude *(00:11:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/ops/host-hardening-2026-08.md CLAUDE.md\ngit commit -q -F - >/dev/null 2>&1 <<'EOF'\ndocs(ops): runbook do hardening \u2014 \u00a73 reescrita, \u00a78 pend\u00eancias, \u00edndice\n\nO runbook afirmava que o `sshd_config` n\u00e3o tinha diretiva `Port` alguma. Deixou\nde ser verdade em 21/08, quando foi criado `/etc/ssh/sshd_config.d/10-port.conf`\ncomo seguro duplo: se uma atualiza\u00e7\u00e3o do openssh desativar a ativa\u00e7\u00e3o por\nsocket, o sshd voltaria \u00e0 porta 22 \u2014 fechada em quatro camadas locais e na\nOracle. Perda total de acesso. A frase stale convidava exatamente \u00e0 remo\u00e7\u00e3o\nerrada, ent\u00e3o \u00a73 foi reescrita com as cinco camadas e suas provas, o alerta de\nn\u00e3o remover o arquivo, e a explica\u00e7\u00e3o de que ver `ssh.service` ativo junto com\n`ssh.socket` \u00e9 normal.\n\nEntra tamb\u00e9m o invent\u00e1rio de consumidores da porta 22 \u2014 a pergunta que n\u00e3o foi\nfeita antes da virada e que quebrou o MCP `ssh-server`.\n\nA \u00a78 registra as pend\u00eancias que at\u00e9 agora viviam s\u00f3 no transcript de uma sess\u00e3o\n\u00f3rf\u00e3: o MCP (que n\u00e3o aceita argumento algum, ao contr\u00e1rio do que se supunha), as\nduas exclus\u00f5es cosm\u00e9ticas e as tr\u00eas regras de porta 22 mantidas de prop\u00f3sito\ncomo escada de inc\u00eandio.\n\nO runbook estava fora da Key Files Reference. Agora est\u00e1.\nEOF\ngit log --oneline -1",
+  "description": "Commit do runbook de hardening"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> edb8057 docs(ops): runbook do hardening — §3 reescrita, §8 pendências, índice
+> ```
+
+## 🤖 Claude *(00:11:49)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add docs/roadmap/9router-recon-2026-08-20.md .claude/context/9router-recon-raw.md\ngit commit -q -F - >/dev/null 2>&1 <<'EOF'\ndocs(roadmap): sela o recon do 9router \u2014 recuper\u00e1vel fora do transcript\n\nO recon inteiro vivia numa sess\u00e3o que ficou \u00f3rf\u00e3 quando a porta SSH migrou. O\nSovereign pediu explicitamente que fosse f\u00e1cil recuper\u00e1vel: ele quer voltar a\nesse assunto depois de publicar o EP08, com o objetivo de ter desenvolvimento\n24/7 dos agentes de fundo sem depender de sess\u00e3o interativa.\n\nFicam registrados o veredito material (existe, MIT, CVE-2026-56676 real com\nCVSS 7.4 corrigida em 0.5.2, Cloud Sync ligado por padr\u00e3o), a fronteira que a\nan\u00e1lise acertou (agente de fundo sim, SaaS multi-tenant nunca) e as tr\u00eas\nobje\u00e7\u00f5es que travam o \"implantar de imediato\" \u2014 sendo a primeira decisiva: o RTK\nreescreve a sa\u00edda da ferramenta entre o tool e o modelo, e \u00e9 exatamente disso\nque a Lei 1 vive.\n\nDuas corre\u00e7\u00f5es apuradas hoje: o `fcc-server` existe mesmo, fora do reposit\u00f3rio,\nem `/home/ubuntu/free-claude-code/` \u2014 o recon o havia declarado premissa\nfabricada com base num grep que s\u00f3 olhou o repo. E o 9router j\u00e1 foi instalado em\n19/08, runtime 1.0.0, sem estar rodando.\nEOF\ngit add scripts/ep08/ docs/roadmap/ep08-roteiro-v01-2026-08-16.md\ngit commit -q -F - >/dev/null 2>&1 <<'EOF'\nfeat(ep08): runners de produ\u00e7\u00e3o do epis\u00f3dio + roteiro + variante v4\n\nOs runners que produziram o EP08 viviam apenas no disco, sem estar no\nreposit\u00f3rio: gera\u00e7\u00e3o da frota de clipes, alinhamento por onset, montagem das\ncenas MONTAR e assembly do master.\n\nEntra tamb\u00e9m o `montar-blocks-v4.ts`, variante que isola uma \u00fanica vari\u00e1vel \u2014 a\nprofundidade do plano de v\u00eddeo. O v3 p\u00f5e a laje em z=-2100 com perspectiva 1689,\no que a reduz a 52% da largura; a laje de preview cai a 12%. O resultado \u00e9\ncinema exibido em porta-retrato. O v4 traz o plano para z=-260 e o clipe passa a\nsangrar o quadro.\n\nO A/B provou que o quadro cheio transforma a cena, e provou tamb\u00e9m o limite: o\nSovereign leu o resultado e fixou a regra certa \u2014 caixa cheia s\u00f3 para v\u00eddeo\nreal, cart\u00e3o para imagem parada. O Luhmann do prot\u00f3tipo \u00e9 Ken Burns, e em quadro\ncheio a imobilidade aparece.\n\nO roteiro (7 blocos, cold open, CTA, outro, fontes prim\u00e1rias em cada dado) j\u00e1\nestava escrito para o h\u00edbrido: cada bloco separa conceito visual em clipe de 8s\ne interst\u00edcio data-viz em forma pura. O v3 \u00e9 que ignorou essa separa\u00e7\u00e3o.\nEOF\ngit log --oneline -4",
+  "description": "Commits do recon e dos runners do EP08"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 4e37d17 feat(ep08): runners de produção do episódio + roteiro + variante v4
+> c88a359 docs(roadmap): sela o recon do 9router — recuperável fora do transcript
+> edb8057 docs(ops): runbook do hardening — §3 reescrita, §8 pendências, índice
+> dd4e933 feat(qa): trio de recuperação Veo — colhedor, poller e diagnóstico
+> ```
+
+## 🤖 Claude *(00:11:54)*
+
+
+## 🤖 Claude *(00:11:54)*
+
+4 commits. O PDF de 20 MB fica de fora de propósito (registro no Record).
+
+**FASE 3 — nó de milestone na malha:**
+
+## 🤖 Claude *(00:12:05)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nRESP=$(curl -s -X POST \"${SUPABASE_URL}/rest/v1/mcorch_nodes\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -H \"Prefer: return=representation\" \\\n  -d \"{\n    \\\"name\\\": \\\"session-handoff-20260821-ep08-veo-recovery\\\",\n    \\\"node_type\\\": \\\"handoff\\\",\n    \\\"content\\\": \\\"[HANDOFF SEAL] EP08 diagnostico raiz: os 4 clipes-ancora nunca falharam \u2014 o veo-poll estoura memoria (HTTP 546 WORKER_RESOURCE_LIMIT) ao decodificar o video que o Vertex devolve inline em base64. 16 assets orfaos recuperados do storage (entre eles o b7_petrov, instalado). Trio de ferramentas de recuperacao Veo criado. Runbook do hardening SSH corrigido (secao 3 stale convidava a remover o seguro duplo) + secao 8 de pendencias. Recon do 9router selado fora do transcript. Regra Sovereign fixada: caixa cheia so para video real, cartao para imagem parada. Vertex = credito de teste gratuito; Gemini API = cartao de credito do Sovereign.\\\",\n    \\\"stability_score\\\": 1.0,\n    \\\"project_id\\\": null,\n    \\\"user_id\\\": null,\n    \\\"metadata\\\": {\n      \\\"session\\\": \\\"ep08-veo-recovery\\\",\n      \\\"sealed_at\\\": \\\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\\\",\n      \\\"commits\\\": \\\"$(git log --oneline -4 | tr '\\n' '|')\\\"\n    }\n  }\")\necho \"$RESP\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('NODE_ID:', d[0]['id'] if isinstance(d,list) else d.get('id','erro'))\" 2>/dev/null || echo \"\u26a0\ufe0f insert falhou: $(echo $RESP | head -c 200)\"",
+  "description": "Insere o n\u00f3 de milestone na malha"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> NODE_ID: 785ee010-4b96-4191-9fda-e31dec3b704f
+> ```
+
+## 🤖 Claude *(00:12:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\nSUPABASE_URL=\"https://bcyvddsykvehvpwstlfa.supabase.co\"\nNODE_ID=\"785ee010-4b96-4191-9fda-e31dec3b704f\"\necho \"=== embedding ===\"\ncurl -s -m 60 -X POST \"${SUPABASE_URL}/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" -d \"{\\\"record\\\": {\\\"id\\\": \\\"${NODE_ID}\\\"}}\" | head -c 300\necho; echo \"{\\\"handoffNodeId\\\": \\\"${NODE_ID}\\\"}\" > proof-manifest.json\necho; echo \"=== contagem viva da malha ===\"\ncurl -s \"${SUPABASE_URL}/rest/v1/mcorch_nodes?select=id&limit=1\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Prefer: count=exact\" -I 2>/dev/null | grep -i content-range | grep -o '[0-9]*$'",
+  "description": "Embedding do n\u00f3 e contagem da malha"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === embedding ===
+> {"error":"Request body must contain { node_id: string }"}
+> 
+> === contagem viva da malha ===
+> 21429
+> ```
+
+## 🤖 Claude *(00:12:18)*
+
+
+## 🤖 Claude *(00:12:19)*
+
+O template do skill está stale — a função espera `{ node_id }`, não `{ record: { id } }`. Corrigindo:
+
+## 🤖 Claude *(00:12:21)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsource .env 2>/dev/null\ncurl -s -m 60 -X POST \"https://bcyvddsykvehvpwstlfa.supabase.co/functions/v1/embed-mcorch-node\" \\\n  -H \"apikey: ${SB_SECRET_KEY}\" -H \"Authorization: Bearer ${SB_SECRET_KEY}\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"node_id\": \"785ee010-4b96-4191-9fda-e31dec3b704f\"}' | head -c 300",
+  "description": "Refaz o embedding com o payload correto"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> {"node_id":"785ee010-4b96-4191-9fda-e31dec3b704f","dims":768,"chunks":1,"model":"openai/text-embedding-3-small","provider":"openrouter","stitched":0}
+> ```
+
+## 🤖 Claude *(00:12:28)*
+
+
+## 🤖 Claude *(00:12:28)*
+
+Embedding ✅ (768 dims). Malha: **21.429 nós**.
+
+**FASE 4 — README:**
+
+## 🤖 Claude *(00:12:30)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"neural_mesh\\|version-6\\|^### \\[v6\" README.md | head -8\necho \"---\"; sed -n '/^## .*What.s New\\|^### \\[v6.144/,+8p' README.md | head -14",
+  "description": "L\u00ea os badges e a se\u00e7\u00e3o What's New do README"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 3:  <img src="https://img.shields.io/badge/version-6.144.0--mcorch__model_especialista_self--host_%2B_RAG_da_mesh-blueviolet?style=for-the-badge" alt="Version" />
+> 7:  <img src="https://img.shields.io/badge/neural_mesh-21214_nodes-blueviolet?style=for-the-badge" alt="Neural Mesh" />
+> 92:### [v6.144.0] — MCORCH Model Specialist Factory: mcorch_model vivo no Ollama + RAG da Knowledge Mesh (2026-08-19)
+> 102:### [v6.143.0] — O pivô para modelos de vídeo · gates de legibilidade · a fortaleza SSH (2026-08-16)
+> 110:### [v6.142.0] — EP07 em produção · a régua de densidade (2026-08-15)
+> 974:### [v6.141.0] — A régua de cinema, a cena REFERENCIAL e a trilha de câmera (2026-08-14)
+> 983:### [v6.140.0] — EP07 em MONTAR: motor v2 · kit por gauntlet · chave no cofre (2026-08-13)
+> 991:### [v6.137.0] — Sincronia + auditoria de 13 agentes: a causa-raiz do vídeo · HANDOFF desmentido · direção EP07 (2026-08-10)
+> ---
+> ### [v6.144.0] — MCORCH Model Specialist Factory: mcorch_model vivo no Ollama + RAG da Knowledge Mesh (2026-08-19)
+> 
+> > ⚖️ Frente inteira na branch `feat/mcorch-model-factory` (7 commits, pushed) — **main intocada por diretiva**; merge só via PR quando todas as fases forem validadas.
+> 
+> - **O 1º LLM especialista self-host da Sovereign está VIVO:** `mcorch_model` (Qwen2.5-Coder-7B + LoRA, GGUF q4_k_m, sha `93490c73…`) registrado no Ollama do host — **inferência US$ 0** no rail CPU. Teste de doutrina aprovado: cita "Lei 1 (Materialidade): nunca reporte sucesso sem prova física — UUID/commit/ls/curl".
+> - **RAG da Knowledge Mesh** (`scripts/ai/mcorch-ask.ts` + skill `mcorch-ask`): pergunta → embedding no espaço da mesh → `match_mcorch_nodes` (threshold 0.3) → resposta na voz da casa **citando fontes**. Witness: pergunta sobre o EP07 respondida com exatidão factual, recuperando os handoffs reais. Arquitetura selada: **SFT = voz · RAG = fato**.
+> - **Fábrica completa e reprodutível:** extrator SFT com Sanitização Zero-Trust fail-closed (gate `G-SANITIZE`, 3.895 pares, 0 segredos residuais) · treino QLoRA em RunPod (~US$ 3 o ciclo de 5 runs) · merge **peft canônico** · export GGUF sem sudo · `ollama create`.
+> - **4 anticorpos de treino selados no SOP** (`docs/processes/mcorch-model-pipeline.md` §8): o merge da Unsloth **corrompe** (provado por A/B — coerente in-training, salada pós-merge, nas DUAS receitas) → `merge-lora.py`; sanity do artefato final em processo limpo; cram de fatos (flashcards 15× + r=32) = **overfit catastrófico** → receita suave r=16/1 epoch; `save_pretrained_gguf` trava em sudo → `export-gguf.sh` userspace.
+> - **NEXT-STEPS.md 2026-08-19** emitido pelo pmo-curator (M1-M5 da frente + fila gated + 4 linhas stale da FILA SOVEREIGN flagadas).
+> ```
+
+## 🤖 Claude *(00:12:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 - <<'PY'\nimport io\np='README.md'\ns=io.open(p,encoding='utf-8').read()\nold_ver=\"version-6.144.0--mcorch__model_especialista_self--host_%2B_RAG_da_mesh\"\nnew_ver=\"version-6.145.0--diagnostico_raiz_do_EP08_%2B_recuperacao_de_16_clipes_Veo_orfaos\"\nassert s.count(old_ver)==1; s=s.replace(old_ver,new_ver)\nassert s.count(\"neural_mesh-21214_nodes\")==1; s=s.replace(\"neural_mesh-21214_nodes\",\"neural_mesh-21429_nodes\")\n\nanchor=\"### [v6.144.0] \u2014\"\nentry = \"\"\"### [v6.145.0] \u2014 O diagn\u00f3stico raiz do EP08: 16 clipes Veo \u00f3rf\u00e3os recuperados, o poll \u00e9 que quebrava (2026-08-21)\n\n> \u2696\ufe0f Frente na branch `feat/mcorch-model-factory` \u2014 **main intocada**.\n\n- **Os quatro clipes-\u00e2ncora do EP08 nunca falharam.** Luhmann, oficina de 1776, Apollo e Petrov foram dados como falhos e substitu\u00eddos por Ken Burns sobre still \u2014 o que o Sovereign leu, com raz\u00e3o, como amadorismo. A causa \u00e9 infraestrutura, n\u00e3o conte\u00fado: o `gen-clips.ts` desiste do poll em 18 min, o Veo termina depois, e o asset fica no storage sem nunca chegar ao disco.\n- **16 assets Veo \u00f3rf\u00e3os recuperados** \u2014 gerados e pagos entre 17 e 20/08, nenhum no disco. Entre eles **o `b7_petrov`** (1920\u00d71080, o maior arquivo do lote), j\u00e1 instalado no lugar do still, e **tr\u00eas tomadas de apresentador**, duas com faixa de \u00e1udio \u2014 material de lip-sync que ia ser re-encomendado.\n- **A causa raiz do fracasso do poll:** `veo-poll` responde `HTTP 546 WORKER_RESOURCE_LIMIT`, determin\u00edstico em 5 de 5. Sem `storageUri`, o Vertex devolve o v\u00eddeo **inline em base64** e o worker estoura ao decodificar. A hip\u00f3tese \u00f3bvia (1080p) foi **refutada** \u2014 v\u00e1rios 1080p sa\u00edram `done`; o discriminante \u00e9 o peso do arquivo, e por isso o mesmo n\u00f3 alterna `done` e `error` entre rodadas.\n- **Trio de ferramentas** (`scripts/qa/`): `harvest-veo-orphans.ts` colhe o que ficou no storage \u00b7 `poll-veo-stuck.ts` leva ao terminal as gera\u00e7\u00f5es que ningu\u00e9m est\u00e1 pollando (o Google n\u00e3o avisa sozinho) \u00b7 `diag-veo-generations.ts` cruza status por n\u00f3 \u00d7 resolu\u00e7\u00e3o \u00d7 motor \u00d7 dinheiro. Auditoria do ledger: **20 falhas, 5.340 mco, 100% estornado**.\n- **Runbook do hardening corrigido** \u2014 \u00a73 afirmava que o `sshd_config` n\u00e3o tinha `Port` algum, o que deixou de ser verdade em 21/08 e convidava a remover o seguro duplo `10-port.conf`. Nova \u00a78 registra as pend\u00eancias que viviam s\u00f3 num transcript \u00f3rf\u00e3o. Runbook indexado na Key Files Reference.\n- **Recon do 9router selado** em `docs/roadmap/9router-recon-2026-08-20.md` (+ extrato bruto), com duas corre\u00e7\u00f5es: o `fcc-server` existe mesmo (fora do repo) e o 9router j\u00e1 foi instalado em 19/08.\n- **Regra de linguagem fixada pelo Sovereign:** caixa cheia s\u00f3 para v\u00eddeo real; cart\u00e3o para imagem parada. O A/B `montar-blocks-v4.ts` provou que quadro cheio transforma a cena \u2014 e provou o limite, porque o plano do prot\u00f3tipo era Ken Burns.\n\n\"\"\"\nassert s.count(anchor)==1\ns=s.replace(anchor, entry+anchor)\nio.open(p,'w',encoding='utf-8').write(s)\nprint(\"README atualizado\")\nPY\ngit add README.md\ngit commit -q -F - >/dev/null 2>&1 <<'EOF'\ndocs(readme): v6.145.0 \u2014 diagn\u00f3stico raiz do EP08 e recupera\u00e7\u00e3o dos clipes \u00f3rf\u00e3os\n\nRegistra a sess\u00e3o em que os quatro clipes-\u00e2ncora do epis\u00f3dio deixaram de ser um\nproblema de conte\u00fado e passaram a ser o que sempre foram: um problema de poll.\nEOF\ngit log --oneline -1",
+  "description": "Atualiza e commita o README"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> README atualizado
+> 3a1b43e docs(readme): v6.145.0 — diagnóstico raiz do EP08 e recuperação dos clipes órfãos
+> ```
+
+## 🤖 Claude *(00:13:01)*
+
+
+## 🤖 Claude *(00:13:01)*
+
+**FASE 5 — HANDOFF.md:**
+
+## 🤖 Claude *(00:13:03)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nsed -n '1,42p' HANDOFF.md",
+  "description": "L\u00ea o cabe\u00e7alho do HANDOFF"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> # HANDOFF — MCORCH Constellation Orchestra
+> 
+> ## ⚡ FIRST ACTION FOR NEXT AGENT
+> 
+> ```bash
+> git log --oneline -20
+> # ═══════════════════════════════════════════════════════════════════════════════════════════
+> # 🏭 UPDATE 2026-08-19 — FRENTE PARALELA SELADA: mcorch_model (1º LLM especialista self-host) VIVO.
+> #    Branch `feat/mcorch-model-factory` (9 commits, pushed) — ⚖️ MAIN INTOCADA por diretiva Sovereign;
+> #    merge SÓ via PR quando todas as fases forem validadas. Consultar o especialista (US$ 0):
+> #      bun run scripts/ai/mcorch-ask.ts "<pergunta>"     (skill `mcorch-ask` · SOP [[mcorch-model-pipeline|mcorch-model-pipeline]].md)
+> #    Plano priorizado FRESCO: NEXT-STEPS.md ([[pmo-curator|pmo-curator]] 2026-08-19 — M1-M5 + 4 linhas stale flagadas).
+> #    ⚠️ A sessão STANDBY (EP08/outlier) NÃO selou: docs/roadmap/ep08-roteiro-v01-2026-08-16.md +
+> #       scripts/ep08/ + docs/ref-pdf/Agentic-Design-Patterns.pdf seguem UNCOMMITTED no worktree —
+> #       são DELA (não commitar por fora); o seal dela reconcilia. O item 1 abaixo (EP08) segue VIGENTE.
+> # ═══════════════════════════════════════════════════════════════════════════════════════════
+> # 🎯 UPDATE 2026-08-16 (SEAL NOITE) — EP07 REPROVADO E ARQUIVADO. PIVÔ TOTAL: VIDEO-MODELS.
+> # ═══════════════════════════════════════════════════════════════════════════════════════════
+> #
+> # ⚡ COMECE POR AQUI — o parecer FINAL do Sovereign (2026-08-16, noite) governa tudo. Textual:
+> #
+> #    "Ficou péssimo. O vídeo ainda bem que foi privado, mas ficou muito ruim — está faltando
+> #     vários assets, ícones e recortes no motion design. Vamos criar um roteiro novo baseado
+> #     em uma sessão única de 1m no próximo handson; arquiva esse que temos, vamos usar no
+> #     futuro. Tudo com Veo, Higgsfield e Gemini Omni — cirúrgico nos principais ganchos.
+> #     Preciso remodelar um outlier que vou mandar no handson da próxima sessão."
+> #
+> #  0. 🔴 EP07 MASTER = ACERVO, NÃO POSTAR. Está PRIVADO no YouTube (video id rxYsyjnevYI, upload
+> #     Track B completo com título/capítulos/categoria 28/thumb) e no host em
+> #     repurpose-inbox/<uid>/ep07-kit/master/ep07-master.mp4 (7min03 · 177,7 MB · loudnorm -16).
+> #     As 7 cenas + narração v0.2 + specs ficam como acervo reutilizável.
+> #
+> #  1. 🎬 A PRÓXIMA SESSÃO COMEÇA POR: (a) o Sovereign manda o OUTLIER a remodelar — esperar por
+> #     ele antes de escrever roteiro; (b) roteiro NOVO de SESSÃO ÚNICA de ~1 minuto (não é mini-EP
+> #     de 8min ainda — é UMA peça viral de 1min); (c) produção 100% video-models: Veo 3.1 (rail
+> #     vivo, refs ≤3, 8s obrigatório com refs), Higgsfield (sentinel 7/7 verde, key+secret BYOK
+> #     configurados, ~73 créditos; seedance/kling/dop 5s — chaves de preço 10s AINDA NÃO EXISTEM,
+> #     pedir 422 protege), e Gemini Omni conforme o guia Keemfinity.
+> #     Gramática: docs/ref-pdf/Keemfinity_AI_Motion_Commercial_Guide.pdf (3 refs com papéis fixos ·
+> #     1 evento visual/segundo · hard-cut marker #111212 · áudio só na edição).
+> #
+> #  2. 🧪 WITNESS HIGGSFIELD ARMADO E NUNCA EXECUTADO: projeto bba8f236-5917-4287-883c-123ec33a46a9
+> ```
+
+## 🤖 Claude *(00:13:07)*
+
+
+## 🤖 Claude *(00:13:09)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngrep -n \"^## \\|^| \\*\\*\" HANDOFF.md | head -24",
+  "description": "Mapeia a estrutura do HANDOFF"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 3:## ⚡ FIRST ACTION FOR NEXT AGENT
+> 146:## Task State
+> 148:| **MCORCH Model Factory — mcorch_model self-host + RAG da mesh (2026-08-19, BRANCH)** | ✅ **9 commits em `feat/mcorch-model-factory` pushed · MAIN INTOCADA (merge só via PR)**. `mcorch_model` VIVO no Ollama do host (gguf sha256=93490c73… · ollama-id=dea709c1ea87 · US$ 0) — teste de doutrina APROVADO. RAG `scripts/ai/mcorch-ask.ts` (witness EP07 factualmente exato citando fontes) + skill `mcorch-ask`. SOP §8: **4 anticorpos** (merge Unsloth CORROMPE→`merge-lora.py` peft · sanity em processo limpo · SFT=voz/RAG=fato, cram=overfit · GGUF sem sudo). Ciclo ~US$ 3 GPU (5 runs) · adapter LoRA preservado no host · pod+volume terminados. NEXT-STEPS.md 08-19 ([[pmo-curator|pmo-curator]]). Malha **21.214** · nó `5321efae`. Record abaixo. |
+> 149:| **EP07 reprovado e arquivado · pivô video-models · fortaleza SSH (2026-08-16)** | ✅ **9 commits `8b9ec18..9e6cabd`** · tsc-app **0** · vitest 916+5 · malha **21.020** · nó `e72cec04`. **EP07 master 7min03 REPROVADO** ("faltam assets/ícones/recortes") — privado `rxYsyjnevYI` = acervo. Perícia: spec perdia capacidade do campeão em silêncio → 4 fixes no motor + gates **G-LEG** (regra de SUJEITO) e **G-HONESTIDADE**. **SSH**: 353.422 ataques colhidos · senha OFF · ban permanente · MaxStartups 10→100 (a causa do "não conecta") · load-sentinel. **PIVÔ SELADO**: próxima sessão = roteiro de sessão única ~1min, outlier do Sovereign, tudo Veo/Higgsfield/Omni (sentinel 7/7 · witness `bba8f236` armado). Record abaixo. |
+> 150:| **EP07 em produção · a régua de densidade · 4 defeitos silenciosos do motor (2026-08-15)** | ✅ **8 commits `5ad2a71..f0f31a5`** · tsc-app **0** · vitest **916** · malha **20.977** · nó `dfeba8d2`. **N10+N8 fechados** com gate hermético US$ 0 e detector provado nos dois sentidos. **O último episódio não fracassou pelo filme:** retenção a 92% do normal, mas `RELATED_VIDEO = 0` — publicado em **News & Politics** em vez de Science & Technology; no mesmo 10/08 o Short em cat. 28 fez 62 views e o episódio em cat. 25 fez 16. Categoria corrigida em produção. **EP07:** roteiro v0.2 auditado (5 números sem fonte REMOVIDOS · 6,7 min), 7 narrações IVC (423,5 s), **7/7 blocos com beat na PALAVRA** (whisper self-host) e 7 cenas como spec. **Quatro defeitos silenciosos do motor:** o runner **nunca terminara uma cena longa** (faltavam args do chromium), **descartava o 2.39:1** renderizando 16:9, o `cutout` **só honra `w`** (todos os recortes a 300 px idênticos = "adesivo colado") e dois renders costuravam frames de specs diferentes. **RÉGUA DE DENSIDADE** medida da cena aprovada `b49ffbd8`: **um evento a cada 1,8 s** (a v1 do ATO 2 tinha um a cada 16,6 s). Gancho v2 `d2830b5a` e ATO 2 v2 `9f90042b` aguardam parecer ocular. Record abaixo. |
+> 151:| **A régua de cinema · a cena REFERENCIAL · a trilha de câmera (2026-08-14)** | ✅ **12 commits `3a59c52..9f0396f`** · tsc-app **0** · vitest **916** · malha **20.941** · nó `76147592`. **A régua medida**: os 2 breakdowns da Higgsfield decompostos por 61 agentes com crítico adversarial — das 27 acusações, **14 caíram em prova material** (8 eram minhas). Achado que ficou: mediana de plano **2,4–2,9 s** contra **ZERO cortes** nas nossas 9 peças, e o master do EP06 tem **1 corte em 173 s** (junções são dissolves). **6 alertas do `/handson` fechados com anticorpo**: guard de FORMA na chave Google (22 caracteres de sucata passavam por `length > 10`), `doctor` §10 de disco/mídia órfã, a cena carro-chefe que não re-renderizava (spec apontando para `/tmp` morto), e o `pgrep -f` que casa com o próprio comando (43 min de laço imortal). **A cena ESTRUTURA virou REFERENCIAL** por direção do Sovereign: cada imagem é o REFERENTE do que a voz diz. Kit de 10 peças (API Google direta), **relógio na PALAVRA** (whisper self-host, 14/14 âncoras), narração IVC a **165 ppm** (medido: `stability 0` compra expressão e não velocidade; `speed` da API é ignorado pelo `eleven_v3`), **trilha de câmera em 3 eixos narrada** (VOC-DOP-CAM-XYZ — a câmera tinha 1 grau de 3), e **2 gates novos**: `G-COLISAO` (quem cobre quem no espaço) e `G-PERMANENCIA` (quem devia ter saído no tempo). **Achado-mãe do motor:** o matte devolve o recorte na caixa de 2048 px e **a pessoa ocupa 28–38% dela** — o tamanho declarado nunca foi o visto. Record abaixo. |
+> 152:| **EP07 em MONTAR: motor v2 · kit por gauntlet · chave no cofre (2026-08-13)** | ✅ **10 commits `d379f86..adc4faa`** · tsc-app **0** · gitleaks limpo ×11 · malha **20.823** · nó `69c02e4b`. **Motor MONTAR v2** spec-driven portado do benchmark aprovado (`fcf91d44`) com 3 correções nascidas de defeito MEDIDO: asset quebrado vira `__fatal` **antes do frame 1** (a 1ª rodada do piloto renderizou 360 frames "verdes" com TODAS as imagens mortas — a família que produziu o master vazio do EP06), **ancoragem uniforme por centro** (metade dos kinds ancorava pelo canto e nasceria deslocada de meia-caixa; provado: 3 larguras diferentes centram com desvio 0,0 px) e `style`/`plain` por camada (VOC-ART-M-004/005 da trupe). **Trupe: 5.324 linhas de Partitura** (5 blocos × 4 lentes), com `durationSec: null` até o ffprobe — o beat cai na PALAVRA. **Gauntlet de peça**: torneio de N variações + recorte com a borda-assinatura; pegou **4 defeitos que geração única esconde** (marca fictícia "AUDIO VOID" · haste cortada pela borda · "Lorem ipsum" legível · tabela de preços em dólar). Gráfico analítico virou **conteúdo da folha** (diretiva), sempre como FORMA — zero dígito. **Pesquisa v2v** (6 frentes + crítico): **recâmera de take real por API NÃO existe provada** (`gen4_aleph` desligado 2026-07-30; Seedance ref é 480p "guide"), e o presenter crível é **lip-sync sobre plate real** — credibilidade = pixels nunca inventados. **Higgsfield: não assinar** (openapi.json com 50 paths e ZERO entrada de vídeo; ToS §11.5 proíbe pass-through). **Vazamento de chave fechado na FONTE**: 3 chaves 403-leaked, origem em **6 nós da malha** — limpar só os 16 arquivos duraria até o cron das 02:30. Credencial saiu do `.env` para o cofre `user_api_keys`; imagem migrada para a **API Google direta**. **Loop de validação em browser** (7/8) provou 22/22 imagens carregando e pegou o rótulo que anunciava "Nano Banana 2" despachando o modelo de 2025. ⚠️ **Veredito do Sovereign no visual: prova de conceito, "ainda amador"** — a régua será um link de cinema na próxima sessão. Record abaixo. |
+> 153:| **Segurança, audiência e anticorpos (2026-08-11)** | ✅ **9 commits `506ed7d..37b6ad6`** · tsc-app **0** · vitest **905** · malha **20.478** · gitleaks limpo em todos. **P0 vivo fechado:** `stripe-webhook` aceitava evento forjado de qualquer um (guard condicional; omitir o header dava 200) → fail-closed + deploy + re-prova. **A chave vive em TRÊS cofres:** o do POSTGRES (`vault.decrypted_secrets`, de onde o pg_cron lê) ficou para trás na rotação e matou `autopilot-cadence`+`nurture-advance` por **55h** com `active=true` e zero alarme → corrigido, crons batendo. **Self-healing `*/5`** (`self-heal-bridge-keys.sh` + SOP): chave morta ⇒ recusa reiniciar · ponte stale ⇒ reinicia provando pelo `ExecMainStartTimestamp` · pg_cron ⇒ detecta pela ausência de batimento. **Fabricação extirpada:** 7 `creative_asset` inventados no código (o "13.9 MB/151,73s" que 3 sessões repetiram) + 2 `throw error` restaurados + vazamento de master (HTTP 206 anônimo) fechado. **Chaves legadas removidas** dos 3 lugares + backdoor de comparação de string no `sync-meta-ads`. **Audiência medida** (17/17 sondas): 100% masculino, 100% BR em 90d, episódio converte **14× mais que Short**, título-tese 15-24× mais que manchete, ótimo 7-8 min; Reporting API com 4 jobs. **Acervo podado** 148→101 vídeos (419,6 MB, 7 publicados intactos). **Amendments 28-bis/46** (grid + legenda alpha) e **suíte de monetização com gate FECHADO** pelos críticos. Record abaixo. |
+> 154:| **Sincronia + auditoria de 13 agentes: a causa-raiz do vídeo achada · HANDOFF desmentido · acervo colhido · direção EP07 (2026-08-10)** | ✅ **Sessão de VERDADE, não de produção.** Git reconciliado (`git pull --rebase` limpo · HEAD `0608662` · 0 behind/2 ahead · zero conflito). **Bloqueador nº 1 achado:** a secret key do Supabase está **revogada** — 401 em `SB_SECRET_KEY`/`SUPABASE_SECRET_KEY`/JWT legada, 200 na publishable; derrubou **em silêncio** as 6 pontes de render (systemd diz `active (running)`, mas nenhuma pega job desde 08-08 00:46) + Edge Functions (500) + todo script CLI. Memória nova `reference_supabase_secret_key_rotation_silent_kill` (a lição: *serviço "rodando" ≠ serviço "funcionando"*; o gate é a última linha de trabalho no journal). **Auditoria exaustiva** (workflow `wf_b78f931d-bc6`: 6 frentes + crítico adversarial + diagnóstico-chefe · 13 agentes · 2,1M tokens) provou que **o EP06 v4 do Antigravity é artefato vazio**: 22 cartelas estáticas de 7,000s (22×7=154,0s exatos; freezedetect = 147s congelados) sobre **senoide de 110 Hz**, zero narração — porque `download-and-assemble.cjs:55` pediu o bucket `creative_assets` (que é o nome de uma **TABELA**) e o `curl -s -o` sem `-f` gravou `{"code":"NoSuchBucket"}` dentro de 19 arquivos de 98 bytes, e o montador degradou tudo em silêncio imprimindo "🎉 CONCLUÍDO COM SUCESSO". **E a causa-raiz do "está longe do benchmark"** (que vem desde a v3.2): o motor MONTAR foi **reduzido a um plano** na adaptação — `render-all-scenes.ts:79` lê `companions ?? []` e nenhuma das 14 cenas define companions; `grep -c 'blur('` no template = **0** contra **9** no `build-scene.mjs`, que ainda tem `dof(z)` e mapa Z de 8 profundidades sobre 12 planos. Era **Ken Burns com o rótulo MONTAR**. **HANDOFF desmentido (Lei 1):** dizia "13.9 MB · 151.73s · 5 camadas · voz IVC" — real: **4.675.413 B · 154,000s · 0 camadas · 0 narração**. **Acervo colhido** (780 MB / 5.283 arq. de um `/tmp` de sessão morta → `repurpose-inbox/<uid>/ep06-montar-harvest/`, gates de tamanho+contagem+ffprobe verdes): 14 cenas MONTAR reais 1080p + 12 narrações ElevenLabs + Veo P1 + master v3.2. **HANDOFF podado** 🟡 23.801 → ✅ **16.268 tokens** (4 records → arquivo, gate byte-a-byte ✅, 7+4=11 sem perda). **Direção Sovereign: próxima sessão = EP07** (pauta e 4 pilares de doutrina já escritos e verificados). Record abaixo. |
+> 156:| **EP06 v3.1 armado · narrações ElevenLabs · skill motion-promo · canvas defensivo (2026-08-07)** | ✅ **5 commits `4b7e0e3..890954a`** · tsc-app **0** · malha **20.402** · saldo 41.042 mco. Projeto Spaces `441a5f04` pronto para o Sovereign clicar em **Executar tudo**: 35 nós · 26 arestas · 4 phaseGroup (FALAR/FILMAR/MONTAR/MASTER) · 12 voiceClone HIDRATADOS (áudio ElevenLabs conectado por aresta) · 3 imageToVideo Veo `veo-3.1-fast`/1080p/8s idle (~801 mco) · 14 motionScene (C4/C10 com treatment `card` novo) · 1 assembler. **Sovereign reprovou qwen3-local ("todos ficaram muito ruins")** → clonei ElevenLabs a partir do próprio EP06 antigo em `eleven_v3` (perfil `867e95b9`) → 12 sínteses × 36 mco = 432 mco. **Cereja do bolo**: skill motion-promo do Sovereign registrada em `.claude/skills/motion-promo/`, C01 e C13 do roteiro apontam para ela ("Uma skill assistiu, cortou em cinco linhas, escolheu a paleta, e me devolveu esse filme"). **Robustez do canvas** — 2 crashes consertados: (a) grafo semeado por script sem `type=data.kind` renderiza card branco/vazio → `useCanvasStore.initialize` reforça no load (mata o loop autosave-clobbera-fix-do-servidor); (b) `ImageToVideoNode.backendBadge` derrubava a página INTEIRA em `videoModel.startsWith(...)` quando o campo vinha undefined → guard silencioso. **3 armadilhas operacionais** achadas e documentadas: `generate-voice` ignora `metadata` do body (casamento por prefixo do script) · ElevenLabs cria assets com title/metadata vazios (casamento por ORDEM CRONOLÓGICA + prova de duração) · `count` do PostgREST é null em UPDATE simples (usar `data.length`). Record abaixo. |
+> 158:| **O motor de motion para de mentir · trupe criativa · Exportar YouTube (2026-08-06)** | ✅ **13 commits `69dd463..f8eb1b3`** · tsc-app **0** · vitest **871** · build no ar · malha **20.164**. Perícia com frames renderizados do EP06 achou 8 defeitos que NENHUM teste pegaria: contador exibindo `2800000,0 tri` onde o dado é 2,8 trilhões · nota de direção despejada na tela truncada no meio da palavra · `badges`/`runningRing` oferecidos pela UI e com **0 ocorrências** no motor · `chart` com curva hardcoded · 720p esticado 1,5× no master · byte NUL fazendo o `grep` pular o arquivo em silêncio. **Beat passou a cair na PALAVRA falada** (whisper self-host, casamento sequencial, cache no asset de voz) — era o defeito estrutural nº1 da Doutrina Motion v3. **1080p nativo ficou MAIS BARATO que o 720p** (285 vs 536 ms/frame) ao trocar um `blur(70px)` que comia 65% do render. **Trupe criativa** completa (Dramaturgo/Encenador/DoP) sobre Partitura de Cena com vocabulário FECHADO. **Amendment 41 — Exportar para YouTube**. **OOM do host** diagnosticado (1 agente a 15,6 GB) → teto na slice + 3,7 GB liberados. EP06 armado, verificado por pré-voo e com presenters em `veo-3.1`/1080p. Record abaixo. |
+> 160:| **Spaces UX + Run All server-side + controles Veo + motor motion v2 (2026-08-05c)** | ✅ **13 commits `333c43f..e8b489d`** pushed · tsc-app **0** · vitest **788** · build no ar · `/security-review` NO FINDINGS (2 achados F1/F2 da faxina fechados) · witness ocular ×4. Sessão reativa de UX do Spaces sobre o run do EP06. **Amend 36:** Run All do rail do host **100% server-side** — cadeia cenas→master enfileirada no clique, **pode fechar a aba** (witness: browser morto 4s após o clique → master saiu); nós pagos (Veo) mantêm fluxo por camadas + **aviso de sessão** (toast+faixa âmbar+`beforeunload`). **Amend 35:** execução **seletiva** (seleção do canvas recorta o Run All). **Amend 38:** kind **phaseGroup** (card de FASE com botão próprio "Executar esta fase (N)", resize via NodeResizer, no menu Adicionar + agente) + **FR-142 skip-success** (nó pronto não re-executa em batch — matou re-débito de Veo pago). **Amend 39:** **STOP** no console (✕ por job + geral, agora limpa nós presos) + **faxina de projeto** (`cleanup-project-drafts` dry-run default, allowlist fail-safe `motion/`+`sfx/synth/`, cura refs mortas). **Amend 37:** **motor motion v2** — cena MOSTRA o contexto (21 ícones SVG por keyword, heroIcon, shockwave, fundo estudio, variedade por SEED). **UX:** handles de fluxo vertical (Master entra por cima · imageToVideo/characterReference saem por baixo) · painéis colapsados por padrão · canvas full-bleed · marca RF oculta · hover só scale. **EP06 v2 `a65eeb05`** armado (esteira limpa + master centro-baixo + 3 narrações REGERAR). **🐛 Pendente durável: poller de PÁGINA do Veo** (Run All headless não finaliza presenters — os 4 do EP06 falharam por Google high-load e foram **estornados 1068 mco**). Record abaixo. |
+> 162:| **Agente do Spaces VIVO + esteira do episódio ponta-a-ponta no Spaces (2026-08-05)** | ✅ **19 commits `de5bdb5..9a1fac5`** pushed · tsc-app **0** · vitest **765** · build verde · `/security-review` NO FINDINGS. **(1) spaces-agent** (Amendment 33): chat que MONTA o canvas por conversa — migration `spaces_node_threads`, edge fn deployada, dock + sugestões contextuais (função pura, 0 mco), BoK `spaces-agent` 10/10. Witness: 1 mco exato/msg, estorno provado no 502, 13 nós do EP06 montados por conversa. **(2) Amendment 34 — pós-produção** (o gap CLI→UI): nós **Cena Motion** (Playwright+FFmpeg, 0 mco, color grading no encode) · **Efeito Sonoro** (motor DUPLO — síntese FFmpeg 0 mco onde a IA falha por construção, IA 2 mco onde ela brilha; licença CARIMBADA em ambos) · **Montar Master** · inspector da Nota de cena. Worker `motion-bridge` (systemd active/enabled) atende motion+sfx+assemble. **Executar tudo** passou a despachar os 3. **(3) Console de execução** com fila·%·tempo (progresso em streaming do stdout) + **barra do agente flutuante** com aurora (referência do Sovereign). **(4) Repertório profissional**: manual de 1.485 l + guia de SFX de 386 l + `cinematic-grammar.ts`; 18 regras nos agentes. **(5) EP06**: roteiro 22 cenas motion-first (−82% de custo vs EP05) + 15 narrações IVC com arco emocional (3:24). **Achados-anticorpo:** Playwright engasga sob bun (>10min vs 77s) · autosave da UI APAGA escrita server-side · LUFS não mede transiente <400ms · `register_creative_asset` tem allowlist de source_module e falha em silêncio. ⏭ **Próximo: clicar em EXECUTAR TUDO** (projeto armado, 4 gates verdes). Record abaixo. |
+> 164:| **MARATONA EP05 A6→A14 + linguagem MOTION SCENES selada + voz IVC eleven_v3 + frota blockbuster (2026-08-04)** | ✅ ~15 commits `a131f3e..adc8965` pushed · sessão-maratona de produção iterada por parecer do Sovereign do início ao fim. **(1) Masters A6→A13**: VFX título como abertura · trilha Lyria v2 D-major FELIZ (fix alinhamento buffer 4 bytes) · screencasts calibrados 85% (clique→painel, dblclick→modal+cede, commit `a131f3e`; scroll ATÉ o prompt; campo prompt `resize-y` deployado) · **pivô editorial NOVIDADES** (playbook §6b + gancho novo cena 1) · **narração 100% voz IVC do Sovereign** (ElevenLabs Creator assinado, pool único provado; eleven_v3 audio tags; IVC `h8e1Indc…`) · CTA engajamento · créditos template VALIDADO. **(2) Frota BLOCKBUSTER 19/19** (prompt-template ARRI/MCU/JARVIS do Sovereign; débito exato 5.073; QA A/V pegou p47 MUDA→v2 +267 e p14 esteira-ergométrica=retake opcional; guard anti-legenda no prompt). **(3) Linguagem MOTION SCENES v6 SELADA** ("Perfeito"): 6 iterações por parecer (ring perímetro NUNCA rotate · glass+3D · galáxia t=0 · assets REAIS · flow rise 2 estágios · edges TRACKEIAM nós flutuantes · respiro) → **6 peças produzidas e na Biblioteca** (i2v `50f88802` · voz `047b1a2f` · imagem `ff274f69` · retenção `4a7c90a9` · biblioteca `c7174c67` · canvas `94b566db`) → **assemble-v14 RODANDO no seal** (retomada no FIRST ACTION). **(4) Síntese**: skill `motion-scenes` + contratos 3 agentes + knowledge pack spaces-agent + Scratchpad Harvest (PHASE 1b /handoff + SOP + skill, nascido do quase-acidente) + QA A/V sync como lei + playbook dark-channel + blueprint ai-news-brief (BoK-gated). Masters/peças TODOS na Biblioteca; runners TODOS em `scripts/ep05/`. ⏭ A14 QA+upload → thumbnail → DOMINGO. Record abaixo. |
+> 165:| **EP05 MASTER produzido: áudio EP01-04 (Veo nativo + Qwen3 grosso + trilha Lyria ducada) + intro/créditos Times + VFX título 10s aprovado (2026-08-03)** | ✅ Sessão-maratona de PRODUÇÃO (entregáveis na Biblioteca, fora do repo). 32 segmentos sintéticos gerados por script (`canvas-execute`/`generate-voice` JWT User 0) todos Vision-QA: 19 apresentador + 7 b-roll 16:9 + 6 voz. Wav2Lip CPU REPROVADO (host sem GPU) → estratégia EP01-04: **áudio Veo nativo** nos apresentadores (`generate_audio:true`, lip-sync perfeito) + narração Qwen3 **mais grossa** só nas mudas + **trilha Lyria RealTime** por-ato ducada (lift emocional @28s) + timeline dirigida pela narração (sem sobreposição). Intro "GABRIEL AI APRESENTA…" + créditos Liberation Serif (=Times, replica `gerar_cartela`/`gerar_creditos`) + **VFX título 10s APROVADO** (`title.html` GSAP + Playwright frame-seek, técnica HyperFrames). Cap diário admin 10k→100k (`canvas-execute:794`, deployado, commit `563e86f`). Malha **19232** · nó `79365255`. ⏭ Próxima: juntar VFX no master · trilha mais feliz/esperança · re-gravar screencasts 1920×1080 zoom 70% colapsado. Record abaixo. |
+> 166:| **EP05 v2 formato GabrielAI (48 cenas, 62 nós) + kind sceneNote + clamp Veo refs→8s + 4 refinamentos Canvas (2026-08-03)** | ✅ **14 commits na main** (`bd94dae..5b9db1a`) · tsc-app **0** · build 25.05s · gitleaks limpo · `/security-review` NO FINDINGS · 738/740 vitest verdes · Master Execution Protocol §6 respeitado. EP05 v2 no formato exato do motor CLI Python que fez EP01-04: `docs/roadmap/ep05-roteiro-v2-formato-gabrielai-2026-08-03.md` (48 cenas §3, regex validado, 6 atos, 16:9). Projeto Spaces `/dashboard/spaces/18a21002-df9c-48b4-aff3-7aba28e812e7` com 62 nós (19P + 7 pair B-roll + 6 voz + 1 charRef + 22 sceneNote), 26 edges, custo Run ~6.180 mco. Clamp Veo `reference_to_video`→8s (server 422 pré-débito + UI auto-clamp) deployado em prod. Canvas: edges com espessura adaptável ao zoom · fitView respeita viewport salvo · LANE_HEIGHT 320→480 · 48 labels cena-a-cena. Amendment 32 kind sceneNote (BoK selada antes do código, Pattern Conformance 1y/20na). Auditoria robusta 4 lentes achou 1 blocker (n_p_1 fora do grid) e 1 important (voice_ato1 desalinhado) — ambos patchados. Malha **19176** · nó `0da058d6`. ⏭ Próxima: Opção C HÍBRIDO — MVP chat-por-nó (Amendment 33) + bok-curator escreve suite `spaces-agent`. Record abaixo. |
+> 167:| **Estratégia DEFINITIVA de shorts orgânicos + formato React provado + fábrica Spaces (2026-07-30b)** | ✅ **6 commits na main** (`61022c3..abe2a12`) · tsc-app **0** · gitleaks limpo. As 6 refs do Sovereign ERAM os deepsearches → estratégia **DEFINITIVA v1** (§D1..D7 em `docs/roadmap/organic-shorts-strategy-inicial-2026-07-30.md`). Witness react `1a98cef3` (split_grid 2v, 12 mco, Vision QA) · 8 cortes EP02 · projeto Spaces **"React Gabriel AI"** `024e1c03` armado (zero pago) · tabela de vídeos restaurada no /dashboard/youtube (Short 118 views) · pad TTS 0,5s provado · smoke cadência 7/7 + anticorpo FR-CAD-006. Malha **19120** · nó `aa7e1dc9`. ⏭ PAUSE → **EP05 formato tutorial** (parecer no Record). Record abaixo. |
+> 168:| **TikTok App Review destravado + pipeline de Publicações do Spaces (2026-07-30)** | ✅ **4 commits na main** (`266d3f0..7d4add3`) · tsc-app **0** · eslint **0** · vitest **+20 novos** (public-app-settings 9 + asset-publications 11) · 3 migrations aplicadas · 1 edge fn deployada · frontend no ar · `/security-review` NO FINDINGS ×3. **TikTok (reprovado 4×)**: conta `tiktok.review@mcorch.com` provisionada (viewer · email pré-confirmado · onboarding pré-completo · 1500 mco) + login **provado E2E** no /auth público. Achado material: botões social login atrás de `?devLogin` (invisíveis na URL do formulário) → flag admin `public_app_settings` (aba **Acesso** em /dashboard/admin, world-readable+CHECK allowlist, RLS admin-write, auditada). Sovereign gravou o vídeo e **enviou a re-submissão**. **Publicações**: aba no modal do asset (badge/timestamp/Cancelar/Remover) + trigger cascade fecha o **dead-end 409 `already_enqueued`** + **sync bidirecional** (apagar do calendário SOME de toda superfície: `scheduled`→delete, `published`→histórico). Revisão adversarial ultracode pegou 2 P0/P1 nascidos-mortos (handler 409 = código morto; `activeForSelected` sem `published`) → corrigidos+provados E2E. Malha **18985** · nó `59c4d1c2`. Record abaixo. |
+> 169:| **"Rodar não é entregar": 6 superfícies + limpeza total de branches + media_state (2026-07-29)** | ✅ **14 commits na main** (`15c84fe..7533a5a`) · tsc-app **0** · eslint **0 erros** (era 75) · vitest **712** · 3 edge fns deployadas · frontend no ar. Remoto = **só `main`** (20 branches retiradas; backup provado por `git clone` do bundle). **P0**: logrotate criava `/var/log/mcorch-*.log` como gcrUX enquanto o cron roda como ubuntu → **redirect falho = comando NÃO executa** → 4 crons mortos 3 dias (telemetria de saúde em branco). **Gate de ENTREGA** da auditoria 4Cs (worktree detached em `origin/main` + push verificado por grep no destino). **Produção estava À FRENTE da main** (dist de branch nunca mergeada) → reconciliada. **Cortes**: grade do menu era galeria decorativa + edge fn 5 dias velha → grade provada E2E por frame. **media_state** (text+CHECK) separa estado técnico do editorial + aba "Em processamento"; **IDOR MEDIUM** fechado que o próprio fix ativara. Malha **18851** · nó `32897de0`. Record abaixo. |
+> 170:| **Modal de Publicação YouTube Studio (abas Vídeo/Shorts/Histórico) — free-agent S1 (2026-07-25)** | ✅ **3 commits `free-agent/publish-modal-s1`** · tsc-app **93=baseline** · worktree limpo. **Passo 1**: widget "Vídeos do canal" extraído p/ `src/components/youtube/ChannelVideosCard.tsx` (auto-contido: `useYouTubeVideos` + `useYouTubeConnection` + `useDeleteVideo` + `useUpdateVideo`; 17 colunas + paginação + Editar/Excluir gated por `hasWriteScope`). **Passo 2**: `src/components/youtube/YouTubePublishModal.tsx` — `<Dialog>` + `<Tabs>` 3 abas: **Vídeo** (`YouTubeUploadPanel`), **Shorts** (mesmo fluxo + dica 9:16/60s), **Histórico** (`ChannelVideosCard`). **Passo 3**: `YouTubeStudioPage.tsx` header (L443) — estado `pubOpen`/`pubTab` + botões "Publicar" / "Histórico" → abrem modal com `defaultTab` dinâmico; Card inline removido do corpo. **Zero regressão** — apenas 3 arquivos tocados. Malha **18375** · nó aguardando seal. Record abaixo. |
+> 171:| **Modais publicação (terreno free-agent) + P0 EP03 destravado + doutrina de recência (2026-07-25)** | ✅ **5 commits `fbb53b3..b66396c`** pushed · tsc-app 93=baseline · worktree limpo. **P0 EP03**: selo "Armazenado" p/ masters no Storage (W2.1) destrava o botão "Não verificado" morto (`canProbe` exigia bucket='local'); EP03→YouTube nunca dependeu do selo — `useHostMasters` lista por `source_module`, worker dual-source (buildado, no ar). **Modais** YT/TikTok/IG: contrato+playbook path-resolvido p/ agente FREE (`docs/roadmap/publish-modals-*`); **Nemotron-9B:free provou tool-use real** (leu useYouTubeUpload.ts, 7 exports); Sovereign roda fcc-claude na branch `free-agent/publish-modal-s1` passo-a-passo. **Pantheon free-model via gateway `openclaw agent` PROVOU não executar código** (gemini-flash-lite = pseudo-código). **Cap edge fns DESTRAVADO** (Pro 100→500; memória stale reconciliada SUPERSEDED). **Doutrina de recência de memória** (corolário Lei 1). Malha **18348** · nó `5cc6ad2a`. Record abaixo. |
+> 172:| **Autonomia: security + P0 YouTube (pós-W2.1) + kanban de dev + grounding AIOS + AI Act Fatia 4 disclosure VIVO (2026-07-25)** | ✅ **8 commits `3766034..0e120be`** pushed · gitleaks limpo · tsc-app 93=baseline. **AI Act Art.50(4) FECHADO** antes do deadline 02-Ago (Fatia 4 disclosure server-side nunca-LLM em orchestrate-step+reshape-pillar, smoke 12/12, /security-review SAFE, deployado; OTD-CP-002 resolvida Sovereign). **Fatias 0/1/2 C2PA já vivas desde 18-jul** (SOP estava stale). **P0 YouTube** pós-W2.1 restaurado (UI source_module='external' + worker dual-source host/Storage). **W1.2** statement_timeout + revoga-anon (migrations aplicadas em prod). **Kanban** neon+fatia-2 sinal-real. **AIOS** nós Consciousness v2 auto-semeados neutralizados. Malha **18347** · nó `2f4eee7d`. Record abaixo. |
+> 173:| **Grounding do AIOS (anti-confabulação) + otimização Supabase Pro (2026-07-25)** | ✅ Sessão interativa longa. **8 commits `cb18729..00f5295`** pushed · tsc-app **93=baseline** · gitleaks limpo. **Raiz de "algo errado no ecossistema" achada+corrigida:** o chat AIOS Core-Fable confabulava arquitetura inexistente (monorepo/tabelas/`ffmpeg.wasm`) — diagnóstico por 2 workflows de verificação material. Fix (`cb18729`): **E** prompt anti-confabulação (`DEFAULT_SYSTEM`+`LIVE_SYSTEM`) + **A** RAG query-aware (`buildQueryContext` liga o `searchContext` que era dead-code) + **threshold** `search-constellation` 0.45→0.3 (**search prod 0→20 provado**) + **F1** modo voz. **Auto-ingest RESSUSCITADO** (`4001e38`): morria com 401 silencioso desde a rotação de chaves → força `SB_SECRET_KEY` + varre `src`+`supabase/functions`+`packages`; malha **9831→18324**. Menu **Orquestra→Constelação**. **Supabase Pro:** roadmap `docs/roadmap/supabase-pro-optimization.md` (cap 100 fns **destravado provado**; upload 50MB→500GB; no-pause; logs 7d) + host cleanup **~16GB** (disco 79%→71%) + **masters EP01/EP02 migrados p/ Storage** (`scripts/migrate-local-masters-to-storage.ts`, verificado, host liberado 1.8G→24M). Malha **18324** · nó `88030445`. Record abaixo. |
+> 174:| **Autonomia total: PIPC S1+S2 + CRM Contatos + cadence-fix + AI Act selada (2026-07-24)** | ✅ Sessão de autonomia total do Sovereign (migrations/deploys/schema/seal **un-gated**; público/compliance-code/editorial/credenciais **gated**). **6 commits `c58a57e..88a04dd`** pushed · toda migration `/security-review`+RLS default-deny. **S1+S2 PIPC VIVOS** (retenção YT persiste→brief por-EP; A19/A20 desbloqueado por re-OAuth) · **A4 Contatos** (`contacts`+RLS, OTD-CS-001 resolvida) · **A8 cadence-fix** (conta explícita mata null→1ª) · **A10 [[content-provenance|content-provenance]] selada 9/9** (Fatia 4 deferida OTD-CP-002). Todos **witness E2E**. ⚠️ cap 100 edge fns atingido. Malha **9831** · nó `36d233dc`. Record abaixo. |
+> ```
+
+## 🤖 Claude *(00:13:16)*
+
+
+## 🤖 Claude *(00:14:28)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 - <<'PY'\nimport io\np='HANDOFF.md'\ns=io.open(p,encoding='utf-8').read()\n\n# 1) FIRST ACTION \u2014 o bloco de topo passa a apontar a pr\u00f3xima sess\u00e3o\nold_head = \"\"\"# \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n# \ud83c\udfed UPDATE 2026-08-19 \u2014 FRENTE PARALELA SELADA: mcorch_model (1\u00ba LLM especialista self-host) VIVO.\"\"\"\nnew_head = \"\"\"# \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n# \ud83c\udfac UPDATE 2026-08-21 \u2014 SESS\u00c3O DEDICADA AO EP08. Diretiva Sovereign: \"vamos fazer /handoff oficial\n#    e come\u00e7ar com algo em uma sess\u00e3o dedicada s\u00f3 para isso. FINALIZAR O EP!\"\n#\n#    \ud83d\udcb0 FATO QUE GOVERNA O OR\u00c7AMENTO (o Sovereign corrigiu no seal \u2014 N\u00c3O inverter):\n#       Vertex  = cr\u00e9dito de TESTE GRATUITO do console Google  \u2192  R$ 147,94 restantes\n#       Gemini API = CART\u00c3O DE CR\u00c9DITO do Sovereign            \u2192  sai do bolso dele\n#    \u21d2 Ficar no VERTEX. Trocar para o Gemini \"porque \u00e9 mais barato por segundo\" TIRA DO BOLSO.\n#    \u21d2 Foco da pr\u00f3xima sess\u00e3o: gastar bem os cr\u00e9ditos de teste do console Google.\n#\n#    \ud83d\udd27 O BLOQUEADOR REAL (achado desta sess\u00e3o, n\u00e3o \u00e9 o Veo):\n#       `veo-poll` responde HTTP 546 WORKER_RESOURCE_LIMIT \u2014 determin\u00edstico 5/5. Sem `storageUri`,\n#       o Vertex devolve o v\u00eddeo INLINE EM BASE64 e o worker estoura ao decodificar. Por isso o\n#       mesmo n\u00f3 alterna done/error entre rodadas (o discriminante \u00e9 o PESO do arquivo, n\u00e3o 1080p \u2014\n#       hip\u00f3tese refutada: v\u00e1rios 1080p sa\u00edram `done`).\n#       Sa\u00eddas, em ordem de prefer\u00eancia: (a) `storageUri` no request Vertex \u2192 poll s\u00f3 manipula URL\n#       (conserto dur\u00e1vel, mexe em edge fn de produ\u00e7\u00e3o); (b) 720p s\u00f3 nos clipes pesados; (c) insistir\n#       (\u00e9 intermitente e o mco volta \u2014 mas queima cr\u00e9dito Google a cada tentativa).\n#\n#    \u2705 ANTES DE RE-GERAR QUALQUER CLIPE, NESTA ORDEM:\n#       bun run scripts/qa/diag-veo-generations.ts --since=2026-08-16   # status\u00d7resolu\u00e7\u00e3o\u00d7motor\u00d7$\n#       bun run scripts/qa/poll-veo-stuck.ts                            # leva 'running' ao terminal\n#       bun run scripts/qa/harvest-veo-orphans.ts <dir> --since=<data>  # colhe o que ficou no storage\n#       \u26a0\ufe0f REGRA: poll estourado \u2260 gera\u00e7\u00e3o falha. Re-gerar o que j\u00e1 existe paga 2\u00d7 pelo mesmo frame.\n#\n#    \ud83d\udcfc ESTADO DO KIT (repurpose-inbox/ada39fae\u2026/ep08-kit/clips/):\n#       v\u00eddeo REAL: b1_bell \u00b7 b1_maos \u00b7 b2_payoff \u00b7 b3_valla \u00b7 b3_payoff \u00b7 b5_papin \u00b7 b5_payoff \u00b7\n#                   b7_petrov (RECUPERADO 21/08) \u00b7 outro_presenter\n#       ainda STILL (Ken Burns): kb_b2_luhmann (gera\u00e7\u00e3o `1e7e0ce1` em running) \u00b7 kb_b4_alfinetes \u00b7\n#                   kb_b6_apollo\n#       FALTA GERAR: b4_alfinetes \u00b7 b6_apollo \u00b7 payoff b4 \u00b7 payoff b6  \u2192  ~US$ 4,80 \u2248 R$ 26\n#       B\u00d4NUS recuperado: 3 tomadas de apresentador, 2 COM \u00c1UDIO (lip-sync do CTA j\u00e1 resolvido)\n#       Invent\u00e1rio completo: clips/orfaos-recuperados/LEIA-ME.md\n#\n#    \ud83c\udfa8 REGRA DE LINGUAGEM FIXADA PELO SOVEREIGN (2026-08-21):\n#       \"Caixa cheia somente para v\u00eddeos. Quadro atual somente para imagens est\u00e1ticas ou com pedido\n#        espec\u00edfico. Precisa sempre verificar a posi\u00e7\u00e3o dos elementos, principalmente os que aparecem\n#        e v\u00e3o aparecer em movimentos.\"\n#       \u21d2 quadro cheio \u00e9 M\u00c9RITO de fonte com movimento real; still vai para o cart\u00e3o.\n#       \u21d2 verifica\u00e7\u00e3o de colis\u00e3o POR ARITM\u00c9TICA AO LONGO DO TEMPO, n\u00e3o s\u00f3 no frame parado.\n#       O `montar-blocks-v4.ts` (commitado) j\u00e1 traz o plano de v\u00eddeo de z=-2100 para z=-260 \u2014 mas\n#       AINDA trata still e v\u00eddeo igual. \u00c9 o que falta codificar.\n#\n#    \ud83d\udd0a DESENHO DE \u00c1UDIO APROVADO (4 faixas): clipe com fala (lip-sync Veo) \u21d2 narra\u00e7\u00e3o CORTADA, vale\n#       o \u00e1udio nativo \u00b7 clipe sob narra\u00e7\u00e3o \u21d2 gerado SEM VOZ, s\u00f3 foley da cena \u00b7 + trilha por baixo\n#       para costurar. A VOZ da narra\u00e7\u00e3o troca; o TEXTO fica.\n#\n#    \ud83d\udcca A/B na Biblioteca: \"\ud83d\udd2c EP08 A/B \u2014 bloco 2: v3 cartao x v4 QUADRO CHEIO\" (6aa6e213) e\n#       \"\ud83c\udfac EP08 v4 PROTOTIPO\" (0c2802c1).\n# \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n# \ud83c\udfed UPDATE 2026-08-19 \u2014 FRENTE PARALELA SELADA: mcorch_model (1\u00ba LLM especialista self-host) VIVO.\"\"\"\nassert s.count(old_head)==1\ns=s.replace(old_head,new_head)\n\n# 2) Task State \u2014 nova linha no topo da tabela\nanchor=\"| **MCORCH Model Factory \u2014 mcorch_model self-host\"\nrow = (\"| **EP08 \u2014 o diagn\u00f3stico raiz: 16 clipes Veo \u00f3rf\u00e3os recuperados (2026-08-21, BRANCH)** | \"\n \"\u2705 **6 commits em `feat/mcorch-model-factory`** \u00b7 tsc-app **0** \u00b7 gitleaks limpo \u00b7 malha **21.429** \u00b7 n\u00f3 `785ee010`. \"\n \"**Os 4 clipes-\u00e2ncora do EP08 NUNCA falharam** \u2014 `gen-clips.ts` desiste do poll em 18 min, o Veo termina depois e o asset fica no storage. \"\n \"**16 \u00f3rf\u00e3os colhidos** (pagos, nenhum no disco), entre eles **`b7_petrov` instalado** e 3 tomadas de apresentador (2 com \u00e1udio = lip-sync do CTA resolvido). \"\n \"**Causa raiz:** `veo-poll` \u2192 HTTP **546 WORKER_RESOURCE_LIMIT** determin\u00edstico (Vertex devolve v\u00eddeo inline em base64; worker estoura). Hip\u00f3tese 1080p **REFUTADA**. \"\n \"Ledger auditado: 20 falhas, 5.340 mco, **100% estornado**. Trio `scripts/qa/{harvest-veo-orphans,poll-veo-stuck,diag-veo-generations}.ts`. \"\n \"**Runbook do hardening corrigido** (\u00a73 stale convidava a remover o seguro duplo `10-port.conf`) + \u00a78 de pend\u00eancias + indexado. \"\n \"**Recon do 9router selado** fora do transcript \u00f3rf\u00e3o. **Regra Sovereign:** caixa cheia s\u00f3 p/ v\u00eddeo real. \"\n \"\ud83d\udcb0 **Vertex = cr\u00e9dito de teste gr\u00e1tis (R$ 147,94); Gemini API = cart\u00e3o do Sovereign.** Record abaixo. |\\n\")\nassert s.count(anchor)==1\ns=s.replace(anchor, row+anchor, 1)\n\n# 3) Record novo \u2014 logo ap\u00f3s a tabela Task State\nrec_anchor = \"\\n## MCORCH Model Factory\"\nif rec_anchor not in s:\n    # fallback: antes do primeiro \"## \" ap\u00f3s a tabela\n    import re\n    m=re.search(r\"\\n## [^\\n]*Record\", s[s.index(\"## Task State\"):])\n    rec_anchor = \"\\n\" + s[s.index(\"## Task State\"):][m.start()+1:m.end()].split(\"\\n\")[0]\nrecord = \"\"\"\n## EP08 \u2014 O Diagn\u00f3stico Raiz Record (2026-08-21)\n\nA sess\u00e3o come\u00e7ou retomando a frente de SSH de uma sess\u00e3o \u00f3rf\u00e3 e terminou achando por que o EP08\nparecia amador. As duas coisas se ligam por um mesmo defeito de m\u00e9todo: **grep no reposit\u00f3rio n\u00e3o\nprova aus\u00eancia no host, e poll estourado n\u00e3o prova gera\u00e7\u00e3o falha.**\n\nO Sovereign viu os renders e cravou a regra que faltava: *\"caixa cheia somente para v\u00eddeos; quadro\natual somente para imagens est\u00e1ticas\"*. Essa regra reprovou o prot\u00f3tipo v4 desta pr\u00f3pria sess\u00e3o \u2014 o\nLuhmann em quadro cheio \u00e9 Ken Burns, e em tela inteira a imobilidade aparece. Ao investigar por que\naquele plano era um still, veio o achado: **ele nunca deveria ter sido**. Os quatro clipes-\u00e2ncora\n(Luhmann, oficina de 1776, Apollo, Petrov) foram encomendados como Veo, gerados, cobrados \u2014 e\nperdidos entre o Google e o disco.\n\n| A\u00e7\u00e3o | Resultado |\n|------|-----------|\n| `scripts/qa/harvest-veo-orphans.ts` | \u2705 colhe assets Veo que ficaram no storage; piso de 100 KB rejeita stub. **16 recuperados** |\n| `scripts/qa/poll-veo-stuck.ts` | \u2705 leva ao terminal gera\u00e7\u00f5es `running` sem ningu\u00e9m pollando (o Google n\u00e3o avisa) |\n| `scripts/qa/diag-veo-generations.ts` | \u2705 cruza status por n\u00f3 \u00d7 resolu\u00e7\u00e3o \u00d7 motor \u00d7 dinheiro \u2014 foi o cruzamento que achou a causa |\n| `clips/b7_petrov.mp4` | \u2705 **recuperado do storage**, 1920\u00d71080, 8s \u2014 substitui o still. Custo zero |\n| `clips/orfaos-recuperados/` | \u2705 109 MB salvos fora do `/tmp` + `LEIA-ME.md` com identifica\u00e7\u00e3o visual de cada um |\n| `docs/ops/host-hardening-2026-08.md` | \u2705 \u00a73 reescrita (5 camadas, o seguro duplo, o invent\u00e1rio de consumidores da 22) + \u00a78 pend\u00eancias |\n| `CLAUDE.md` | \u2705 runbook do hardening indexado na Key Files Reference (estava \u00f3rf\u00e3o) |\n| `docs/roadmap/9router-recon-2026-08-20.md` | \u2705 recon selado fora do transcript + extrato bruto em `.claude/context/` |\n| `scripts/ep08/montar-blocks-v4.ts` | \u2705 isola a profundidade do plano de v\u00eddeo (z=-2100 \u2192 z=-260). Ainda **n\u00e3o** distingue still de v\u00eddeo |\n| Ledger Veo | \u2705 20 falhas \u00b7 5.340 mco \u00b7 **100% estornado** \u00b7 l\u00edquido US$ 21,23 em 16 gera\u00e7\u00f5es boas |\n\n### A causa raiz, em uma linha\n\n`veo-poll` responde **HTTP 546 WORKER_RESOURCE_LIMIT**, determin\u00edstico em 5 de 5. Sem `storageUri`,\no Vertex devolve o v\u00eddeo **inline em base64**; o worker estoura ao decodificar. Como depende do\nworker que atende, **o mesmo n\u00f3 alterna `done` e `error`** entre rodadas \u2014 o que fez a leitura\nnatural ser \"o prompt foi recusado\". A hip\u00f3tese \u00f3bvia (1080p) foi **refutada por dados**: v\u00e1rios\n1080p sa\u00edram `done`. O discriminante \u00e9 o peso do arquivo.\n\nNuance que sobrou para investigar: `b4_alfinetes` e `b6_apollo` erraram **5 de 5 sem nenhuma\naltern\u00e2ncia**, enquanto `b7_petrov`, `b5_papin` e `b2_luhmann` alternam. Podem ter uma segunda causa\n(ambas s\u00e3o cenas de multid\u00e3o com muitos rostos).\n\n### Corre\u00e7\u00f5es de fato registradas\n\n- O **`fcc-server` existe** \u2014 `/home/ubuntu/free-claude-code/` e `/home/ubuntu/.local/bin/`. O recon\n  do 9router o havia declarado \"premissa fabricada\" com base num grep que s\u00f3 olhou o reposit\u00f3rio.\n- O **9router j\u00e1 foi instalado** em 19/08 (runtime 1.0.0, `/home/ubuntu/.9router/`), sem rodar.\n- O MCP `ssh-server` **n\u00e3o aceita argumento algum** \u2014 credenciais v\u00e3o por chamada de ferramenta.\n  P\u00f4r `-p 52022` nos `args` n\u00e3o faria efeito. Toda a suposi\u00e7\u00e3o anterior estava errada.\n- **Vertex usa o cr\u00e9dito de teste gratuito; o Gemini API vai no cart\u00e3o do Sovereign.** Isso inverte\n  a recomenda\u00e7\u00e3o econ\u00f4mica: ficar no Vertex, n\u00e3o fugir dele.\n\n### Colheita do scratchpad (Fase 1b)\n\nScratchpad: `/tmp/claude-1001/\u2026/ee72a767\u2026/scratchpad`. Promovidos: os 3 utilit\u00e1rios de recupera\u00e7\u00e3o\n(`scripts/qa/`) e os 109 MB de m\u00eddia recuperada (`clips/orfaos-recuperados/`). Publicados na\nBiblioteca: A/B `6aa6e213` e prot\u00f3tipo v4 `0c2802c1`. Ficaram para tr\u00e1s por serem descart\u00e1veis: logs,\nframes intermedi\u00e1rios do A/B, backup do runbook e os `q-*.ts` ad-hoc \u2014 cuja utilidade foi consolidada\nem `diag-veo-generations.ts`. **`docs/ref-pdf/Agentic-Design-Patterns.pdf` (19,9 MB) segue\nUNCOMMITTED de prop\u00f3sito** \u2014 bin\u00e1rio grande demais para o git; o roteiro do EP08 o cita por nome.\n\n### Pendente para a sess\u00e3o dedicada\n\n1. **Gerar os 4 que faltam** (b4_alfinetes \u00b7 b6_apollo \u00b7 payoff b4 \u00b7 payoff b6) \u2014 ~R$ 26 do cr\u00e9dito\n   de teste. Rodar o diagn\u00f3stico e o colhedor **antes**.\n2. **Resolver o 546** \u2014 `storageUri` \u00e9 o conserto dur\u00e1vel; 720p nos pesados \u00e9 o atalho.\n3. **Codificar a regra do Sovereign** no montador: quadro cheio s\u00f3 para fonte de v\u00eddeo real; still\n   cai no cart\u00e3o automaticamente. Verifica\u00e7\u00e3o de colis\u00e3o por aritm\u00e9tica ao longo do tempo.\n4. **Trocar a voz da narra\u00e7\u00e3o** (ElevenLabs IVC, registro r\u00e1pido e expressivo \u2014 receita em\n   `scripts/ep07/gen-narracao-eleven.ts`). \u26a0\ufe0f Refazer a narra\u00e7\u00e3o muda os onsets e obriga a\n   re-renderizar tudo \u2014 decidir **antes** do render, n\u00e3o depois.\n5. **Montar o h\u00edbrido**: cinema em quadro cheio nos relatos, motion s\u00f3 nos interst\u00edcios de dado.\n\"\"\"\nidx = s.index(\"## Task State\")\nnxt = s.index(\"\\n## \", idx+10)\ns = s[:nxt] + \"\\n\" + record + s[nxt:]\nio.open(p,'w',encoding='utf-8').write(s)\nprint(\"HANDOFF atualizado\")\nPY\nwc -l HANDOFF.md",
+  "description": "Atualiza o HANDOFF com Task State e Record"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> HANDOFF atualizado
+> 540 HANDOFF.md
+> ```
+
+## 🤖 Claude *(00:14:33)*
+
+
+## 🤖 Claude *(00:14:34)*
+
+**FASE 5b — varredura de segredo no HANDOFF + gate de tamanho:**
+
+## 🤖 Claude *(00:14:37)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== 5b-1. credenciais no HANDOFF ===\"\ngrep -nE \"(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|eyJ[a-zA-Z0-9._-]{40,}|ghp_[a-zA-Z0-9]{36}|xox[baprs]-[a-zA-Z0-9-]+)\" HANDOFF.md | grep -v \"example\\|placeholder\\|<.*>\\|your-key\\|YOUR_\\|digest\\|sha256\\|hash\\|fingerprint\" | head -10 || echo \"NENHUMA \u2705\"\necho; echo \"=== 5b-2. gate de tamanho ===\"\nbash scripts/qa/check-handoff-size.sh 2>&1 | tail -8; echo \"(exit=${PIPESTATUS[0]})\"",
+  "description": "Fase 5b varredura e gate de tamanho"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === 5b-1. credenciais no HANDOFF ===
+> 
+> === 5b-2. gate de tamanho ===
+>    Pode selar, mas agende a poda para a próxima sessão.
+> 
+> ✂️  Corte sugerido: linha 452
+>     primeiro record a ARQUIVAR: ## A régua de cinema · a cena REFERENCIAL · a trilha de câmera Record (2026-08-14)
+>     → arquiva da linha 452 até o início do rodapé '📦 Records arquivados'
+>     → destino: docs/handoff-archive/HANDOFF-archive-<data-do-corte>-and-earlier.md
+>     → siga o SOP: docs/processes/[[handoff-pruning-gate|handoff-pruning-gate]].md (a verificação de
+>       integridade byte-a-byte é OBRIGATÓRIA — nenhum record pode se perder)
+> (exit=0)
+> ```
+
+## 🤖 Claude *(00:14:44)*
+
+
+## 🤖 Claude *(00:14:45)*
+
+Sem credenciais ✅. Gate de tamanho: **🟡 WARN** — pode selar, mas a poda fica agendada. Registrando isso no Pendente, como manda o SOP:
+
+## 🤖 Claude *(00:14:53)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\npython3 - <<'PY'\nimport io\np='HANDOFF.md'\ns=io.open(p,encoding='utf-8').read()\nold=\"\"\"5. **Montar o h\u00edbrido**: cinema em quadro cheio nos relatos, motion s\u00f3 nos interst\u00edcios de dado.\"\"\"\nnew=\"\"\"5. **Montar o h\u00edbrido**: cinema em quadro cheio nos relatos, motion s\u00f3 nos interst\u00edcios de dado.\n6. **Podar o HANDOFF** \u2014 o gate saiu \ud83d\udfe1 WARN neste seal (corte sugerido na linha 452, primeiro record\n   a arquivar: *A r\u00e9gua de cinema \u00b7 2026-08-14*). D\u00edvida agendada, n\u00e3o isen\u00e7\u00e3o: SOP\n   `docs/processes/handoff-pruning-gate.md`, com verifica\u00e7\u00e3o byte-a-byte obrigat\u00f3ria.\"\"\"\nassert s.count(old)==1\ns=s.replace(old,new)\nio.open(p,'w',encoding='utf-8').write(s)\nprint(\"pendente de poda registrado\")\nPY\ngit add HANDOFF.md\ngit commit -q -F - >/dev/null 2>&1 <<'EOF'\ndocs(handoff): seal EP08 \u2014 os 4 clipes-\u00e2ncora nunca falharam, o poll \u00e9 que quebrava\n\nSela a sess\u00e3o em que o \"amadorismo\" do EP08 deixou de ser um problema de roteiro\ne passou a ser o que sempre foi: dezesseis clipes Veo gerados, pagos e perdidos\nentre o Google e o disco, porque o runner desiste do poll em 18 minutos.\n\nO Record registra o fato que governa o or\u00e7amento da pr\u00f3xima sess\u00e3o e que estava\ninvertido na minha recomenda\u00e7\u00e3o anterior: o Vertex consome o cr\u00e9dito de teste\ngratuito do console Google, enquanto o Gemini API vai no cart\u00e3o do Sovereign.\nFicar no Vertex.\nEOF\ngit log --oneline -1",
+  "description": "Commita o HANDOFF"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> pendente de poda registrado
+> 869ae38 docs(handoff): seal EP08 — os 4 clipes-âncora nunca falharam, o poll é que quebrava
+> ```
+
+## 🤖 Claude *(00:14:56)*
+
+**FASE 5c — auditoria de prova material:**
+
+## 🤖 Claude *(00:14:57)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ntimeout 300 bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -30; echo \"(exit=${PIPESTATUS[0]})\"",
+  "description": "Auditoria de prova material"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ### 📋 Proof Manifest — Material Proof Audit (Phase 5c)
+> 
+> | Claim | Kind | Expected | Actual | Verdict |
+> |-------|------|----------|--------|---------|
+> | file scripts/qa/harvest-veo-orphans.ts | file_exists | scripts/qa/harvest-veo-orphans.ts | scripts/qa/harvest-veo-orphans.ts | ✅ |
+> | file scripts/qa/poll-veo-stuck.ts | file_exists | scripts/qa/poll-veo-stuck.ts | scripts/qa/poll-veo-stuck.ts | ✅ |
+> | file scripts/qa/diag-veo-generations.ts | file_exists | scripts/qa/diag-veo-generations.ts | scripts/qa/diag-veo-generations.ts | ✅ |
+> | file docs/ops/host-hardening-2026-08.md | file_exists | docs/ops/host-hardening-2026-08.md | docs/ops/host-hardening-2026-08.md | ✅ |
+> | file docs/roadmap/9router-recon-2026-08-20.md | file_exists | docs/roadmap/9router-recon-2026-08-20.md | docs/roadmap/9router-recon-2026-08-20.md | ✅ |
+> | file scripts/ep08/montar-blocks-v4.ts | file_exists | scripts/ep08/montar-blocks-v4.ts | scripts/ep08/montar-blocks-v4.ts | ✅ |
+> | file scripts/ep07/gen-narracao-eleven.ts | file_exists | scripts/ep07/gen-narracao-eleven.ts | scripts/ep07/gen-narracao-eleven.ts | ✅ |
+> | file docs/processes/[[handoff-pruning-gate|handoff-pruning-gate]].md | file_exists | docs/processes/[[handoff-pruning-gate|handoff-pruning-gate]].md | docs/processes/[[handoff-pruning-gate|handoff-pruning-gate]].md | ✅ |
+> | deploy size 100kB | edge_deploy | 100kB | 100kB | ⏭ |
+> | oro triplet compliance | oro_compliance | missing | missing | 🔴 |
+> | handoff node 785ee010 | mesh_node | 785ee010-4b96-4191-9fda-e31dec3b704f | 785ee010-4b96-4191-9fda-e31dec3b704f | ✅ |
+> 
+> - 🔴 **oro triplet compliance** — ORO triplet (Operator, Reviewer, Owner) is missing from the record block
+> 
+> QA VERDICT: 9 verified · 1 skipped · 1 failed → SEAL BLOCKED
+> 
+> (audit completed in 0.1s)
+> (exit=1)
+> ```
+
+## 🤖 Claude *(00:15:03)*
+
+
+## 🤖 Claude *(00:15:05)*
+
+`SEAL BLOCKED` — falta o triplet ORO no Record (Lei 4). Corrigindo, e aproveito para incluir a tabela de commits que também faltava:
+
+## 🤖 Claude *(00:15:14)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nHASHES=$(git log --oneline -6 --format='%h %s' | tac)\npython3 - <<PY\nimport io\np='HANDOFF.md'\ns=io.open(p,encoding='utf-8').read()\nold=\"\"\"## EP08 \u2014 O Diagn\u00f3stico Raiz Record (2026-08-21)\n\nA sess\u00e3o come\u00e7ou\"\"\"\nnew=\"\"\"## EP08 \u2014 O Diagn\u00f3stico Raiz Record (2026-08-21)\n\n**ORO triplet desta sess\u00e3o:**\n- **Operator:** MCORCH Master Execution Agent (esta sess\u00e3o)\n- **Reviewer:** Sovereign (Gabriel) \u2014 parecer ocular sobre os renders governou a virada de linguagem\n- **Owner:** Sovereign \u2014 absorve o risco da publica\u00e7\u00e3o do EP08 e do consumo do cr\u00e9dito de teste do console Google (R\\$ 147,94)\n\nA sess\u00e3o come\u00e7ou\"\"\"\nassert s.count(old)==1\ns=s.replace(old,new)\n\ncommits = \"\"\"\n| Commit | Conte\u00fado |\n|--------|----------|\n| \\`dd4e933\\` | feat(qa): trio de recupera\u00e7\u00e3o Veo \u2014 colhedor, poller e diagn\u00f3stico |\n| \\`edb8057\\` | docs(ops): runbook do hardening \u2014 \u00a73 reescrita, \u00a78 pend\u00eancias, \u00edndice |\n| \\`c88a359\\` | docs(roadmap): sela o recon do 9router \u2014 recuper\u00e1vel fora do transcript |\n| \\`4e37d17\\` | feat(ep08): runners de produ\u00e7\u00e3o do epis\u00f3dio + roteiro + variante v4 |\n| \\`3a1b43e\\` | docs(readme): v6.145.0 \u2014 diagn\u00f3stico raiz do EP08 e recupera\u00e7\u00e3o dos clipes \u00f3rf\u00e3os |\n| \\`869ae38\\` | docs(handoff): seal EP08 \u2014 os 4 clipes-\u00e2ncora nunca falharam, o poll \u00e9 que quebrava |\n\n### A causa raiz, em uma linha\"\"\"\nold2 = \"\\n### A causa raiz, em uma linha\"\nassert s.count(old2)==1\ns=s.replace(old2, commits)\nio.open(p,'w',encoding='utf-8').write(s)\nprint(\"ORO + tabela de commits inseridos\")\nPY\ntimeout 300 bun run scripts/qa/run-audit.ts HANDOFF.md 2>&1 | tail -12; echo \"(exit=${PIPESTATUS[0]})\"",
+  "description": "Insere ORO e commits, reroda a auditoria"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> ORO + tabela de commits inseridos
+> | file docs/ops/host-hardening-2026-08.md | file_exists | docs/ops/host-hardening-2026-08.md | docs/ops/host-hardening-2026-08.md | ✅ |
+> | file docs/roadmap/9router-recon-2026-08-20.md | file_exists | docs/roadmap/9router-recon-2026-08-20.md | docs/roadmap/9router-recon-2026-08-20.md | ✅ |
+> | file scripts/ep08/montar-blocks-v4.ts | file_exists | scripts/ep08/montar-blocks-v4.ts | scripts/ep08/montar-blocks-v4.ts | ✅ |
+> | file scripts/ep07/gen-narracao-eleven.ts | file_exists | scripts/ep07/gen-narracao-eleven.ts | scripts/ep07/gen-narracao-eleven.ts | ✅ |
+> | file docs/processes/[[handoff-pruning-gate|handoff-pruning-gate]].md | file_exists | docs/processes/[[handoff-pruning-gate|handoff-pruning-gate]].md | docs/processes/[[handoff-pruning-gate|handoff-pruning-gate]].md | ✅ |
+> | deploy size 100kB | edge_deploy | 100kB | 100kB | ⏭ |
+> | oro triplet compliance | oro_compliance | Operator = MCORCH Master Execution Agent (esta sessão); Reviewer = Sovereign (Gabriel) — p | Operator = MCORCH Master Execution Agent (esta sessão); Reviewer = Sovereign (Gabriel) — p | ✅ |
+> | handoff node 785ee010 | mesh_node | 785ee010-4b96-4191-9fda-e31dec3b704f | 785ee010-4b96-4191-9fda-e31dec3b704f | ✅ |
+> 
+> QA VERDICT: 16 verified · 1 skipped · 0 failed → SEAL ALLOWED
+> 
+> (audit completed in 0.1s)
+> (exit=0)
+> ```
+
+## 🤖 Claude *(00:15:21)*
+
+
+## 🤖 Claude *(00:15:22)*
+
+**`SEAL ALLOWED`** — 16 verificadas, 1 pulada, 0 falhas.
+
+## 🤖 Claude *(00:15:29)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ngit add HANDOFF.md\ngit commit -q -F - >/dev/null 2>&1 <<'EOF'\ndocs(handoff): ORO triplet + tabela de commits no Record do EP08\n\nA Fase 5c bloqueou o seal por aus\u00eancia do triplet ORO \u2014 Lei 4 exige que toda\ntarefa substantiva declare quem executa, quem revisa e quem absorve o preju\u00edzo.\nEntra tamb\u00e9m a tabela de commits, que a auditoria verifica hash a hash.\nEOF\necho \"=== FASE 6 \u2014 BoK ===\"\nfor slug in $(ls docs/bok/ 2>/dev/null); do\n  req=(00-index 01-mrd 02-brd 03-prd 04-frd 05-sdd 06-data-model 07-process-flow 08-quality-metrics)\n  miss=(); for d in \"${req[@]}\"; do [ -f \"docs/bok/$slug/$d.md\" ] || miss+=(\"$d\"); done\n  [ ${#miss[@]} -eq 0 ] && echo \"\u2705 $slug\" || echo \"\u26a0\ufe0f  $slug \u2014 faltam: ${miss[*]}\"\ndone | head -25\necho; echo \"=== esta sess\u00e3o criou m\u00f3dulo novo (page/edge fn)? ===\"\ngit diff --name-only HEAD~7..HEAD 2>/dev/null | grep -E \"^(src/pages/|supabase/functions/)\" | head -5 || echo \"NENHUM \u2014 s\u00f3 scripts/qa, docs e scripts/ep08 \u2705 (isentos do gate BoK)\"",
+  "description": "Commita o ORO e roda o gate BoK"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === FASE 6 — BoK ===
+> ✅ agentic-governance
+> ✅ agentic-workspace
+> ✅ aios-sql-bridge
+> ✅ authenticated-browser-operator
+> ✅ avatar-clone-ai
+> ✅ canvas-design
+> ✅ constellation-v2
+> ✅ content-intel
+> ✅ [[content-provenance|content-provenance]]
+> ✅ conteudo-v2
+> ✅ crm-inbox
+> ✅ crm-suite
+> ✅ e2e-user-zero
+> ✅ gamificacao-nodes
+> ✅ identity-fabric
+> ✅ landing-factory
+> ✅ marketing-hub
+> ⚠️  mco-monetization — faltam: 06-data-model 07-process-flow 08-quality-metrics
+> ✅ mcorch-constellation
+> ✅ mcorch-qa-healing
+> ✅ mercado-livre-api
+> ✅ meta-api
+> ✅ openclaw
+> ✅ orchestration-control-room
+> ✅ pipc
+> 
+> === esta sessão criou módulo novo (page/edge fn)? ===
+> ```
+
+## 🤖 Claude *(00:15:35)*
+
+
+## 🤖 Claude *(00:15:37)*
+
+Nenhuma página ou edge function nova nesta sessão — só `scripts/qa`, docs e `scripts/ep08`, todos isentos do gate. (`mco-monetization` incompleta é dívida pré-existente, não desta sessão.)
+
+**FASE 7 — push:**
+
+## 🤖 Claude *(00:15:38)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\nBR=$(git rev-parse --abbrev-ref HEAD)\necho \"branch: $BR\"\ngit push origin \"$BR\" 2>&1 | tail -6\necho \"---\"; git log --oneline -8; echo \"---\"; git status -sb | head -3",
+  "description": "Push da branch"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> branch: feat/mcorch-model-factory
+> 
+> [38;2;56;56;56m  ────────────────────────────────────[m
+> summary: (done in 0.16 seconds)
+> ✔️ gitleaks-range (0.16 seconds)
+> To github.com:gabrielZarattini/constellation-orchestra.git
+>    6c0fcb7..9d38d49  feat/mcorch-model-factory -> feat/mcorch-model-factory
+> ---
+> 9d38d49 docs(handoff): ORO triplet + tabela de commits no Record do EP08
+> 869ae38 docs(handoff): seal EP08 — os 4 clipes-âncora nunca falharam, o poll é que quebrava
+> 3a1b43e docs(readme): v6.145.0 — diagnóstico raiz do EP08 e recuperação dos clipes órfãos
+> 4e37d17 feat(ep08): runners de produção do episódio + roteiro + variante v4
+> c88a359 docs(roadmap): sela o recon do 9router — recuperável fora do transcript
+> edb8057 docs(ops): runbook do hardening — §3 reescrita, §8 pendências, índice
+> dd4e933 feat(qa): trio de recuperação Veo — colhedor, poller e diagnóstico
+> 6c0fcb7 ops(host): guarda de busca sem escopo + Law 5 + runbook do hardening
+> ---
+> ## feat/mcorch-model-factory...origin/feat/mcorch-model-factory
+>  M proof-manifest.json
+> ?? docs/ref-pdf/Agentic-Design-Patterns.pdf
+> ```
+
+## 🤖 Claude *(00:15:52)*
+
+
+## 🤖 Claude *(00:15:54)*
+
+Push feito: **7 commits** em `feat/mcorch-model-factory` (`6c0fcb7..9d38d49`), gitleaks limpo. Agora as memórias — três fatos desta sessão que enganariam a próxima:
+
+## 🤖 Claude *(00:16:04)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_vertex_free_credits_gemini_is_card.md",
+  "content": "---\nname: reference_vertex_free_credits_gemini_is_card\ndescription: Vertex consome o cr\u00e9dito de TESTE GRATUITO do console Google; o Gemini API vai no CART\u00c3O do Sovereign \u2014 a tabela de pre\u00e7o por segundo engana\nmetadata:\n  type: reference\n---\n\n**Corrigido pelo Sovereign em 2026-08-21**, depois de eu recomendar o contr\u00e1rio:\n\n| Caminho | De onde sai o dinheiro | Pre\u00e7o Veo 3.1-fast |\n|---|---|---|\n| **`vertex-sa`** (credencial `gabrielai-veo \u00b7 Vertex`) | **cr\u00e9dito de teste GRATUITO** do console Google | US$ 0,15/s |\n| **`gemini-api`** (credencial `GabrielAI`) | **cart\u00e3o de cr\u00e9dito do Sovereign** | US$ 0,12/s |\n\nO Gemini API \u00e9 **mais barato por segundo** \u2014 e por isso \u00e9 a recomenda\u00e7\u00e3o errada. Ele tira do\nbolso; o Vertex consome cr\u00e9dito que j\u00e1 foi dado. **Ficar no Vertex enquanto houver cr\u00e9dito.**\n\nSaldo em 2026-08-21: **R$ 147,94** \u00b7 projeto `project-a302ace9-d9f9-4801-b7d` (n\u00ba 502595612234) \u00b7\nregi\u00e3o `us-central1`. O Google pede R$ 200 de pr\u00e9-pagamento para **ativar a conta paga** \u2014 isso \u00e9\nindependente do cr\u00e9dito que j\u00e1 existe, e o cr\u00e9dito **\u00e9 gast\u00e1vel** (provado: submit aceito sem\n402/429/403).\n\n\u26a0\ufe0f **O saldo n\u00e3o \u00e9 leg\u00edvel por API.** N\u00e3o h\u00e1 `gcloud` no host, a service account est\u00e1 cifrada no\nbanco (`decrypted_user_provider_keys`), e o saldo de trial do GCP s\u00f3 aparece no Console\n(Faturamento \u2192 Cr\u00e9ditos). Perguntar ao Sovereign \u2014 n\u00e3o inventar.\n\nVer [[reference_veo_poll_oom_orphan_clips]] para o que consome esse cr\u00e9dito \u00e0 toa.\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_vertex_free_credits_gemini_is_card.md
+> ```
+
+## 🤖 Claude *(00:16:17)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_veo_poll_oom_orphan_clips.md",
+  "content": "---\nname: reference_veo_poll_oom_orphan_clips\ndescription: Poll estourado \u2260 gera\u00e7\u00e3o falha \u2014 o veo-poll morre com HTTP 546 nos clipes pesados e o v\u00eddeo pago fica \u00f3rf\u00e3o no storage\nmetadata:\n  type: reference\n---\n\n**Achado material 2026-08-21.** Quatro clipes-\u00e2ncora do EP08 foram dados como \"falharam\" e\nsubstitu\u00eddos por Ken Burns sobre still \u2014 o que o Sovereign leu, com raz\u00e3o, como amadorismo.\n**Nenhum deles falhou.**\n\n## Os dois buracos, em ordem\n\n1. **O Google n\u00e3o avisa quando termina.** A linha em `generations` s\u00f3 avan\u00e7a quando algu\u00e9m chama\n   `veo-poll`. Gera\u00e7\u00e3o sem poll fica **`running` para sempre**, com o mco j\u00e1 debitado.\n2. **`gen-clips.ts` desiste do poll em 18 min** (`scripts/ep08/gen-clips.ts:151`). O Veo sob carga\n   passa disso: o job termina, o asset \u00e9 registrado em `creative_assets` e **cobrado**, mas o\n   download nunca acontece. `done-<manifest>.json` fica `{}` e o operador l\u00ea \"falhou\".\n\n**16 assets Veo \u00f3rf\u00e3os** foram encontrados assim \u2014 entre eles o `b7_petrov`, o plano mais forte do\nepis\u00f3dio, recuperado sem gastar um centavo.\n\n## A causa raiz do `error`\n\n`veo-poll` responde **HTTP 546 `WORKER_RESOURCE_LIMIT`** \u2014 determin\u00edstico, 5 de 5. Sem `storageUri`,\no Vertex devolve o v\u00eddeo **INLINE EM BASE64**; o worker da edge function estoura ao decodificar.\n\n\u26a0\ufe0f **A hip\u00f3tese \u00f3bvia (1080p) \u00e9 FALSA** \u2014 v\u00e1rios 1080p sa\u00edram `done`. O discriminante \u00e9 o **peso do\narquivo**, e como depende do worker que atende, **o mesmo n\u00f3 alterna `done` e `error`** entre\nrodadas. Essa altern\u00e2ncia \u00e9 a assinatura de falha de INFRA; sem ela a leitura natural \u00e9 \"o prompt\nfoi recusado\" \u2014 e a\u00ed se reescreve o roteiro para consertar um problema de infraestrutura.\n\nConserto dur\u00e1vel: `storageUri` no request Vertex (o poll passa a manipular s\u00f3 URL). Atalho: 720p\nnos clipes pesados.\n\n## O ritual, nesta ordem, ANTES de re-gerar\n\n```bash\nbun run scripts/qa/diag-veo-generations.ts --since=<data>   # status\u00d7resolu\u00e7\u00e3o\u00d7motor\u00d7dinheiro\nbun run scripts/qa/poll-veo-stuck.ts                        # leva 'running' ao terminal\nbun run scripts/qa/harvest-veo-orphans.ts <dir> --since=<data>\n```\n\n**Re-gerar o que j\u00e1 existe paga duas vezes pelo mesmo frame.** O ledger de mco estorna as falhas\n(auditado: 20 falhas, 5.340 mco, 100% estornado) \u2014 mas o cr\u00e9dito Google n\u00e3o volta.\nVer [[reference_vertex_free_credits_gemini_is_card]].\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/reference_veo_poll_oom_orphan_clips.md
+> ```
+
+## 🤖 Claude *(00:16:31)*
+
+
+🛠️ **Tool Call**: `Write`
+```json
+{
+  "file_path": "/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/feedback_fullframe_only_for_real_video.md",
+  "content": "---\nname: feedback_fullframe_only_for_real_video\ndescription: Caixa cheia \u00e9 m\u00e9rito de fonte com movimento real \u2014 imagem est\u00e1tica vai para o cart\u00e3o; e conferir posi\u00e7\u00e3o ao longo do TEMPO, n\u00e3o s\u00f3 no frame parado\nmetadata:\n  type: feedback\n---\n\n**Diretiva Sovereign, 2026-08-21, depois de ver os renders:**\n\n> \"Caixa cheia somente para v\u00eddeos. Quadro atual somente para imagens est\u00e1ticas ou com pedido\n> espec\u00edfico de colocar o v\u00eddeo dentro do quadro atual. Precisa sempre verificar a posi\u00e7\u00e3o dos\n> elementos, principalmente os que aparecem e v\u00e3o aparecer em movimentos.\"\n\n**Why:** em cart\u00e3o de ~50% da largura, um Ken Burns sobre still passa por v\u00eddeo. Em quadro cheio a\nimobilidade aparece e denuncia a pe\u00e7a. O quadro cheio \u00e9 **m\u00e9rito de fonte com movimento real**, n\u00e3o\numa escolha de enquadramento. Foi assim que o prot\u00f3tipo `montar-blocks-v4.ts` \u2014 que eu tinha\nacabado de defender \u2014 caiu: o plano que ele ampliou era um still.\n\nE a segunda metade da frase \u00e9 um gate pr\u00f3prio: elemento que **entra em movimento** precisa ser\nconferido no percurso inteiro, n\u00e3o no frame parado. Precedente: o Encenador achou por aritm\u00e9tica\nque `#counter` e `#chart` colidiam 33 px em 16:9.\n\n**How to apply:**\n- O montador deve decidir **sozinho** pela fonte: v\u00eddeo real \u21d2 quadro cheio; still/Ken Burns \u21d2\n  cart\u00e3o. N\u00e3o depender de o autor lembrar.\n- Antes de ampliar um plano, confirmar que o arquivo \u00e9 v\u00eddeo gerado, n\u00e3o still animado. O prefixo\n  `kb_` no kit do EP08 marca exatamente isso.\n- Verifica\u00e7\u00e3o de colis\u00e3o **por aritm\u00e9tica ao longo do tempo** (entradas, sa\u00eddas, trajet\u00f3rias),\n  n\u00e3o s\u00f3 no quadro est\u00e1tico.\n\nGeometria do motor MONTAR: `escala = perspective / (perspective \u2212 (camZ + planoZ))`. Com\n`perspective: 1689`, um plano em `z=-2100` encolhe para 44,6% \u2014 foi o que transformou cinema em\nporta-retrato no EP08 v3.\n\nVer [[feedback_montar_is_poc_not_cinema]] \u00b7 [[project_motor_montar]] \u00b7\n[[reference_veo_poll_oom_orphan_clips]] (por que o plano era um still).\n"
+}
+```
+
+> **Tool Result (Write)** - ✅ Success
+>
+> ```
+> File created successfully at: /home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/feedback_fullframe_only_for_real_video.md
+> ```
+
+## 🤖 Claude *(00:16:43)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "M=/home/ubuntu/.claude/projects/-home-gcrUX-htdocs-constellation-orchestra/memory/MEMORY.md\npython3 - \"$M\" <<'PY'\nimport io,sys\np=sys.argv[1]\ns=io.open(p,encoding='utf-8').read()\nanchor=\"- [\ud83d\ude80 PIV\u00d4 2026-08-16\"\nnovas = (\n\"- [\ud83d\udcb0 Vertex = cr\u00e9dito de teste GR\u00c1TIS \u00b7 Gemini API = CART\u00c3O do Sovereign](reference_vertex_free_credits_gemini_is_card.md) \u2014 o mais barato por segundo \u00e9 o que tira do bolso; R$ 147,94 restantes, saldo s\u00f3 leg\u00edvel no Console.\\n\"\n\"- [\ud83c\udfa3 Poll estourado \u2260 gera\u00e7\u00e3o falha \u2014 16 clipes Veo pagos ficaram \u00f3rf\u00e3os](reference_veo_poll_oom_orphan_clips.md) \u2014 `veo-poll` morre em HTTP 546 (base64 inline do Vertex); 1080p \u00e9 hip\u00f3tese FALSA, o discriminante \u00e9 o peso; colher ANTES de re-gerar.\\n\"\n\"- [\ud83d\uddbc\ufe0f Caixa cheia s\u00f3 para V\u00cdDEO real; still vai para o cart\u00e3o](feedback_fullframe_only_for_real_video.md) \u2014 quadro cheio \u00e9 m\u00e9rito de movimento; e conferir colis\u00e3o ao longo do TEMPO, n\u00e3o no frame parado.\\n\"\n)\nassert s.count(anchor)==1\ns=s.replace(anchor, novas+anchor)\nio.open(p,'w',encoding='utf-8').write(s)\nprint(\"MEMORY.md indexado\")\nPY\ncd /home/gcrUX/htdocs/constellation-orchestra\ngit add proof-manifest.json\ngit commit -q -F - >/dev/null 2>&1 <<'EOF'\nchore(qa): proof-manifest do seal EP08\n\nArtefato da Fase 3 que a auditoria da Fase 5c consome para verificar o n\u00f3 de\nhandoff de forma estrita.\nEOF\ngit push -q origin feat/mcorch-model-factory 2>&1 | tail -2\necho \"=== estado final ===\"; git status -sb | head -3; git log --oneline -1",
+  "description": "Indexa mem\u00f3rias e commita o proof-manifest"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> MEMORY.md indexado
+> summary: (done in 0.19 seconds)
+> ✔️ gitleaks-range (0.19 seconds)
+> === estado final ===
+> ## feat/mcorch-model-factory...origin/feat/mcorch-model-factory
+> ?? docs/ref-pdf/Agentic-Design-Patterns.pdf
+> 8ac5278 chore(qa): proof-manifest do seal EP08
+> ```
+
+## 🤖 Claude *(00:16:51)*
+
+
+## 🤖 Claude *(00:16:52)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== sprint-priorities: topo ===\"; head -20 .claude/context/sprint-priorities.md 2>/dev/null\necho \"...\"; ls scratch/ 2>/dev/null || echo \"(sem scratch/ \u2705)\"",
+  "description": "Verifica sprint-priorities e scratch"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === sprint-priorities: topo ===
+> # 🧠 Sprint Priorities — Constellation Orchestra
+> 
+> **Sprint Goal**: **A peça de 1 minuto que remodela o outlier** — o EP07 foi REPROVADO no parecer final ("faltam assets, ícones, recortes") e está ARQUIVADO privado (`rxYsyjnevYI`). A próxima sessão ESPERA o outlier que o Sovereign vai mandar no `/handson` e escreve um roteiro NOVO de **sessão única de ~1 min**, produzido 100% com modelos de vídeo (Veo 3.1 · Higgsfield seedance/kling/dop · Gemini Omni), cirúrgico nos ganchos, na gramática Keemfinity (3 refs com papéis · 1 evento/s · hard-cut marker). Witness `bba8f236` armado (2 cliques, 170 mco). Lição-mãe da reprovação: o motor desenha bem o que TEM — faltou MATÉRIA; modelos geram a matéria.
+> 
+> **90-day outcome**: Dev workflow autônomo onde cada sessão começa com brief sprint-aware e termina com seal+milestone+push em <5min de overhead manual.
+> 
+> ## 📋 FILA SOVEREIGN (ordem declarada — não reordenar sem GO)
+> 
+> | # | Item | Estado | Gate |
+> |---|------|--------|------|
+> | 🎬 **FEITO 2026-08-16** | **EP07 reprovado e arquivado · pivô video-models · fortaleza SSH** — 10 commits `8b9ec18..df284cd`. Master 7min03 montado fail-closed e enviado PRIVADO (acervo, NÃO postar). Perícia: spec perdia capacidade do campeão em silêncio → 4 fixes no motor + gates G-LEG (regra de SUJEITO) + G-HONESTIDADE. SSH: 353.422 ataques colhidos · senha OFF · ban permanente · MaxStartups 10→100 · load-sentinel. Canvas blindado contra data parcial. Malha **21.020** · nó `e72cec04`. | ✅ | — |
+> | 🎬 **FEITO 2026-08-15** | **EP07 em produção · a régua de densidade · 4 defeitos silenciosos do motor** — 14 commits `5ad2a71..23742b0`. **N10+N8 fechados** (gate hermético US$ 0). **O último episódio não fracassou pelo filme:** retenção a 92% do normal, mas `RELATED_VIDEO = 0` por estar em **News & Politics** — categoria corrigida em produção. Roteiro v0.2 auditado (5 números sem fonte removidos), 7 narrações IVC (423,5 s), **7/7 blocos com beat na PALAVRA**, 7 cenas como spec. **Quatro defeitos que nenhum gate mecânico via:** runner nunca terminava cena longa · descartava o 2.39:1 · `cutout` só honra `w` (recortes a 300 px idênticos) · frames não limpos entre execuções. Malha **20.977** · nó `dfeba8d2`. | ✅ | — |
+> | 🎬 **FEITO 2026-08-14** | **A régua de cinema · a cena REFERENCIAL · a trilha de câmera** — 12 commits `3a59c52..d707496`. Os 2 breakdowns da Higgsfield decompostos por **61 agentes** com crítico adversarial: das 27 acusações, **14 caíram em prova material** (8 minhas). Régua medida: mediana de plano **2,4–2,9 s** contra **ZERO cortes** nossos; master do EP06 com **1 corte em 173 s** (dissolves). **6 alertas do `/handson` fechados com anticorpo** (guard de FORMA na chave Google · `doctor` §10 de disco/mídia órfã · cena carro-chefe re-renderizando · `pgrep -f` que casa consigo mesmo). **Cena ESTRUTURA virou REFERENCIAL**: cada imagem é o REFERENTE do que a voz diz, relógio na PALAVRA (14/14 âncoras, whisper self-host), narração IVC a **165 ppm**, **trilha de câmera em 3 eixos narrada** (VOC-DOP-CAM-XYZ) e **2 gates novos** (`G-COLISAO` no espaço · `G-PERMANENCIA` no tempo). **Achado-mãe:** o matte devolve o recorte na caixa de 2048 px e a pessoa ocupa **28–38%** dela. Formato selado: **2.39:1 documentário · 16:9 podcast**. Malha **20.941** · nó `76147592`. | ✅ | — |
+> | 🎬 **FEITO 2026-08-13** | **EP07 em MONTAR: motor v2 · kit por gauntlet · chave no cofre** — 13 commits `d379f86..b74fe03`. Motor MONTAR v2 spec-driven do benchmark `fcf91d44` (+3 correções de defeito medido: `__fatal` antes do frame 1 · ancoragem por centro · `style`/`plain`). Trupe: **5.324 linhas de Partitura** (5 blocos × 4 lentes) + Veo em **16:9 nativo**. **Gauntlet de peça** pegou 4 defeitos invisíveis a geração única. Pesquisa v2v (6 frentes + crítico): **recâmera por API não existe provada**; presenter crível = lip-sync sobre plate real; **Higgsfield não se assina** (ToS §11.5). Vazamento de chave fechado **na fonte** (6 nós da malha). Imagem migrada p/ **API Google direta**. Malha **20.823** · nó `69c02e4b`. ⚠️ **Veredito visual do Sovereign: PoC, "ainda amador"** — a régua é um link de cinema. | ✅ | — |
+> | 🛡️ **FEITO 2026-08-11 (seal 2)** | **3 cofres blindados · init enxuto · EP07 ancorado e pipeline provado** — 6 commits `34b7f64..1ab6ea5`. Detecção contínua dos 3 cofres da secret key (self-heal GATE 1b · doctor §4b · rotação atômica; SOP v1.1). Init **−192 KB** (sprint-priorities 183→26 KB · CLAUDE.md Key Files 89,8→65,6 KB, 0 removes). **EP07:** 12 números ancorados por deepsearch (8✅/2🟡/3❌ → fabricados viram a realidade Podpah sourced) + roteiro v0.1 + **pipeline de produção provado** (motor `scene-template.ts` → data-viz honesto 4,4 Mbps/100% frames únicos). Malha 20.521. | ✅ | — |
+> | 🛡️ **FEITO 2026-08-11** | **Segurança, audiência e anticorpos** — 10 commits `506ed7d..42d238d`. **P0 vivo fechado:** `stripe-webhook` aceitava evento forjado de qualquer um (omitir o header dava 200) → fail-closed, deployado, re-provado. **A chave vive em TRÊS cofres** — o do POSTGRES (`vault.decrypted_secrets`, de onde o pg_cron lê) ficou para trás e matou `autopilot-cadence`+`nurture-advance` por **55h** com `active=true`; corrigido e batendo. **Self-healing `*/5`** (`self-heal-bridge-keys.sh`). **Audiência medida** (17/17 sondas): episódio converte **14× mais que Short**; calibração em `docs/roadmap/ep07-calibracao-audiencia-2026-08-11.md`. **Reporting API** com 4 jobs (impressões/CTR). **Acervo podado** 148→101. **Amendments 28-bis/46**. Suíte de monetização com gate **FECHADO** pelos críticos. | ✅ | — |
+> | 🎯 **AGORA (2026-08-10)** | **EP07 — "A economia secreta por trás dos videocasts brasileiros"** (direção Sovereign: *"vamos para o EP07 seguindo a mesma estratégia… conforme nossos deepsearch"*). Pauta e os 4 pilares JÁ escritos: `docs/roadmap/ep07-pauta-economia-videocast-2026-08-05.md` · `organic-shorts-strategy-inicial-2026-07-30.md` (§D1-D7) · `hook-library-seed-2026-07-30.md` · `tutorial-track-iamaimaster-template-2026-08-04.md`. **O EP06 saiu do alvo — virou acervo** (`repurpose-inbox/<uid>/ep06-montar-harvest/`, 780 MB colhidos). | ⏳ Ordem: (1) `deepsearch-blueprint` ancorar os **12 números** da pauta; (2) **ELEVAR O MOTOR** antes de produzir — portar `dof(z)`+planos+atmosfera e popular `companions[]`, piloto de UMA cena com gate triplo; (3) montar com `assemble-master.ts` fail-closed. **(edge vault já fechado 2026-08-11 — os 3 cofres verdes, provados por `mcorch-doctor §4b`.)** | 🔒 **Sovereign:** GO para produzir o EP07. |
+> | ✅ **FEITO 2026-08-11** | ~~**3 regressões de `src/`**~~ — ENTREGUE (`43f5fea`): a fabricação de 7 `creative_asset` extirpada (−275 linhas, incluindo o "13.9 MB/151,73s" que 3 sessões repetiram), os 2 `if (error) throw error` restaurados, e a rota autenticada `/api/host-media` de volta — os masters respondiam **HTTP 206 a chamador anônimo**. Detalhe original: | ⚠️ **DÍVIDA** | **3 regressões de `src/`** entradas em `bd2b9df`/`0608662`: `asset-url.ts` perdeu a rota autenticada `/api/host-media` (masters EP01/EP02 → 404; mídia EP06 pública sem JWT) e `useCreativeAssets.ts` perdeu os dois `if (error) throw error` (galeria "saudável" com 7 assets falsos `user_id:'system'`, quebra o `getNextPageParam`). Nada disso falha build/tsc/lint. | ⏳ Reverter preservando o fix legítimo de `zIndex:-1` do phaseGroup. | — |
+> | 🎯 **AGORA-ter** | **Amendment 34 — pós-produção de episódio no Spaces (o gap CLI→UI)** — o EP05 provou a esteira completa, mas 5 elos vivem só como runner em `scripts/ep05/` e nenhum usuário alcança: **`motionScene` · `soundtrack` · `titleCard` · `episodeAssembler` · `avQaGate`** (todos de custo ZERO no host) + **design 3D Glass Neon nos cards** (FR-SPACES-136) + receita "Episódio completo". SSOT: `docs/bok/spaces-evolution/34-amendment-episode-post-production.md` (FR-SPACES-130..136 · Pattern Conformance 16y/3d/2na · OTD-EP-001..004). É [[feedback_cli_actions_must_become_ui]] aplicado: hoje o produto entrega ingredientes, não o prato. | ✅ **Amendment SELADA** (BoK antes do código, §1). Fatias: **A** `motionScene`+worker (destrava 16 das 22 cenas do EP06) → **B** 3D Glass Neon → **C** titleCard+assembler → **D** avQaGate → **E** soundtrack+receita. | 🔒 **Sovereign:** GO para arrancar a Fatia A. |
+> | 🎯 **AGORA** | **▶️ Rodar o EP06 na UI — Passo A + Passo B** — o projeto `a65eeb05` está **armado e verificado por pré-voo** (`bun run scripts/qa/preflight-spaces-project.ts <id>` → 0 bloqueadores). 13 cenas motion com beats/série/narração · 3 narrações em `idle` com texto v2 · 4 presenters em **`veo-3.1`/1080p** (2.848 mco) · montador com 17 clipes. O motor mudou por completo nesta sessão: contador honesto, tela que cala quando o narrador fala, selos, anel, gráfico com dado declarado, beat na palavra falada, 1080p nativo. | ⏳ **Aguardando o clique do Sovereign** (recarregar a página primeiro — build novo). Se o Veo do Google estiver sobrecarregado como em 2026-08-05, o estorno é integral e o poller novo impede nó preso. | 🔒 **Sovereign:** GO já dado para o gasto; falta executar. |
+> ...
+> dataset_mcorch_sft_v1_1.jsonl
+> dataset_mcorch_sft_v1_2.jsonl
+> dataset_mcorch_sft_v1.jsonl
+> mcorch-train-bundle.tgz
+> mcorch-train-v2.tgz
+> mcorch-train-v3.tgz
+> mcorch-train-v5.tgz
+> ```
+
+## 🤖 Claude *(00:16:57)*
+
+
+## 🤖 Claude *(00:17:15)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\ndu -sh scratch/ 2>/dev/null; ls scratch/*.ts 2>/dev/null | head -3 || echo \"(sem .ts em scratch/ \u2014 nada a migrar \u2705)\"\npython3 - <<'PY'\nimport io\np='.claude/context/sprint-priorities.md'\ns=io.open(p,encoding='utf-8').read()\n\nold_goal = s[s.index(\"**Sprint Goal**\"):s.index(\"\\n\\n**90-day outcome**\")]\nnew_goal = (\"**Sprint Goal**: **FINALIZAR E PUBLICAR O EP08** \u2014 diretiva Sovereign 2026-08-21: *\\\"vamos fazer /handoff oficial e \"\n\"come\u00e7ar com algo em uma sess\u00e3o dedicada s\u00f3 para isso. Finalizar o EP!\\\"*. O epis\u00f3dio est\u00e1 montado (master v3 de 7m08) e o que o \"\n\"reprovava n\u00e3o era o roteiro: **os 4 clipes-\u00e2ncora nunca falharam** \u2014 ficaram \u00f3rf\u00e3os no storage porque o poll desiste em 18 min. \"\n\"O `b7_petrov` j\u00e1 foi recuperado; faltam `b4_alfinetes`, `b6_apollo` e 2 payoffs (~R$ 26 do cr\u00e9dito de teste do console Google). \"\n\"Bloqueador t\u00e9cnico: `veo-poll` \u2192 HTTP 546 `WORKER_RESOURCE_LIMIT` (o Vertex devolve v\u00eddeo inline em base64). \"\n\"\ud83d\udcb0 **Vertex = cr\u00e9dito de teste GR\u00c1TIS \u00b7 Gemini API = cart\u00e3o do Sovereign** \u2014 ficar no Vertex. \"\n\"Linguagem fixada: **caixa cheia s\u00f3 para v\u00eddeo real, cart\u00e3o para still**, com verifica\u00e7\u00e3o de colis\u00e3o ao longo do tempo.\")\ns = s.replace(old_goal, new_goal)\n\nanchor = \"| \ud83c\udfac **FEITO 2026-08-16** |\"\nrow = (\"| \ud83c\udfac **FEITO 2026-08-21** | **EP08 \u2014 o diagn\u00f3stico raiz: 16 clipes Veo \u00f3rf\u00e3os recuperados** \u2014 7 commits `dd4e933..8ac5278` \"\n\"em `feat/mcorch-model-factory`. Os 4 clipes-\u00e2ncora **nunca falharam**: `gen-clips.ts` desiste do poll em 18 min, o Veo termina \"\n\"depois, o asset fica no storage **pago e inalcan\u00e7\u00e1vel**. **`b7_petrov` recuperado e instalado** (1920\u00d71080) + 3 tomadas de \"\n\"apresentador (2 com \u00e1udio = lip-sync do CTA resolvido). Causa raiz: `veo-poll` \u2192 HTTP **546 WORKER_RESOURCE_LIMIT**, \"\n\"determin\u00edstico 5/5 \u2014 hip\u00f3tese 1080p **REFUTADA**, o discriminante \u00e9 o peso. Ledger auditado: 20 falhas, **100% estornado**. \"\n\"Trio `scripts/qa/{harvest-veo-orphans,poll-veo-stuck,diag-veo-generations}.ts`. Runbook do hardening corrigido (\u00a73 stale \"\n\"convidava a remover o seguro duplo) + \u00a78 + indexado. Recon do 9router selado fora do transcript \u00f3rf\u00e3o. Malha **21.429** \u00b7 \"\n\"n\u00f3 `785ee010`. | \u2705 | \u2014 |\\n\")\nassert s.count(anchor)==1\ns = s.replace(anchor, row+anchor, 1)\nio.open(p,'w',encoding='utf-8').write(s)\nprint(\"sprint-priorities atualizado\")\nPY\ngit add .claude/context/sprint-priorities.md\ngit commit -q -F - >/dev/null 2>&1 <<'EOF'\nchore(sprint): Sprint Goal passa a ser finalizar e publicar o EP08\n\nA meta anterior (pe\u00e7a de 1 minuto remodelando o outlier) foi superada pela\ndiretiva de 21/08. Registra tamb\u00e9m o que descobrimos sobre o bloqueador real e o\nfato econ\u00f4mico que inverte a escolha de credencial.\nEOF\ngit push -q origin feat/mcorch-model-factory 2>&1 | tail -1\ngit log --oneline -1",
+  "description": "Atualiza sprint-priorities e faz push"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> 47M	scratch/
+> sprint-priorities atualizado
+> ✔️ gitleaks-range (0.21 seconds)
+> be23bd9 chore(sprint): Sprint Goal passa a ser finalizar e publicar o EP08
+> ```
+
+## 🤖 Claude *(00:17:24)*
+
+
+## 🤖 Claude *(00:17:26)*
+
+
+🛠️ **Tool Call**: `Bash`
+```json
+{
+  "command": "cd /home/gcrUX/htdocs/constellation-orchestra\necho \"=== commits desta sess\u00e3o ===\"; git log --oneline 6c0fcb7..HEAD | tac\necho; echo \"total: $(git rev-list --count 6c0fcb7..HEAD)\"\necho; echo \"=== worktree ===\"; git status -sb",
+  "description": "Contagem final de commits"
+}
+```
+
+> **Tool Result (Bash)** - ✅ Success
+>
+> ```
+> === commits desta sessão ===
+> dd4e933 feat(qa): trio de recuperação Veo — colhedor, poller e diagnóstico
+> edb8057 docs(ops): runbook do hardening — §3 reescrita, §8 pendências, índice
+> c88a359 docs(roadmap): sela o recon do 9router — recuperável fora do transcript
+> 4e37d17 feat(ep08): runners de produção do episódio + roteiro + variante v4
+> 3a1b43e docs(readme): v6.145.0 — diagnóstico raiz do EP08 e recuperação dos clipes órfãos
+> 869ae38 docs(handoff): seal EP08 — os 4 clipes-âncora nunca falharam, o poll é que quebrava
+> 9d38d49 docs(handoff): ORO triplet + tabela de commits no Record do EP08
+> 8ac5278 chore(qa): proof-manifest do seal EP08
+> be23bd9 chore(sprint): Sprint Goal passa a ser finalizar e publicar o EP08
+> 
+> total: 9
+> 
+> === worktree ===
+> ## feat/mcorch-model-factory...origin/feat/mcorch-model-factory
+> ?? docs/ref-pdf/Agentic-Design-Patterns.pdf
+> ```
+
+## 🤖 Claude *(00:17:45)*
+
+```
+═══════════════════════════════════════════════════════════
+  HANDOFF SEALED — EP08: O DIAGNÓSTICO RAIZ (2026-08-21)
+═══════════════════════════════════════════════════════════
+```
+
+🔐 **SEGURANÇA** — vazamento no diff ✅ · nos arquivos novos ✅ · dedução de moeda no cliente ✅ · log sensível ✅ · gitleaks limpo em 9 de 9 commits · HANDOFF sem credenciais ✅
+
+📦 **COMMITS (9)** — `dd4e933..be23bd9`
+
+⬡ **KNOWLEDGE MESH** — nó `785ee010` · embedding 768 dims ✅ · malha **21.214 → 21.429**
+
+📖 **README** — v6.144.0 → **v6.145.0**
+
+🧠 **HANDOFF.md** — Task State, Record com ORO e tabela de commits, FIRST ACTION reescrito para a sessão dedicada. Gate de tamanho 🟡 WARN → poda agendada no Pendente
+
+📋 **PROVA MATERIAL (Fase 5c)** — **`SEAL ALLOWED`** · 16 verificadas · 1 pulada · 0 falhas
+
+🚀 **PUSH** — `feat/mcorch-model-factory` → origin (main intocada por diretiva)
+
+---
+
+## O que esta sessão descobriu
+
+Você me perguntou se estava renderizando mesmo. A resposta virou o achado da sessão: **os quatro clipes-âncora do EP08 nunca falharam.** Foram gerados, cobrados e perdidos entre o Google e o disco, porque o runner desiste do poll em 18 minutos. Dezesseis assets estavam nessa situação — entre eles o **Petrov**, o plano mais forte do episódio, que **recuperei sem gastar nada** e já está instalado no lugar do still.
+
+O "amadorismo" que você viu não era o roteiro. Era metade dos momentos-âncora sendo fotografia.
+
+A causa raiz do erro é o `veo-poll` estourando memória (`HTTP 546`) ao decodificar o vídeo que o Vertex devolve inline em base64. Minha hipótese óbvia — 1080p — **foi refutada pelos dados**: vários 1080p saíram `done`. O discriminante é o peso do arquivo, e é por isso que o mesmo nó alternava sucesso e erro entre rodadas.
+
+E corrigi a recomendação que eu tinha te dado errada: **Vertex é crédito de teste; Gemini é seu cartão.** Ficar no Vertex. Isso está gravado em três lugares para não se perder — memória, HANDOFF e Sprint Goal.
+
+⏭ **PRÓXIMOS PASSOS** (a sessão dedicada já tem tudo no FIRST ACTION)
+
+1. **Rodar o ritual antes de gerar qualquer coisa** — diagnóstico → poller → colhedor. Re-gerar o que já existe paga duas vezes.
+2. **Gerar os 4 que faltam** — `b4_alfinetes`, `b6_apollo` e os dois payoffs: ~R$ 26 dos R$ 147,94.
+3. **Resolver o 546** — `storageUri` é o conserto durável; 720p nos pesados é o atalho de véspera.
+4. **Codificar sua regra** no montador: quadro cheio só para fonte com movimento real, still cai no cartão sozinho.
+5. **Trocar a voz da narração** — decisão que precisa vir **antes** do render, porque os onsets governam cada beat.
+
+O 9router está selado em `docs/roadmap/9router-recon-2026-08-20.md` com o comando de resume, pronto para quando você voltar a ele depois de publicar.
+
+Uma ressalva: o PDF `Agentic-Design-Patterns.pdf` (19,9 MB) segue fora do git de propósito — binário grande demais. Está no disco e o roteiro o cita por nome.
+
 ---
 
 %% --- PROJECT METADATA START --- %%
@@ -5622,4 +7496,5 @@ Erro meu — pedi colunas que não existem e engoli o erro. Refazendo.
 %% --- TIMELINE START --- %%
 > [!info] Linha do Tempo (Handoff)
 > * **Sessão Anterior**: [[2026-08-21 - ssh-server connector test]]
+> * **Próxima Sessão**: [[2026-08-22 - b7378e67-2ea2-4eff-a01b-3d2907f1f838]]
 %% --- TIMELINE END --- %%

@@ -14,8 +14,8 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 > * `[[TradeUX]]` - Núcleo central das sessões do projeto **TradeUX**.
 
 > [!info] Métricas do Grafo
-> * **Total de Sessões Registradas**: 3722
-> * **Sessões do Claude**: 3669
+> * **Total de Sessões Registradas**: 3723
+> * **Sessões do Claude**: 3670
 > * **Sessões do Gemini**: 53
 
 ---
@@ -75,6 +75,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-05-29 - Fix API key leak and reconfigure model defaults]]` - *2026-05-29*
 
 ### Other Sessions
+*   `[[2026-08-22 - b7378e67-2ea2-4eff-a01b-3d2907f1f838]]` - *2026-08-22*
 *   `[[2026-08-22 - Sessão travada 251db3ca e migração SSH porta 52022]]` - *2026-08-22*
 *   `[[2026-08-21 - ssh-server connector test]]` - *2026-08-21*
 *   `[[2026-08-21 - Sessão travada 251db3ca e migração SSH porta 52022]]` - *2026-08-21*
@@ -86,8 +87,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-08-20 - agent-a1ab94ff51817cae4]]` - *2026-08-20*
 *   `[[2026-08-20 - agent-a15c2eff261e45ce9]]` - *2026-08-20*
 *   `[[2026-08-19 - agent-a7e6996a9859b547c]]` - *2026-08-19*
-*   `[[2026-08-18 - Criar roteiro e produção visual para episódio Claude AI]]` - *2026-08-18*
-*   *... e mais 3660 sessões nessa categoria.*
+*   *... e mais 3661 sessões nessa categoria.*
 
 ---
 
@@ -3314,6 +3314,7 @@ Este MOC atua como o diretório central do vault, organizando automaticamente to
 *   `[[2026-07-01 - Configurar loop autônomo e definir fila soberana]]` (ClaudeSessions)
 
 ### Agosto 2026
+*   `[[2026-08-22 - b7378e67-2ea2-4eff-a01b-3d2907f1f838]]` (ClaudeSessions)
 *   `[[2026-08-22 - Sessão travada 251db3ca e migração SSH porta 52022]]` (ClaudeSessions)
 *   `[[2026-08-21 - ssh-server connector test]]` (ClaudeSessions)
 *   `[[2026-08-21 - Sessão travada 251db3ca e migração SSH porta 52022]]` (ClaudeSessions)
